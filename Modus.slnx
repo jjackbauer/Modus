@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/plugins/">
+    <Project Path="plugins/Plugin.Host.Telemetry.csproj" />
+    <Project Path="plugins/Plugin.Machine.Telemetry.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Modus.Core/Modus.Core.csproj" />
+    <Project Path="src/Modus.Host/Modus.Host.csproj" />
+    <Folder Name="SamplePlugins/">
+      <Project Path="src/SamplePlugins/Plugin.Orders.Fulfillment/Plugin.Orders.Fulfillment.csproj" />
+      <Project Path="src/SamplePlugins/Plugin.Payments.Gateway/Plugin.Payments.Gateway.csproj" />
+    </Folder>
+  </Folder>
+  <Folder Name="/src/SamplePlugins/">
+    <Project Path="src/SamplePlugins/Plugin.Orders.Fulfillment/Plugin.Orders.Fulfillment.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj" />
+    <Project Path="tests/Modus.Core.Tests/Modus.Core.Tests.csproj" />
+    <Project Path="tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

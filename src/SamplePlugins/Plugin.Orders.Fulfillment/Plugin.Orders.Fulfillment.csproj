@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Plugin.Orders.Fulfillment</AssemblyName>
+    <ModusVersion>1.4.3</ModusVersion>
+    <ModusCapabilities>Cap.Orders;Cap.Fulfillment</ModusCapabilities>
+    <ModusOperations>Orders.AllocateInventory;Orders.CreateShipment</ModusOperations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modus.Core\Modus.Core.csproj" />
+  </ItemGroup>
+</Project>

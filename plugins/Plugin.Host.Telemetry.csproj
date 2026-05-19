@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Plugin.Host.Telemetry</AssemblyName>
+    <ModusVersion>1.0.0</ModusVersion>
+    <ModusCapabilities>Cap.Host;Cap.Telemetry</ModusCapabilities>
+    <ModusOperations>Telemetry.Host.CollectSnapshot</ModusOperations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,4 @@
+{
+  "chat.experimental.prompts.enabled": true,
+  "github.copilot.chat.agent.enabled": true
+}

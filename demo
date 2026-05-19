@@ -1,0 +1,205 @@
+# demo
+
+> Scope: Define implementation requirements for the Host project so concrete plugins can be created, loaded, activated, and executed through the host runtime while exercising Core library capabilities (contracts, operations, events, scheduling, fallback behavior, and fault isolation).
+
+---
+
+## Functionality Worktree
+
+### Coverage Matrix
+
+| Capability | Required Outcome | Dependency Note |
+|---|---|---|
+| Plugin artifact onboarding | Host accepts concrete plugin projects and builds runtime descriptors deterministically | [foundation for all runtime phases] |
+| Descriptor and contract validation | Host rejects invalid descriptors/contracts before load and emits explicit diagnostics | [depends on plugin artifact onboarding] |
+| Runtime loading and activation | Host loads validated plugins and activates them in deterministic dependency order | [depends on validation] |
+| Operation execution path | Host executes at least one deterministic operation per activated plugin and records stage diagnostics | [depends on activation] |
+| Capability ownership resolution | Host resolves capability owners deterministically across competing plugin versions | [depends on activation and operations] |
+| Fault isolation and rollback | Host isolates plugin failures and rolls back partial side effects while preserving continuity | [depends on operation execution path] |
+| Hot onboarding through watcher | Host processes new plugin projects under plugins path and activates eligible plugins | [depends on onboarding, validation, activation] |
+| End-to-end host entrypoint | Host app startup path returns success only when host remains healthy and pipeline initializes | [depends on all previous runtime capabilities] |
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class HostRunner {
+        +StartAsync(string pluginsPath, CancellationToken ct)
+    }
+
+    class PluginFolderWatcher {
+        +Start(string pluginsPath)
+        +OnProjectCreated(string csprojPath)
+    }
+
+    class InMemoryHostRuntime {
+        +Start(IEnumerable~PluginDescriptor~ input)
+    }
+
+    class PluginLoader {
+        +ScanRuntimeAssemblies(string pluginsPath)
+    }
+
+    class PluginValidationService {
+        +Validate(PluginDescriptor descriptor)
+    }
+
+    class PluginDescriptor {
+        +string PluginId
+        +Version Version
+        +IReadOnlyList~string~ Capabilities
+        +IReadOnlyList~string~ DeclaredOperations
+        +IReadOnlyList~string~ DependsOn
+    }
+
+    class IPluginContract
+    class IPluginLifecycle
+    class IPluginOperationCatalog
+    class IPluginScheduledEvents
+    class IPluginScheduler
+
+    HostRunner --> PluginFolderWatcher
+    PluginFolderWatcher --> PluginLoader
+    PluginFolderWatcher --> InMemoryHostRuntime
+    InMemoryHostRuntime --> PluginValidationService
+    InMemoryHostRuntime --> PluginDescriptor
+    PluginDescriptor ..> IPluginContract
+    PluginDescriptor ..> IPluginLifecycle
+    PluginDescriptor ..> IPluginOperationCatalog
+    PluginDescriptor ..> IPluginScheduledEvents
+    IPluginScheduledEvents --> IPluginScheduler
+```
+
+### Completeness Checklist
+
+- [x] Implement concrete sample plugins as class-library artifacts that declare stable plugin identity, version, and required capabilities [foundation for host execution]
+- [x] Ensure descriptor construction and validation gate rejects non-compliant contract metadata and invalid assemblies with deterministic diagnostics [depends on concrete sample plugins]
+- [x] Ensure host runtime loads validated plugins and activates them in dependency-aware deterministic order [depends on descriptor validation]
+- [x] Ensure activated plugins expose and execute deterministic declared operations through host runtime operation stage [depends on runtime activation]
+- [x] Ensure capability ownership conflicts are resolved deterministically by version and stable plugin id tie-breaker [depends on runtime activation and operation execution]
+- [x] Ensure operation and activation failures are isolated per plugin, including deterministic rollback of registration and activation side effects [depends on operation execution]
+- [x] Ensure watcher-driven hot onboarding accepts only in-scope plugin projects and prevents duplicate event reprocessing [depends on descriptor construction and runtime start]
+- [x] Ensure host application entrypoint runs the plugin pipeline end-to-end and reports healthy/unhealthy exit semantics [depends on all prior items]
+
+---
+
+## Test Plan
+
+### `ConcretePluginArtifacts`
+
+1. `PluginArtifacts_GivenConcreteClassLibraryPlugin_ExpectedDescriptorContainsStableIdentityVersionAndCapabilities`
+   *Assumption*: A concrete plugin implementation must produce deterministic descriptor identity and capability metadata that can be consumed by Host runtime.
+
+2. `PluginArtifacts_GivenMultipleConcretePlugins_ExpectedDeclaredOperationsAreNonEmptyAndDeterministic`
+   *Assumption*: Concrete plugins used for host execution should expose a stable operation catalog so runtime behavior is reproducible.
+
+### `PluginValidationService.Validate`
+
+1. `Validate_GivenContractCompliantAndValidAssembly_ExpectedSuccessResult`
+   *Assumption*: Validation succeeds only when plugin contract compliance and assembly validity checks both pass.
+
+2. `Validate_GivenInvalidContractOrAssembly_ExpectedFailureReasonIsExplicit`
+   *Assumption*: Validation failures must preserve a deterministic reason string to support startup diagnostics and triage.
+
+### `InMemoryHostRuntime.Start` Activation Ordering
+
+1. `Start_GivenDependencyGraph_ExpectedActivationFollowsTopologicalOrder`
+   *Assumption*: Runtime activation order must honor declared dependencies to prevent plugins from starting before prerequisites.
+
+2. `Start_GivenDuplicatePluginIds_ExpectedLaterDuplicateIgnoredWithoutBreakingStartup`
+   *Assumption*: Duplicate plugin identifiers are ignored deterministically while host startup continues for unique descriptors.
+
+### `InMemoryHostRuntime.Start` Operation Stage
+
+1. `Start_GivenDeclaredOperations_ExpectedOperationStageLogsDeterministicOperationExecution`
+   *Assumption*: Activated plugins execute a predictable operation name and emit a success diagnostic for operation stage.
+
+2. `Start_GivenNoDeclaredOperations_ExpectedHealthCheckFallbackOperationIsExecuted`
+   *Assumption*: Runtime must derive a deterministic fallback operation when plugin operation catalog is empty.
+
+### `InMemoryHostRuntime.Start` Capability Owners
+
+1. `Start_GivenSharedCapabilityAcrossVersions_ExpectedHighestVersionOwnsCapability`
+   *Assumption*: Capability ownership is assigned to the plugin with highest semantic version among activated contenders.
+
+2. `Start_GivenSharedCapabilityWithSameVersion_ExpectedLexicographicallySmallerPluginIdWins`
+   *Assumption*: When versions tie, capability owner selection must use stable ordinal plugin id ordering.
+
+3. `Start_GivenHigherVersionCapabilityOwnerFailsActivationOrOperation_ExpectedHealthyContenderOwnsCapability`
+   *Assumption*: Capability ownership must be computed from plugins that remain active after activation and deterministic operation execution; failed contenders cannot retain ownership.
+
+### `InMemoryHostRuntime.Start` Failure Isolation
+
+1. `Start_GivenOperationFailure_ExpectedPluginIsolatedAndRollbackDiagnosticsRecorded`
+   *Assumption*: A failing plugin operation must trigger isolation and rollback while preserving explicit rollback stage diagnostics.
+
+2. `Start_GivenActivationFailure_ExpectedOtherPluginsContinueAndHostRemainsStarted`
+   *Assumption*: Activation failure of one plugin must not prevent healthy plugins from completing activation and operation stages.
+
+### `PluginFolderWatcher` Hot Onboarding
+
+1. `OnProjectCreated_GivenValidPluginProjectUnderPluginsPath_ExpectedEventAcceptedAndPluginActivated`
+   *Assumption*: Watcher onboarding should accept valid plugin project creation events under configured plugins root and activate eligible plugins.
+
+2. `OnProjectCreated_GivenDuplicateOrOutOfScopeEvent_ExpectedEventIgnoredWithReason`
+   *Assumption*: Watcher must ignore duplicate notifications and out-of-scope paths deterministically to avoid reprocessing instability.
+
+### `Program` and `HostRunner.StartAsync`
+
+1. `HostRunner_GivenValidPluginsPath_ExpectedWatcherRegisteredAndHostHealthy`
+   *Assumption*: Host startup path reports healthy startup when watcher registration and pipeline initialization complete successfully.
+
+2. `Program_GivenUnhealthyStartup_ExpectedExitCodeOne`
+   *Assumption*: Host app entrypoint returns non-zero exit status when startup is unhealthy to support automation and deployment gates.
+
+---
+
+*All assumptions verified by Falsify Claims. Zero Falsified rows.*
+
+## Checklist Transition Evidence
+
+- Date: 2026-05-17
+- Checklist item: Ensure capability ownership conflicts are resolved deterministically by version and stable plugin id tie-breaker [depends on runtime activation and operation execution]
+- Transition record: [ ] -> [x]
+- Independent verification commands:
+   - `git log --oneline -- demo`
+   - `git log -p -- demo`
+   - `Select-String -Path demo -Pattern "Ensure capability ownership conflicts are resolved deterministically by version and stable plugin id tie-breaker"`
+- Linked implementation evidence:
+   - `src/Modus.Host/Domain/Plugins/InMemoryHostRuntime.cs` uses `PickCapabilityOwner` with version-first and ordinal plugin-id tie-break, and resolves owners from activated plugin candidates only.
+   - `tests/Modus.Host.IntegrationTests/OperationExecutionTests.cs` covers version win, tie-break win, activation-failure exclusion, and operation-failure exclusion.
+
+- Date: 2026-05-17
+- Checklist item: Ensure operation and activation failures are isolated per plugin, including deterministic rollback of registration and activation side effects [depends on operation execution]
+- Transition record: [ ] -> [x]
+- Independent verification commands:
+   - `dotnet build src/Modus.Host/Modus.Host.csproj`
+   - `dotnet build tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj`
+   - `dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --no-build`
+- Linked implementation evidence:
+   - `src/Modus.Host/Domain/Plugins/InMemoryHostRuntime.cs` records activation side effects transactionally before activation-failure isolation so rollback deterministically reverts `activation,registration`.
+   - `tests/Modus.Host.IntegrationTests/FaultIsolationAndContinuityTests.cs` verifies activation failure rollback diagnostics and host continuity.
+
+- Date: 2026-05-17
+- Checklist item: Ensure watcher-driven hot onboarding accepts only in-scope plugin projects and prevents duplicate event reprocessing [depends on descriptor construction and runtime start]
+- Transition record: [ ] -> [x]
+- Independent verification commands:
+   - `dotnet build src/Modus.Host/Modus.Host.csproj`
+   - `dotnet build tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj`
+   - `dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --no-build`
+- Linked implementation evidence:
+   - `src/Modus.Host/Domain/Plugins/PluginFolderWatcher.cs` accepts onboarding events only for `Plugin.*.csproj` files under the configured plugins path and emits `out-of-scope plugin project` diagnostics otherwise.
+   - `src/Modus.Host/Domain/Plugins/PluginFolderWatcher.cs` deduplicates create notifications by normalized full project path before descriptor/runtime processing.
+   - `tests/Modus.Host.IntegrationTests/StartupAndActivationTests.cs` verifies out-of-scope project rejection and duplicate create-event suppression while keeping single activation for in-scope projects.
+
+- Date: 2026-05-17
+- Checklist item: Ensure host application entrypoint runs the plugin pipeline end-to-end and reports healthy/unhealthy exit semantics [depends on all prior items]
+- Transition record: [ ] -> [x]
+- Independent verification commands:
+   - `dotnet build src/Modus.Host/Modus.Host.csproj`
+   - `dotnet build tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj`
+   - `dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --no-build`
+- Linked implementation evidence:
+   - `src/Modus.Host/Domain/Plugins/PluginFolderWatcher.cs` treats startup as unhealthy when the provided plugins directory does not exist, while still reporting deterministic startup diagnostics.
+   - `tests/Modus.Host.IntegrationTests/HostRunnerEntrypointTests.cs` verifies `Program` exit code `1` for unhealthy startup and exit code `0` for healthy startup by executing the host entrypoint process.
+   - `tests/Modus.Host.IntegrationTests/StartupAndActivationTests.cs` verifies missing plugins directory startup is reported as unhealthy with deterministic failure diagnostics.
