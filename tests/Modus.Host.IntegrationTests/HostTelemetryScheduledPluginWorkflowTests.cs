@@ -53,7 +53,7 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
     }
 
     [Fact]
-    public void TelemetryPluginHostStartup_GivenPluginsPathContainsTelemetryAssembly_ExpectedLifecycleSchedulingAndOperationDiagnostics()
+    public void TelemetryPluginHostStartup_GivenPluginsPathContainsTelemetryAssembly_ExpectedLifecycleSchedulingAndDiOnlyOperationDiagnostics()
     {
         var root = Path.Combine(Path.GetTempPath(), $"modus-telemetry-runtime-{Guid.NewGuid():N}");
         var pluginsPath = Path.Combine(root, "plugins");
@@ -86,7 +86,9 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
                 result.Diagnostics,
                 static x => x.Contains("stage=operation plugin=Plugin.Host.Telemetry operation=Telemetry.Host.CollectSnapshot", StringComparison.Ordinal)
                     && x.Contains("source=scheduled", StringComparison.Ordinal)
-                    && x.Contains("outcome=success", StringComparison.Ordinal));
+                    && x.Contains("outcome=ignored", StringComparison.Ordinal)
+                    && x.Contains("reason=unresolvable-via-di", StringComparison.Ordinal)
+                    && x.Contains($"lifecycleType={typeof(HostTelemetryPlugin).FullName}", StringComparison.Ordinal));
         }
         finally
         {

@@ -605,6 +605,579 @@ public sealed class PluginDiConsumptionTests
         }
     }
 
+    [Fact]
+    [Trait("ChecklistItem", "di-registration-lambda")]
+    public async Task HostRunnerStartAsync_GivenDiscoveredScheduledPluginFromDi_ExpectedScheduledExecutionResolvesThroughLifecycleHostProvider()
+    {
+        var tempDir = CopyPluginsToTemporaryDirectory();
+
+        try
+        {
+            var services = new ServiceCollection();
+            var pluginsPath = Path.Combine(tempDir, "plugins");
+
+            services.AddModusPluginHosting(opts => opts.PluginsPath = pluginsPath);
+
+            using var provider = services.BuildServiceProvider(validateScopes: true);
+            var runner = provider.GetRequiredService<HostRunner>();
+
+            var result = await runner.StartAsync(CancellationToken.None);
+
+            Assert.Contains(
+                result.Diagnostics,
+                d => d.Contains("stage=lifecycle plugin=Plugin.Host.Telemetry outcome=started", StringComparison.Ordinal));
+            Assert.Contains(
+                result.Diagnostics,
+                d => d.Contains("stage=operation plugin=Plugin.Host.Telemetry", StringComparison.Ordinal)
+                    && d.Contains("operation=Telemetry.Host.CollectSnapshot", StringComparison.Ordinal)
+                    && d.Contains("outcome=success", StringComparison.Ordinal));
+            Assert.DoesNotContain(
+                result.Diagnostics,
+                d => d.Contains("stage=operation plugin=Plugin.Host.Telemetry", StringComparison.Ordinal)
+                    && d.Contains("reason=unresolvable-via-di", StringComparison.Ordinal));
+        }
+        finally
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            _ = TryDeleteDirectory(tempDir);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "non-breaking-scheduling-contract")]
+    public void StartActivatedPlugins_GivenDiResolvedScheduledPluginWithoutParameterlessConstructor_ExpectedSchedulingDiagnosticsStayStableWhileExecutionUsesDiResolution()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(
+            new ConstructorInjectedScheduleDefinition(
+            [
+                new ConstructorInjectedScheduleRegistration("Telemetry.Host.CollectSnapshot.EveryFiveMinutes", TimeSpan.FromMinutes(5), "Telemetry.Host.CollectSnapshot", "payload-five"),
+                new ConstructorInjectedScheduleRegistration("Telemetry.Host.CollectSnapshot.EveryMinute", TimeSpan.FromMinutes(1), "Telemetry.Host.CollectSnapshot.Fast", "payload-one")
+            ]));
+        services.AddTransient<ConstructorInjectedScheduledPlugin>();
+
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(ConstructorInjectedScheduledPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ConstructorInjectedScheduled"),
+            "Plugin.Tests.ConstructorInjectedScheduled",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.ScheduledContract")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ConstructorInjectedScheduled"]);
+
+        Assert.Contains(
+            "stage=lifecycle plugin=Plugin.Tests.ConstructorInjectedScheduled outcome=started source=Plugin.Tests.ConstructorInjectedScheduled",
+            diagnostics,
+            StringComparer.Ordinal);
+        Assert.Equal(
+            new[]
+            {
+                "stage=scheduling plugin=Plugin.Tests.ConstructorInjectedScheduled job=Telemetry.Host.CollectSnapshot.EveryFiveMinutes intervalMs=300000 operation=Telemetry.Host.CollectSnapshot outcome=registered",
+                "stage=scheduling plugin=Plugin.Tests.ConstructorInjectedScheduled job=Telemetry.Host.CollectSnapshot.EveryMinute intervalMs=60000 operation=Telemetry.Host.CollectSnapshot.Fast outcome=registered"
+            }.OrderBy(x => x, StringComparer.Ordinal).ToArray(),
+            diagnostics
+                .Where(d => d.StartsWith("stage=scheduling plugin=Plugin.Tests.ConstructorInjectedScheduled", StringComparison.Ordinal))
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray());
+        Assert.Equal(
+            new[]
+            {
+                "stage=operation plugin=Plugin.Tests.ConstructorInjectedScheduled operation=Telemetry.Host.CollectSnapshot source=scheduled job=Telemetry.Host.CollectSnapshot.EveryFiveMinutes outcome=success payload=payload-five",
+                "stage=operation plugin=Plugin.Tests.ConstructorInjectedScheduled operation=Telemetry.Host.CollectSnapshot.Fast source=scheduled job=Telemetry.Host.CollectSnapshot.EveryMinute outcome=success payload=payload-one"
+            }.OrderBy(x => x, StringComparer.Ordinal).ToArray(),
+            diagnostics
+                .Where(d => d.StartsWith("stage=operation plugin=Plugin.Tests.ConstructorInjectedScheduled", StringComparison.Ordinal))
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray());
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "remove-manual-lifetime-control")]
+    public void StartActivatedPlugins_GivenServiceProviderWithoutPluginTypeRegistration_ExpectedActivationDoesNotManuallyInstantiatePlugin()
+    {
+        ScheduledInstanceTrackingPlugin.Reset();
+        var services = new ServiceCollection();
+        using var provider = services.BuildServiceProvider();
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(ScheduledInstanceTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ScheduledInstanceTracking"),
+            "Plugin.Tests.ScheduledInstanceTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.InstanceTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ScheduledInstanceTracking"]);
+
+        Assert.DoesNotContain(
+            diagnostics,
+            d => d.Contains("stage=lifecycle plugin=Plugin.Tests.ScheduledInstanceTracking", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            diagnostics,
+            d => d.Contains("stage=scheduling plugin=Plugin.Tests.ScheduledInstanceTracking", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "deterministic-fallback")]
+    public void StartActivatedPlugins_GivenServiceProviderWithoutPluginTypeRegistration_ExpectedScheduledOperationProducesDeterministicFallbackDiagnostic()
+    {
+        // Arrange: activation uses the provider-less fallback to register schedules, but
+        // scheduled execution still must not construct the runtime instance outside DI.
+        ScheduledInstanceTrackingPlugin.Reset();
+
+        var host = new AssemblyLifecycleHost();
+        var assemblyPath = typeof(ScheduledInstanceTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ScheduledInstanceTracking"),
+            "Plugin.Tests.ScheduledInstanceTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.InstanceTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        // Act
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ScheduledInstanceTracking"]);
+
+        // Assert: schedule registration still happens from the activated instance, but execution
+        // is ignored because the runtime plugin type is not resolved through DI.
+        Assert.Contains(
+            diagnostics,
+            d => d.Contains("stage=scheduling plugin=Plugin.Tests.ScheduledInstanceTracking", StringComparison.Ordinal)
+                && d.Contains("operation=InstanceTracking.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=registered", StringComparison.Ordinal));
+        var ignoredDiagnostic = Assert.Single(
+            diagnostics,
+            d => d.Contains("operation=InstanceTracking.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=ignored", StringComparison.Ordinal));
+        Assert.Contains("reason=unresolvable-via-di", ignoredDiagnostic, StringComparison.Ordinal);
+        Assert.Contains(
+            $"lifecycleType={typeof(ScheduledInstanceTrackingPlugin).FullName}",
+            ignoredDiagnostic,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "remove-manual-lifetime-control")]
+    public void StartActivatedPlugins_GivenNoServiceProvider_ExpectedActivationFallsBackToParameterlessConstruction()
+    {
+        ScheduledInstanceTrackingPlugin.Reset();
+
+        var host = new AssemblyLifecycleHost();
+        var assemblyPath = typeof(ScheduledInstanceTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ScheduledInstanceTracking"),
+            "Plugin.Tests.ScheduledInstanceTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.InstanceTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ScheduledInstanceTracking"]);
+
+        Assert.Contains(
+            diagnostics,
+            d => d.Contains("stage=lifecycle plugin=Plugin.Tests.ScheduledInstanceTracking outcome=started", StringComparison.Ordinal));
+        Assert.Contains(
+            diagnostics,
+            d => d.Contains("stage=scheduling plugin=Plugin.Tests.ScheduledInstanceTracking", StringComparison.Ordinal)
+                && d.Contains("outcome=registered", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "scope-per-tick")]
+    public void StartActivatedPlugins_GivenMultipleScheduledExecutions_ExpectedNewScopeCreatedPerExecution()
+    {
+        ScopedExecutionTrackingPlugin.Reset();
+        using var scopeFactory = new CountingScopeFactory();
+        using var provider = new CountingRootProvider(scopeFactory);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(ScopedExecutionTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ScopedExecutionTracking"),
+            "Plugin.Tests.ScopedExecutionTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.ScopeTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ScopedExecutionTracking"]);
+
+        var executionDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=ScopedExecution.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=success", StringComparison.Ordinal))
+            .ToArray();
+        var executionScopes = executionDiagnostics
+            .Select(diagnostic =>
+            {
+                var scopeId = ExtractTokenValue(diagnostic, "scopeId");
+                var activationScopeId = ExtractTokenValue(diagnostic, "activationScopeId");
+                return (scopeId, activationScopeId);
+            })
+            .ToArray();
+
+        Assert.Equal(2, executionDiagnostics.Length);
+        Assert.Equal(
+            executionScopes.Length,
+            executionScopes
+                .Select(x => x.scopeId)
+                .Distinct(StringComparer.Ordinal)
+                .Count());
+        Assert.All(
+            executionScopes,
+            execution => Assert.NotEqual(execution.activationScopeId, execution.scopeId));
+        Assert.True(scopeFactory.CreateScopeCallCount >= 3);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "singleton-container-owned")]
+    public void StartActivatedPlugins_GivenSingletonScheduledPluginResolvedFromScope_ExpectedContainerOwnedSingletonReusedAcrossExecutions()
+    {
+        SingletonExecutionTrackingPlugin.Reset();
+        using var scopeFactory = new SingletonTrackingScopeFactory();
+        using var provider = new SingletonTrackingRootProvider(scopeFactory);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(SingletonExecutionTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.SingletonExecutionTracking"),
+            "Plugin.Tests.SingletonExecutionTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.SingletonTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.SingletonExecutionTracking"]);
+
+        var executionDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=SingletonExecution.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=success", StringComparison.Ordinal))
+            .ToArray();
+        var executionInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "instanceId"))
+            .ToArray();
+        var activationInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "activationInstanceId"))
+            .ToArray();
+
+        Assert.Equal(2, executionDiagnostics.Length);
+        Assert.Single(executionInstanceIds.Distinct(StringComparer.Ordinal));
+        Assert.All(
+            activationInstanceIds,
+            activationInstanceId => Assert.Equal(executionInstanceIds[0], activationInstanceId));
+        Assert.Equal(0, provider.PluginResolutionCount);
+        Assert.True(scopeFactory.CreateScopeCallCount >= 3);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "integration-transient-fresh")]
+    public void StartActivatedPlugins_GivenTransientScheduledPluginResolvedFromDi_ExpectedFreshInstanceEachRun()
+    {
+        TransientExecutionTrackingPlugin.Reset();
+
+        var services = new ServiceCollection();
+        services.AddTransient<TransientExecutionTrackingPlugin>();
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(TransientExecutionTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.TransientExecutionTracking"),
+            "Plugin.Tests.TransientExecutionTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.TransientTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.TransientExecutionTracking"]);
+
+        var executionDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=TransientExecution.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=success", StringComparison.Ordinal))
+            .ToArray();
+        var executionInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "instanceId"))
+            .ToArray();
+        var activationInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "activationInstanceId"))
+            .ToArray();
+
+        Assert.Equal(2, executionDiagnostics.Length);
+        Assert.Equal(
+            executionInstanceIds.Length,
+            executionInstanceIds.Distinct(StringComparer.Ordinal).Count());
+        Assert.Single(activationInstanceIds.Distinct(StringComparer.Ordinal));
+        Assert.DoesNotContain(activationInstanceIds[0], executionInstanceIds, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "integration-singleton-stable")]
+    public void StartActivatedPlugins_GivenSingletonScheduledPluginResolvedFromDi_ExpectedSameInstanceAcrossRuns()
+    {
+        SingletonExecutionTrackingPlugin.Reset();
+
+        var services = new ServiceCollection();
+        services.AddSingleton<SingletonExecutionTrackingPlugin>();
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(SingletonExecutionTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.SingletonExecutionTracking"),
+            "Plugin.Tests.SingletonExecutionTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.SingletonTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.SingletonExecutionTracking"]);
+
+        var executionDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=SingletonExecution.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=success", StringComparison.Ordinal))
+            .ToArray();
+        var executionInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "instanceId"))
+            .ToArray();
+        var activationInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "activationInstanceId"))
+            .ToArray();
+
+        Assert.Equal(2, executionDiagnostics.Length);
+        Assert.Single(executionInstanceIds.Distinct(StringComparer.Ordinal));
+        Assert.Single(activationInstanceIds.Distinct(StringComparer.Ordinal));
+        Assert.Equal(executionInstanceIds[0], activationInstanceIds[0]);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "integration-scoped-per-scope")]
+    public void StartActivatedPlugins_GivenScopedScheduledPluginResolvedFromDi_ExpectedDifferentInstancePerSchedulerScope()
+    {
+        ScopedExecutionTrackingPlugin.Reset();
+
+        var services = new ServiceCollection();
+        services.AddScoped<ScopedExecutionTrackingPlugin>();
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(ScopedExecutionTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ScopedExecutionTracking"),
+            "Plugin.Tests.ScopedExecutionTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.ScopeTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ScopedExecutionTracking"]);
+
+        var executionDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=ScopedExecution.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=success", StringComparison.Ordinal))
+            .ToArray();
+        var executionInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "instanceId"))
+            .ToArray();
+        var activationInstanceIds = executionDiagnostics
+            .Select(diagnostic => ExtractTokenValue(diagnostic, "activationInstanceId"))
+            .ToArray();
+
+        Assert.Equal(2, executionDiagnostics.Length);
+        Assert.Equal(
+            executionInstanceIds.Length,
+            executionInstanceIds.Distinct(StringComparer.Ordinal).Count());
+        Assert.Single(activationInstanceIds.Distinct(StringComparer.Ordinal));
+        Assert.DoesNotContain(activationInstanceIds[0], executionInstanceIds, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "diagnostics-determinism")]
+    public void ScheduledExecutionDiagnostics_GivenResolutionFailure_ExpectedSingleDeterministicFailureMessage()
+    {
+        ScheduledInstanceTrackingPlugin.Reset();
+
+        var host = new AssemblyLifecycleHost();
+        var assemblyPath = typeof(ScheduledInstanceTrackingPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ScheduledInstanceTracking"),
+            "Plugin.Tests.ScheduledInstanceTracking",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.InstanceTracking")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ScheduledInstanceTracking"]);
+
+        var failureDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=InstanceTracking.Execute", StringComparison.Ordinal)
+                && d.Contains("outcome=ignored", StringComparison.Ordinal))
+            .ToArray();
+
+        var failure = Assert.Single(failureDiagnostics);
+        Assert.Equal("operation", ExtractTokenValue(failure, "stage"));
+        Assert.Equal("Plugin.Tests.ScheduledInstanceTracking", ExtractTokenValue(failure, "plugin"));
+        Assert.Equal("InstanceTracking.Execute", ExtractTokenValue(failure, "operation"));
+        Assert.Equal("scheduled", ExtractTokenValue(failure, "source"));
+        Assert.Equal("InstanceTracking.Once", ExtractTokenValue(failure, "job"));
+        Assert.Equal("ignored", ExtractTokenValue(failure, "outcome"));
+        Assert.Equal("unresolvable-via-di", ExtractTokenValue(failure, "reason"));
+        Assert.Equal(typeof(ScheduledInstanceTrackingPlugin).FullName, ExtractTokenValue(failure, "lifecycleType"));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "diagnostics-determinism")]
+    public void ScheduledExecutionDiagnostics_GivenSuccess_ExpectedIncludesJobAndOperationMetadata()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new ConstructorInjectedScheduleDefinition(
+        [
+            new ConstructorInjectedScheduleRegistration("Payments.SyncLedger.EveryHour", TimeSpan.FromHours(1), "Payments.SyncLedger", "sync-ok")
+        ]));
+        services.AddTransient<ConstructorInjectedScheduledPlugin>();
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+
+        var host = new AssemblyLifecycleHost(provider);
+        var assemblyPath = typeof(ConstructorInjectedScheduledPlugin).Assembly.Location;
+        var descriptor = new PluginDescriptor(
+            new PluginId("Plugin.Tests.ConstructorInjectedScheduled"),
+            "Plugin.Tests.ConstructorInjectedScheduled",
+            new Version(1, 0, 0),
+            [new CapabilityName("Cap.ScheduledContract")],
+            [],
+            AssemblyPath: assemblyPath);
+
+        var diagnostics = host.StartActivatedPlugins([descriptor], ["Plugin.Tests.ConstructorInjectedScheduled"]);
+
+        var successDiagnostics = diagnostics
+            .Where(d => d.Contains("operation=Payments.SyncLedger", StringComparison.Ordinal)
+                && d.Contains("outcome=success", StringComparison.Ordinal))
+            .ToArray();
+
+        var success = Assert.Single(successDiagnostics);
+        Assert.Equal("operation", ExtractTokenValue(success, "stage"));
+        Assert.Equal("Plugin.Tests.ConstructorInjectedScheduled", ExtractTokenValue(success, "plugin"));
+        Assert.Equal("Payments.SyncLedger", ExtractTokenValue(success, "operation"));
+        Assert.Equal("scheduled", ExtractTokenValue(success, "source"));
+        Assert.Equal("Payments.SyncLedger.EveryHour", ExtractTokenValue(success, "job"));
+        Assert.Equal("success", ExtractTokenValue(success, "outcome"));
+        Assert.Equal("sync-ok", ExtractTokenValue(success, "payload"));
+    }
+
+    private static string ExtractTokenValue(string diagnostic, string tokenName)
+    {
+        var marker = $"{tokenName}=";
+        var markerIndex = diagnostic.IndexOf(marker, StringComparison.Ordinal);
+        Assert.True(markerIndex >= 0, $"Diagnostic did not contain '{marker}': {diagnostic}");
+
+        markerIndex += marker.Length;
+        var endIndex = diagnostic.IndexOf(' ', markerIndex);
+        return endIndex >= 0
+            ? diagnostic[markerIndex..endIndex]
+            : diagnostic[markerIndex..];
+    }
+
+    public sealed class ScheduledInstanceTrackingPlugin :
+        IPluginContract,
+        IPluginLifecycle,
+        IPluginScheduledEvents,
+        ISyncResponder
+    {
+        private static int s_instanceCounter;
+        private static volatile int s_activationInstanceId;
+        private readonly int _instanceId = Interlocked.Increment(ref s_instanceCounter);
+
+        public static void Reset()
+        {
+            s_instanceCounter = 0;
+            s_activationInstanceId = 0;
+        }
+
+        public PluginId PluginId => new("Plugin.Tests.ScheduledInstanceTracking");
+        public ContractName ContractName => new("Modus.PluginContract");
+        public Version ContractVersion => new(1, 0, 0);
+
+        public void Load(PluginLoadContext context) { }
+        public void Start(PluginStartContext context) { }
+        public void Stop(PluginStopContext context) { }
+        public void Unload(PluginUnloadContext context) { }
+
+        public void RegisterSchedules(IPluginScheduler scheduler)
+        {
+            s_activationInstanceId = _instanceId;
+            scheduler.ScheduleAt(
+                new JobName("InstanceTracking.Once"),
+                DateTimeOffset.UtcNow,
+                new OperationName("InstanceTracking.Execute"));
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            var isActivated = _instanceId == s_activationInstanceId;
+            return new SyncResponse(
+                Success: true,
+                Payload: $"instanceId={_instanceId} isActivated={isActivated}",
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    public sealed record ConstructorInjectedScheduleRegistration(string JobName, TimeSpan Interval, string Operation, string Payload);
+
+    public sealed class ConstructorInjectedScheduleDefinition(IReadOnlyList<ConstructorInjectedScheduleRegistration> schedules)
+    {
+        public IReadOnlyList<ConstructorInjectedScheduleRegistration> Schedules { get; } = schedules;
+    }
+
+    public sealed class ConstructorInjectedScheduledPlugin(ConstructorInjectedScheduleDefinition definition) :
+        IPluginContract,
+        IPluginLifecycle,
+        IPluginScheduledEvents,
+        ISyncResponder
+    {
+        public PluginId PluginId => new("Plugin.Tests.ConstructorInjectedScheduled");
+
+        public ContractName ContractName => new("Modus.PluginContract");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public void Load(PluginLoadContext context)
+        {
+        }
+
+        public void Start(PluginStartContext context)
+        {
+        }
+
+        public void Stop(PluginStopContext context)
+        {
+        }
+
+        public void Unload(PluginUnloadContext context)
+        {
+        }
+
+        public void RegisterSchedules(IPluginScheduler scheduler)
+        {
+            foreach (var schedule in definition.Schedules)
+            {
+                scheduler.ScheduleRecurring(new JobName(schedule.JobName), schedule.Interval, new OperationName(schedule.Operation));
+            }
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            var match = definition.Schedules.Single(x => x.Operation == request.Operation.Value);
+            return new SyncResponse(Success: true, Payload: match.Payload, CorrelationId: request.CorrelationId);
+        }
+    }
+
     public sealed class TransientRuntimePlugin :
         IPluginDependencyRegister,
         IPluginContract,
@@ -642,6 +1215,314 @@ public sealed class PluginDiConsumptionTests
 
         public void Unload(PluginUnloadContext context)
         {
+        }
+    }
+
+    public sealed class ScopedExecutionTrackingPlugin :
+        IPluginContract,
+        IPluginLifecycle,
+        IPluginScheduledEvents,
+        ISyncResponder
+    {
+        private static int s_activationScopeId;
+        private static string s_activationInstanceId = string.Empty;
+        private readonly int _scopeId;
+        private readonly string _instanceId = Guid.NewGuid().ToString("N");
+
+        public ScopedExecutionTrackingPlugin()
+            : this(-1)
+        {
+        }
+
+        public ScopedExecutionTrackingPlugin(int scopeId)
+        {
+            _scopeId = scopeId;
+        }
+
+        public static void Reset()
+        {
+            s_activationScopeId = 0;
+            s_activationInstanceId = string.Empty;
+        }
+
+        public PluginId PluginId => new("Plugin.Tests.ScopedExecutionTracking");
+
+        public ContractName ContractName => new("Modus.PluginContract");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public void Load(PluginLoadContext context)
+        {
+        }
+
+        public void Start(PluginStartContext context)
+        {
+        }
+
+        public void Stop(PluginStopContext context)
+        {
+        }
+
+        public void Unload(PluginUnloadContext context)
+        {
+        }
+
+        public void RegisterSchedules(IPluginScheduler scheduler)
+        {
+            s_activationScopeId = _scopeId;
+            s_activationInstanceId = _instanceId;
+            scheduler.ScheduleAt(
+                new JobName("ScopedExecution.Once.1"),
+                DateTimeOffset.UtcNow,
+                new OperationName("ScopedExecution.Execute"));
+            scheduler.ScheduleAt(
+                new JobName("ScopedExecution.Once.2"),
+                DateTimeOffset.UtcNow.AddMilliseconds(1),
+                new OperationName("ScopedExecution.Execute"));
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: $"instanceId={_instanceId} activationInstanceId={s_activationInstanceId} scopeId={_scopeId} activationScopeId={s_activationScopeId}",
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    public sealed class SingletonExecutionTrackingPlugin :
+        IPluginContract,
+        IPluginLifecycle,
+        IPluginScheduledEvents,
+        ISyncResponder
+    {
+        private static string s_activationInstanceId = string.Empty;
+        private readonly string _instanceId = Guid.NewGuid().ToString("N");
+
+        public static void Reset()
+        {
+            s_activationInstanceId = string.Empty;
+        }
+
+        public PluginId PluginId => new("Plugin.Tests.SingletonExecutionTracking");
+
+        public ContractName ContractName => new("Modus.PluginContract");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public void Load(PluginLoadContext context)
+        {
+        }
+
+        public void Start(PluginStartContext context)
+        {
+        }
+
+        public void Stop(PluginStopContext context)
+        {
+        }
+
+        public void Unload(PluginUnloadContext context)
+        {
+        }
+
+        public void RegisterSchedules(IPluginScheduler scheduler)
+        {
+            s_activationInstanceId = _instanceId;
+            scheduler.ScheduleAt(
+                new JobName("SingletonExecution.Once.1"),
+                DateTimeOffset.UtcNow,
+                new OperationName("SingletonExecution.Execute"));
+            scheduler.ScheduleAt(
+                new JobName("SingletonExecution.Once.2"),
+                DateTimeOffset.UtcNow.AddMilliseconds(1),
+                new OperationName("SingletonExecution.Execute"));
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: $"instanceId={_instanceId} activationInstanceId={s_activationInstanceId}",
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    public sealed class TransientExecutionTrackingPlugin :
+        IPluginContract,
+        IPluginLifecycle,
+        IPluginScheduledEvents,
+        ISyncResponder
+    {
+        private static string s_activationInstanceId = string.Empty;
+        private readonly string _instanceId = Guid.NewGuid().ToString("N");
+
+        public static void Reset()
+        {
+            s_activationInstanceId = string.Empty;
+        }
+
+        public PluginId PluginId => new("Plugin.Tests.TransientExecutionTracking");
+
+        public ContractName ContractName => new("Modus.PluginContract");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public void Load(PluginLoadContext context)
+        {
+        }
+
+        public void Start(PluginStartContext context)
+        {
+        }
+
+        public void Stop(PluginStopContext context)
+        {
+        }
+
+        public void Unload(PluginUnloadContext context)
+        {
+        }
+
+        public void RegisterSchedules(IPluginScheduler scheduler)
+        {
+            s_activationInstanceId = _instanceId;
+            scheduler.ScheduleAt(
+                new JobName("TransientExecution.Once.1"),
+                DateTimeOffset.UtcNow,
+                new OperationName("TransientExecution.Execute"));
+            scheduler.ScheduleAt(
+                new JobName("TransientExecution.Once.2"),
+                DateTimeOffset.UtcNow.AddMilliseconds(1),
+                new OperationName("TransientExecution.Execute"));
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: $"instanceId={_instanceId} activationInstanceId={s_activationInstanceId}",
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class CountingRootProvider(CountingScopeFactory scopeFactory) : IServiceProvider, IDisposable
+    {
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(IServiceScopeFactory))
+            {
+                return scopeFactory;
+            }
+
+            return null;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class CountingScopeFactory : IServiceScopeFactory, IDisposable
+    {
+        private int _nextScopeId;
+
+        public int CreateScopeCallCount { get; private set; }
+
+        public IServiceScope CreateScope()
+        {
+            CreateScopeCallCount++;
+            return new TrackingScope(Interlocked.Increment(ref _nextScopeId));
+        }
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class TrackingScope(int scopeId) : IServiceScope
+        {
+            public IServiceProvider ServiceProvider { get; } = new ScopeServiceProvider(scopeId);
+
+            public void Dispose()
+            {
+            }
+        }
+
+        private sealed class ScopeServiceProvider(int scopeId) : IServiceProvider
+        {
+            public object? GetService(Type serviceType)
+            {
+                if (serviceType == typeof(ScopedExecutionTrackingPlugin))
+                {
+                    return new ScopedExecutionTrackingPlugin(scopeId);
+                }
+
+                return null;
+            }
+        }
+    }
+
+    private sealed class SingletonTrackingRootProvider(SingletonTrackingScopeFactory scopeFactory) : IServiceProvider, IDisposable
+    {
+        public int PluginResolutionCount { get; private set; }
+
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(IServiceScopeFactory))
+            {
+                return scopeFactory;
+            }
+
+            if (serviceType == typeof(SingletonExecutionTrackingPlugin))
+            {
+                PluginResolutionCount++;
+                return scopeFactory.SingletonInstance;
+            }
+
+            return null;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class SingletonTrackingScopeFactory : IServiceScopeFactory, IDisposable
+    {
+        public SingletonExecutionTrackingPlugin SingletonInstance { get; } = new();
+
+        public int CreateScopeCallCount { get; private set; }
+
+        public IServiceScope CreateScope()
+        {
+            CreateScopeCallCount++;
+            return new TrackingScope(SingletonInstance);
+        }
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class TrackingScope(SingletonExecutionTrackingPlugin singletonInstance) : IServiceScope
+        {
+            public IServiceProvider ServiceProvider { get; } = new ScopeServiceProvider(singletonInstance);
+
+            public void Dispose()
+            {
+            }
+        }
+
+        private sealed class ScopeServiceProvider(SingletonExecutionTrackingPlugin singletonInstance) : IServiceProvider
+        {
+            public object? GetService(Type serviceType)
+            {
+                if (serviceType == typeof(SingletonExecutionTrackingPlugin))
+                {
+                    return singletonInstance;
+                }
+
+                return null;
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ using Modus.Core.Hosting;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
 using Modus.Host.Domain.WebApi;
+using Modus.Host.Plugins.Scanning;
 using Modus.Host.Plugins;
 using Modus.Host.Plugins.Validation;
 using System.Reflection;
@@ -75,8 +76,13 @@ public static class PluginHostingHostExtensions
         services.TryAddSingleton<PluginDiscoveryService>();
         services.TryAddSingleton<PluginValidationService>();
         services.TryAddSingleton<InMemoryHostRuntime>();
+        services.TryAddSingleton<PluginFolderWatcher>(
+            static sp => new PluginFolderWatcher(sp));
         services.TryAddSingleton<HostRunner>(
-            static sp => new HostRunner(sp.GetRequiredService<PluginHostingOptions>()));
+            static sp => new HostRunner(
+                sp.GetRequiredService<PluginHostingOptions>(),
+                sp,
+                sp.GetRequiredService<PluginFolderWatcher>()));
         
         // Register the endpoint mapper that registers plugin operation routes
         services.TryAddSingleton<PluginEndpointMapper>();

@@ -11,19 +11,24 @@ public sealed class HostRunner
     private readonly PluginHostingOptions? _options;
 
     public HostRunner()
-        : this(options: null, new PluginFolderWatcher())
+        : this(options: null, serviceProvider: null, watcher: null)
     {
     }
 
     public HostRunner(PluginHostingOptions options)
-        : this(options, new PluginFolderWatcher())
+        : this(options, serviceProvider: null, watcher: null)
     {
     }
 
-    internal HostRunner(PluginHostingOptions? options, PluginFolderWatcher watcher)
+    public HostRunner(PluginHostingOptions options, IServiceProvider serviceProvider)
+        : this(options, serviceProvider, watcher: null)
+    {
+    }
+
+    internal HostRunner(PluginHostingOptions? options, IServiceProvider? serviceProvider, PluginFolderWatcher? watcher = null)
     {
         _options = options;
-        _watcher = watcher;
+        _watcher = watcher ?? new PluginFolderWatcher(serviceProvider);
     }
 
     public Task<PluginWatcherStartResult> StartAsync(CancellationToken ct)

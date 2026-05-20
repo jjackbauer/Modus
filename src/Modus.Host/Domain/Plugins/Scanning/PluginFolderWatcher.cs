@@ -11,13 +11,25 @@ public sealed class PluginFolderWatcher
     private readonly PluginProjectDescriptorFactory _descriptorFactory = new();
     private readonly PluginLoader _loader = new();
     private readonly InMemoryHostRuntime _runtime = new();
-    private readonly AssemblyLifecycleHost _assemblyLifecycleHost = new();
+    private readonly AssemblyLifecycleHost _assemblyLifecycleHost;
     private readonly HashSet<string> _processedProjectPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _activePluginIds = new(StringComparer.Ordinal);
     private readonly HashSet<string> _failedPluginIds = new(StringComparer.Ordinal);
     private long _discoverySequence;
     private string? _pluginsPath;
     private bool _started;
+
+    public PluginFolderWatcher()
+        : this(serviceProvider: null)
+    {
+    }
+
+    internal PluginFolderWatcher(IServiceProvider? serviceProvider)
+    {
+        _assemblyLifecycleHost = serviceProvider is null
+            ? new AssemblyLifecycleHost()
+            : new AssemblyLifecycleHost(serviceProvider);
+    }
 
     public PluginWatcherStartResult Start(string pluginsPath)
     {

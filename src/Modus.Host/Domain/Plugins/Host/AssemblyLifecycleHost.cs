@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
 using Modus.Host.Plugins.Descriptors;
@@ -8,6 +9,19 @@ namespace Modus.Host.Plugins.Host;
 internal sealed class AssemblyLifecycleHost
 {
     private readonly CancellationTokenSource _lifecycleCts = new();
+    private readonly IServiceProvider? _serviceProvider;
+    private readonly IServiceScopeFactory? _scopeFactory;
+
+    public AssemblyLifecycleHost()
+    {
+    }
+
+    public AssemblyLifecycleHost(IServiceProvider serviceProvider)
+    {
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+        _serviceProvider = serviceProvider;
+        _scopeFactory = serviceProvider.GetService<IServiceScopeFactory>();
+    }
 
     public IReadOnlyList<string> StartActivatedPlugins(
         IReadOnlyList<PluginDescriptor> descriptors,
@@ -39,13 +53,15 @@ internal sealed class AssemblyLifecycleHost
                     .Where(type =>
                         type is { IsAbstract: false, IsInterface: false }
                         && typeof(IPluginLifecycle).IsAssignableFrom(type)
-                        && type.GetConstructor(Type.EmptyTypes) is not null)
+                        && CanActivateLifecycleType(type))
                     .OrderBy(type => type.FullName, StringComparer.Ordinal)
                     .ToArray();
 
                 foreach (var lifecycleType in lifecycleTypes)
                 {
-                    if (Activator.CreateInstance(lifecycleType) is not IPluginLifecycle plugin)
+                    using var activationScope = CreateScope();
+                    var plugin = ResolveActivationLifecyclePluginInstance(lifecycleType, activationScope?.ServiceProvider);
+                    if (plugin is null)
                     {
                         continue;
                     }
@@ -59,7 +75,10 @@ internal sealed class AssemblyLifecycleHost
                     plugin.Start(new PluginStartContext(pluginId, _lifecycleCts.Token));
 
                     diagnostics.Add($"stage=lifecycle plugin={pluginId} outcome=started source={descriptor.PluginId}");
-                    diagnostics.AddRange(RegisterAndRunSchedules(plugin, pluginId.Value));
+                    if (plugin is IPluginScheduledEvents scheduledPlugin)
+                    {
+                        diagnostics.AddRange(RegisterAndRunSchedules(scheduledPlugin, lifecycleType, pluginId.Value));
+                    }
                 }
             }
             catch (Exception ex)
@@ -71,14 +90,12 @@ internal sealed class AssemblyLifecycleHost
         return diagnostics;
     }
 
-    private IReadOnlyList<string> RegisterAndRunSchedules(IPluginLifecycle plugin, string pluginId)
+    private IReadOnlyList<string> RegisterAndRunSchedules(
+        IPluginScheduledEvents scheduledPlugin,
+        Type lifecycleType,
+        string pluginId)
     {
         var diagnostics = new List<string>();
-
-        if (plugin is not IPluginScheduledEvents scheduledPlugin)
-        {
-            return diagnostics;
-        }
 
         var scheduler = new RecordingPluginScheduler();
 
@@ -99,7 +116,7 @@ internal sealed class AssemblyLifecycleHost
         {
             diagnostics.Add(
                 $"stage=scheduling plugin={pluginId} job={recurring.JobName} intervalMs={recurring.Interval.TotalMilliseconds:F0} operation={recurring.Operation} outcome=registered");
-            diagnostics.AddRange(ExecuteScheduledOperation(plugin, pluginId, recurring.JobName, recurring.Operation));
+            diagnostics.AddRange(ExecuteScheduledOperation(lifecycleType, pluginId, recurring.JobName, recurring.Operation));
 
             var token = _lifecycleCts.Token;
             var interval = recurring.Interval;
@@ -110,7 +127,7 @@ internal sealed class AssemblyLifecycleHost
                 using var timer = new PeriodicTimer(interval);
                 while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
                 {
-                    ExecuteScheduledOperation(plugin, pluginId, jobName, operation);
+                    ExecuteScheduledOperation(lifecycleType, pluginId, jobName, operation);
                 }
             }, CancellationToken.None);
         }
@@ -122,19 +139,44 @@ internal sealed class AssemblyLifecycleHost
         {
             diagnostics.Add(
                 $"stage=scheduling plugin={pluginId} job={oneTime.JobName} runAt={oneTime.RunAt:O} operation={oneTime.Operation} outcome=registered");
-            diagnostics.AddRange(ExecuteScheduledOperation(plugin, pluginId, oneTime.JobName, oneTime.Operation));
+            diagnostics.AddRange(ExecuteScheduledOperation(lifecycleType, pluginId, oneTime.JobName, oneTime.Operation));
         }
 
         return diagnostics;
     }
 
-    private static IReadOnlyList<string> ExecuteScheduledOperation(
-        IPluginLifecycle plugin,
+    private IReadOnlyList<string> ExecuteScheduledOperation(
+        Type lifecycleType,
         string pluginId,
         string jobName,
         string operation)
     {
-        if (plugin is not ISyncResponder responder)
+        using var scope = CreateScope();
+        if (ResolveScheduledLifecyclePluginInstance(lifecycleType, scope?.ServiceProvider) is IPluginLifecycle runtimePlugin)
+        {
+            return ExecuteScheduledOperationOnResolvedPlugin(runtimePlugin, pluginId, jobName, operation);
+        }
+
+        return [CreateUnresolvableScheduledLifecycleDiagnostic(lifecycleType, pluginId, jobName, operation)];
+    }
+
+    private static string CreateUnresolvableScheduledLifecycleDiagnostic(
+        Type lifecycleType,
+        string pluginId,
+        string jobName,
+        string operation)
+    {
+        var lifecycleTypeName = lifecycleType.FullName ?? lifecycleType.Name;
+        return $"stage=operation plugin={pluginId} operation={operation} source=scheduled job={jobName} outcome=ignored reason=unresolvable-via-di lifecycleType={lifecycleTypeName}";
+    }
+
+    private static IReadOnlyList<string> ExecuteScheduledOperationOnResolvedPlugin(
+        IPluginLifecycle runtimePlugin,
+        string pluginId,
+        string jobName,
+        string operation)
+    {
+        if (runtimePlugin is not ISyncResponder responder)
         {
             return [$"stage=operation plugin={pluginId} operation={operation} source=scheduled job={jobName} outcome=ignored reason=sync responder missing"];
         }
@@ -154,6 +196,58 @@ internal sealed class AssemblyLifecycleHost
             return [$"stage=operation plugin={pluginId} operation={operation} source=scheduled job={jobName} outcome=failure reason={ex.Message}"];
         }
     }
+
+    private IPluginLifecycle? ResolveActivationLifecyclePluginInstance(Type lifecycleType, IServiceProvider? provider)
+    {
+        if (ResolveLifecyclePluginFromProvider(provider, lifecycleType) is IPluginLifecycle resolvedFromScope)
+        {
+            return resolvedFromScope;
+        }
+
+        if (ResolveLifecyclePluginFromProvider(_serviceProvider, lifecycleType) is IPluginLifecycle resolvedFromRoot)
+        {
+            return resolvedFromRoot;
+        }
+
+        if (provider is not null || _serviceProvider is not null)
+        {
+            return null;
+        }
+
+        return Activator.CreateInstance(lifecycleType) as IPluginLifecycle;
+    }
+
+    private IPluginLifecycle? ResolveScheduledLifecyclePluginInstance(Type lifecycleType, IServiceProvider? provider)
+    {
+        var resolutionProvider = provider ?? _serviceProvider;
+        return ResolveLifecyclePluginFromProvider(resolutionProvider, lifecycleType);
+    }
+
+    private bool CanActivateLifecycleType(Type lifecycleType)
+    {
+        if (_serviceProvider is not null)
+        {
+            return true;
+        }
+
+        return lifecycleType.GetConstructor(Type.EmptyTypes) is not null;
+    }
+
+    private static IPluginLifecycle? ResolveLifecyclePluginFromProvider(IServiceProvider? provider, Type lifecycleType)
+    {
+        return provider?.GetService(lifecycleType) as IPluginLifecycle;
+    }
+
+    private IServiceScope? CreateScope()
+    {
+        if (_scopeFactory is null)
+        {
+            return null;
+        }
+
+        return _scopeFactory.CreateScope();
+    }
+
 
     private sealed class RecordingPluginScheduler : IPluginScheduler
     {

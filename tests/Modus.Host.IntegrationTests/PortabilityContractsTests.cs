@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Hosting;
 using Modus.Host.Hosting;
+using Modus.Host.Plugins.Scanning;
 using Xunit;
 
 namespace Modus.Host.IntegrationTests;
@@ -184,5 +185,24 @@ public sealed class PortabilityContractsTests
         using var provider = services.BuildServiceProvider();
         var runner = provider.GetRequiredService<HostRunner>();
         Assert.NotNull(runner);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "di-registration-lambda")]
+    public void AddModusPluginHostingRuntime_GivenProviderBuild_ExpectedPluginFolderWatcherResolvableFromDi()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(new PluginHostingOptions());
+
+        services.AddModusPluginHostingRuntime();
+
+        using var provider = services.BuildServiceProvider();
+
+        var watcher1 = provider.GetRequiredService<PluginFolderWatcher>();
+        var watcher2 = provider.GetRequiredService<PluginFolderWatcher>();
+        var runner = provider.GetRequiredService<HostRunner>();
+
+        Assert.NotNull(runner);
+        Assert.Same(watcher1, watcher2);
     }
 }
