@@ -13,7 +13,7 @@ public sealed class StandardPluginAuthoringWorkflowTests
     {
         var plugin = new StandardWorkflowPlugin(
             pluginId: "Plugin.Standard.Compliant",
-            supportedOperations: ["Ops.Alpha", "Ops.Beta"]);
+            supportedOperations: [new OperationName("Ops.Alpha"), new OperationName("Ops.Beta")]);
 
         var validation = PluginContractValidator.Validate(
             plugin,
@@ -26,9 +26,9 @@ public sealed class StandardPluginAuthoringWorkflowTests
         var runtime = new InMemoryHostRuntime();
         var descriptor = new PluginDescriptor(
             PluginId: plugin.PluginId,
-            AssemblyName: plugin.PluginId,
+            AssemblyName: plugin.PluginId.Value,
             Version: new Version(1, 0, 0),
-            Capabilities: ["Cap.Standard"],
+            Capabilities: [new CapabilityName("Cap.Standard")],
             DependsOn: [],
             DeclaredOperations: plugin.SupportedOperations.ToList());
 
@@ -36,7 +36,7 @@ public sealed class StandardPluginAuthoringWorkflowTests
 
         Assert.True(validation.IsValid);
         Assert.Empty(validation.MissingCapabilities);
-        Assert.Contains(plugin.PluginId, result.ActivatedPluginIds);
+        Assert.Contains(plugin.PluginId.Value, result.ActivatedPluginIds);
         Assert.Contains($"stage=activation plugin={plugin.PluginId} outcome=success", result.Diagnostics, StringComparer.Ordinal);
         Assert.Contains($"stage=operation plugin={plugin.PluginId} operation=Ops.Alpha outcome=success", result.Diagnostics, StringComparer.Ordinal);
     }
@@ -66,7 +66,7 @@ public sealed class StandardPluginAuthoringWorkflowTests
             var secondOperationDiagnostic = Assert.Single(
                 secondRun.Diagnostics.Where(x => x.StartsWith("stage=operation plugin=Plugin.Standard.Ordered", StringComparison.Ordinal)));
 
-            Assert.Equal(["Ops.Alpha", "Ops.Beta", "Ops.Zeta"], descriptor.DeclaredOperations);
+            Assert.Equal([new OperationName("Ops.Alpha"), new OperationName("Ops.Beta"), new OperationName("Ops.Zeta")], descriptor.DeclaredOperations);
             Assert.Equal(
                 "stage=operation plugin=Plugin.Standard.Ordered operation=Ops.Alpha outcome=success",
                 firstOperationDiagnostic);
@@ -86,19 +86,19 @@ public sealed class StandardPluginAuthoringWorkflowTests
         ISyncResponder,
         IPluginRegistrationPolicy
     {
-        public StandardWorkflowPlugin(string pluginId, IReadOnlyCollection<string> supportedOperations)
+        public StandardWorkflowPlugin(string pluginId, IReadOnlyCollection<OperationName> supportedOperations)
         {
-            PluginId = pluginId;
+            PluginId = new PluginId(pluginId);
             SupportedOperations = supportedOperations;
         }
 
-        public string PluginId { get; }
+        public PluginId PluginId { get; }
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
-        public IReadOnlyCollection<string> SupportedOperations { get; }
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; }
 
         public void Load(PluginLoadContext context)
         {
@@ -128,9 +128,9 @@ public sealed class StandardPluginAuthoringWorkflowTests
         public IReadOnlyList<PluginRegistrationStep> BuildRegistrationPlan(IPluginContract plugin)
         {
             var steps = SupportedOperations
-                .OrderBy(x => x, StringComparer.Ordinal)
-                .Distinct(StringComparer.Ordinal)
-                .Select((operation, index) => new PluginRegistrationStep(index + 1, PluginRegistrationStepKind.RegisterOperation, operation))
+                .OrderBy(x => x.Value, StringComparer.Ordinal)
+                .DistinctBy(x => x.Value, StringComparer.Ordinal)
+                .Select((operation, index) => new PluginRegistrationStep(index + 1, PluginRegistrationStepKind.RegisterOperation, operation.Value))
                 .ToArray();
 
             return steps;

@@ -4,7 +4,7 @@ using Modus.Core.Messaging;
 
 public interface IScheduledTimerTaskExtension : IPluginOperationCatalog, IPluginScheduledEvents, ISyncResponder
 {
-	new IReadOnlyCollection<string> SupportedOperations { get; }
+	new IReadOnlyCollection<OperationName> SupportedOperations { get; }
 
 	new void RegisterSchedules(IPluginScheduler scheduler);
 

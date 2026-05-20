@@ -1,3 +1,4 @@
+using Modus.Core.Plugins;
 using Modus.Host.Plugins;
 using Xunit;
 
@@ -19,11 +20,11 @@ public sealed class ConcretePluginArtifactsTests
         var first = descriptorFactory.Create(projectPath);
         var second = descriptorFactory.Create(projectPath);
 
-        Assert.Equal("Plugin.Payments.Gateway", first.PluginId);
-        Assert.Equal("Plugin.Payments.Gateway", second.PluginId);
+        Assert.Equal(new PluginId("Plugin.Payments.Gateway"), first.PluginId);
+        Assert.Equal(new PluginId("Plugin.Payments.Gateway"), second.PluginId);
         Assert.Equal(new Version(2, 1, 0), first.Version);
         Assert.Equal(first.Version, second.Version);
-        Assert.Equal(["Cap.Billing", "Cap.Payments"], first.Capabilities);
+        Assert.Equal([new CapabilityName("Cap.Billing"), new CapabilityName("Cap.Payments")], first.Capabilities);
         Assert.Equal(first.Capabilities, second.Capabilities);
     }
 
@@ -41,12 +42,12 @@ public sealed class ConcretePluginArtifactsTests
 
         var firstPass = projectPaths
             .Select(descriptorFactory.Create)
-            .OrderBy(x => x.PluginId, StringComparer.Ordinal)
+            .OrderBy(x => x.PluginId.Value, StringComparer.Ordinal)
             .ToArray();
 
         var secondPass = projectPaths
             .Select(descriptorFactory.Create)
-            .OrderBy(x => x.PluginId, StringComparer.Ordinal)
+            .OrderBy(x => x.PluginId.Value, StringComparer.Ordinal)
             .ToArray();
 
         Assert.Equal(
@@ -59,8 +60,8 @@ public sealed class ConcretePluginArtifactsTests
             Assert.NotEmpty(descriptor.DeclaredOperations!);
 
             var expectedOperations = descriptor.DeclaredOperations!
-                .OrderBy(x => x, StringComparer.Ordinal)
-                .Distinct(StringComparer.Ordinal)
+                .OrderBy(x => x.Value, StringComparer.Ordinal)
+                .Distinct()
                 .ToArray();
 
             Assert.Equal(expectedOperations, descriptor.DeclaredOperations);

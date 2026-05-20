@@ -1,3 +1,4 @@
+using Modus.Core.Plugins;
 using Modus.Host.Plugins.Validation;
 using Xunit;
 
@@ -11,14 +12,14 @@ public sealed class DiscoveryValidationPipelineTests
         var discovery = new PluginDiscoveryService();
         var input = new[]
         {
-            new PluginDescriptor("Plugin.C", "Plugin.C", new Version(1, 0), ["Cap.C"], []),
-            new PluginDescriptor("Plugin.A", "Plugin.A", new Version(1, 0), ["Cap.A"], []),
-            new PluginDescriptor("Plugin.B", "Plugin.B", new Version(1, 0), ["Cap.B"], []),
+            new PluginDescriptor(new PluginId("Plugin.C"), "Plugin.C", new Version(1, 0), [new CapabilityName("Cap.C")], []),
+            new PluginDescriptor(new PluginId("Plugin.A"), "Plugin.A", new Version(1, 0), [new CapabilityName("Cap.A")], []),
+            new PluginDescriptor(new PluginId("Plugin.B"), "Plugin.B", new Version(1, 0), [new CapabilityName("Cap.B")], []),
         };
 
         var discovered = discovery.Discover(input);
 
-        Assert.Equal(["Plugin.A", "Plugin.B", "Plugin.C"], discovered.Select(x => x.PluginId).ToArray());
+        Assert.Equal(["Plugin.A", "Plugin.B", "Plugin.C"], discovered.Select(x => x.PluginId.Value).ToArray());
     }
 
     [Fact]
@@ -26,10 +27,10 @@ public sealed class DiscoveryValidationPipelineTests
     {
         var validation = new PluginValidationService();
         var descriptor = new PluginDescriptor(
-            "Plugin.ContractsInvalid",
+            new PluginId("Plugin.ContractsInvalid"),
             "Plugin.ContractsInvalid",
             new Version(1, 0),
-            ["Cap.ContractsInvalid"],
+            [new CapabilityName("Cap.ContractsInvalid")],
             [],
             IsContractCompliant: false,
             IsValidAssembly: true);
@@ -45,10 +46,10 @@ public sealed class DiscoveryValidationPipelineTests
     {
         var validation = new PluginValidationService();
         var descriptor = new PluginDescriptor(
-            "Plugin.AssemblyInvalid",
+            new PluginId("Plugin.AssemblyInvalid"),
             "Plugin.AssemblyInvalid",
             new Version(1, 0),
-            ["Cap.AssemblyInvalid"],
+            [new CapabilityName("Cap.AssemblyInvalid")],
             [],
             IsContractCompliant: true,
             IsValidAssembly: false);

@@ -40,7 +40,7 @@ public class PluginEndpointMapper
 
         // Build a lookup of plugin IDs to contracts for quick access
         var contractsByPluginId = _contracts
-            .ToDictionary(c => c.PluginId, StringComparer.Ordinal);
+            .ToDictionary(c => c.PluginId.Value, StringComparer.Ordinal);
 
         // For each operation catalog, find its corresponding contract and register routes
         var processedCatalogs = new HashSet<IPluginOperationCatalog>();
@@ -78,12 +78,12 @@ public class PluginEndpointMapper
                     routePattern,
                     async (PluginOperationHttpRequest request) =>
                     {
-                        return await HandlePluginOperation(request, capturedOperation, capturedCatalog);
+                        return await HandlePluginOperation(request, capturedOperation.Value, capturedCatalog);
                     })
                     .WithName($"PluginOperation_{pluginId}_{operation}")
                     .WithOpenApi()
-                    .WithTags(pluginId)
-                    .WithSummary(operation)
+                    .WithTags(pluginId.Value)
+                    .WithSummary(operation.Value)
                     .WithDescription($"{capturedContract.ContractName} v{capturedContract.ContractVersion}");
             }
         }
@@ -104,11 +104,11 @@ public class PluginEndpointMapper
         {
             // Create a SyncRequest from the HTTP request
             var syncRequest = new SyncRequest(
-                Operation: operation,
+                Operation: new OperationName(operation),
                 IsFallbackExplicit: false,
                 FallbackReason: SyncFallbackReason.None,
                 FallbackReasonCode: null,
-                CorrelationId: request.CorrelationId);
+                CorrelationId: request.CorrelationId is not null ? new CorrelationId(request.CorrelationId) : null);
 
             // Try to get the responder from the catalog first (if it implements ISyncResponder)
             // Otherwise, use the first available responder from the dispatcher
@@ -122,8 +122,8 @@ public class PluginEndpointMapper
             {
                 Success = response.Success,
                 Payload = response.Payload,
-                Status = response.Status.ToString(),
-                CorrelationId = response.CorrelationId
+                Status = response.Status,
+                CorrelationId = response.CorrelationId?.Value
             };
 
             // Determine HTTP status code based on SyncResponseStatus
@@ -144,7 +144,7 @@ public class PluginEndpointMapper
             {
                 Success = false,
                 Payload = ex.Message,
-                Status = SyncResponseStatus.Failed.ToString(),
+                Status = SyncResponseStatus.Failed,
                 CorrelationId = request.CorrelationId
             };
 

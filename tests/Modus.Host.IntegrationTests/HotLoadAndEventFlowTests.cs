@@ -10,7 +10,7 @@ public sealed class HotLoadAndEventFlowTests
     public void LifecycleStateMachine_GivenValidPlugin_ExpectedOrderedStateProgressionToActive()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.Valid", IsValid: true, FailOnActivation: false);
+        var plugin = new PluginSpec(new PluginId("Plugin.Valid"), IsValid: true, FailOnActivation: false);
 
         var result = engine.HotLoad(plugin);
 
@@ -31,7 +31,7 @@ public sealed class HotLoadAndEventFlowTests
     public void LifecycleStateMachine_GivenValidationFailure_ExpectedTransitionToFailedWithoutHostTermination()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.Invalid", IsValid: false, FailOnActivation: false);
+        var plugin = new PluginSpec(new PluginId("Plugin.Invalid"), IsValid: false, FailOnActivation: false);
 
         var result = engine.HotLoad(plugin);
 
@@ -44,7 +44,7 @@ public sealed class HotLoadAndEventFlowTests
     public void Rollback_GivenActivationFailureAfterRegistration_ExpectedStateTransitionToRollbackPendingThenFailed()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.Rollback", IsValid: true, FailOnActivation: true);
+        var plugin = new PluginSpec(new PluginId("Plugin.Rollback"), IsValid: true, FailOnActivation: true);
 
         var result = engine.HotLoad(plugin);
 
@@ -59,7 +59,7 @@ public sealed class HotLoadAndEventFlowTests
                 PluginRuntimeState.Failed,
             ],
             result.Transitions);
-        Assert.DoesNotContain("Plugin.Rollback", engine.ActivePluginIds);
+        Assert.DoesNotContain(new PluginId("Plugin.Rollback"), engine.ActivePluginIds);
         Assert.Contains("rollback complete", result.Diagnostics, StringComparer.Ordinal);
     }
 
@@ -67,7 +67,7 @@ public sealed class HotLoadAndEventFlowTests
     public void HotUnload_GivenPluginDeactivationRequest_ExpectedTransitionFromActiveToDeactivatingToUnloaded()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.Unload", IsValid: true, FailOnActivation: false);
+        var plugin = new PluginSpec(new PluginId("Plugin.Unload"), IsValid: true, FailOnActivation: false);
         engine.HotLoad(plugin);
 
         var unload = engine.HotUnload(plugin.PluginId);
@@ -81,7 +81,7 @@ public sealed class HotLoadAndEventFlowTests
     public void LifecyclePhases_GivenHotLoad_ExpectedDeterministicPhaseDiagnostics()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.Phases", IsValid: true, FailOnActivation: false);
+        var plugin = new PluginSpec(new PluginId("Plugin.Phases"), IsValid: true, FailOnActivation: false);
 
         var result = engine.HotLoad(plugin);
 
@@ -101,7 +101,7 @@ public sealed class HotLoadAndEventFlowTests
     public void LifecyclePhases_GivenHotUnload_ExpectedDeterministicPhaseDiagnosticsAndRegistryCleanup()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.Unload.Phases", IsValid: true, FailOnActivation: false);
+        var plugin = new PluginSpec(new PluginId("Plugin.Unload.Phases"), IsValid: true, FailOnActivation: false);
         engine.HotLoad(plugin);
 
         var unload = engine.HotUnload(plugin.PluginId);
@@ -119,7 +119,7 @@ public sealed class HotLoadAndEventFlowTests
     public void RetryPolicy_GivenRepeatedPluginFailures_ExpectedPluginQuarantinedAfterConfiguredThreshold()
     {
         var engine = new InMemoryLifecycleEngine(quarantineThreshold: 3);
-        var plugin = new PluginSpec("Plugin.Flaky", IsValid: true, FailOnActivation: true);
+        var plugin = new PluginSpec(new PluginId("Plugin.Flaky"), IsValid: true, FailOnActivation: true);
 
         engine.HotLoad(plugin);
         engine.HotLoad(plugin);
@@ -127,8 +127,8 @@ public sealed class HotLoadAndEventFlowTests
 
         Assert.True(third.HostHealthy);
         Assert.True(third.Quarantined);
-        Assert.Equal(3, engine.GetFailureCount(plugin.PluginId));
-        Assert.Contains(plugin.PluginId, engine.QuarantinedPluginIds);
+        Assert.Equal(3, engine.GetFailureCount(plugin.PluginId.Value));
+        Assert.Contains(plugin.PluginId.Value, engine.QuarantinedPluginIds);
     }
 
     [Fact]
@@ -137,11 +137,11 @@ public sealed class HotLoadAndEventFlowTests
         var engine = new InMemoryLifecycleEngine(quarantineThreshold: 3);
         const string pluginId = "Plugin.Flaky.Reset";
 
-        engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: true));
-        engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: true));
+        engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: true));
+        engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: true));
 
-        var recovered = engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: false));
-        var failedAfterRecovery = engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: true));
+        var recovered = engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: false));
+        var failedAfterRecovery = engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: true));
 
         Assert.True(recovered.HostHealthy);
         Assert.False(recovered.Quarantined);
@@ -156,9 +156,9 @@ public sealed class HotLoadAndEventFlowTests
         var engine = new InMemoryLifecycleEngine(quarantineThreshold: 2);
         const string pluginId = "Plugin.Flaky.Quarantined";
 
-        engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: true));
-        var secondFailure = engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: true));
-        var rejected = engine.HotLoad(new PluginSpec(pluginId, IsValid: true, FailOnActivation: true));
+        engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: true));
+        var secondFailure = engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: true));
+        var rejected = engine.HotLoad(new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: true));
 
         Assert.True(secondFailure.Quarantined);
         Assert.True(rejected.Quarantined);
@@ -175,24 +175,24 @@ public sealed class HotLoadAndEventFlowTests
     public void EventFlow_GivenPublishedEvent_ExpectedCrossModuleHandlerExecutionThroughContracts()
     {
         var engine = new InMemoryLifecycleEngine();
-        var auth = new PluginSpec("Plugin.Auth", IsValid: true, FailOnActivation: false);
-        var billing = new PluginSpec("Plugin.Billing", IsValid: true, FailOnActivation: false);
+        var auth = new PluginSpec(new PluginId("Plugin.Auth"), IsValid: true, FailOnActivation: false);
+        var billing = new PluginSpec(new PluginId("Plugin.Billing"), IsValid: true, FailOnActivation: false);
         engine.HotLoad(auth);
         engine.HotLoad(billing);
 
         var dispatch = engine.Publish(new DomainEvent("OrderPlaced"));
 
         Assert.Equal(2, dispatch.DeliveredCount);
-        Assert.Equal(1, engine.GetReceivedEvents("Plugin.Auth"));
-        Assert.Equal(1, engine.GetReceivedEvents("Plugin.Billing"));
+        Assert.Equal(1, engine.GetReceivedEvents(new PluginId("Plugin.Auth")));
+        Assert.Equal(1, engine.GetReceivedEvents(new PluginId("Plugin.Billing")));
     }
 
     [Fact]
     public void EventFlow_GivenPluginHotUnloaded_ExpectedUnloadedPluginStopsReceivingEvents()
     {
         var engine = new InMemoryLifecycleEngine();
-        var auth = new PluginSpec("Plugin.Auth.Unload", IsValid: true, FailOnActivation: false);
-        var billing = new PluginSpec("Plugin.Billing.Unload", IsValid: true, FailOnActivation: false);
+        var auth = new PluginSpec(new PluginId("Plugin.Auth.Unload"), IsValid: true, FailOnActivation: false);
+        var billing = new PluginSpec(new PluginId("Plugin.Billing.Unload"), IsValid: true, FailOnActivation: false);
 
         engine.HotLoad(auth);
         engine.HotLoad(billing);
@@ -218,12 +218,12 @@ public sealed class HotLoadAndEventFlowTests
         for (var i = 0; i < 10; i++)
         {
             var pluginId = $"Plugin.Cycle.{i}";
-            var plugin = new PluginSpec(pluginId, IsValid: true, FailOnActivation: false);
+            var plugin = new PluginSpec(new PluginId(pluginId), IsValid: true, FailOnActivation: false);
 
             var load = engine.HotLoad(plugin);
             Assert.True(load.HostHealthy);
 
-            var unload = engine.HotUnload(pluginId);
+            var unload = engine.HotUnload(new PluginId(pluginId));
             Assert.True(unload.HostHealthy);
         }
 
@@ -255,8 +255,8 @@ public sealed class HotLoadAndEventFlowTests
             Assert.True(onboarding.HostHealthy);
             Assert.True(onboarding.EventAccepted);
             Assert.True(onboarding.PluginActivated);
-            Assert.Equal("Plugin.Inventory", onboarding.PluginId);
-            Assert.Contains("Plugin.Inventory", onboarding.ActivePluginIds);
+            Assert.Equal(new PluginId("Plugin.Inventory"), onboarding.PluginId);
+            Assert.Contains(new PluginId("Plugin.Inventory"), onboarding.ActivePluginIds);
             Assert.Contains("stage=activation plugin=Plugin.Inventory outcome=success", onboarding.Diagnostics, StringComparer.Ordinal);
         }
         finally
@@ -294,16 +294,67 @@ public sealed class HotLoadAndEventFlowTests
             Assert.True(badOnboarding.HostHealthy);
             Assert.True(badOnboarding.EventAccepted);
             Assert.False(badOnboarding.PluginActivated);
-            Assert.Contains("Plugin.Bad", badOnboarding.FailedPluginIds);
+            Assert.Contains(new PluginId("Plugin.Bad"), badOnboarding.FailedPluginIds);
 
             Assert.True(goodOnboarding.HostHealthy);
             Assert.True(goodOnboarding.PluginActivated);
-            Assert.Contains("Plugin.Good", goodOnboarding.ActivePluginIds);
-            Assert.DoesNotContain("Plugin.Good", goodOnboarding.FailedPluginIds);
+            Assert.Contains(new PluginId("Plugin.Good"), goodOnboarding.ActivePluginIds);
+            Assert.DoesNotContain(new PluginId("Plugin.Good"), goodOnboarding.FailedPluginIds);
         }
         finally
         {
             Directory.Delete(root, recursive: true);
         }
+    }
+
+    [Fact]
+    public void InMemoryLifecycleEngine_ActivePluginIds_GivenActivatedPlugin_ReturnsPluginIdCollection()
+    {
+        var engine = new InMemoryLifecycleEngine();
+        var plugin = new PluginSpec(new PluginId("Plugin.TypeCheck"), IsValid: true, FailOnActivation: false);
+        engine.HotLoad(plugin);
+
+        var activeIds = engine.ActivePluginIds;
+
+        Assert.IsAssignableFrom<IReadOnlyCollection<PluginId>>(activeIds);
+        Assert.Contains(plugin.PluginId, activeIds);
+    }
+
+    [Fact]
+    public void InMemoryLifecycleEngine_HotUnload_GivenTypedPluginId_RemovesPlugin()
+    {
+        var engine = new InMemoryLifecycleEngine();
+        var plugin = new PluginSpec(new PluginId("Plugin.TypedUnload"), IsValid: true, FailOnActivation: false);
+        engine.HotLoad(plugin);
+
+        var result = engine.HotUnload(plugin.PluginId);
+
+        Assert.True(result.HostHealthy);
+        Assert.DoesNotContain(plugin.PluginId, engine.ActivePluginIds);
+    }
+
+    [Fact]
+    public void InMemoryLifecycleEngine_GetReceivedEvents_GivenTypedPluginId_ReturnsCount()
+    {
+        var engine = new InMemoryLifecycleEngine();
+        var plugin = new PluginSpec(new PluginId("Plugin.EventCount"), IsValid: true, FailOnActivation: false);
+        engine.HotLoad(plugin);
+        engine.Publish(new DomainEvent("TestEvent"));
+
+        var count = engine.GetReceivedEvents(plugin.PluginId);
+
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public void InMemoryLifecycleEngine_HotLoad_GivenPluginSpecWithTypedPluginId_ActivatesPlugin()
+    {
+        var engine = new InMemoryLifecycleEngine();
+        var plugin = new PluginSpec(new PluginId("Plugin.TypedLoad"), IsValid: true, FailOnActivation: false);
+
+        var result = engine.HotLoad(plugin);
+
+        Assert.True(result.HostHealthy);
+        Assert.Contains(plugin.PluginId, engine.ActivePluginIds);
     }
 }

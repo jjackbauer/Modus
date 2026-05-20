@@ -19,9 +19,9 @@ internal sealed class AssemblyLifecycleHost
         var diagnostics = new List<string>();
         var activatedSet = activatedPluginIds.ToHashSet(StringComparer.Ordinal);
 
-        foreach (var descriptor in descriptors.OrderBy(x => x.PluginId, StringComparer.Ordinal))
+        foreach (var descriptor in descriptors.OrderBy(x => x.PluginId.Value, StringComparer.Ordinal))
         {
-            if (!activatedSet.Contains(descriptor.PluginId))
+            if (!activatedSet.Contains(descriptor.PluginId.Value))
             {
                 continue;
             }
@@ -50,15 +50,16 @@ internal sealed class AssemblyLifecycleHost
                         continue;
                     }
 
-                    var pluginId = (plugin as IPluginContract)?.PluginId
+                    var pluginIdString = (plugin as IPluginContract)?.PluginId.Value
                         ?? lifecycleType.FullName
                         ?? lifecycleType.Name;
+                    var pluginId = new PluginId(pluginIdString);
 
                     plugin.Load(new PluginLoadContext(pluginId, _lifecycleCts.Token));
                     plugin.Start(new PluginStartContext(pluginId, _lifecycleCts.Token));
 
                     diagnostics.Add($"stage=lifecycle plugin={pluginId} outcome=started source={descriptor.PluginId}");
-                    diagnostics.AddRange(RegisterAndRunSchedules(plugin, pluginId));
+                    diagnostics.AddRange(RegisterAndRunSchedules(plugin, pluginId.Value));
                 }
             }
             catch (Exception ex)
@@ -140,7 +141,7 @@ internal sealed class AssemblyLifecycleHost
 
         try
         {
-            var response = responder.Handle(SyncRequest.ForStandardPath(operation, correlationId: $"scheduled:{jobName}"));
+            var response = responder.Handle(SyncRequest.ForStandardPath(new OperationName(operation), correlationId: new CorrelationId($"scheduled:{jobName}")));
             if (!response.Success)
             {
                 return [$"stage=operation plugin={pluginId} operation={operation} source=scheduled job={jobName} outcome=failure reason={response.Payload}"];
@@ -160,14 +161,14 @@ internal sealed class AssemblyLifecycleHost
 
         public List<OneTimeSchedule> OneTimeSchedules { get; } = [];
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
-            RecurringSchedules.Add(new RecurringSchedule(jobName, interval, operation));
+            RecurringSchedules.Add(new RecurringSchedule(jobName.Value, interval, operation.Value));
         }
 
-        public void ScheduleAt(string jobName, DateTimeOffset runAt, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation)
         {
-            OneTimeSchedules.Add(new OneTimeSchedule(jobName, runAt, operation));
+            OneTimeSchedules.Add(new OneTimeSchedule(jobName.Value, runAt, operation.Value));
         }
 
         public sealed record RecurringSchedule(string JobName, TimeSpan Interval, string Operation);

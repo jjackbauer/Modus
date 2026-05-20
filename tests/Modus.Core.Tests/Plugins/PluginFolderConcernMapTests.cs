@@ -145,10 +145,10 @@ public sealed class PluginFolderConcernMapTests
         Assert.IsAssignableFrom<IPluginContract>(hostConsumer);
         Assert.IsAssignableFrom<IPluginContract>(machineConsumer);
 
-        Assert.Equal("host-plugin", hostConsumer.PluginId);
-        Assert.Equal("machine-plugin", machineConsumer.PluginId);
-        Assert.Equal("Modus.PluginContract", hostConsumer.ContractName);
-        Assert.Equal("Modus.PluginContract", machineConsumer.ContractName);
+        Assert.Equal(new PluginId("host-plugin"), hostConsumer.PluginId);
+        Assert.Equal(new PluginId("machine-plugin"), machineConsumer.PluginId);
+        Assert.Equal(new ContractName("Modus.PluginContract"), hostConsumer.ContractName);
+        Assert.Equal(new ContractName("Modus.PluginContract"), machineConsumer.ContractName);
         Assert.Equal(new Version(1, 0), hostConsumer.ContractVersion);
         Assert.Equal(new Version(1, 0), machineConsumer.ContractVersion);
     }
@@ -182,18 +182,18 @@ public sealed class PluginFolderConcernMapTests
     public void LifecycleMove_GivenLifecycleContextsRelocated_ExpectedLifecycleConsumersResolveTypes()
     {
         var cancellationToken = new CancellationTokenSource().Token;
-        var loadContext = new PluginLoadContext("plugin-a", cancellationToken);
-        var startContext = new PluginStartContext("plugin-a", cancellationToken);
-        var stopContext = new PluginStopContext("plugin-a", cancellationToken);
+        var loadContext = new PluginLoadContext(new PluginId("plugin-a"), cancellationToken);
+        var startContext = new PluginStartContext(new PluginId("plugin-a"), cancellationToken);
+        var stopContext = new PluginStopContext(new PluginId("plugin-a"), cancellationToken);
         var unloadContext = new PluginUnloadContext(
-            "plugin-a",
+            new PluginId("plugin-a"),
             PluginUnloadReason.Reload,
             new DateTimeOffset(2026, 5, 19, 0, 0, 0, TimeSpan.Zero),
             cancellationToken);
 
-        Assert.Equal("plugin-a", loadContext.PluginId);
-        Assert.Equal("plugin-a", startContext.PluginId);
-        Assert.Equal("plugin-a", stopContext.PluginId);
+        Assert.Equal(new PluginId("plugin-a"), loadContext.PluginId);
+        Assert.Equal(new PluginId("plugin-a"), startContext.PluginId);
+        Assert.Equal(new PluginId("plugin-a"), stopContext.PluginId);
         Assert.Equal(PluginUnloadReason.Reload, unloadContext.UnloadReason);
 
         var repoRoot = FindRepositoryRoot();
@@ -340,8 +340,8 @@ public sealed class PluginFolderConcernMapTests
 
         var plugin = new DerivedBasePlugin("base-move-plugin");
 
-        Assert.Equal("base-move-plugin", plugin.PluginId);
-        Assert.Equal("Modus.PluginContract", plugin.ContractName);
+        Assert.Equal(new PluginId("base-move-plugin"), plugin.PluginId);
+        Assert.Equal(new ContractName("Modus.PluginContract"), plugin.ContractName);
         Assert.Equal(new Version(1, 0), plugin.ContractVersion);
     }
 
@@ -363,15 +363,15 @@ public sealed class PluginFolderConcernMapTests
 
         plugin.RegisterSchedules(scheduler);
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
 
         Assert.True(response.Success);
         Assert.Single(writes, utcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
         Assert.Single(scheduler.RecurringSchedules);
         var schedule = scheduler.RecurringSchedules[0];
-        Assert.Equal("Timer.WriteCurrentTime.Every5Seconds", schedule.JobName);
+        Assert.Equal(new JobName("Timer.WriteCurrentTime.Every5Seconds"), schedule.JobName);
         Assert.Equal(TimeSpan.FromSeconds(5), schedule.Interval);
-        Assert.Equal("Timer.WriteCurrentTime", schedule.Operation);
+        Assert.Equal(new OperationName("Timer.WriteCurrentTime"), schedule.Operation);
     }
 
     [Fact]
@@ -501,9 +501,9 @@ public sealed class PluginFolderConcernMapTests
         Assert.Empty(compliantResult.MissingCapabilities);
 
         Assert.False(invalidResult.IsValid);
-        Assert.Contains(nameof(IPluginLifecycle), invalidResult.MissingCapabilities);
-        Assert.Contains(nameof(IPluginOperationCatalog), invalidResult.MissingCapabilities);
-        Assert.Contains(nameof(IPluginRegistrationPolicy), invalidResult.MissingCapabilities);
+        Assert.Contains(new CapabilityName(nameof(IPluginLifecycle)), invalidResult.MissingCapabilities);
+        Assert.Contains(new CapabilityName(nameof(IPluginOperationCatalog)), invalidResult.MissingCapabilities);
+        Assert.Contains(new CapabilityName(nameof(IPluginRegistrationPolicy)), invalidResult.MissingCapabilities);
     }
 
     [Fact]
@@ -536,7 +536,7 @@ public sealed class PluginFolderConcernMapTests
         plugin.Start(new PluginStartContext(plugin.PluginId, CancellationToken.None));
         plugin.RegisterSchedules(scheduler);
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime", "corr-regression-runtime"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime"), new CorrelationId("corr-regression-runtime")));
 
         plugin.Stop(new PluginStopContext(plugin.PluginId, CancellationToken.None));
         plugin.Unload(new PluginUnloadContext(
@@ -547,13 +547,13 @@ public sealed class PluginFolderConcernMapTests
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("corr-regression-runtime", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-regression-runtime"), response.CorrelationId);
         Assert.Equal([utcNow.ToString("O", System.Globalization.CultureInfo.InvariantCulture)], writes);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Timer.WriteCurrentTime.Every5Seconds", recurring.JobName);
+        Assert.Equal(new JobName("Timer.WriteCurrentTime.Every5Seconds"), recurring.JobName);
         Assert.Equal(TimeSpan.FromSeconds(5), recurring.Interval);
-        Assert.Equal("Timer.WriteCurrentTime", recurring.Operation);
+        Assert.Equal(new OperationName("Timer.WriteCurrentTime"), recurring.Operation);
     }
 
     private static string FindRepositoryRoot()
@@ -587,18 +587,18 @@ public sealed class PluginFolderConcernMapTests
 
     private sealed class HostTelemetryConsumerPlugin(string pluginId) : IHostTelemetryPluginContract
     {
-        public string PluginId { get; } = pluginId;
+        public PluginId PluginId { get; } = new PluginId(pluginId);
 
-        public string ContractName { get; } = "Modus.PluginContract";
+        public ContractName ContractName { get; } = new ContractName("Modus.PluginContract");
 
         public Version ContractVersion { get; } = new(1, 0);
     }
 
     private sealed class MachineTelemetryConsumerPlugin(string pluginId) : IMachineTelemetryPluginContract
     {
-        public string PluginId { get; } = pluginId;
+        public PluginId PluginId { get; } = new PluginId(pluginId);
 
-        public string ContractName { get; } = "Modus.PluginContract";
+        public ContractName ContractName { get; } = new ContractName("Modus.PluginContract");
 
         public Version ContractVersion { get; } = new(1, 0);
     }
@@ -611,13 +611,13 @@ public sealed class PluginFolderConcernMapTests
         IEventSubscriber,
         ISyncResponder
     {
-        public string PluginId { get; } = pluginId;
+        public PluginId PluginId { get; } = new PluginId(pluginId);
 
-        public string ContractName { get; } = "Modus.PluginContract";
+        public ContractName ContractName { get; } = new ContractName("Modus.PluginContract");
 
         public Version ContractVersion { get; } = new(1, 0);
 
-        public IReadOnlyCollection<string> SupportedOperations { get; } = ["ping"];
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; } = [new OperationName("ping")];
 
         public void Load(PluginLoadContext context)
         {
@@ -662,13 +662,13 @@ public sealed class PluginFolderConcernMapTests
         IEventSubscriber,
         ISyncResponder
     {
-        public string PluginId { get; } = "registration-plugin";
+        public PluginId PluginId { get; } = new PluginId("registration-plugin");
 
-        public string ContractName { get; } = "Modus.PluginContract";
+        public ContractName ContractName { get; } = new ContractName("Modus.PluginContract");
 
         public Version ContractVersion { get; } = new(1, 0);
 
-        public IReadOnlyCollection<string> SupportedOperations { get; } = operations;
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; } = operations.Select(op => new OperationName(op)).ToArray();
 
         public void Load(PluginLoadContext context)
         {
@@ -702,9 +702,9 @@ public sealed class PluginFolderConcernMapTests
 
     private sealed class ValidationIncompletePlugin : IPluginContract, IEventSubscriber, ISyncResponder
     {
-        public string PluginId { get; } = "regression-invalid";
+        public PluginId PluginId { get; } = new PluginId("regression-invalid");
 
-        public string ContractName { get; } = "Modus.PluginContract";
+        public ContractName ContractName { get; } = new ContractName("Modus.PluginContract");
 
         public Version ContractVersion { get; } = new(1, 0);
 
@@ -744,31 +744,22 @@ public sealed class PluginFolderConcernMapTests
 
     private sealed class DerivedBasePlugin(string pluginId) : PluginBase
     {
-        public override string PluginId { get; } = pluginId;
+        public override PluginId PluginId { get; } = new PluginId(pluginId);
 
         public override Version ContractVersion { get; } = new(1, 0);
     }
 
     private sealed class RecordingScheduler : IPluginScheduler
     {
-        public List<(string JobName, TimeSpan Interval, string Operation)> RecurringSchedules { get; } = [];
+        public List<(JobName JobName, TimeSpan Interval, OperationName Operation)> RecurringSchedules { get; } = [];
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
             RecurringSchedules.Add((jobName, interval, operation));
         }
 
-        public void ScheduleOneTime(string jobName, DateTimeOffset when, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset when, OperationName operation)
         {
-        }
-
-        public void ScheduleAt(string jobName, DateTimeOffset when, string operation)
-        {
-        }
-
-        public bool TryCancel(string jobName)
-        {
-            return false;
         }
     }
 }

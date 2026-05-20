@@ -14,8 +14,7 @@ public sealed class DeterministicPluginRegistrationPolicy : IPluginRegistrationP
         if (plugin is IPluginOperationCatalog operationCatalog)
         {
             var operations = operationCatalog.SupportedOperations
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x.Trim())
+                .Select(x => x.Value.Trim())
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(x => x, StringComparer.Ordinal)
                 .ToArray();

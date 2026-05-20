@@ -9,7 +9,7 @@ public sealed class PluginDiscoveryService
         ArgumentNullException.ThrowIfNull(descriptors);
 
         return descriptors
-            .OrderBy(x => x.PluginId, StringComparer.Ordinal)
+            .OrderBy(x => x.PluginId.Value, StringComparer.Ordinal)
             .ToList();
     }
 }

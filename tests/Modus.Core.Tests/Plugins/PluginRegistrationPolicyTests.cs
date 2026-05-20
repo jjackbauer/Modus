@@ -58,26 +58,26 @@ public sealed class PluginRegistrationPolicyTests
         var result = PluginContractValidator.Validate(plugin, validationPolicy);
 
         Assert.False(result.IsValid);
-        Assert.Contains(nameof(IPluginRegistrationPolicy), result.MissingCapabilities);
+        Assert.Contains(new CapabilityName(nameof(IPluginRegistrationPolicy)), result.MissingCapabilities);
     }
 
     private sealed class PluginWithEventsAndSchedules : IPluginContract, IPluginLifecycle, IPluginOperationCatalog, IEventSubscriber, ISyncResponder, IPluginScheduledEvents
     {
         public PluginWithEventsAndSchedules(string pluginId, IReadOnlyCollection<string> operations)
         {
-            PluginId = pluginId;
-            SupportedOperations = operations;
-            ContractName = "Modus.PluginContract";
+            PluginId = new PluginId(pluginId);
+            SupportedOperations = operations.Select(op => new OperationName(op)).ToArray();
+            ContractName = new ContractName("Modus.PluginContract");
             ContractVersion = new Version(1, 0);
         }
 
-        public string PluginId { get; }
+        public PluginId PluginId { get; }
 
-        public string ContractName { get; }
+        public ContractName ContractName { get; }
 
         public Version ContractVersion { get; }
 
-        public IReadOnlyCollection<string> SupportedOperations { get; }
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; }
 
         public void Load(PluginLoadContext context)
         {
@@ -113,19 +113,19 @@ public sealed class PluginRegistrationPolicyTests
     {
         public PluginWithCatalogOnly(string pluginId, IReadOnlyCollection<string> operations)
         {
-            PluginId = pluginId;
-            SupportedOperations = operations;
-            ContractName = "Modus.PluginContract";
+            PluginId = new PluginId(pluginId);
+            SupportedOperations = operations.Select(op => new OperationName(op)).ToArray();
+            ContractName = new ContractName("Modus.PluginContract");
             ContractVersion = new Version(1, 0);
         }
 
-        public string PluginId { get; }
+        public PluginId PluginId { get; }
 
-        public string ContractName { get; }
+        public ContractName ContractName { get; }
 
         public Version ContractVersion { get; }
 
-        public IReadOnlyCollection<string> SupportedOperations { get; }
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; }
 
         public void Load(PluginLoadContext context)
         {
@@ -153,18 +153,18 @@ public sealed class PluginRegistrationPolicyTests
     {
         public PluginMissingRegistrationPolicy(string pluginId, string contractName, Version contractVersion)
         {
-            PluginId = pluginId;
-            ContractName = contractName;
+            PluginId = new PluginId(pluginId);
+            ContractName = new ContractName(contractName);
             ContractVersion = contractVersion;
         }
 
-        public string PluginId { get; }
+        public PluginId PluginId { get; }
 
-        public string ContractName { get; }
+        public ContractName ContractName { get; }
 
         public Version ContractVersion { get; }
 
-        public IReadOnlyCollection<string> SupportedOperations { get; } = ["ping"];
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; } = [new OperationName("ping")];
 
         public void Load(PluginLoadContext context)
         {

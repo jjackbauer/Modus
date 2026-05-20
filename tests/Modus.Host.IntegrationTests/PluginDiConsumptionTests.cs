@@ -201,13 +201,13 @@ public sealed class PluginDiConsumptionTests
 
                 // Assert: Verify that plugin contracts and capabilities are accessible.
                 Assert.NotNull(hostTelemetry);
-                Assert.Equal("Plugin.Host.Telemetry", hostTelemetry.PluginId);
-                Assert.Equal("Modus.PluginContract", hostTelemetry.ContractName);
+                Assert.Equal(new PluginId("Plugin.Host.Telemetry"), hostTelemetry.PluginId);
+                Assert.Equal(new ContractName("Modus.PluginContract"), hostTelemetry.ContractName);
                 Assert.Equal(new Version(1, 0, 0), hostTelemetry.ContractVersion);
 
                 Assert.NotNull(machineTelemetry);
-                Assert.Equal("Plugin.Machine.Telemetry", machineTelemetry.PluginId);
-                Assert.Equal("Modus.PluginContract", machineTelemetry.ContractName);
+                Assert.Equal(new PluginId("Plugin.Machine.Telemetry"), machineTelemetry.PluginId);
+                Assert.Equal(new ContractName("Modus.PluginContract"), machineTelemetry.ContractName);
                 Assert.Equal(new Version(1, 0, 0), machineTelemetry.ContractVersion);
             }
 
@@ -242,7 +242,7 @@ public sealed class PluginDiConsumptionTests
                 Assert.NotNull(hostTelemetry);
                 var supportedOps = hostTelemetry.SupportedOperations;
                 Assert.Single(supportedOps);
-                Assert.Contains("Telemetry.Host.CollectSnapshot", supportedOps);
+                Assert.Contains(new OperationName("Telemetry.Host.CollectSnapshot"), supportedOps);
             }
 
             GC.Collect();
@@ -393,7 +393,7 @@ public sealed class PluginDiConsumptionTests
                 var request = new SyncRequest(
                     Operation: supportedOp,
                     IsFallbackExplicit: false,
-                    CorrelationId: Guid.NewGuid().ToString());
+                    CorrelationId: new CorrelationId(Guid.NewGuid().ToString()));
                 var response = syncResponder.Handle(request);
 
                 Assert.True(response.Success);
@@ -617,9 +617,9 @@ public sealed class PluginDiConsumptionTests
 
         public Guid InstanceId { get; }
 
-        public string PluginId => "Tests.HostIntegration.TransientRuntimePlugin";
+        public PluginId PluginId => new PluginId("Tests.HostIntegration.TransientRuntimePlugin");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0, 0);
 

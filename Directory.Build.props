@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <EmbedAllSources>true</EmbedAllSources>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Ricardo Medeiros</Authors>
+    <Company>Modus</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/jackbauer/Modus</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jackbauer/Modus</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>plugin;monolith;modular;extensibility</PackageTags>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Copyright>Copyright © Ricardo Medeiros 2026</Copyright>
+  </PropertyGroup>
+</Project>

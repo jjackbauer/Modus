@@ -1,3 +1,5 @@
+using Modus.Core.Messaging;
+using Modus.Core.Plugins;
 using Modus.Host.Diagnostics;
 using Modus.Host.Plugins.Lifecycle;
 
@@ -13,14 +15,14 @@ internal sealed class PluginIsolationBoundary
     }
 
     public void IsolateFailure(
-        string pluginId,
+        PluginId pluginId,
         string failedStage,
         IEnumerable<string> failureReasons,
         ISet<string> failedPluginIds,
         List<string> diagnostics,
         RegistrationTransactionLog? transactionLog = null)
     {
-        failedPluginIds.Add(pluginId);
+        failedPluginIds.Add(pluginId.Value);
 
         foreach (var failureReason in failureReasons)
         {
@@ -29,7 +31,7 @@ internal sealed class PluginIsolationBoundary
 
         if (transactionLog is not null)
         {
-            PluginRollbackCoordinator.Rollback(pluginId, transactionLog, diagnostics);
+            PluginRollbackCoordinator.Rollback(pluginId.Value, transactionLog, diagnostics);
         }
 
         diagnostics.Add(_failureReporter.Isolation(failedStage, pluginId));
@@ -37,16 +39,16 @@ internal sealed class PluginIsolationBoundary
     }
 
     public void IsolateOperationFailure(
-        string pluginId,
-        string operation,
+        PluginId pluginId,
+        OperationName operation,
         string reason,
         ISet<string> failedPluginIds,
         List<string> diagnostics,
         RegistrationTransactionLog transactionLog)
     {
-        failedPluginIds.Add(pluginId);
+        failedPluginIds.Add(pluginId.Value);
         diagnostics.Add(_failureReporter.OperationFailure(pluginId, operation, reason));
-        PluginRollbackCoordinator.Rollback(pluginId, transactionLog, diagnostics);
+        PluginRollbackCoordinator.Rollback(pluginId.Value, transactionLog, diagnostics);
         diagnostics.Add(_failureReporter.Isolation("operation", pluginId));
         diagnostics.Add(_failureReporter.ContinuityPreserved());
     }

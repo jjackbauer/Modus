@@ -4,13 +4,13 @@ namespace Modus.Core.Plugins;
 
 public abstract class PluginBase : IPluginContract, IPluginLifecycle, IPluginOperationCatalog, IPluginScheduledEvents
 {
-    public virtual string PluginId => GetType().FullName ?? GetType().Name;
+    public virtual PluginId PluginId => new PluginId(GetType().FullName ?? GetType().Name);
 
-    public virtual string ContractName => "Modus.PluginContract";
+    public virtual ContractName ContractName => new ContractName("Modus.PluginContract");
 
     public virtual Version ContractVersion => new(1, 0, 0);
 
-    public virtual IReadOnlyCollection<string> SupportedOperations => Array.Empty<string>();
+    public virtual IReadOnlyCollection<OperationName> SupportedOperations => Array.Empty<OperationName>();
 
     public virtual void Load(PluginLoadContext context)
     {

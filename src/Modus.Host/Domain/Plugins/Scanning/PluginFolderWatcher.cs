@@ -1,3 +1,4 @@
+using Modus.Core.Plugins;
 using Modus.Host.Plugins.Descriptors;
 using Modus.Host.Plugins.Host;
 using Modus.Host.Plugins.Lifecycle;
@@ -154,13 +155,13 @@ public sealed class PluginFolderWatcher
                 HostHealthy: true,
                 EventAccepted: true,
                 PluginActivated: false,
-                PluginId: Path.GetFileNameWithoutExtension(fullPath),
+                PluginId: new PluginId(Path.GetFileNameWithoutExtension(fullPath)!),
                 ActivePluginIds: Snapshot(_activePluginIds),
                 FailedPluginIds: Snapshot(_failedPluginIds),
                 Diagnostics: [.. discoveryDiagnostics, $"stage=descriptor outcome=failure reason={ex.Message}"]);
         }
 
-        if (_activePluginIds.Contains(descriptor.PluginId))
+        if (_activePluginIds.Contains(descriptor.PluginId.Value))
         {
             return CreateIgnoredResult($"stage=discovery sequence={sequence:D4} outcome=ignored reason=plugin already active plugin={descriptor.PluginId}");
         }
@@ -177,7 +178,7 @@ public sealed class PluginFolderWatcher
             _failedPluginIds.Add(pluginId);
         }
 
-        var activated = hostResult.ActivatedPluginIds.Contains(descriptor.PluginId, StringComparer.Ordinal);
+        var activated = hostResult.ActivatedPluginIds.Contains(descriptor.PluginId.Value, StringComparer.Ordinal);
 
         return new PluginOnboardingResult(
             HostHealthy: hostResult.Started,
@@ -222,9 +223,9 @@ public sealed class PluginFolderWatcher
             || string.Equals(fullPath, _pluginsPath, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static IReadOnlyList<string> Snapshot(HashSet<string> source)
+    private static IReadOnlyList<PluginId> Snapshot(HashSet<string> source)
     {
-        return source.OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        return source.OrderBy(x => x, StringComparer.Ordinal).Select(x => new PluginId(x)).ToArray();
     }
 
     private static bool IsInScopePluginProject(string fullPath)

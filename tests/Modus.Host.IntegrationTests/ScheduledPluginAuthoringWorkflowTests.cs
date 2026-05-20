@@ -30,9 +30,9 @@ public sealed class ScheduledPluginAuthoringWorkflowTests
         Assert.Empty(validation.MissingCapabilities);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Payments.SyncLedger.EveryHour", recurring.JobName);
+        Assert.Equal(new JobName("Payments.SyncLedger.EveryHour"), recurring.JobName);
         Assert.Equal(TimeSpan.FromHours(1), recurring.Interval);
-        Assert.Equal("Payments.SyncLedger", recurring.Operation);
+        Assert.Equal(new OperationName("Payments.SyncLedger"), recurring.Operation);
         Assert.Contains(recurring.Operation, plugin.SupportedOperations);
     }
 
@@ -52,7 +52,7 @@ public sealed class ScheduledPluginAuthoringWorkflowTests
             });
 
         Assert.False(validation.IsValid);
-        Assert.Contains(nameof(IPluginScheduledEvents), validation.MissingCapabilities, StringComparer.Ordinal);
+        Assert.Contains(new CapabilityName(nameof(IPluginScheduledEvents)), validation.MissingCapabilities);
     }
 
     private sealed class RecordingPluginScheduler : IPluginScheduler
@@ -61,20 +61,20 @@ public sealed class ScheduledPluginAuthoringWorkflowTests
 
         public List<OneTimeSchedule> OneTimeSchedules { get; } = [];
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
             RecurringSchedules.Add(new RecurringSchedule(jobName, interval, operation));
         }
 
-        public void ScheduleAt(string jobName, DateTimeOffset runAt, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation)
         {
             OneTimeSchedules.Add(new OneTimeSchedule(jobName, runAt, operation));
         }
     }
 
-    private sealed record RecurringSchedule(string JobName, TimeSpan Interval, string Operation);
+    private sealed record RecurringSchedule(JobName JobName, TimeSpan Interval, OperationName Operation);
 
-    private sealed record OneTimeSchedule(string JobName, DateTimeOffset RunAt, string Operation);
+    private sealed record OneTimeSchedule(JobName JobName, DateTimeOffset RunAt, OperationName Operation);
 
     private sealed class ScheduledWorkflowPlugin :
         IPluginContract,
@@ -89,18 +89,18 @@ public sealed class ScheduledPluginAuthoringWorkflowTests
 
         public ScheduledWorkflowPlugin(string pluginId, string operation, TimeSpan recurringInterval)
         {
-            PluginId = pluginId;
+            PluginId = new PluginId(pluginId);
             _operation = operation;
             _recurringInterval = recurringInterval;
         }
 
-        public string PluginId { get; }
+        public PluginId PluginId { get; }
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
-        public IReadOnlyCollection<string> SupportedOperations => ["Payments.EmitSettlement", _operation];
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName("Payments.EmitSettlement"), new OperationName(_operation)];
 
         public void Load(PluginLoadContext context)
         {
@@ -122,9 +122,9 @@ public sealed class ScheduledPluginAuthoringWorkflowTests
         {
             ArgumentNullException.ThrowIfNull(scheduler);
             scheduler.ScheduleRecurring(
-                jobName: "Payments.SyncLedger.EveryHour",
+                jobName: new JobName("Payments.SyncLedger.EveryHour"),
                 interval: _recurringInterval,
-                operation: _operation);
+                operation: new OperationName(_operation));
         }
 
         public void Subscribe(IEventPublisher publisher)
@@ -146,17 +146,17 @@ public sealed class ScheduledPluginAuthoringWorkflowTests
     {
         public StandardOnlyWorkflowPlugin(string pluginId, string operation)
         {
-            PluginId = pluginId;
-            SupportedOperations = [operation];
+            PluginId = new PluginId(pluginId);
+            SupportedOperations = [new OperationName(operation)];
         }
 
-        public string PluginId { get; }
+        public PluginId PluginId { get; }
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
-        public IReadOnlyCollection<string> SupportedOperations { get; }
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; }
 
         public void Load(PluginLoadContext context)
         {

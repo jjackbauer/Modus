@@ -2,7 +2,7 @@ namespace Modus.Core.Plugins;
 
 public interface IPluginScheduler
 {
-    void ScheduleRecurring(string jobName, TimeSpan interval, string operation);
+    void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation);
 
-    void ScheduleAt(string jobName, DateTimeOffset runAt, string operation);
+    void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation);
 }

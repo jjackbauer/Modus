@@ -1,3 +1,4 @@
+using Modus.Core.Plugins;
 using Xunit;
 
 namespace Modus.Host.IntegrationTests;
@@ -31,8 +32,8 @@ public sealed class DescriptorValidationGateTests
             Assert.True(onboarding.HostHealthy);
             Assert.True(onboarding.EventAccepted);
             Assert.False(onboarding.PluginActivated);
-            Assert.Equal(projectName, onboarding.PluginId);
-            Assert.Contains(projectName, onboarding.FailedPluginIds);
+            Assert.Equal(new PluginId(projectName), onboarding.PluginId);
+            Assert.Contains(new PluginId(projectName), onboarding.FailedPluginIds);
             Assert.Contains($"stage=validation plugin={projectName} outcome=failure reason={expectedReason}", onboarding.Diagnostics, StringComparer.Ordinal);
             Assert.Contains($"stage=isolation plugin={projectName} failed-stage=validation outcome=isolated", onboarding.Diagnostics, StringComparer.Ordinal);
             Assert.Contains("stage=continuity outcome=preserved", onboarding.Diagnostics, StringComparer.Ordinal);

@@ -1,4 +1,6 @@
 using Modus.Core.Events;
+using Modus.Core.Messaging;
+using Modus.Core.Plugins;
 using Xunit;
 
 namespace Modus.Core.Tests.Events;
@@ -30,17 +32,17 @@ public sealed class EventContractsTests
         var eventId = Guid.Parse("11111111-2222-3333-4444-555555555555");
         var envelope = new DomainEventEnvelope(
             Event: new DomainEvent("OrderCreated"),
-            SourcePluginId: "Plugin.Orders",
+            SourcePluginId: new PluginId("Plugin.Orders"),
             OccurredAtUtc: occurredAt,
             EventId: eventId,
-            CorrelationId: "corr-123",
+            CorrelationId: new CorrelationId("corr-123"),
             Headers: new Dictionary<string, string> { ["tenant"] = "alpha" });
 
         Assert.Equal("OrderCreated", envelope.Event.Name);
-        Assert.Equal("Plugin.Orders", envelope.SourcePluginId);
+        Assert.Equal(new PluginId("Plugin.Orders"), envelope.SourcePluginId);
         Assert.Equal(occurredAt, envelope.OccurredAtUtc);
         Assert.Equal(eventId, envelope.EventId);
-        Assert.Equal("corr-123", envelope.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-123"), envelope.CorrelationId);
         Assert.Equal("alpha", envelope.Headers["tenant"]);
     }
 
@@ -53,12 +55,24 @@ public sealed class EventContractsTests
 
         publisher.Publish(new DomainEventEnvelope(
             Event: new DomainEvent("InventoryReserved"),
-            SourcePluginId: "Plugin.Inventory"));
+            SourcePluginId: new PluginId("Plugin.Inventory")));
 
         var received = Assert.Single(subscriber.ReceivedEnvelopes);
         Assert.Equal("InventoryReserved", received.Event.Name);
-        Assert.Equal("Plugin.Inventory", received.SourcePluginId);
+        Assert.Equal(new PluginId("Plugin.Inventory"), received.SourcePluginId);
         Assert.NotEqual(Guid.Empty, received.EventId);
+    }
+
+    [Fact]
+    public void DomainEventEnvelope_SourcePluginId_PropertyType_IsPluginId()
+    {
+        Assert.Equal(typeof(PluginId), typeof(DomainEventEnvelope).GetProperty(nameof(DomainEventEnvelope.SourcePluginId))!.PropertyType);
+    }
+
+    [Fact]
+    public void DomainEventEnvelope_CorrelationId_PropertyType_IsNullableCorrelationId()
+    {
+        Assert.Equal(typeof(CorrelationId?), typeof(DomainEventEnvelope).GetProperty(nameof(DomainEventEnvelope.CorrelationId))!.PropertyType);
     }
 
     private sealed class InMemoryEventPublisher : IEventPublisher
@@ -67,7 +81,7 @@ public sealed class EventContractsTests
 
         public void Publish(DomainEvent @event)
         {
-            Publish(new DomainEventEnvelope(@event, SourcePluginId: "host"));
+            Publish(new DomainEventEnvelope(@event, SourcePluginId: new PluginId("host")));
         }
 
         public void Publish(DomainEventEnvelope envelope)

@@ -52,8 +52,8 @@ public sealed class TimerPluginLifecycleTests
     {
         var plugin = new TimerPlugin();
 
-        Assert.Equal("Plugin.Timer", plugin.PluginId);
-        Assert.Equal("Modus.PluginContract", plugin.ContractName);
+        Assert.Equal(new PluginId("Plugin.Timer"), plugin.PluginId);
+        Assert.Equal(new ContractName("Modus.PluginContract"), plugin.ContractName);
         Assert.Equal(new Version(1, 0, 0), plugin.ContractVersion);
     }
 
@@ -104,7 +104,7 @@ public sealed class TimerPluginLifecycleTests
     {
         var plugin = new TimerPlugin(new StubScheduledTimerTaskExtension("Timer.Custom.One"));
 
-        Assert.Equal(["Timer.Custom.One"], plugin.SupportedOperations);
+        Assert.Equal([new OperationName("Timer.Custom.One")], plugin.SupportedOperations);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public sealed class TimerPluginLifecycleTests
             new MultiOperationScheduledTimerTaskExtension("Timer.Zulu", "Timer.Alpha"),
             new MultiOperationScheduledTimerTaskExtension("Timer.Beta"));
 
-        Assert.Equal(["Timer.Alpha", "Timer.Beta", "Timer.Zulu"], plugin.SupportedOperations);
+        Assert.Equal([new OperationName("Timer.Alpha"), new OperationName("Timer.Beta"), new OperationName("Timer.Zulu")], plugin.SupportedOperations);
     }
 
     [Fact]
@@ -124,7 +124,7 @@ public sealed class TimerPluginLifecycleTests
             new MultiOperationScheduledTimerTaskExtension("Timer.Beta", "Timer.Alpha", "Timer.Beta", "timer.alpha"),
             new MultiOperationScheduledTimerTaskExtension("Timer.Alpha", "Timer.Gamma"));
 
-        Assert.Equal(["Timer.Alpha", "Timer.Beta", "Timer.Gamma", "timer.alpha"], plugin.SupportedOperations);
+        Assert.Equal([new OperationName("Timer.Alpha"), new OperationName("Timer.Beta"), new OperationName("Timer.Gamma"), new OperationName("timer.alpha")], plugin.SupportedOperations);
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public sealed class TimerPluginLifecycleTests
     {
         var plugin = new TimerPlugin();
 
-        Assert.Equal(["Timer.WriteCurrentTime"], plugin.SupportedOperations);
+        Assert.Equal([new OperationName("Timer.WriteCurrentTime")], plugin.SupportedOperations);
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public sealed class TimerPluginLifecycleTests
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
         Assert.Equal(TimeSpan.FromSeconds(5), recurring.Interval);
-        Assert.Equal("Timer.WriteCurrentTime", recurring.Operation);
+        Assert.Equal(new OperationName("Timer.WriteCurrentTime"), recurring.Operation);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public sealed class TimerPluginLifecycleTests
         plugin.RegisterSchedules(scheduler);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Timer.WriteCurrentTime.Every5Seconds", recurring.JobName);
+        Assert.Equal(new JobName("Timer.WriteCurrentTime.Every5Seconds"), recurring.JobName);
         Assert.Contains(recurring.Operation, plugin.SupportedOperations);
     }
 
@@ -186,8 +186,8 @@ public sealed class TimerPluginLifecycleTests
         plugin.RegisterSchedules(scheduler);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Timer.Custom.One.EverySecond", recurring.JobName);
-        Assert.Equal("Timer.Custom.One", recurring.Operation);
+        Assert.Equal(new JobName("Timer.Custom.One.EverySecond"), recurring.JobName);
+        Assert.Equal(new OperationName("Timer.Custom.One"), recurring.Operation);
     }
 
     [Fact]
@@ -218,8 +218,8 @@ public sealed class TimerPluginLifecycleTests
         Assert.Equal(defaultSchedule, explicitSchedule);
         Assert.Equal(defaultPlugin.SupportedOperations, explicitPlugin.SupportedOperations);
 
-        var defaultResponse = defaultPlugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime", "corr-default"));
-        var explicitResponse = explicitPlugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime", "corr-explicit"));
+        var defaultResponse = defaultPlugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime"), new CorrelationId("corr-default")));
+        var explicitResponse = explicitPlugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime"), new CorrelationId("corr-explicit")));
 
         Assert.True(defaultResponse.Success);
         Assert.True(explicitResponse.Success);
@@ -237,15 +237,15 @@ public sealed class TimerPluginLifecycleTests
 
         plugin.RegisterSchedules(scheduler);
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Timer.Custom.Composite.EverySecond", recurring.JobName);
-        Assert.Equal("Timer.Custom.Composite", recurring.Operation);
+        Assert.Equal(new JobName("Timer.Custom.Composite.EverySecond"), recurring.JobName);
+        Assert.Equal(new OperationName("Timer.Custom.Composite"), recurring.Operation);
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Timer.Custom.Composite", "corr-custom"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.Custom.Composite"), new CorrelationId("corr-custom")));
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal("handled:Timer.Custom.Composite", response.Payload);
-        Assert.Equal("corr-custom", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-custom"), response.CorrelationId);
         Assert.Equal(1, extension.HandleCallCount);
     }
 
@@ -285,16 +285,16 @@ public sealed class TimerPluginLifecycleTests
 
         Assert.Equal(
             [
-                "Timer.Custom.First.Every15Seconds",
-                "Timer.Custom.First.EveryMinute",
-                "Timer.Custom.Second.Every5Seconds"
+                new JobName("Timer.Custom.First.Every15Seconds"),
+                new JobName("Timer.Custom.First.EveryMinute"),
+                new JobName("Timer.Custom.Second.Every5Seconds")
             ],
             scheduler.RecurringSchedules.Select(static schedule => schedule.JobName).ToArray());
 
         Assert.Equal(
             [
-                "Timer.Custom.First.Bootstrap",
-                "Timer.Custom.Second.Warmup"
+                new JobName("Timer.Custom.First.Bootstrap"),
+                new JobName("Timer.Custom.Second.Warmup")
             ],
             scheduler.OneTimeSchedules.Select(static schedule => schedule.JobName).ToArray());
     }
@@ -381,11 +381,11 @@ public sealed class TimerPluginLifecycleTests
         var writes = new List<string>();
         var plugin = new TimerPlugin(() => fixedTimestamp, writes.Add);
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime", "corr-1"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime"), new CorrelationId("corr-1")));
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("corr-1", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-1"), response.CorrelationId);
         Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), response.Payload);
         Assert.Equal([response.Payload], writes);
     }
@@ -399,8 +399,8 @@ public sealed class TimerPluginLifecycleTests
         var writes = new List<string>();
         var plugin = new TimerPlugin(() => sequence.Dequeue(), writes.Add);
 
-        var firstResponse = plugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime"));
-        var secondResponse = plugin.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime"));
+        var firstResponse = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
+        var secondResponse = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
 
         Assert.NotEqual(firstResponse.Payload, secondResponse.Payload);
         Assert.Equal(2, writes.Count);
@@ -415,7 +415,7 @@ public sealed class TimerPluginLifecycleTests
         var beta = new RoutingAwareScheduledTimerTaskExtension("Timer.Custom.Beta");
         var plugin = new TimerPlugin(alpha, beta);
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Timer.Custom.Beta", "corr-route"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.Custom.Beta"), new CorrelationId("corr-route")));
 
         Assert.True(response.Success);
         Assert.Equal("handled:Timer.Custom.Beta", response.Payload);
@@ -429,27 +429,27 @@ public sealed class TimerPluginLifecycleTests
         var alpha = new RoutingAwareScheduledTimerTaskExtension("Timer.Custom.Alpha");
         var plugin = new TimerPlugin(alpha);
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Timer.Custom.Unknown", "corr-unknown"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.Custom.Unknown"), new CorrelationId("corr-unknown")));
 
         Assert.False(response.Success);
         Assert.Equal(SyncResponseStatus.Rejected, response.Status);
         Assert.Equal("unsupported-operation", response.Payload);
-        Assert.Equal("corr-unknown", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-unknown"), response.CorrelationId);
         Assert.Equal(0, alpha.HandleCallCount);
     }
 
     private sealed class RecordingScheduler : IPluginScheduler
     {
-        public List<(string JobName, TimeSpan Interval, string Operation)> RecurringSchedules { get; } = new();
+        public List<(JobName JobName, TimeSpan Interval, OperationName Operation)> RecurringSchedules { get; } = new();
 
-        public List<(string JobName, DateTimeOffset RunAt, string Operation)> OneTimeSchedules { get; } = new();
+        public List<(JobName JobName, DateTimeOffset RunAt, OperationName Operation)> OneTimeSchedules { get; } = new();
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
             RecurringSchedules.Add((jobName, interval, operation));
         }
 
-        public void ScheduleAt(string jobName, DateTimeOffset runAt, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation)
         {
             OneTimeSchedules.Add((jobName, runAt, operation));
         }
@@ -468,12 +468,12 @@ public sealed class TimerPluginLifecycleTests
             _operation = operation;
         }
 
-        public IReadOnlyCollection<string> SupportedOperations => [_operation];
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName(_operation)];
 
         public void RegisterSchedules(IPluginScheduler scheduler)
         {
             ArgumentNullException.ThrowIfNull(scheduler);
-            scheduler.ScheduleRecurring($"{_operation}.EverySecond", TimeSpan.FromSeconds(1), _operation);
+            scheduler.ScheduleRecurring(new JobName($"{_operation}.EverySecond"), TimeSpan.FromSeconds(1), new OperationName(_operation));
         }
 
         public SyncResponse Handle(SyncRequest request)
@@ -499,18 +499,18 @@ public sealed class TimerPluginLifecycleTests
 
         public int HandleCallCount { get; private set; }
 
-        public IReadOnlyCollection<string> SupportedOperations => [_operation];
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName(_operation)];
 
         public void RegisterSchedules(IPluginScheduler scheduler)
         {
             ArgumentNullException.ThrowIfNull(scheduler);
-            scheduler.ScheduleRecurring($"{_operation}.EverySecond", TimeSpan.FromSeconds(1), _operation);
+            scheduler.ScheduleRecurring(new JobName($"{_operation}.EverySecond"), TimeSpan.FromSeconds(1), new OperationName(_operation));
         }
 
         public SyncResponse Handle(SyncRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
-            if (!string.Equals(request.Operation, _operation, StringComparison.Ordinal))
+            if (!string.Equals(request.Operation.Value, _operation, StringComparison.Ordinal))
             {
                 return new SyncResponse(
                     Success: false,
@@ -532,14 +532,14 @@ public sealed class TimerPluginLifecycleTests
 
     private sealed class MultiOperationScheduledTimerTaskExtension : IScheduledTimerTaskExtension
     {
-        private readonly IReadOnlyCollection<string> _supportedOperations;
+        private readonly IReadOnlyCollection<OperationName> _supportedOperations;
 
         public MultiOperationScheduledTimerTaskExtension(params string[] supportedOperations)
         {
-            _supportedOperations = supportedOperations;
+            _supportedOperations = supportedOperations.Select(op => new OperationName(op)).ToArray();
         }
 
-        public IReadOnlyCollection<string> SupportedOperations => _supportedOperations;
+        public IReadOnlyCollection<OperationName> SupportedOperations => _supportedOperations;
 
         public void RegisterSchedules(IPluginScheduler scheduler)
         {
@@ -551,7 +551,7 @@ public sealed class TimerPluginLifecycleTests
             ArgumentNullException.ThrowIfNull(request);
             return new SyncResponse(
                 Success: true,
-                Payload: request.Operation,
+                Payload: request.Operation.Value,
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -562,7 +562,7 @@ public sealed class TimerPluginLifecycleTests
     {
         private readonly IReadOnlyCollection<(string JobName, TimeSpan Interval, string Operation)> _recurringSchedules;
         private readonly IReadOnlyCollection<(string JobName, DateTimeOffset RunAt, string Operation)> _oneTimeSchedules;
-        private readonly IReadOnlyCollection<string> _supportedOperations;
+        private readonly IReadOnlyCollection<OperationName> _supportedOperations;
 
         public RecordingScheduledTimerTaskExtension(
             IReadOnlyCollection<(string JobName, TimeSpan Interval, string Operation)> recurringSchedules,
@@ -571,12 +571,12 @@ public sealed class TimerPluginLifecycleTests
         {
             _recurringSchedules = recurringSchedules;
             _oneTimeSchedules = oneTimeSchedules;
-            _supportedOperations = supportedOperations;
+            _supportedOperations = supportedOperations.Select(op => new OperationName(op)).ToArray();
         }
 
         public int RegisterSchedulesCallCount { get; private set; }
 
-        public IReadOnlyCollection<string> SupportedOperations => _supportedOperations;
+        public IReadOnlyCollection<OperationName> SupportedOperations => _supportedOperations;
 
         public void RegisterSchedules(IPluginScheduler scheduler)
         {
@@ -585,12 +585,12 @@ public sealed class TimerPluginLifecycleTests
             RegisterSchedulesCallCount++;
             foreach (var schedule in _recurringSchedules)
             {
-                scheduler.ScheduleRecurring(schedule.JobName, schedule.Interval, schedule.Operation);
+                scheduler.ScheduleRecurring(new JobName(schedule.JobName), schedule.Interval, new OperationName(schedule.Operation));
             }
 
             foreach (var schedule in _oneTimeSchedules)
             {
-                scheduler.ScheduleAt(schedule.JobName, schedule.RunAt, schedule.Operation);
+                scheduler.ScheduleAt(new JobName(schedule.JobName), schedule.RunAt, new OperationName(schedule.Operation));
             }
         }
 
@@ -600,7 +600,7 @@ public sealed class TimerPluginLifecycleTests
 
             return new SyncResponse(
                 Success: true,
-                Payload: request.Operation,
+                Payload: request.Operation.Value,
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);

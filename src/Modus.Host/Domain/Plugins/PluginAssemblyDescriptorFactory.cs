@@ -1,4 +1,5 @@
 using System.Reflection;
+using Modus.Core.Plugins;
 
 namespace Modus.Host.Plugins;
 
@@ -38,10 +39,10 @@ public sealed class PluginAssemblyDescriptorFactory
         var fileSize = new FileInfo(fullPath).Length;
 
         return new PluginDescriptor(
-            PluginId: pluginId,
+            PluginId: new PluginId(pluginId),
             AssemblyName: resolvedName,
             Version: version,
-            Capabilities: [$"Cap.{pluginId}"],
+            Capabilities: [new CapabilityName($"Cap.{pluginId}")],
             DependsOn: [],
             AssemblyPath: fullPath,
             AssemblyFileSizeBytes: fileSize);

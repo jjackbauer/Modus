@@ -15,9 +15,9 @@ public sealed class TimerAutonomousLoopWorkflowTests
         plugin.RegisterSchedules(scheduler);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Timer.WriteCurrentTime.Every5Seconds", recurring.JobName);
+        Assert.Equal(new JobName("Timer.WriteCurrentTime.Every5Seconds"), recurring.JobName);
         Assert.Equal(TimeSpan.FromSeconds(5), recurring.Interval);
-        Assert.Equal("Timer.WriteCurrentTime", recurring.Operation);
+        Assert.Equal(new OperationName("Timer.WriteCurrentTime"), recurring.Operation);
     }
 
     [Fact]
@@ -102,17 +102,17 @@ public sealed class TimerAutonomousLoopWorkflowTests
     {
         public List<RecurringSchedule> RecurringSchedules { get; } = [];
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
             RecurringSchedules.Add(new RecurringSchedule(jobName, interval, operation));
         }
 
-        public void ScheduleAt(string jobName, DateTimeOffset runAt, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation)
         {
         }
     }
 
-    private sealed record RecurringSchedule(string JobName, TimeSpan Interval, string Operation);
+    private sealed record RecurringSchedule(JobName JobName, TimeSpan Interval, OperationName Operation);
 
     private sealed class RecordingTimerTaskExtension : IScheduledTimerTaskExtension
     {
@@ -121,16 +121,16 @@ public sealed class TimerAutonomousLoopWorkflowTests
         public RecordingTimerTaskExtension(string operation)
         {
             _operation = operation;
-            SupportedOperations = [operation];
+            SupportedOperations = [new OperationName(operation)];
         }
 
         public int HandleCalls { get; private set; }
 
-        public IReadOnlyCollection<string> SupportedOperations { get; }
+        public IReadOnlyCollection<OperationName> SupportedOperations { get; }
 
         public void RegisterSchedules(IPluginScheduler scheduler)
         {
-            scheduler.ScheduleRecurring($"{_operation}.Every5Seconds", TimeSpan.FromSeconds(5), _operation);
+            scheduler.ScheduleRecurring(new JobName($"{_operation}.Every5Seconds"), TimeSpan.FromSeconds(5), new OperationName(_operation));
         }
 
         public SyncResponse Handle(SyncRequest request)

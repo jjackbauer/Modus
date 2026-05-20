@@ -41,7 +41,7 @@ if (pluginContracts.Length == 0)
 }
 else
 {
-    var pluginIds = string.Join(",", pluginContracts.Select(static x => x.PluginId).OrderBy(static x => x, StringComparer.Ordinal));
+    var pluginIds = string.Join(",", pluginContracts.Select(static x => x.PluginId.Value).OrderBy(static x => x, StringComparer.Ordinal));
     Console.WriteLine($"stage=di outcome=success pluginContracts={pluginContracts.Length} pluginIds={pluginIds}");
 }
 
@@ -55,11 +55,11 @@ Console.WriteLine(machineTelemetryContracts.Length > 0
     ? $"stage=di outcome=success contract={nameof(IMachineTelemetryPluginContract)} resolvedCount={machineTelemetryContracts.Length} selectedLifetime={DescribeSelectedLifetime("Plugin.Machine.Telemetry")}" 
     : $"stage=di outcome=failure contract={nameof(IMachineTelemetryPluginContract)} resolvedCount=0 reason={DescribeSkipReason("Plugin.Machine.Telemetry")}");
 
-Console.WriteLine(hostTelemetryContracts.Any(static x => string.Equals(x.PluginId, "Plugin.Host.Telemetry", StringComparison.Ordinal))
+Console.WriteLine(hostTelemetryContracts.Any(static x => string.Equals(x.PluginId.Value, "Plugin.Host.Telemetry", StringComparison.Ordinal))
     ? "stage=di outcome=success resolved=Plugin.Host.Telemetry"
     : "stage=di outcome=failure missing=Plugin.Host.Telemetry");
 
-Console.WriteLine(machineTelemetryContracts.Any(static x => string.Equals(x.PluginId, "Plugin.Machine.Telemetry", StringComparison.Ordinal))
+Console.WriteLine(machineTelemetryContracts.Any(static x => string.Equals(x.PluginId.Value, "Plugin.Machine.Telemetry", StringComparison.Ordinal))
     ? "stage=di outcome=success resolved=Plugin.Machine.Telemetry"
     : "stage=di outcome=failure missing=Plugin.Machine.Telemetry");
 

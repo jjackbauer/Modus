@@ -1,3 +1,4 @@
+using Modus.Core.Plugins;
 using Xunit;
 
 namespace Modus.Host.IntegrationTests;
@@ -9,12 +10,12 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var inventory = new PluginDescriptor(
-            "Plugin.Inventory",
+            new PluginId("Plugin.Inventory"),
             "Plugin.Inventory",
             new Version(1, 0, 0),
-            ["Cap.Inventory"],
+            [new CapabilityName("Cap.Inventory")],
             [],
-            DeclaredOperations: ["Inventory.RebuildSnapshot", "Inventory.EmitDelta"]);
+            DeclaredOperations: [new OperationName("Inventory.RebuildSnapshot"), new OperationName("Inventory.EmitDelta")]);
 
         var result = runtime.Start([inventory]);
 
@@ -31,10 +32,10 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var plugin = new PluginDescriptor(
-            "Plugin.Health",
+            new PluginId("Plugin.Health"),
             "Plugin.Health",
             new Version(1, 0, 0),
-            ["Cap.Health"],
+            [new CapabilityName("Cap.Health")],
             []);
 
         var result = runtime.Start([plugin]);
@@ -52,26 +53,26 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var failing = new PluginDescriptor(
-            "Plugin.Failing",
+            new PluginId("Plugin.Failing"),
             "Plugin.Failing",
             new Version(1, 0, 0),
-            ["Cap.Failing"],
+            [new CapabilityName("Cap.Failing")],
             [],
-            DeclaredOperations: ["Failing.Run"],
-            FailingOperations: ["Failing.Run"]);
+            DeclaredOperations: [new OperationName("Failing.Run")],
+            FailingOperations: [new OperationName("Failing.Run")]);
 
         var healthy = new PluginDescriptor(
-            "Plugin.Healthy",
+            new PluginId("Plugin.Healthy"),
             "Plugin.Healthy",
             new Version(3, 0, 0),
-            ["Cap.Healthy", "Cap.Shared"],
+            [new CapabilityName("Cap.Healthy"), new CapabilityName("Cap.Shared")],
             []);
 
         var fallback = new PluginDescriptor(
-            "Plugin.Fallback",
+            new PluginId("Plugin.Fallback"),
             "Plugin.Fallback",
             new Version(1, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             []);
 
         var result = runtime.Start([failing, healthy, fallback]);
@@ -100,17 +101,17 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var lowerVersionOwner = new PluginDescriptor(
-            "Plugin.CapabilityOwner.V1",
+            new PluginId("Plugin.CapabilityOwner.V1"),
             "Plugin.CapabilityOwner.V1",
             new Version(1, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             []);
 
         var higherVersionOwner = new PluginDescriptor(
-            "Plugin.CapabilityOwner.V2",
+            new PluginId("Plugin.CapabilityOwner.V2"),
             "Plugin.CapabilityOwner.V2",
             new Version(2, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             []);
 
         var result = runtime.Start([lowerVersionOwner, higherVersionOwner]);
@@ -124,17 +125,17 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var lexicalLater = new PluginDescriptor(
-            "Plugin.Shared.Zebra",
+            new PluginId("Plugin.Shared.Zebra"),
             "Plugin.Shared.Zebra",
             new Version(3, 1, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             []);
 
         var lexicalEarlier = new PluginDescriptor(
-            "Plugin.Shared.Alpha",
+            new PluginId("Plugin.Shared.Alpha"),
             "Plugin.Shared.Alpha",
             new Version(3, 1, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             []);
 
         var result = runtime.Start([lexicalLater, lexicalEarlier]);
@@ -148,17 +149,17 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var lowerVersionHealthy = new PluginDescriptor(
-            "Plugin.Shared.Lower",
+            new PluginId("Plugin.Shared.Lower"),
             "Plugin.Shared.Lower",
             new Version(1, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             []);
 
         var higherVersionFailingActivation = new PluginDescriptor(
-            "Plugin.Shared.Higher",
+            new PluginId("Plugin.Shared.Higher"),
             "Plugin.Shared.Higher",
             new Version(2, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             [],
             FailOnActivation: true);
 
@@ -174,21 +175,21 @@ public sealed class OperationExecutionTests
     {
         var runtime = new InMemoryHostRuntime();
         var lowerVersionHealthy = new PluginDescriptor(
-            "Plugin.Shared.Operation.Lower",
+            new PluginId("Plugin.Shared.Operation.Lower"),
             "Plugin.Shared.Operation.Lower",
             new Version(1, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             [],
-            DeclaredOperations: ["Shared.Ping"]);
+            DeclaredOperations: [new OperationName("Shared.Ping")]);
 
         var higherVersionFailingOperation = new PluginDescriptor(
-            "Plugin.Shared.Operation.Higher",
+            new PluginId("Plugin.Shared.Operation.Higher"),
             "Plugin.Shared.Operation.Higher",
             new Version(3, 0, 0),
-            ["Cap.Shared"],
+            [new CapabilityName("Cap.Shared")],
             [],
-            DeclaredOperations: ["Shared.Ping"],
-            FailingOperations: ["Shared.Ping"]);
+            DeclaredOperations: [new OperationName("Shared.Ping")],
+            FailingOperations: [new OperationName("Shared.Ping")]);
 
         var result = runtime.Start([lowerVersionHealthy, higherVersionFailingOperation]);
 

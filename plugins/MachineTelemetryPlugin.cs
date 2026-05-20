@@ -23,15 +23,15 @@ public sealed class MachineTelemetryPlugin :
     {
     }
 
-    public override string PluginId => "Plugin.Machine.Telemetry";
+    public override PluginId PluginId => new PluginId("Plugin.Machine.Telemetry");
 
-    public override string ContractName => "Modus.PluginContract";
+    public override ContractName ContractName => new ContractName("Modus.PluginContract");
 
     public override Version ContractVersion => new(1, 0, 0);
 
-    public override IReadOnlyCollection<string> SupportedOperations => [OperationName];
+    public override IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName(OperationNameValue)];
 
-    private const string OperationName = "Telemetry.Machine.CollectSnapshot";
+    private const string OperationNameValue = "Telemetry.Machine.CollectSnapshot";
     private const string RecurringJobName = "Telemetry.Machine.CollectSnapshot.Every5Seconds";
     private static readonly TimeSpan RecurringInterval = TimeSpan.FromSeconds(5);
 
@@ -63,7 +63,7 @@ public sealed class MachineTelemetryPlugin :
     public override void RegisterSchedules(IPluginScheduler scheduler)
     {
         ArgumentNullException.ThrowIfNull(scheduler);
-        scheduler.ScheduleRecurring(RecurringJobName, RecurringInterval, OperationName);
+        scheduler.ScheduleRecurring(new JobName(RecurringJobName), RecurringInterval, new OperationName(OperationNameValue));
     }
 
     protected override void RegisterPluginServices(IServiceCollection services)
@@ -83,7 +83,7 @@ public sealed class MachineTelemetryPlugin :
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!string.Equals(request.Operation, OperationName, StringComparison.Ordinal))
+        if (!string.Equals(request.Operation.Value, OperationNameValue, StringComparison.Ordinal))
         {
             return new SyncResponse(
                 Success: false,
@@ -93,7 +93,7 @@ public sealed class MachineTelemetryPlugin :
         }
 
         var snapshot = BuildTelemetrySnapshot();
-        Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationName} {snapshot}");
+        Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationNameValue} {snapshot}");
         return new SyncResponse(
             Success: true,
             Payload: snapshot,

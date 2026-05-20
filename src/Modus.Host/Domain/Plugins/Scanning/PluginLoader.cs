@@ -45,7 +45,7 @@ public sealed class PluginLoader
             try
             {
                 var descriptor = _descriptorFactory.CreateFromAssembly(fullAssemblyPath);
-                if (!descriptorsByPluginId.TryAdd(descriptor.PluginId, descriptor))
+                if (!descriptorsByPluginId.TryAdd(descriptor.PluginId.Value, descriptor))
                 {
                     diagnostics.Add($"stage=scan sequence={sequence:D4} outcome=ignored reason=duplicate plugin id plugin={descriptor.PluginId} path={fullAssemblyPath}");
                     continue;
@@ -61,7 +61,7 @@ public sealed class PluginLoader
 
         var descriptors = descriptorsByPluginId
             .Values
-            .OrderBy(x => x.PluginId, StringComparer.Ordinal)
+            .OrderBy(x => x.PluginId.Value, StringComparer.Ordinal)
             .ToArray();
 
         return new PluginAssemblyScanResult(descriptors, diagnostics);

@@ -5,21 +5,23 @@ namespace Modus.Core.Plugins;
 
 public static class PluginContractValidator
 {
-    public static ContractValidationResult Validate(object candidate)
+    public static ContractValidationResult Validate<T>(T candidate) where T : class
     {
         return Validate(candidate, new PluginContractValidationPolicy());
     }
 
-    public static ContractValidationResult Validate(object candidate, PluginContractValidationPolicy policy)
+    public static ContractValidationResult Validate<T>(T candidate, PluginContractValidationPolicy policy) where T : class
     {
-        var missing = new List<string>();
+        ArgumentNullException.ThrowIfNull(candidate);
+
+        var missing = new List<CapabilityName>();
         var registeredMissing = new HashSet<string>(StringComparer.Ordinal);
 
         void AddMissing(string capability)
         {
             if (registeredMissing.Add(capability))
             {
-                missing.Add(capability);
+                missing.Add(new CapabilityName(capability));
             }
         }
 
@@ -29,12 +31,12 @@ public static class PluginContractValidator
         }
         else if (candidate is IPluginContract pluginContract)
         {
-            if (string.IsNullOrWhiteSpace(pluginContract.PluginId))
+            if (string.IsNullOrWhiteSpace(pluginContract.PluginId.Value))
             {
                 AddMissing("IPluginContract.PluginId");
             }
 
-            if (string.IsNullOrWhiteSpace(pluginContract.ContractName))
+            if (string.IsNullOrWhiteSpace(pluginContract.ContractName.Value))
             {
                 AddMissing("IPluginContract.ContractName");
             }
@@ -79,7 +81,7 @@ public static class PluginContractValidator
             else
             {
                 var normalizedOperations = supportedOperations
-                    .Select(operation => operation?.Trim())
+                    .Select(operation => operation.Value.Trim())
                     .ToArray();
 
                 if (normalizedOperations.Any(string.IsNullOrWhiteSpace))

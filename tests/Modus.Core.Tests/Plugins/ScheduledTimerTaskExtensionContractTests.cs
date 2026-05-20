@@ -14,7 +14,7 @@ public sealed class ScheduledTimerTaskExtensionContractTests
         Assert.NotNull(extensionType);
         Assert.True(extensionType!.IsInterface);
         Assert.Equal(
-            typeof(IReadOnlyCollection<string>),
+            typeof(IReadOnlyCollection<OperationName>),
             extensionType.GetProperty(nameof(IPluginOperationCatalog.SupportedOperations))?.PropertyType);
 
         var registerSchedules = extensionType.GetMethod(nameof(IPluginScheduledEvents.RegisterSchedules), [typeof(IPluginScheduler)]);

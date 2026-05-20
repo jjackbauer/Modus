@@ -12,7 +12,7 @@ public sealed class MakefileTargetsTests
         Assert.Contains("run-host:", content, StringComparison.Ordinal);
         Assert.Contains("dotnet run --project $(HOST_PROJECT) -- $(PLUGINS_PATH)", content, StringComparison.Ordinal);
         Assert.Contains("HOST_PROJECT=src/Modus.Host/Modus.Host.csproj", content, StringComparison.Ordinal);
-        Assert.Contains("PLUGINS_PATH=plugins", content, StringComparison.Ordinal);
+        Assert.Contains("PLUGINS_PATH=$(CURDIR)/plugins", content, StringComparison.Ordinal);
     }
 
     [Fact]

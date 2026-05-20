@@ -5,7 +5,7 @@ using Modus.Core.Messaging;
 
 public sealed class FiveSecondIntervalsTimerPrint : IScheduledTimerTaskExtension
 {
-    private const string OperationName = "Timer.WriteCurrentTime";
+    private const string OperationNameValue = "Timer.WriteCurrentTime";
     private const string RecurringJobName = "Timer.WriteCurrentTime.Every5Seconds";
     private readonly Func<DateTimeOffset> _utcNowProvider;
     private readonly Action<string> _writeLine;
@@ -26,19 +26,19 @@ public sealed class FiveSecondIntervalsTimerPrint : IScheduledTimerTaskExtension
         _recurringInterval = recurringInterval;
     }
 
-    public IReadOnlyCollection<string> SupportedOperations => [OperationName];
+    public IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName(OperationNameValue)];
 
     public void RegisterSchedules(IPluginScheduler scheduler)
     {
         ArgumentNullException.ThrowIfNull(scheduler);
-        scheduler.ScheduleRecurring(RecurringJobName, _recurringInterval, OperationName);
+        scheduler.ScheduleRecurring(new JobName(RecurringJobName), _recurringInterval, new OperationName(OperationNameValue));
     }
 
     public SyncResponse Handle(SyncRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!string.Equals(request.Operation, OperationName, StringComparison.Ordinal))
+        if (!string.Equals(request.Operation.Value, OperationNameValue, StringComparison.Ordinal))
         {
             return new SyncResponse(
                 Success: false,

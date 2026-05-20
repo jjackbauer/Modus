@@ -8,8 +8,8 @@ namespace Modus.Host.Plugins.Lifecycle;
 
 public sealed class InMemoryLifecycleEngine
 {
-    private readonly Dictionary<string, PluginSpec> _activePlugins = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, int> _receivedEventCount = new(StringComparer.Ordinal);
+    private readonly Dictionary<PluginId, PluginSpec> _activePlugins = new();
+    private readonly Dictionary<PluginId, int> _receivedEventCount = new();
     private readonly PluginLifecycleOrchestrator _lifecycleOrchestrator = new();
     private readonly PluginUnloadCoordinator _unloadCoordinator = new();
     private readonly PluginRetryPolicy _retryPolicy;
@@ -22,23 +22,23 @@ public sealed class InMemoryLifecycleEngine
 
     public bool HostHealthy { get; private set; } = true;
 
-    public IReadOnlyCollection<string> ActivePluginIds => _activePlugins.Keys.OrderBy(x => x, StringComparer.Ordinal).ToArray();
+    public IReadOnlyCollection<PluginId> ActivePluginIds => _activePlugins.Keys.OrderBy(x => x.Value, StringComparer.Ordinal).ToArray();
 
     public IReadOnlyCollection<string> QuarantinedPluginIds => _quarantineStore.QuarantinedPluginIds;
 
     public LifecycleResult HotLoad(PluginSpec spec)
     {
-        var orchestration = _lifecycleOrchestrator.OrchestrateHotLoad(spec, _quarantineStore.IsQuarantined(spec.PluginId));
+        var orchestration = _lifecycleOrchestrator.OrchestrateHotLoad(spec, _quarantineStore.IsQuarantined(spec.PluginId.Value));
 
         if (orchestration.RegisterFailure)
         {
-            _quarantineStore.RegisterFailure(spec.PluginId, _retryPolicy);
+            _quarantineStore.RegisterFailure(spec.PluginId.Value, _retryPolicy);
         }
 
         if (orchestration.Activated)
         {
             _activePlugins[spec.PluginId] = spec;
-            _quarantineStore.RegisterSuccess(spec.PluginId);
+            _quarantineStore.RegisterSuccess(spec.PluginId.Value);
 
             if (!_receivedEventCount.ContainsKey(spec.PluginId))
             {
@@ -50,13 +50,13 @@ public sealed class InMemoryLifecycleEngine
             orchestration.Transitions,
             orchestration.Diagnostics,
             HostHealthy,
-            Quarantined: orchestration.Quarantined || _quarantineStore.IsQuarantined(spec.PluginId));
+            Quarantined: orchestration.Quarantined || _quarantineStore.IsQuarantined(spec.PluginId.Value));
     }
 
-    public LifecycleResult HotUnload(string pluginId)
+    public LifecycleResult HotUnload(PluginId pluginId)
     {
         var wasActive = _activePlugins.Remove(pluginId);
-        return _unloadCoordinator.OrchestrateHotUnload(pluginId, wasActive, HostHealthy);
+        return _unloadCoordinator.OrchestrateHotUnload(pluginId.Value, wasActive, HostHealthy);
     }
 
     public EventDispatchResult Publish(DomainEvent @event)
@@ -73,7 +73,7 @@ public sealed class InMemoryLifecycleEngine
         return new EventDispatchResult(delivered);
     }
 
-    public int GetReceivedEvents(string pluginId)
+    public int GetReceivedEvents(PluginId pluginId)
     {
         return _receivedEventCount.TryGetValue(pluginId, out var count) ? count : 0;
     }

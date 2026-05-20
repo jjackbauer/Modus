@@ -29,7 +29,7 @@ public static class PluginHostingServiceProviderExtensions
             var resolved = provider
                 .GetServices(contractType)
                 .OfType<IPluginContract>()
-                .OrderBy(static x => x.PluginId, StringComparer.Ordinal)
+                .OrderBy(static x => x.PluginId.Value, StringComparer.Ordinal)
                 .ToArray();
 
             if (resolved.Length > 0)

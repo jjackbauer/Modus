@@ -1,3 +1,4 @@
+using Modus.Core.Plugins;
 using Modus.Host.Plugins;
 using Xunit;
 
@@ -24,15 +25,15 @@ public sealed class DescriptorConstructionTests
             var first = factory.Create(projectPath);
             var second = factory.Create(projectPath);
 
-            Assert.Equal("Plugin.Payments.Gateway", first.PluginId);
-            Assert.Equal("Plugin.Payments.Gateway", second.PluginId);
+            Assert.Equal(new PluginId("Plugin.Payments.Gateway"), first.PluginId);
+            Assert.Equal(new PluginId("Plugin.Payments.Gateway"), second.PluginId);
             Assert.Equal("Payments.Gateway.Ext", first.AssemblyName);
             Assert.Equal(first.AssemblyName, second.AssemblyName);
             Assert.Equal(new Version(2, 3, 4), first.Version);
             Assert.Equal(first.Version, second.Version);
-            Assert.Equal(["Cap.Billing", "Cap.Payments"], first.Capabilities);
+            Assert.Equal([new CapabilityName("Cap.Billing"), new CapabilityName("Cap.Payments")], first.Capabilities);
             Assert.Equal(first.Capabilities, second.Capabilities);
-            Assert.Equal(["Plugin.Auth", "Plugin.Core"], first.DependsOn);
+            Assert.Equal([new CapabilityName("Plugin.Auth"), new CapabilityName("Plugin.Core")], first.DependsOn);
             Assert.Equal(first.DependsOn, second.DependsOn);
         }
         finally
@@ -61,8 +62,8 @@ public sealed class DescriptorConstructionTests
             Assert.True(onboarding.HostHealthy);
             Assert.True(onboarding.EventAccepted);
             Assert.False(onboarding.PluginActivated);
-            Assert.Equal("Plugin.Malformed", onboarding.PluginId);
-            Assert.Contains("Plugin.Malformed", onboarding.FailedPluginIds);
+            Assert.Equal(new PluginId("Plugin.Malformed"), onboarding.PluginId);
+            Assert.Contains(new PluginId("Plugin.Malformed"), onboarding.FailedPluginIds);
             Assert.Contains("stage=descriptor outcome=failure reason=Malformed project metadata.", onboarding.Diagnostics, StringComparer.Ordinal);
         }
         finally

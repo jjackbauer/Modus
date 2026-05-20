@@ -7,7 +7,7 @@ public sealed record SyncResponse
 		string Payload,
 		SyncResponseStatus? Status = null,
 		bool ServedFromFallback = false,
-		string? CorrelationId = null)
+		CorrelationId? CorrelationId = null)
 	{
 		if (Payload is null)
 		{
@@ -40,5 +40,5 @@ public sealed record SyncResponse
 
 	public bool ServedFromFallback { get; }
 
-	public string? CorrelationId { get; }
+	public CorrelationId? CorrelationId { get; }
 }

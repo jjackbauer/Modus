@@ -1,3 +1,5 @@
+using Modus.Core.Messaging;
+using Modus.Core.Plugins;
 using Modus.Host.Plugins.Descriptors;
 using Modus.Host.Plugins.Host;
 using Modus.Host.Plugins.Scanning;
@@ -50,7 +52,7 @@ public sealed class InMemoryHostRuntime
         {
             diagnostics.Add($"stage=discovery plugin={descriptor.PluginId} outcome=success");
 
-            if (!seenPluginIds.Add(descriptor.PluginId))
+            if (!seenPluginIds.Add(descriptor.PluginId.Value))
             {
                 diagnostics.Add($"duplicate plugin ignored: {descriptor.PluginId}");
                 continue;
@@ -99,8 +101,8 @@ public sealed class InMemoryHostRuntime
         foreach (var descriptor in activationOrder)
         {
             var unavailableDependencies = descriptor.DependsOn
-                .Where(dependency => !activated.Contains(dependency, StringComparer.Ordinal))
-                .OrderBy(x => x, StringComparer.Ordinal)
+                .Where(dependency => !activated.Contains(dependency.Value, StringComparer.Ordinal))
+                .OrderBy(x => x.Value, StringComparer.Ordinal)
                 .ToArray();
 
             if (unavailableDependencies.Length > 0)
@@ -108,7 +110,7 @@ public sealed class InMemoryHostRuntime
                 _isolationBoundary.IsolateFailure(
                     pluginId: descriptor.PluginId,
                     failedStage: "activation",
-                    failureReasons: [$"dependency unavailable: {string.Join(", ", unavailableDependencies)}"],
+                    failureReasons: [$"dependency unavailable: {string.Join(", ", unavailableDependencies.Select(d => d.Value))}"],
                     failedPluginIds: failed,
                     diagnostics: diagnostics);
                 continue;
@@ -119,12 +121,12 @@ public sealed class InMemoryHostRuntime
             activatedDescriptors.Add(descriptor);
             registrationTransaction.Record(
                 "registration",
-                () => RemovePluginDescriptor(activatedDescriptors, descriptor.PluginId));
+                () => RemovePluginDescriptor(activatedDescriptors, descriptor.PluginId.Value));
 
-            activated.Add(descriptor.PluginId);
+            activated.Add(descriptor.PluginId.Value);
             registrationTransaction.Record(
                 "activation",
-                () => RemovePluginId(activated, descriptor.PluginId));
+                () => RemovePluginId(activated, descriptor.PluginId.Value));
 
             if (descriptor.FailOnActivation)
             {
@@ -141,11 +143,11 @@ public sealed class InMemoryHostRuntime
             diagnostics.Add($"stage=activation plugin={descriptor.PluginId} outcome=success");
 
             var operation = SelectDeterministicOperation(descriptor);
-            if (descriptor.FailingOperations?.Contains(operation, StringComparer.Ordinal) == true)
+            if (descriptor.FailingOperations?.Any(o => string.Equals(o.Value, operation, StringComparison.Ordinal)) == true)
             {
                 _isolationBoundary.IsolateOperationFailure(
                     pluginId: descriptor.PluginId,
-                    operation: operation,
+                    operation: new OperationName(operation),
                     reason: "operation exception",
                     failedPluginIds: failed,
                     diagnostics: diagnostics,
@@ -158,7 +160,7 @@ public sealed class InMemoryHostRuntime
 
         var activePluginIds = activated.ToHashSet(StringComparer.Ordinal);
         var capabilityOwnerCandidates = activatedDescriptors
-            .Where(descriptor => activePluginIds.Contains(descriptor.PluginId))
+            .Where(descriptor => activePluginIds.Contains(descriptor.PluginId.Value))
             .ToList();
 
         var capabilityOwners = ResolveCapabilityOwners(capabilityOwnerCandidates);
@@ -167,19 +169,20 @@ public sealed class InMemoryHostRuntime
             Started: true,
             ActivatedPluginIds: activated,
             FailedPluginIds: failed.OrderBy(x => x, StringComparer.Ordinal).ToList(),
-            CapabilityOwners: capabilityOwners.ToDictionary(x => x.Key, x => x.Value.PluginId, StringComparer.Ordinal),
+            CapabilityOwners: capabilityOwners.ToDictionary(x => x.Key, x => x.Value.PluginId.Value, StringComparer.Ordinal),
             Diagnostics: diagnostics);
     }
 
     private static string SelectDeterministicOperation(PluginDescriptor descriptor)
     {
         var declared = descriptor.DeclaredOperations
-            ?.Where(x => !string.IsNullOrWhiteSpace(x))
+            ?.Select(x => x.Value)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(x => x, StringComparer.Ordinal)
             .FirstOrDefault();
 
-        return declared ?? $"Op.{descriptor.PluginId}.HealthCheck";
+        return declared ?? $"Op.{descriptor.PluginId.Value}.HealthCheck";
     }
 
     private static PluginDescriptor PickCapabilityOwner(PluginDescriptor currentOwner, PluginDescriptor challenger)
@@ -195,7 +198,7 @@ public sealed class InMemoryHostRuntime
             return currentOwner;
         }
 
-        return string.CompareOrdinal(challenger.PluginId, currentOwner.PluginId) < 0
+        return string.CompareOrdinal(challenger.PluginId.Value, currentOwner.PluginId.Value) < 0
             ? challenger
             : currentOwner;
     }
@@ -208,13 +211,13 @@ public sealed class InMemoryHostRuntime
         {
             foreach (var capability in descriptor.Capabilities)
             {
-                if (!capabilityOwners.TryGetValue(capability, out var currentOwner))
+                if (!capabilityOwners.TryGetValue(capability.Value, out var currentOwner))
                 {
-                    capabilityOwners[capability] = descriptor;
+                    capabilityOwners[capability.Value] = descriptor;
                     continue;
                 }
 
-                capabilityOwners[capability] = PickCapabilityOwner(currentOwner, descriptor);
+                capabilityOwners[capability.Value] = PickCapabilityOwner(currentOwner, descriptor);
             }
         }
 
@@ -232,7 +235,7 @@ public sealed class InMemoryHostRuntime
 
     private static void RemovePluginDescriptor(List<PluginDescriptor> activatedDescriptors, string pluginId)
     {
-        var index = activatedDescriptors.FindIndex(x => string.Equals(x.PluginId, pluginId, StringComparison.Ordinal));
+        var index = activatedDescriptors.FindIndex(x => string.Equals(x.PluginId.Value, pluginId, StringComparison.Ordinal));
         if (index >= 0)
         {
             activatedDescriptors.RemoveAt(index);
@@ -241,13 +244,13 @@ public sealed class InMemoryHostRuntime
 
     private static List<PluginDescriptor> TopologicalOrder(IReadOnlyList<PluginDescriptor> descriptors)
     {
-        var byId = descriptors.ToDictionary(x => x.PluginId, StringComparer.Ordinal);
+        var byId = descriptors.ToDictionary(x => x.PluginId.Value, StringComparer.Ordinal);
         var visited = new Dictionary<string, int>(StringComparer.Ordinal);
         var ordered = new List<PluginDescriptor>();
 
-        foreach (var descriptor in descriptors.OrderBy(x => x.PluginId, StringComparer.Ordinal))
+        foreach (var descriptor in descriptors.OrderBy(x => x.PluginId.Value, StringComparer.Ordinal))
         {
-            Visit(descriptor.PluginId);
+            Visit(descriptor.PluginId.Value);
         }
 
         return ordered;
@@ -274,9 +277,9 @@ public sealed class InMemoryHostRuntime
 
             visited[pluginId] = 1;
             var descriptor = byId[pluginId];
-            foreach (var dependency in descriptor.DependsOn.OrderBy(x => x, StringComparer.Ordinal))
+            foreach (var dependency in descriptor.DependsOn.OrderBy(x => x.Value, StringComparer.Ordinal))
             {
-                Visit(dependency);
+                Visit(dependency.Value);
             }
 
             visited[pluginId] = 2;

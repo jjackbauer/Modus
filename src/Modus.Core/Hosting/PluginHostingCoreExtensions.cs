@@ -57,7 +57,7 @@ public static class PluginHostingCoreExtensions
                 continue;
             }
 
-            var pluginId = NormalizePluginId(((IPluginContract)registrar).PluginId, registrarType);
+            var pluginId = NormalizePluginId(((IPluginContract)registrar).PluginId.Value, registrarType);
 
             if (state.HasWinningPluginId(pluginId))
             {

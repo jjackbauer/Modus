@@ -484,9 +484,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DiscoverablePluginRegister : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DiscoveredPlugin";
+        public PluginId PluginId => new PluginId("Core.Tests.DiscoveredPlugin");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -498,9 +498,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public abstract class AbstractPluginRegister : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.AbstractPluginRegister";
+        public PluginId PluginId => new PluginId("Core.Tests.AbstractPluginRegister");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -512,9 +512,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class OpenGenericPluginRegister<T> : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.OpenGenericPluginRegister";
+        public PluginId PluginId => new PluginId("Core.Tests.OpenGenericPluginRegister");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -526,9 +526,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class ConcretePluginRegister : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.ConcretePluginRegister";
+        public PluginId PluginId => new PluginId("Core.Tests.ConcretePluginRegister");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -548,9 +548,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DeterministicOrderRegisterAlpha : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DeterministicOrderRegisterAlpha";
+        public PluginId PluginId => new PluginId("Core.Tests.DeterministicOrderRegisterAlpha");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -562,9 +562,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DeterministicOrderRegisterBeta : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DeterministicOrderRegisterBeta";
+        public PluginId PluginId => new PluginId("Core.Tests.DeterministicOrderRegisterBeta");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -576,9 +576,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DeterministicOrderRegisterGamma : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DeterministicOrderRegisterGamma";
+        public PluginId PluginId => new PluginId("Core.Tests.DeterministicOrderRegisterGamma");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -590,9 +590,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DuplicatePluginIdentityRegisterAlpha : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DuplicateIdentity";
+        public PluginId PluginId => new PluginId("Core.Tests.DuplicateIdentity");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -604,9 +604,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DuplicatePluginIdentityRegisterBeta : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DuplicateIdentity";
+        public PluginId PluginId => new PluginId("Core.Tests.DuplicateIdentity");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -618,9 +618,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DuplicateCapabilityRegisterAlpha : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DuplicateCapability.Alpha";
+        public PluginId PluginId => new PluginId("Core.Tests.DuplicateCapability.Alpha");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -632,9 +632,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
     public sealed class DuplicateCapabilityRegisterBeta : IPluginDependencyRegister, IPluginContract
     {
-        public string PluginId => "Core.Tests.DuplicateCapability.Beta";
+        public PluginId PluginId => new PluginId("Core.Tests.DuplicateCapability.Beta");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -654,13 +654,13 @@ public sealed class PluginHostingCoreExtensionsTests
         IEventSubscriber,
         ISyncResponder
     {
-        public string PluginId => "Core.Tests.CapabilityMappedPlugin";
+        public PluginId PluginId => new PluginId("Core.Tests.CapabilityMappedPlugin");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
-        public IReadOnlyCollection<string> SupportedOperations => ["capability-mapped-op"];
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName("capability-mapped-op")];
 
         public void Register(IServiceCollection services)
         {
@@ -718,9 +718,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
         public Guid InstanceId { get; }
 
-        public string PluginId => "Core.Tests.ScopedCapabilityMappedPlugin";
+        public PluginId PluginId => new PluginId("Core.Tests.ScopedCapabilityMappedPlugin");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -763,9 +763,9 @@ public sealed class PluginHostingCoreExtensionsTests
 
         public Guid InstanceId { get; }
 
-        public string PluginId => "Core.Tests.TransientCapabilityMappedPlugin";
+        public PluginId PluginId => new PluginId("Core.Tests.TransientCapabilityMappedPlugin");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 
@@ -796,9 +796,9 @@ public sealed class PluginHostingCoreExtensionsTests
         public FailingConstructorPluginRegister()
             => throw new InvalidOperationException("Construction failed for test.");
 
-        public string PluginId => "Core.Tests.FailingPlugin";
+        public PluginId PluginId => new PluginId("Core.Tests.FailingPlugin");
 
-        public string ContractName => "Modus.PluginContract";
+        public ContractName ContractName => new ContractName("Modus.PluginContract");
 
         public Version ContractVersion => new(1, 0);
 

@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Modus.Core.Plugins;
 
 namespace Modus.Host.Plugins;
 
@@ -48,18 +49,18 @@ public sealed class PluginProjectDescriptorFactory
         var isValidAssembly = ParseBoolOrDefault(ReadProperty(document, "ModusIsValidAssembly"), true, "ModusIsValidAssembly");
         var usesOnlyStandardLibrary = ParseBoolOrDefault(ReadProperty(document, "ModusUsesOnlyStandardLibrary"), true, "ModusUsesOnlyStandardLibrary");
         var failOnActivation = ParseBoolOrDefault(ReadProperty(document, "ModusFailOnActivation"), false, "ModusFailOnActivation");
-        var capabilities = ParseStringList(ReadProperty(document, "ModusCapabilities"));
-        var dependsOn = ParseStringList(ReadProperty(document, "ModusDependsOn"));
-        var declaredOperations = ParseStringList(ReadProperty(document, "ModusOperations"));
-        var failingOperations = ParseStringList(ReadProperty(document, "ModusFailingOperations"));
+        var capabilities = ParseCapabilityList(ReadProperty(document, "ModusCapabilities"));
+        var dependsOn = ParseCapabilityList(ReadProperty(document, "ModusDependsOn"));
+        var declaredOperations = ParseOperationList(ReadProperty(document, "ModusOperations"));
+        var failingOperations = ParseOperationList(ReadProperty(document, "ModusFailingOperations"));
 
         if (capabilities.Count == 0)
         {
-            capabilities = [$"Cap.{pluginId}"];
+            capabilities = [new CapabilityName($"Cap.{pluginId}")];
         }
 
         return new PluginDescriptor(
-            PluginId: pluginId,
+            PluginId: new PluginId(pluginId),
             AssemblyName: assemblyName,
             Version: version,
             Capabilities: capabilities,
@@ -111,7 +112,7 @@ public sealed class PluginProjectDescriptorFactory
         return value;
     }
 
-    private static List<string> ParseStringList(string? rawValue)
+    private static List<CapabilityName> ParseCapabilityList(string? rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))
         {
@@ -122,6 +123,22 @@ public sealed class PluginProjectDescriptorFactory
             .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.Ordinal)
             .OrderBy(x => x, StringComparer.Ordinal)
+            .Select(x => new CapabilityName(x))
+            .ToList();
+    }
+
+    private static List<OperationName> ParseOperationList(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return [];
+        }
+
+        return rawValue
+            .Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .Select(x => new OperationName(x))
             .ToList();
     }
 

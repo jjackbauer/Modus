@@ -27,11 +27,11 @@ public sealed class FiveSecondIntervalsTimerPrintTests
         var writes = new List<string>();
         var extension = CreateConcreteExtension(() => fixedTimestamp, writes.Add, TimeSpan.FromSeconds(5));
 
-        var response = extension.Handle(SyncRequest.ForStandardPath("Timer.WriteCurrentTime", "corr-1"));
+        var response = extension.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime"), new CorrelationId("corr-1")));
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("corr-1", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-1"), response.CorrelationId);
         Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), response.Payload);
         Assert.Equal([response.Payload], writes);
     }
@@ -41,12 +41,12 @@ public sealed class FiveSecondIntervalsTimerPrintTests
     {
         var extension = CreateConcreteExtension(() => DateTimeOffset.UtcNow, _ => { }, TimeSpan.FromSeconds(5));
 
-        var response = extension.Handle(SyncRequest.ForStandardPath("Timer.Unknown", "corr-unsupported"));
+        var response = extension.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.Unknown"), new CorrelationId("corr-unsupported")));
 
         Assert.False(response.Success);
         Assert.Equal(SyncResponseStatus.Rejected, response.Status);
         Assert.Equal("unsupported-operation", response.Payload);
-        Assert.Equal("corr-unsupported", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-unsupported"), response.CorrelationId);
     }
 
     [Fact]
@@ -58,9 +58,9 @@ public sealed class FiveSecondIntervalsTimerPrintTests
         extension.RegisterSchedules(scheduler);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Timer.WriteCurrentTime.Every5Seconds", recurring.JobName);
+        Assert.Equal(new JobName("Timer.WriteCurrentTime.Every5Seconds"), recurring.JobName);
         Assert.Equal(TimeSpan.FromSeconds(5), recurring.Interval);
-        Assert.Equal("Timer.WriteCurrentTime", recurring.Operation);
+        Assert.Equal(new OperationName("Timer.WriteCurrentTime"), recurring.Operation);
     }
 
     private static IScheduledTimerTaskExtension CreateConcreteExtension(
@@ -78,14 +78,14 @@ public sealed class FiveSecondIntervalsTimerPrintTests
 
     private sealed class RecordingScheduler : IPluginScheduler
     {
-        public List<(string JobName, TimeSpan Interval, string Operation)> RecurringSchedules { get; } = new();
+        public List<(JobName JobName, TimeSpan Interval, OperationName Operation)> RecurringSchedules { get; } = new();
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
             RecurringSchedules.Add((jobName, interval, operation));
         }
 
-        public void ScheduleAt(string jobName, DateTimeOffset runAt, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation)
         {
         }
     }

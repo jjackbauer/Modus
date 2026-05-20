@@ -27,9 +27,9 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         Assert.Empty(validation.MissingCapabilities);
 
         var recurring = Assert.Single(scheduler.RecurringSchedules);
-        Assert.Equal("Telemetry.Host.CollectSnapshot.EverySecond", recurring.JobName);
+        Assert.Equal(new JobName("Telemetry.Host.CollectSnapshot.EverySecond"), recurring.JobName);
         Assert.Equal(TimeSpan.FromSeconds(1), recurring.Interval);
-        Assert.Equal("Telemetry.Host.CollectSnapshot", recurring.Operation);
+        Assert.Equal(new OperationName("Telemetry.Host.CollectSnapshot"), recurring.Operation);
         Assert.Contains(recurring.Operation, plugin.SupportedOperations);
     }
 
@@ -39,11 +39,11 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         var plugin = new HostTelemetryPlugin();
         plugin.Start(new PluginStartContext(plugin.PluginId, CancellationToken.None));
 
-        var response = plugin.Handle(SyncRequest.ForStandardPath("Telemetry.Host.CollectSnapshot", correlationId: "corr-telemetry"));
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Telemetry.Host.CollectSnapshot"), correlationId: new CorrelationId("corr-telemetry")));
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("corr-telemetry", response.CorrelationId);
+        Assert.Equal(new CorrelationId("corr-telemetry"), response.CorrelationId);
         Assert.Contains("cpuPercent=", response.Payload, StringComparison.Ordinal);
         Assert.Contains("workingSetBytes=", response.Payload, StringComparison.Ordinal);
         Assert.Contains("managedHeapBytes=", response.Payload, StringComparison.Ordinal);
@@ -98,15 +98,15 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
     {
         public List<RecurringSchedule> RecurringSchedules { get; } = [];
 
-        public void ScheduleRecurring(string jobName, TimeSpan interval, string operation)
+        public void ScheduleRecurring(JobName jobName, TimeSpan interval, OperationName operation)
         {
             RecurringSchedules.Add(new RecurringSchedule(jobName, interval, operation));
         }
 
-        public void ScheduleAt(string jobName, DateTimeOffset runAt, string operation)
+        public void ScheduleAt(JobName jobName, DateTimeOffset runAt, OperationName operation)
         {
         }
     }
 
-    private sealed record RecurringSchedule(string JobName, TimeSpan Interval, string Operation);
+    private sealed record RecurringSchedule(JobName JobName, TimeSpan Interval, OperationName Operation);
 }

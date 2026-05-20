@@ -1,3 +1,5 @@
+using Modus.Core.Plugins;
+
 namespace Modus.Host.Plugins.Descriptors;
 
-public sealed record PluginSpec(string PluginId, bool IsValid, bool FailOnActivation);
+public sealed record PluginSpec(PluginId PluginId, bool IsValid, bool FailOnActivation);

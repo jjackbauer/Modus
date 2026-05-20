@@ -1,20 +1,18 @@
 namespace Modus.Core.Events;
 
+using Modus.Core.Messaging;
+using Modus.Core.Plugins;
+
 public sealed record DomainEventEnvelope
 {
     public DomainEventEnvelope(
         DomainEvent Event,
-        string SourcePluginId,
+        PluginId SourcePluginId,
         DateTimeOffset? OccurredAtUtc = null,
         Guid? EventId = null,
-        string? CorrelationId = null,
+        CorrelationId? CorrelationId = null,
         IReadOnlyDictionary<string, string>? Headers = null)
     {
-        if (string.IsNullOrWhiteSpace(SourcePluginId))
-        {
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(SourcePluginId));
-        }
-
         this.Event = Event;
         this.SourcePluginId = SourcePluginId;
         this.OccurredAtUtc = OccurredAtUtc ?? DateTimeOffset.UtcNow;
@@ -27,13 +25,13 @@ public sealed record DomainEventEnvelope
 
     public DomainEvent Event { get; }
 
-    public string SourcePluginId { get; }
+    public PluginId SourcePluginId { get; }
 
     public DateTimeOffset OccurredAtUtc { get; }
 
     public Guid EventId { get; }
 
-    public string? CorrelationId { get; }
+    public CorrelationId? CorrelationId { get; }
 
     public IReadOnlyDictionary<string, string> Headers { get; }
 }

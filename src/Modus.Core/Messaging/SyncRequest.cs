@@ -1,19 +1,16 @@
 namespace Modus.Core.Messaging;
 
+using Modus.Core.Plugins;
+
 public sealed record SyncRequest
 {
 	public SyncRequest(
-		string Operation,
+		OperationName Operation,
 		bool IsFallbackExplicit,
 		SyncFallbackReason FallbackReason = SyncFallbackReason.None,
 		string? FallbackReasonCode = null,
-		string? CorrelationId = null)
+		CorrelationId? CorrelationId = null)
 	{
-		if (string.IsNullOrWhiteSpace(Operation))
-		{
-			throw new ArgumentException("Operation is required.", nameof(Operation));
-		}
-
 		if (IsFallbackExplicit)
 		{
 			if (FallbackReason == SyncFallbackReason.None)
@@ -46,7 +43,7 @@ public sealed record SyncRequest
 		this.CorrelationId = CorrelationId;
 	}
 
-	public string Operation { get; }
+	public OperationName Operation { get; }
 
 	public bool IsFallbackExplicit { get; }
 
@@ -54,18 +51,18 @@ public sealed record SyncRequest
 
 	public string? FallbackReasonCode { get; }
 
-	public string? CorrelationId { get; }
+	public CorrelationId? CorrelationId { get; }
 
 	public static SyncRequest ForExplicitFallback(
-		string operation,
+		OperationName operation,
 		SyncFallbackReason fallbackReason,
 		string fallbackReasonCode,
-		string? correlationId = null)
+		CorrelationId? correlationId = null)
 	{
 		return new SyncRequest(operation, IsFallbackExplicit: true, fallbackReason, fallbackReasonCode, correlationId);
 	}
 
-	public static SyncRequest ForStandardPath(string operation, string? correlationId = null)
+	public static SyncRequest ForStandardPath(OperationName operation, CorrelationId? correlationId = null)
 	{
 		return new SyncRequest(operation, IsFallbackExplicit: false, SyncFallbackReason.None, null, correlationId);
 	}

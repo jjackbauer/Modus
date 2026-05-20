@@ -49,6 +49,7 @@ The baseline architecture uses these roles:
 | .github/prompts/rule-architecture-analysis.prompt.md | Rule preset for architecture analysis in plugin monolith context |
 | .github/prompts/skill-codebase-patterns.prompt.md | Rebuild codebase conventions reference from current source |
 | .github/prompts/skill-plan-format-gate.prompt.md | Validate and self-heal plan document structure |
+| .github/prompts/rule-no-primitive-obsession.instructions.md | Enforce typed value objects for semantic identifiers; reject raw string in contracts, DTOs, and domain types |
 
 ## Journal-Driven Distillation System
 

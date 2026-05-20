@@ -55,16 +55,16 @@ public sealed class PluginBaseTests
         Assert.IsAssignableFrom<IPluginOperationCatalog>(plugin);
         Assert.IsAssignableFrom<IPluginScheduledEvents>(plugin);
 
-        Assert.Equal("Test.Plugin", plugin.PluginId);
-        Assert.Equal("Modus.PluginContract", plugin.ContractName);
+        Assert.Equal(new PluginId("Test.Plugin"), plugin.PluginId);
+        Assert.Equal(new ContractName("Modus.PluginContract"), plugin.ContractName);
         Assert.Equal(new Version(1, 0, 0), plugin.ContractVersion);
-        Assert.Equal(["Test.Operation"], plugin.SupportedOperations);
+        Assert.Equal([new OperationName("Test.Operation")], plugin.SupportedOperations);
     }
 
     private sealed class TestPlugin : PluginBase
     {
-        public override string PluginId => "Test.Plugin";
+        public override PluginId PluginId => new PluginId("Test.Plugin");
 
-        public override IReadOnlyCollection<string> SupportedOperations => ["Test.Operation"];
+        public override IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName("Test.Operation")];
     }
 }

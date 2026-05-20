@@ -1,10 +1,12 @@
+using Modus.Core.Plugins;
+
 namespace Modus.Host.Plugins.Descriptors;
 
 public sealed record PluginOnboardingResult(
     bool HostHealthy,
     bool EventAccepted,
     bool PluginActivated,
-    string? PluginId,
-    IReadOnlyList<string> ActivePluginIds,
-    IReadOnlyList<string> FailedPluginIds,
+    PluginId? PluginId,
+    IReadOnlyList<PluginId> ActivePluginIds,
+    IReadOnlyList<PluginId> FailedPluginIds,
     IReadOnlyList<string> Diagnostics);

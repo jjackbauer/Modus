@@ -38,7 +38,7 @@ public sealed class StartupAndActivationTests
             Assert.True(newlyCreated.HostHealthy);
             Assert.True(newlyCreated.EventAccepted);
             Assert.True(newlyCreated.PluginActivated);
-            Assert.Equal("Plugin.NewlyCreated", newlyCreated.PluginId);
+            Assert.Equal(new PluginId("Plugin.NewlyCreated"), newlyCreated.PluginId);
             Assert.Contains(
                 newlyCreated.Diagnostics,
                 x => x.Contains(
@@ -70,7 +70,7 @@ public sealed class StartupAndActivationTests
             Assert.True(onboarding.HostHealthy);
             Assert.True(onboarding.EventAccepted);
             Assert.True(onboarding.PluginActivated);
-            Assert.Equal("Plugin.Queue", onboarding.PluginId);
+            Assert.Equal(new PluginId("Plugin.Queue"), onboarding.PluginId);
             Assert.Contains(
                 $"stage=discovery sequence=0001 outcome=accepted path={Path.GetFullPath(projectPath)}",
                 onboarding.Diagnostics,
@@ -151,8 +151,8 @@ public sealed class StartupAndActivationTests
             Assert.True(firstInScope.HostHealthy);
             Assert.True(firstInScope.EventAccepted);
             Assert.True(firstInScope.PluginActivated);
-            Assert.Equal("Plugin.Inventory", firstInScope.PluginId);
-            Assert.Equal(["Plugin.Inventory"], firstInScope.ActivePluginIds);
+            Assert.Equal(new PluginId("Plugin.Inventory"), firstInScope.PluginId);
+            Assert.Equal([new PluginId("Plugin.Inventory")], firstInScope.ActivePluginIds);
 
             Assert.True(duplicateInScope.HostHealthy);
             Assert.False(duplicateInScope.EventAccepted);
@@ -162,7 +162,7 @@ public sealed class StartupAndActivationTests
                 x => x.Contains(
                     $"outcome=ignored reason=duplicate file notification path={Path.GetFullPath(inScopeProjectPath)}",
                     StringComparison.Ordinal));
-            Assert.Equal(["Plugin.Inventory"], duplicateInScope.ActivePluginIds);
+            Assert.Equal([new PluginId("Plugin.Inventory")], duplicateInScope.ActivePluginIds);
         }
         finally
         {
@@ -326,21 +326,21 @@ public sealed class StartupAndActivationTests
     {
         var input = new[]
         {
-            new PluginDescriptor("Plugin.C", "Plugin.C", new Version(1, 0), ["Cap.C"], []),
-            new PluginDescriptor("Plugin.A", "Plugin.A", new Version(1, 0), ["Cap.A"], []),
-            new PluginDescriptor("Plugin.B", "Plugin.B", new Version(1, 0), ["Cap.B"], []),
+            new PluginDescriptor(new PluginId("Plugin.C"), "Plugin.C", new Version(1, 0), [new CapabilityName("Cap.C")], []),
+            new PluginDescriptor(new PluginId("Plugin.A"), "Plugin.A", new Version(1, 0), [new CapabilityName("Cap.A")], []),
+            new PluginDescriptor(new PluginId("Plugin.B"), "Plugin.B", new Version(1, 0), [new CapabilityName("Cap.B")], []),
         };
 
         var discovered = InMemoryPluginDiscoveryService.Discover(input);
 
-        Assert.Equal(["Plugin.A", "Plugin.B", "Plugin.C"], discovered.Select(x => x.PluginId).ToArray());
+        Assert.Equal(["Plugin.A", "Plugin.B", "Plugin.C"], discovered.Select(x => x.PluginId.Value).ToArray());
     }
 
     [Fact]
     public void Loader_GivenInvalidPluginAssembly_ExpectedValidationErrorAndNoActivation()
     {
         var runtime = new InMemoryHostRuntime();
-        var invalid = new PluginDescriptor("Plugin.Invalid", "Plugin.Invalid", new Version(1, 0), ["Cap.Invalid"], [], IsValidAssembly: false);
+        var invalid = new PluginDescriptor(new PluginId("Plugin.Invalid"), "Plugin.Invalid", new Version(1, 0), [new CapabilityName("Cap.Invalid")], [], IsValidAssembly: false);
 
         var result = runtime.Start([invalid]);
 
@@ -356,7 +356,7 @@ public sealed class StartupAndActivationTests
     [Fact]
     public void Loader_GivenValidPluginAssembly_ExpectedRuntimeLoadWithoutThirdPartyDependency()
     {
-        var descriptor = new PluginDescriptor("Plugin.Standard", "Plugin.Standard", new Version(1, 0), ["Cap.Standard"], []);
+        var descriptor = new PluginDescriptor(new PluginId("Plugin.Standard"), "Plugin.Standard", new Version(1, 0), [new CapabilityName("Cap.Standard")], []);
 
         var loadResult = InMemoryPluginLoader.Load(descriptor);
 
@@ -370,10 +370,10 @@ public sealed class StartupAndActivationTests
     {
         var runtime = new InMemoryHostRuntime();
         var disallowed = new PluginDescriptor(
-            "Plugin.NonCompliant",
+            new PluginId("Plugin.NonCompliant"),
             "Plugin.NonCompliant",
             new Version(1, 0),
-            ["Cap.NonCompliant"],
+            [new CapabilityName("Cap.NonCompliant")],
             [],
             IsValidAssembly: true,
             UsesOnlyStandardLibrary: false);
@@ -411,8 +411,8 @@ public sealed class StartupAndActivationTests
             Assert.True(onboarding.HostHealthy);
             Assert.True(onboarding.EventAccepted);
             Assert.False(onboarding.PluginActivated);
-            Assert.Equal("Plugin.ContractsInvalid", onboarding.PluginId);
-            Assert.Contains("Plugin.ContractsInvalid", onboarding.FailedPluginIds);
+            Assert.Equal(new PluginId("Plugin.ContractsInvalid"), onboarding.PluginId);
+            Assert.Contains(new PluginId("Plugin.ContractsInvalid"), onboarding.FailedPluginIds);
             Assert.Contains(
                 "stage=validation plugin=Plugin.ContractsInvalid outcome=failure reason=contract violation",
                 onboarding.Diagnostics,
@@ -431,7 +431,7 @@ public sealed class StartupAndActivationTests
     public void Activation_GivenSuccessfullyLoadedPlugin_ExpectedStateProgressionToActive()
     {
         var engine = new InMemoryLifecycleEngine();
-        var plugin = new PluginSpec("Plugin.ActivationOk", IsValid: true, FailOnActivation: false);
+        var plugin = new PluginSpec(new PluginId("Plugin.ActivationOk"), IsValid: true, FailOnActivation: false);
 
         var result = engine.HotLoad(plugin);
 
@@ -456,8 +456,8 @@ public sealed class StartupAndActivationTests
         var runtime = new InMemoryHostRuntime();
         var plugins = new[]
         {
-            new PluginDescriptor("Plugin.Healthy", "Plugin.Healthy", new Version(1, 0), ["Cap.Shared"], []),
-            new PluginDescriptor("Plugin.Faulty", "Plugin.Faulty", new Version(2, 0), ["Cap.Shared"], [], FailOnActivation: true),
+            new PluginDescriptor(new PluginId("Plugin.Healthy"), "Plugin.Healthy", new Version(1, 0), [new CapabilityName("Cap.Shared")], []),
+            new PluginDescriptor(new PluginId("Plugin.Faulty"), "Plugin.Faulty", new Version(2, 0), [new CapabilityName("Cap.Shared")], [], FailOnActivation: true),
         };
 
         var result = runtime.Start(plugins);
@@ -502,14 +502,14 @@ public sealed class StartupAndActivationTests
             Assert.True(failedOnboarding.HostHealthy);
             Assert.True(failedOnboarding.EventAccepted);
             Assert.False(failedOnboarding.PluginActivated);
-            Assert.Contains("Plugin.InvalidValidation", failedOnboarding.FailedPluginIds);
+            Assert.Contains(new PluginId("Plugin.InvalidValidation"), failedOnboarding.FailedPluginIds);
 
             Assert.True(successfulOnboarding.HostHealthy);
             Assert.True(successfulOnboarding.EventAccepted);
             Assert.True(successfulOnboarding.PluginActivated);
-            Assert.Equal("Plugin.ValidAfterFailure", successfulOnboarding.PluginId);
-            Assert.Contains("Plugin.ValidAfterFailure", successfulOnboarding.ActivePluginIds);
-            Assert.Contains("Plugin.InvalidValidation", successfulOnboarding.FailedPluginIds);
+            Assert.Equal(new PluginId("Plugin.ValidAfterFailure"), successfulOnboarding.PluginId);
+            Assert.Contains(new PluginId("Plugin.ValidAfterFailure"), successfulOnboarding.ActivePluginIds);
+            Assert.Contains(new PluginId("Plugin.InvalidValidation"), successfulOnboarding.FailedPluginIds);
             Assert.Contains(
                 $"stage=discovery sequence=0002 outcome=accepted path={Path.GetFullPath(validProjectPath)}",
                 successfulOnboarding.Diagnostics,
@@ -551,8 +551,8 @@ public sealed class StartupAndActivationTests
             Assert.True(failedOnboarding.HostHealthy);
             Assert.True(failedOnboarding.EventAccepted);
             Assert.False(failedOnboarding.PluginActivated);
-            Assert.Equal("Plugin.ThrowsOnActivation", failedOnboarding.PluginId);
-            Assert.Contains("Plugin.ThrowsOnActivation", failedOnboarding.FailedPluginIds);
+            Assert.Equal(new PluginId("Plugin.ThrowsOnActivation"), failedOnboarding.PluginId);
+            Assert.Contains(new PluginId("Plugin.ThrowsOnActivation"), failedOnboarding.FailedPluginIds);
             Assert.Contains(
                 "stage=activation plugin=Plugin.ThrowsOnActivation outcome=failure reason=activation exception",
                 failedOnboarding.Diagnostics,
@@ -561,9 +561,9 @@ public sealed class StartupAndActivationTests
             Assert.True(successfulOnboarding.HostHealthy);
             Assert.True(successfulOnboarding.EventAccepted);
             Assert.True(successfulOnboarding.PluginActivated);
-            Assert.Equal("Plugin.Continues", successfulOnboarding.PluginId);
-            Assert.Contains("Plugin.Continues", successfulOnboarding.ActivePluginIds);
-            Assert.DoesNotContain("Plugin.ThrowsOnActivation", successfulOnboarding.ActivePluginIds);
+            Assert.Equal(new PluginId("Plugin.Continues"), successfulOnboarding.PluginId);
+            Assert.Contains(new PluginId("Plugin.Continues"), successfulOnboarding.ActivePluginIds);
+            Assert.DoesNotContain(new PluginId("Plugin.ThrowsOnActivation"), successfulOnboarding.ActivePluginIds);
         }
         finally
         {
@@ -577,9 +577,9 @@ public sealed class StartupAndActivationTests
         var runtime = new InMemoryHostRuntime();
         var plugins = new[]
         {
-            new PluginDescriptor("Plugin.C", "Plugin.C", new Version(1, 0), ["Cap.C"], ["Plugin.A"]),
-            new PluginDescriptor("Plugin.B", "Plugin.B", new Version(1, 0), ["Cap.B"], ["Plugin.A"]),
-            new PluginDescriptor("Plugin.A", "Plugin.A", new Version(1, 0), ["Cap.A"], []),
+            new PluginDescriptor(new PluginId("Plugin.C"), "Plugin.C", new Version(1, 0), [new CapabilityName("Cap.C")], [new CapabilityName("Plugin.A")]),
+            new PluginDescriptor(new PluginId("Plugin.B"), "Plugin.B", new Version(1, 0), [new CapabilityName("Cap.B")], [new CapabilityName("Plugin.A")]),
+            new PluginDescriptor(new PluginId("Plugin.A"), "Plugin.A", new Version(1, 0), [new CapabilityName("Cap.A")], []),
         };
 
         var result = runtime.Start(plugins);
@@ -594,8 +594,8 @@ public sealed class StartupAndActivationTests
         var runtime = new InMemoryHostRuntime();
         var plugins = new[]
         {
-            new PluginDescriptor("Plugin.Low", "Plugin.Low", new Version(1, 0), ["Cap.Shared"], []),
-            new PluginDescriptor("Plugin.High", "Plugin.High", new Version(2, 0), ["Cap.Shared"], []),
+            new PluginDescriptor(new PluginId("Plugin.Low"), "Plugin.Low", new Version(1, 0), [new CapabilityName("Cap.Shared")], []),
+            new PluginDescriptor(new PluginId("Plugin.High"), "Plugin.High", new Version(2, 0), [new CapabilityName("Cap.Shared")], []),
         };
 
         var result = runtime.Start(plugins);
@@ -610,8 +610,8 @@ public sealed class StartupAndActivationTests
         var runtime = new InMemoryHostRuntime();
         var plugins = new[]
         {
-            new PluginDescriptor("Plugin.Healthy", "Plugin.Healthy", new Version(1, 0), ["Cap.Healthy"], []),
-            new PluginDescriptor("Plugin.Faulty", "Plugin.Faulty", new Version(1, 0), ["Cap.Faulty"], [], FailOnActivation: true),
+            new PluginDescriptor(new PluginId("Plugin.Healthy"), "Plugin.Healthy", new Version(1, 0), [new CapabilityName("Cap.Healthy")], []),
+            new PluginDescriptor(new PluginId("Plugin.Faulty"), "Plugin.Faulty", new Version(1, 0), [new CapabilityName("Cap.Faulty")], [], FailOnActivation: true),
         };
 
         var result = runtime.Start(plugins);
@@ -632,18 +632,18 @@ public sealed class StartupAndActivationTests
         var plugins = new[]
         {
             new PluginDescriptor(
-                "Plugin.DependencyInvalid",
+                new PluginId("Plugin.DependencyInvalid"),
                 "Plugin.DependencyInvalid",
                 new Version(1, 0),
-                ["Cap.Dependency"],
+                [new CapabilityName("Cap.Dependency")],
                 [],
                 IsContractCompliant: false),
             new PluginDescriptor(
-                "Plugin.Dependent",
+                new PluginId("Plugin.Dependent"),
                 "Plugin.Dependent",
                 new Version(1, 0),
-                ["Cap.Dependent"],
-                ["Plugin.DependencyInvalid"]),
+                [new CapabilityName("Cap.Dependent")],
+                [new CapabilityName("Plugin.DependencyInvalid")]),
         };
 
         var result = runtime.Start(plugins);
@@ -662,7 +662,7 @@ public sealed class StartupAndActivationTests
     public void Deduplication_GivenRepeatedCsprojCreateNotifications_ExpectedSinglePluginActivation()
     {
         var runtime = new InMemoryHostRuntime();
-        var repeated = new PluginDescriptor("Plugin.Payments", "Plugin.Payments", new Version(1, 0), ["Cap.Payments"], []);
+        var repeated = new PluginDescriptor(new PluginId("Plugin.Payments"), "Plugin.Payments", new Version(1, 0), [new CapabilityName("Cap.Payments")], []);
 
         var result = runtime.Start([repeated, repeated, repeated]);
 
@@ -675,8 +675,8 @@ public sealed class StartupAndActivationTests
     public void Deduplication_GivenAlreadyActivePluginProject_ExpectedNoDuplicateLoadAndDiagnosticLogged()
     {
         var runtime = new InMemoryHostRuntime();
-        var first = new PluginDescriptor("Plugin.Catalog", "Plugin.Catalog", new Version(1, 0), ["Cap.Catalog"], []);
-        var duplicate = new PluginDescriptor("Plugin.Catalog", "Plugin.Catalog", new Version(1, 0), ["Cap.Catalog"], []);
+        var first = new PluginDescriptor(new PluginId("Plugin.Catalog"), "Plugin.Catalog", new Version(1, 0), [new CapabilityName("Cap.Catalog")], []);
+        var duplicate = new PluginDescriptor(new PluginId("Plugin.Catalog"), "Plugin.Catalog", new Version(1, 0), [new CapabilityName("Cap.Catalog")], []);
 
         var result = runtime.Start([first, duplicate]);
 
@@ -689,7 +689,7 @@ public sealed class StartupAndActivationTests
     public void Diagnostics_GivenSuccessfulPipeline_ExpectedDiscoveryValidationLoadActivationMessagesInOrder()
     {
         var runtime = new InMemoryHostRuntime();
-        var plugin = new PluginDescriptor("Plugin.Observable", "Plugin.Observable", new Version(1, 0), ["Cap.Observable"], []);
+        var plugin = new PluginDescriptor(new PluginId("Plugin.Observable"), "Plugin.Observable", new Version(1, 0), [new CapabilityName("Cap.Observable")], []);
 
         var result = runtime.Start([plugin]);
 
@@ -709,7 +709,7 @@ public sealed class StartupAndActivationTests
     public void Diagnostics_GivenPipelineFailure_ExpectedFailureStageAndReasonIncludedInDiagnosticOutput()
     {
         var runtime = new InMemoryHostRuntime();
-        var invalid = new PluginDescriptor("Plugin.Bad", "Plugin.Bad", new Version(1, 0), ["Cap.Bad"], [], IsValidAssembly: false);
+        var invalid = new PluginDescriptor(new PluginId("Plugin.Bad"), "Plugin.Bad", new Version(1, 0), [new CapabilityName("Cap.Bad")], [], IsValidAssembly: false);
 
         var result = runtime.Start([invalid]);
 
@@ -725,9 +725,9 @@ public sealed class StartupAndActivationTests
         var runtime = new InMemoryHostRuntime();
         var plugins = new[]
         {
-            new PluginDescriptor("Plugin.Auth", "Plugin.Auth", new Version(1, 0), ["Cap.Auth"], []),
-            new PluginDescriptor("Plugin.Billing", "Plugin.Billing", new Version(1, 0), ["Cap.Billing"], []),
-            new PluginDescriptor("Plugin.Notifications", "Plugin.Notifications", new Version(1, 0), ["Cap.Notifications"], []),
+            new PluginDescriptor(new PluginId("Plugin.Auth"), "Plugin.Auth", new Version(1, 0), [new CapabilityName("Cap.Auth")], []),
+            new PluginDescriptor(new PluginId("Plugin.Billing"), "Plugin.Billing", new Version(1, 0), [new CapabilityName("Cap.Billing")], []),
+            new PluginDescriptor(new PluginId("Plugin.Notifications"), "Plugin.Notifications", new Version(1, 0), [new CapabilityName("Cap.Notifications")], []),
         };
 
         var result = runtime.Start(plugins);

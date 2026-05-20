@@ -6,7 +6,7 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
 {
     private readonly IReadOnlyList<IScheduledTimerTaskExtension> _scheduledTaskExtensions;
     private readonly IReadOnlyDictionary<string, IScheduledTimerTaskExtension> _operationOwners;
-    private readonly IReadOnlyCollection<string> _supportedOperations;
+    private readonly IReadOnlyCollection<OperationName> _supportedOperations;
     private readonly string _autonomousOperation;
     private readonly TimeSpan _recurringInterval;
     private readonly object _lifecycleLock = new();
@@ -66,18 +66,19 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
         _operationOwners = BuildOperationOwners(_scheduledTaskExtensions, nameof(scheduledTaskExtensions));
         _supportedOperations = _operationOwners.Keys
             .OrderBy(static operation => operation, StringComparer.Ordinal)
+            .Select(k => new OperationName(k))
             .ToArray();
         _autonomousOperation = ResolveAutonomousOperation(_scheduledTaskExtensions, _operationOwners, nameof(scheduledTaskExtensions));
         _recurringInterval = recurringInterval;
     }
 
-    public override string PluginId => "Plugin.Timer";
+    public override PluginId PluginId => new PluginId("Plugin.Timer");
 
-    public override string ContractName => "Modus.PluginContract";
+    public override ContractName ContractName => new ContractName("Modus.PluginContract");
 
     public override Version ContractVersion => new(1, 0, 0);
 
-    public override IReadOnlyCollection<string> SupportedOperations => _supportedOperations;
+    public override IReadOnlyCollection<OperationName> SupportedOperations => _supportedOperations;
 
     public override void Load(PluginLoadContext context)
     {
@@ -127,7 +128,7 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!_operationOwners.TryGetValue(request.Operation, out var owner))
+        if (!_operationOwners.TryGetValue(request.Operation.Value, out var owner))
         {
             return new SyncResponse(
                 Success: false,
@@ -153,7 +154,7 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
                 break;
             }
 
-            _ = Handle(SyncRequest.ForStandardPath(_autonomousOperation));
+            _ = Handle(SyncRequest.ForStandardPath(new OperationName(_autonomousOperation)));
         }
     }
 
@@ -204,14 +205,9 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
 
             foreach (var operation in extensionOperations)
             {
-                if (string.IsNullOrWhiteSpace(operation))
+                if (!owners.ContainsKey(operation.Value))
                 {
-                    throw new ArgumentException("Scheduled task extension operations cannot be null, empty, or whitespace.", parameterName);
-                }
-
-                if (!owners.ContainsKey(operation))
-                {
-                    owners.Add(operation, extension);
+                    owners.Add(operation.Value, extension);
                 }
             }
         }
@@ -238,9 +234,9 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
 
         foreach (var operation in defaultOperations)
         {
-            if (!string.IsNullOrWhiteSpace(operation) && operationOwners.ContainsKey(operation))
+            if (operationOwners.ContainsKey(operation.Value))
             {
-                return operation;
+                return operation.Value;
             }
         }
 

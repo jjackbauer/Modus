@@ -29,7 +29,7 @@ public sealed class RuntimePluginLoadingTests
             var second = loader.ScanRuntimeAssemblies(pluginsPath);
 
             Assert.Equal(first.Descriptors.Select(x => x.PluginId).ToArray(), second.Descriptors.Select(x => x.PluginId).ToArray());
-            Assert.Equal(new[] { "Modus.Core", "Modus.Host" }, first.Descriptors.Select(x => x.PluginId).ToArray());
+            Assert.Equal(new[] { "Modus.Core", "Modus.Host" }, first.Descriptors.Select(x => x.PluginId.Value).ToArray());
             Assert.All(first.Descriptors, descriptor =>
             {
                 Assert.False(string.IsNullOrWhiteSpace(descriptor.AssemblyPath));

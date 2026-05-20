@@ -1,3 +1,5 @@
+using Modus.Core.Messaging;
+
 namespace Modus.Host.Domain.WebApi;
 
 /// <summary>
@@ -18,9 +20,9 @@ public class PluginOperationHttpResponse
     public string? Payload { get; set; }
 
     /// <summary>
-    /// Status descriptor for the operation outcome (e.g., "Success", "Rejected", "Failed").
+    /// Status descriptor for the operation outcome.
     /// </summary>
-    public string? Status { get; set; }
+    public SyncResponseStatus? Status { get; set; }
 
     /// <summary>
     /// Optional correlation identifier echoed from the request, if provided.

@@ -1,10 +1,10 @@
 namespace Modus.Core.Plugins;
 
-public sealed record PluginLoadContext(string PluginId, CancellationToken CancellationToken);
+public sealed record PluginLoadContext(PluginId PluginId, CancellationToken CancellationToken);
 
-public sealed record PluginStartContext(string PluginId, CancellationToken CancellationToken);
+public sealed record PluginStartContext(PluginId PluginId, CancellationToken CancellationToken);
 
-public sealed record PluginStopContext(string PluginId, CancellationToken CancellationToken);
+public sealed record PluginStopContext(PluginId PluginId, CancellationToken CancellationToken);
 
 public enum PluginUnloadReason
 {
@@ -14,7 +14,7 @@ public enum PluginUnloadReason
 }
 
 public sealed record PluginUnloadContext(
-    string PluginId,
+    PluginId PluginId,
     PluginUnloadReason UnloadReason,
     DateTimeOffset Deadline,
     CancellationToken CancellationToken);

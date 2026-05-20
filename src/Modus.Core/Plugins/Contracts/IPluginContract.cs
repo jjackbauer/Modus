@@ -2,7 +2,7 @@ namespace Modus.Core.Plugins;
 
 public interface IPluginContract
 {
-    string PluginId { get; }
-    string ContractName { get; }
+    PluginId PluginId { get; }
+    ContractName ContractName { get; }
     Version ContractVersion { get; }
 }

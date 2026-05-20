@@ -124,11 +124,11 @@ public sealed class PluginWebApiEndpointTests
             new List<ISyncResponder> { responder1, responder2 });
 
         var request = new SyncRequest(
-            Operation: "Op.One",
+            Operation: new OperationName("Op.One"),
             IsFallbackExplicit: false,
             FallbackReason: SyncFallbackReason.None,
             FallbackReasonCode: null,
-            CorrelationId: "test-123");
+            CorrelationId: new CorrelationId("test-123"));
 
         // Act: Dispatch to the first responder
         var response = dispatcher.Handle(request);
@@ -136,7 +136,7 @@ public sealed class PluginWebApiEndpointTests
         // Assert: Response should be successful
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("test-123", response.CorrelationId);
+        Assert.Equal(new CorrelationId("test-123"), response.CorrelationId);
     }
 
     [Fact]
@@ -148,11 +148,11 @@ public sealed class PluginWebApiEndpointTests
             new List<ISyncResponder> { responder });
 
         var request = new SyncRequest(
-            Operation: "Unknown.Op",
+            Operation: new OperationName("Unknown.Op"),
             IsFallbackExplicit: false,
             FallbackReason: SyncFallbackReason.None,
             FallbackReasonCode: null,
-            CorrelationId: "test-456");
+            CorrelationId: new CorrelationId("test-456"));
 
         // Act: Try to handle unknown operation
         var response = dispatcher.Handle(request);
@@ -161,7 +161,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.False(response.Success);
         Assert.Equal(SyncResponseStatus.Rejected, response.Status);
         Assert.Contains("operation-not-found", response.Payload);
-        Assert.Equal("test-456", response.CorrelationId);
+        Assert.Equal(new CorrelationId("test-456"), response.CorrelationId);
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public sealed class PluginWebApiEndpointTests
             new List<ISyncResponder> { responder });
 
         var request = new SyncRequest(
-            Operation: "Op.Test",
+            Operation: new OperationName("Op.Test"),
             IsFallbackExplicit: false,
             FallbackReason: SyncFallbackReason.None,
             FallbackReasonCode: null,
@@ -211,26 +211,39 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(status, response.Status);
     }
 
+    [Fact]
+    public void PluginOperationHttpResponse_Status_GivenSyncResponseStatusAssigned_PropertyTypeIsNullableSyncResponseStatus()
+    {
+        var response = new PluginOperationHttpResponse
+        {
+            Success = true,
+            Payload = "ok",
+            Status = SyncResponseStatus.Success,
+        };
+
+        Assert.Equal(SyncResponseStatus.Success, response.Status);
+        Assert.IsType<SyncResponseStatus>(response.Status!.Value);
+    }
+
     // Test helper classes
     private sealed class TestPlugin : IPluginContract, IPluginOperationCatalog, ISyncResponder
     {
-        private readonly string _pluginId;
-        private readonly IReadOnlyCollection<string> _supportedOps;
+        private readonly IReadOnlyCollection<OperationName> _supportedOps;
 
         public TestPlugin(string pluginId, string[] supportedOps)
         {
-            _pluginId = pluginId;
-            _supportedOps = supportedOps;
+            PluginId = new PluginId(pluginId);
+            _supportedOps = supportedOps.Select(op => new OperationName(op)).ToArray();
         }
 
-        public string PluginId => _pluginId;
-        public string ContractName => "Test.Contract";
+        public PluginId PluginId { get; }
+        public ContractName ContractName => new ContractName("Test.Contract");
         public Version ContractVersion => new(1, 0, 0);
-        public IReadOnlyCollection<string> SupportedOperations => _supportedOps;
+        public IReadOnlyCollection<OperationName> SupportedOperations => _supportedOps;
 
         public SyncResponse Handle(SyncRequest request)
         {
-            if (!_supportedOps.Contains(request.Operation))
+            if (!_supportedOps.Any(op => op == request.Operation))
             {
                 return new SyncResponse(
                     Success: false,
@@ -249,25 +262,24 @@ public sealed class PluginWebApiEndpointTests
 
     private sealed class TestPluginWithStatus : IPluginContract, IPluginOperationCatalog, ISyncResponder
     {
-        private readonly string _pluginId;
-        private readonly IReadOnlyCollection<string> _supportedOps;
+        private readonly IReadOnlyCollection<OperationName> _supportedOps;
         private readonly SyncResponseStatus _status;
 
         public TestPluginWithStatus(string pluginId, string[] supportedOps, SyncResponseStatus status)
         {
-            _pluginId = pluginId;
-            _supportedOps = supportedOps;
+            PluginId = new PluginId(pluginId);
+            _supportedOps = supportedOps.Select(op => new OperationName(op)).ToArray();
             _status = status;
         }
 
-        public string PluginId => _pluginId;
-        public string ContractName => "Test.Contract";
+        public PluginId PluginId { get; }
+        public ContractName ContractName => new ContractName("Test.Contract");
         public Version ContractVersion => new(1, 0, 0);
-        public IReadOnlyCollection<string> SupportedOperations => _supportedOps;
+        public IReadOnlyCollection<OperationName> SupportedOperations => _supportedOps;
 
         public SyncResponse Handle(SyncRequest request)
         {
-            if (!_supportedOps.Contains(request.Operation))
+            if (!_supportedOps.Any(op => op == request.Operation))
             {
                 return new SyncResponse(
                     Success: false,
