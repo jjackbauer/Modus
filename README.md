@@ -1,4 +1,5 @@
-# Modus
+
+![Modus logo](.github/assets/modus-logo.png)
 
 Modus is an open-source plugin platform built with .NET and C# to support two goals:
 
