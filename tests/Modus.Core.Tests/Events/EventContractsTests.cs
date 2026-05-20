@@ -92,6 +92,10 @@ public sealed class EventContractsTests
             }
         }
 
+        public void Publish<TPayload>(DomainEvent<TPayload> @event)
+        {
+        }
+
         public void Subscribe(Action<DomainEventEnvelope> handler)
         {
             _handlers.Add(handler);

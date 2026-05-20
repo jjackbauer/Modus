@@ -489,6 +489,10 @@ public sealed class PluginContractsTests
             }
         }
 
+        public void Publish<TPayload>(DomainEvent<TPayload> @event)
+        {
+        }
+
         public void Subscribe(Action<DomainEvent> handler)
         {
             _handlers.Add(handler);

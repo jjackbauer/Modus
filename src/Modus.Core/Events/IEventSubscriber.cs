@@ -7,4 +7,8 @@ public interface IEventSubscriber
     void OnEvent(DomainEventEnvelope envelope)
     {
     }
+
+    void OnEvent<TPayload>(DomainEventEnvelope<TPayload> envelope)
+    {
+    }
 }

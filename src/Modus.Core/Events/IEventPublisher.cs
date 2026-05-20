@@ -8,4 +8,11 @@ public interface IEventPublisher
     {
         Publish(envelope.Event);
     }
+
+    void Publish<TPayload>(DomainEvent<TPayload> @event);
+
+    void Publish<TPayload>(DomainEventEnvelope<TPayload> envelope)
+    {
+        Publish(envelope.Event);
+    }
 }
