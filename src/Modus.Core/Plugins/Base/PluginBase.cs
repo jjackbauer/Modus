@@ -69,7 +69,7 @@ public abstract class PluginBase<TPluginImpl> : PluginBase, IPluginDependencyReg
         ArgumentNullException.ThrowIfNull(services);
 
         // Register the concrete plugin implementation with the declared lifetime
-        services.AddPluginServiceInstance<TPluginImpl>((TPluginImpl)(object)this);
+        services.AddPluginService<TPluginImpl, TPluginImpl>(DeclaredServiceLifetime);
     }
 }
 

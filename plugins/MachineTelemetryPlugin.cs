@@ -70,8 +70,8 @@ public sealed class MachineTelemetryPlugin :
     {
         ArgumentNullException.ThrowIfNull(services);
         base.RegisterPluginServices(services);
-        // Also register this plugin as the contract implementation
-        services.AddPluginServiceInstance<IMachineTelemetryPluginContract>(this);
+        // Register the interface contract using the explicit interface-mapping extension
+        services.AddPluginServiceInterface<IMachineTelemetryPluginContract, MachineTelemetryPlugin>(DeclaredServiceLifetime);
     }
 
     public void Subscribe(IEventPublisher publisher)

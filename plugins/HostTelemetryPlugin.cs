@@ -69,8 +69,8 @@ public sealed class HostTelemetryPlugin :
     {
         ArgumentNullException.ThrowIfNull(services);
         base.RegisterPluginServices(services);
-        // Also register this plugin as the contract implementation
-        services.AddPluginServiceInstance<IHostTelemetryPluginContract>(this);
+        // Register the interface contract using the explicit interface-mapping extension
+        services.AddPluginServiceInterface<IHostTelemetryPluginContract, HostTelemetryPlugin>(DeclaredServiceLifetime);
     }
 
     public void Subscribe(IEventPublisher publisher)
