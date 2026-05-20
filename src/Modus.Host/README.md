@@ -47,6 +47,42 @@ modus plugins/          ← discovers, validates, activates
 - The host is the only composition root — plugins never reach into host internals
 - Scheduled and timer-driven plugins are supported via core lifecycle hooks
 
+The host runtime composes dependencies, orchestrates lifecycle stages, and enforces boundary validation before activation.
+
+## Lifecycle and Runtime Extension Points
+
+### Registration and composition flow
+
+1. `AddModusPluginHosting` initializes hosting options and runtime composition.
+2. `AddPluginHostingCore` registers portability contracts and host-core defaults.
+3. `AddDiscoveredPlugins` wires plugin registrars and capability contracts into DI.
+4. `AddModusPluginHostingRuntime` adds discovery, validation, watcher, and host runner services.
+
+### Runtime lifecycle hooks
+
+`IPluginLifecycle` hooks are executed as deterministic runtime stages:
+
+1. `Load(PluginLoadContext)`
+2. `Start(PluginStartContext)`
+3. `Stop(PluginStopContext)`
+4. `Unload(PluginUnloadContext)`
+
+### Runtime resolution helpers
+
+- `HostRunner.StartAsync` starts runtime scanning and watcher registration for the configured plugins path.
+- `TryResolvePluginsByContractInterfaceName` resolves active plugin instances by contract interface full name.
+- `TryResolvePluginByTypeName` resolves a plugin instance by concrete type full name.
+
+## Diagnostics and Troubleshooting
+
+Use runtime stages as the primary troubleshooting spine:
+
+- discovery: verify plugin path and descriptor onboarding inputs
+- validation: inspect contract, capability, and operation catalog failures
+- activate: inspect lifecycle hook failures for the plugin identifier in error output
+
+Failure isolation is intentional: one plugin fault should not terminate healthy plugin activation. Prefer fixing or disabling only the failing plugin and re-running host startup validation.
+
 ## Related packages
 
 - **Modus.Core** — contracts and extension points for plugin authors

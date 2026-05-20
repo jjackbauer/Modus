@@ -36,6 +36,40 @@ public class MyPlugin : IPlugin
 - No runtime dependencies beyond `Microsoft.Extensions.DependencyInjection.Abstractions`
 - All extension points are interface-based for testability and isolation
 
+Contracts are stable and versioned; plugins depend on Modus.Core contracts, never on Modus.Host internals.
+
+## Public API Reference
+
+### `IPluginContract`
+
+- Intent: define stable identity and contract versioning for every plugin capability.
+- Usage: implement `PluginId`, `ContractName`, and `ContractVersion` on plugin contracts.
+- Constraints: values must be deterministic and safe to compare with ordinal semantics.
+
+### `IPluginLifecycle`
+
+- Intent: provide deterministic runtime hooks used by host activation flow.
+- Usage: implement `Load`, `Start`, `Stop`, and `Unload` for startup and shutdown stages.
+- Constraints: each hook must validate input context and avoid hidden cross-plugin coupling.
+
+### `IPluginDependencyRegister`
+
+- Intent: register plugin dependencies through DI without leaking host internals.
+- Usage: call `services.AddPluginService<TService, TImplementation>(...)` from `Register`.
+- Constraints: registrations must be idempotent and consistent with declared plugin lifetime.
+
+### `IPluginOperationCatalog`
+
+- Intent: expose the deterministic operation set owned by a plugin capability.
+- Usage: return `SupportedOperations` as an immutable, stable set of operation names.
+- Constraints: operation names should be non-empty, unique, and stable across process restarts.
+
+### `IPluginScheduledEvents` and `IPluginScheduler`
+
+- Intent: define timer and schedule integration points for recurring or point-in-time plugin operations.
+- Usage: call `ScheduleRecurring` or `ScheduleAt` inside `RegisterSchedules(IPluginScheduler scheduler)`.
+- Constraints: job names and operation names should be deterministic so diagnostics remain comparable.
+
 ## Related packages
 
 - **Modus.Host** — host runtime that discovers, validates, and activates plugins
