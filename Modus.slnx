@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/plugins/">
     <Project Path="plugins/Plugin.Host.Telemetry.csproj" />
+    <Project Path="plugins/Plugin.Lifetime.Scoped.csproj" />
+    <Project Path="plugins/Plugin.Lifetime.Singleton.csproj" />
+    <Project Path="plugins/Plugin.Lifetime.Transient.csproj" />
     <Project Path="plugins/Plugin.Machine.Telemetry.csproj" />
   </Folder>
   <Folder Name="/src/">

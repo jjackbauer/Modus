@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,5 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modus.Host\Modus.Host.csproj" />
     <ProjectReference Include="..\..\plugins\Plugin.Host.Telemetry.csproj" />
+    <ProjectReference Include="..\..\plugins\Plugin.Machine.Telemetry.csproj" />
   </ItemGroup>
 </Project>

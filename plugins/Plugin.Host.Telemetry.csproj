@@ -4,12 +4,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Plugin.Host.Telemetry</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <ModusVersion>1.0.0</ModusVersion>
     <ModusCapabilities>Cap.Host;Cap.Telemetry</ModusCapabilities>
     <ModusOperations>Telemetry.Host.CollectSnapshot</ModusOperations>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="HostTelemetryPlugin.cs" />
     <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
   </ItemGroup>
 </Project>

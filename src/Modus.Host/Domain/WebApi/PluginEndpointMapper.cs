@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
 
@@ -12,16 +13,13 @@ public class PluginEndpointMapper
 {
     private readonly IEnumerable<IPluginContract> _contracts;
     private readonly IEnumerable<IPluginOperationCatalog> _catalogs;
-    private readonly IEnumerable<ISyncResponder> _responders;
 
     public PluginEndpointMapper(
         IEnumerable<IPluginContract> contracts,
-        IEnumerable<IPluginOperationCatalog> catalogs,
-        IEnumerable<ISyncResponder> responders)
+        IEnumerable<IPluginOperationCatalog> catalogs)
     {
         _contracts = contracts ?? throw new ArgumentNullException(nameof(contracts));
         _catalogs = catalogs ?? throw new ArgumentNullException(nameof(catalogs));
-        _responders = responders ?? throw new ArgumentNullException(nameof(responders));
     }
 
     /// <summary>
@@ -37,10 +35,6 @@ public class PluginEndpointMapper
         {
             throw new ArgumentNullException(nameof(app));
         }
-
-        // Build a lookup of plugin IDs to contracts for quick access
-        var contractsByPluginId = _contracts
-            .ToDictionary(c => c.PluginId.Value, StringComparer.Ordinal);
 
         // For each operation catalog, find its corresponding contract and register routes
         var processedCatalogs = new HashSet<IPluginOperationCatalog>();
@@ -72,13 +66,16 @@ public class PluginEndpointMapper
                 var routePattern = $"/api/{pluginId}/{operation}";
                 var capturedOperation = operation;
                 var capturedContract = contract;
-                var capturedCatalog = catalog;
 
                 app.MapPost(
                     routePattern,
-                    async (PluginOperationHttpRequest request) =>
+                    async (PluginOperationHttpRequest request, HttpContext httpContext) =>
                     {
-                        return await HandlePluginOperation(request, capturedOperation.Value, capturedCatalog);
+                        return await HandlePluginOperation(
+                            request,
+                            capturedOperation.Value,
+                            capturedContract.PluginId.Value,
+                            httpContext.RequestServices);
                     })
                     .WithName($"PluginOperation_{pluginId}_{operation}")
                     .WithOpenApi()
@@ -98,7 +95,8 @@ public class PluginEndpointMapper
     private async Task<IResult> HandlePluginOperation(
         PluginOperationHttpRequest request,
         string operation,
-        IPluginOperationCatalog catalog)
+        string pluginId,
+        IServiceProvider requestServices)
     {
         try
         {
@@ -110,10 +108,25 @@ public class PluginEndpointMapper
                 FallbackReasonCode: null,
                 CorrelationId: request.CorrelationId is not null ? new CorrelationId(request.CorrelationId) : null);
 
-            // Try to get the responder from the catalog first (if it implements ISyncResponder)
-            // Otherwise, use the first available responder from the dispatcher
-            ISyncResponder responder = (catalog as ISyncResponder) ?? _responders.FirstOrDefault() 
-                ?? throw new InvalidOperationException("No ISyncResponder available to handle the request");
+            var pluginScopedResponders = requestServices
+                .GetServices<ISyncResponder>()
+                .Where(responder => responder is IPluginContract contract
+                    && string.Equals(contract.PluginId.Value, pluginId, StringComparison.Ordinal))
+                .ToArray();
+
+            if (pluginScopedResponders.Length == 0)
+            {
+                throw new InvalidOperationException(
+                    $"No ISyncResponder registered in request scope for plugin '{pluginId}'.");
+            }
+
+            if (pluginScopedResponders.Length > 1)
+            {
+                throw new InvalidOperationException(
+                    $"Multiple ISyncResponder registrations matched plugin '{pluginId}'.");
+            }
+
+            var responder = pluginScopedResponders[0];
             
             var response = responder.Handle(syncRequest);
 

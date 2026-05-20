@@ -3,15 +3,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>Plugin.Machine.Telemetry</AssemblyName>
+    <AssemblyName>Plugin.Lifetime.Transient</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <ModusVersion>1.0.0</ModusVersion>
-    <ModusCapabilities>Cap.Machine;Cap.Telemetry</ModusCapabilities>
-    <ModusOperations>Telemetry.Machine.CollectSnapshot</ModusOperations>
+    <ModusCapabilities>Cap.Lifetime.Transient</ModusCapabilities>
+    <ModusOperations>Lifetime.Transient.PrintId</ModusOperations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="MachineTelemetryPlugin.cs" />
+    <Compile Include="TransientLifetimePlugin.cs" />
     <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
   </ItemGroup>
+
 </Project>

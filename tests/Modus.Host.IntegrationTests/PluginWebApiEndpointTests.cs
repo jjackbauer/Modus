@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
@@ -27,9 +28,8 @@ public sealed class PluginWebApiEndpointTests
 
         var contracts = new List<IPluginContract> { testPlugin };
         var catalogs = new List<IPluginOperationCatalog> { testPlugin };
-        var responders = new List<ISyncResponder> { testPlugin };
 
-        var mapper = new PluginEndpointMapper(contracts, catalogs, responders);
+        var mapper = new PluginEndpointMapper(contracts, catalogs);
         
         // Create a real WebApplication
         var builder = WebApplication.CreateBuilder();
@@ -53,8 +53,7 @@ public sealed class PluginWebApiEndpointTests
         // Arrange: Empty collections
         var mapper = new PluginEndpointMapper(
             new List<IPluginContract>(),
-            new List<IPluginOperationCatalog>(),
-            new List<ISyncResponder>());
+            new List<IPluginOperationCatalog>());
 
         var builder = WebApplication.CreateBuilder();
         builder.Services.AddModusPluginHosting(opts =>
@@ -77,8 +76,7 @@ public sealed class PluginWebApiEndpointTests
         // Arrange
         var mapper = new PluginEndpointMapper(
             new List<IPluginContract>(),
-            new List<IPluginOperationCatalog>(),
-            new List<ISyncResponder>());
+            new List<IPluginOperationCatalog>());
 
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => mapper.Map(null!));
@@ -90,8 +88,7 @@ public sealed class PluginWebApiEndpointTests
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new PluginEndpointMapper(
             null!,
-            new List<IPluginOperationCatalog>(),
-            new List<ISyncResponder>()));
+            new List<IPluginOperationCatalog>()));
     }
 
     [Fact]
@@ -100,17 +97,6 @@ public sealed class PluginWebApiEndpointTests
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => new PluginEndpointMapper(
             new List<IPluginContract>(),
-            null!,
-            new List<ISyncResponder>()));
-    }
-
-    [Fact]
-    public void PluginEndpointMapper_GivenNullResponders_ExpectedArgumentNullException()
-    {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new PluginEndpointMapper(
-            new List<IPluginContract>(),
-            new List<IPluginOperationCatalog>(),
             null!));
     }
 
@@ -225,6 +211,149 @@ public sealed class PluginWebApiEndpointTests
         Assert.IsType<SyncResponseStatus>(response.Status!.Value);
     }
 
+    [Fact]
+    [Trait("ChecklistItem", "Resolve HTTP operation handlers through request-scoped DI only")]
+    public async Task HandlePluginOperation_GivenOperationRequest_ExpectedResponderResolvedFromRequestScope()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Catalog", ["Catalog.Op"]);
+        var mapper = new PluginEndpointMapper(
+            [catalog],
+            [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<ISyncResponder>(_ =>
+            new ScopeResolvedResponder("Plugin.Catalog", "Catalog.Op", "resolved-from-scope"));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Catalog/Catalog.Op",
+            new PluginOperationHttpRequest { CorrelationId = "corr-1", Payload = "payload" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.True(response!.Success);
+        Assert.Equal(SyncResponseStatus.Success, response.Status);
+        Assert.Equal("resolved-from-scope", response.Payload);
+        Assert.Equal("corr-1", response.CorrelationId);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Resolve HTTP operation handlers through request-scoped DI only")]
+    public async Task HandlePluginOperation_GivenOnlyUnrelatedResponder_ExpectedNoFallbackSelection()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Catalog", ["Catalog.Op"]);
+        var unrelatedResponder = new ScopeResolvedResponder("Plugin.Unrelated", "Other.Op", "unexpected");
+        var mapper = new PluginEndpointMapper(
+            [catalog],
+            [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<ISyncResponder>(_ => unrelatedResponder);
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Catalog/Catalog.Op",
+            new PluginOperationHttpRequest { CorrelationId = "corr-2" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.False(response!.Success);
+        Assert.Contains("No ISyncResponder registered in request scope for plugin 'Plugin.Catalog'.", response.Payload);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "HandlePluginOperation_GivenScopedPluginAcrossDifferentRequests_ExpectedDifferentInstanceIds")]
+    public async Task HandlePluginOperation_GivenScopedPluginAcrossDifferentRequests_ExpectedDifferentInstanceIds()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Scoped", ["Scoped.Op"]);
+        var mapper = new PluginEndpointMapper([catalog], [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<ISyncResponder>(_ => new LifetimeProbeResponder("Plugin.Scoped", "Scoped.Op"));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var firstResponse = await PostPluginOperationAsync(client, "Plugin.Scoped", "Scoped.Op", "scoped-1");
+        var secondResponse = await PostPluginOperationAsync(client, "Plugin.Scoped", "Scoped.Op", "scoped-2");
+
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        Assert.NotNull(firstResponse.Body);
+        Assert.NotNull(secondResponse.Body);
+        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "HandlePluginOperation_GivenTransientPluginAcrossRepeatedCalls_ExpectedNewInstancePerCall")]
+    public async Task HandlePluginOperation_GivenTransientPluginAcrossRepeatedCalls_ExpectedNewInstancePerCall()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Transient", ["Transient.Op"]);
+        var mapper = new PluginEndpointMapper([catalog], [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTransient<ISyncResponder>(_ => new LifetimeProbeResponder("Plugin.Transient", "Transient.Op"));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var firstResponse = await PostPluginOperationAsync(client, "Plugin.Transient", "Transient.Op", "transient-1");
+        var secondResponse = await PostPluginOperationAsync(client, "Plugin.Transient", "Transient.Op", "transient-2");
+
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        Assert.NotNull(firstResponse.Body);
+        Assert.NotNull(secondResponse.Body);
+        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "HandlePluginOperation_GivenSingletonPluginAcrossRepeatedCalls_ExpectedSameInstance")]
+    public async Task HandlePluginOperation_GivenSingletonPluginAcrossRepeatedCalls_ExpectedSameInstance()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Singleton", ["Singleton.Op"]);
+        var mapper = new PluginEndpointMapper([catalog], [catalog]);
+        var singletonResponder = new LifetimeProbeResponder("Plugin.Singleton", "Singleton.Op");
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<ISyncResponder>(singletonResponder);
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var firstResponse = await PostPluginOperationAsync(client, "Plugin.Singleton", "Singleton.Op", "singleton-1");
+        var secondResponse = await PostPluginOperationAsync(client, "Plugin.Singleton", "Singleton.Op", "singleton-2");
+
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        Assert.NotNull(firstResponse.Body);
+        Assert.NotNull(secondResponse.Body);
+        Assert.Equal(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
     // Test helper classes
     private sealed class TestPlugin : IPluginContract, IPluginOperationCatalog, ISyncResponder
     {
@@ -292,6 +421,115 @@ public sealed class PluginWebApiEndpointTests
                 Success: _status == SyncResponseStatus.Success,
                 Payload: $"{{\"status\":\"{_status}\"}}",
                 Status: _status,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class LifetimeProbeResponder : IPluginContract, ISyncResponder
+    {
+        private readonly string _expectedOperation;
+
+        public LifetimeProbeResponder(string pluginId, string expectedOperation)
+        {
+            PluginId = new PluginId(pluginId);
+            _expectedOperation = expectedOperation;
+            InstanceId = Guid.NewGuid().ToString("N");
+        }
+
+        public PluginId PluginId { get; }
+
+        public string InstanceId { get; }
+
+        public ContractName ContractName => new("Test.LifetimeProbe");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            if (!string.Equals(request.Operation.Value, _expectedOperation, StringComparison.Ordinal))
+            {
+                return new SyncResponse(
+                    Success: false,
+                    Payload: "unsupported-operation",
+                    Status: SyncResponseStatus.Rejected,
+                    CorrelationId: request.CorrelationId);
+            }
+
+            return new SyncResponse(
+                Success: true,
+                Payload: InstanceId,
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private static async Task<(HttpStatusCode StatusCode, PluginOperationHttpResponse? Body)> PostPluginOperationAsync(
+        HttpClient client,
+        string pluginId,
+        string operation,
+        string correlationId)
+    {
+        var httpResponse = await client.PostAsJsonAsync(
+            $"/api/{pluginId}/{operation}",
+            new PluginOperationHttpRequest { CorrelationId = correlationId, Payload = "payload" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        return (httpResponse.StatusCode, response);
+    }
+
+    private sealed class CatalogOnlyPlugin : IPluginContract, IPluginOperationCatalog
+    {
+        private readonly IReadOnlyCollection<OperationName> _supportedOps;
+
+        public CatalogOnlyPlugin(string pluginId, IEnumerable<string> supportedOps)
+        {
+            PluginId = new PluginId(pluginId);
+            _supportedOps = supportedOps.Select(static op => new OperationName(op)).ToArray();
+        }
+
+        public PluginId PluginId { get; }
+
+        public ContractName ContractName => new("Test.CatalogOnly");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public IReadOnlyCollection<OperationName> SupportedOperations => _supportedOps;
+    }
+
+    private sealed class ScopeResolvedResponder : IPluginContract, ISyncResponder
+    {
+        private readonly string _expectedOperation;
+        private readonly string _payload;
+
+        public ScopeResolvedResponder(string pluginId, string expectedOperation, string payload)
+        {
+            PluginId = new PluginId(pluginId);
+            _expectedOperation = expectedOperation;
+            _payload = payload;
+        }
+
+        public PluginId PluginId { get; }
+
+        public ContractName ContractName => new("Test.ScopeResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            if (!string.Equals(request.Operation.Value, _expectedOperation, StringComparison.Ordinal))
+            {
+                return new SyncResponse(
+                    Success: false,
+                    Payload: "unsupported-operation",
+                    Status: SyncResponseStatus.Rejected,
+                    CorrelationId: request.CorrelationId);
+            }
+
+            return new SyncResponse(
+                Success: true,
+                Payload: _payload,
+                Status: SyncResponseStatus.Success,
                 CorrelationId: request.CorrelationId);
         }
     }

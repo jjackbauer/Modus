@@ -3,15 +3,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>Plugin.Machine.Telemetry</AssemblyName>
+    <AssemblyName>Plugin.Lifetime.Singleton</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <ModusVersion>1.0.0</ModusVersion>
-    <ModusCapabilities>Cap.Machine;Cap.Telemetry</ModusCapabilities>
-    <ModusOperations>Telemetry.Machine.CollectSnapshot</ModusOperations>
+    <ModusCapabilities>Cap.Lifetime.Singleton</ModusCapabilities>
+    <ModusOperations>Lifetime.Singleton.PrintId</ModusOperations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="MachineTelemetryPlugin.cs" />
+    <Compile Include="SingletonLifetimePlugin.cs" />
     <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
   </ItemGroup>
+
 </Project>
