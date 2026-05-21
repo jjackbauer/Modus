@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text.Json;
 using Modus.Core.Events;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
@@ -82,15 +83,15 @@ public sealed class HostTelemetryPlugin :
                 CorrelationId: request.CorrelationId);
         }
 
-        var snapshot = BuildTelemetrySnapshot();
-        Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationNameValue} {snapshot}");
+        var snapshot = BuildTelemetryResult();
+        Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationNameValue} payload={JsonSerializer.Serialize(snapshot)}");
         return new SyncResponse(
             Success: true,
-            Payload: snapshot,
+            PayloadObject: snapshot,
             CorrelationId: request.CorrelationId);
     }
 
-    private string BuildTelemetrySnapshot()
+    private TelemetryResult BuildTelemetryResult()
     {
         var process = Process.GetCurrentProcess();
         var now = DateTimeOffset.UtcNow;
@@ -123,8 +124,28 @@ public sealed class HostTelemetryPlugin :
         var gcGen1 = GC.CollectionCount(1);
         var gcGen2 = GC.CollectionCount(2);
 
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"cpuPercent={cpuPercent:F2};workingSetBytes={workingSetBytes};privateMemoryBytes={privateMemoryBytes};managedHeapBytes={managedHeapBytes};gcGen0={gcGen0};gcGen1={gcGen1};gcGen2={gcGen2}");
+        return new TelemetryResult(
+            PluginId: PluginId.Value,
+            Operation: OperationNameValue,
+            Source: "host",
+            Category: "runtime",
+            CollectedAtUtc: now,
+            Measurements:
+            [
+                new TelemetryMeasurement("cpu.percent", cpuPercent, "percent", "gauge"),
+                new TelemetryMeasurement("memory.workingSet.bytes", workingSetBytes, "bytes", "gauge"),
+                new TelemetryMeasurement("memory.private.bytes", privateMemoryBytes, "bytes", "gauge"),
+                new TelemetryMeasurement("memory.managedHeap.bytes", managedHeapBytes, "bytes", "gauge"),
+                new TelemetryMeasurement("gc.collections.gen0", gcGen0, "count", "counter"),
+                new TelemetryMeasurement("gc.collections.gen1", gcGen1, "count", "counter"),
+                new TelemetryMeasurement("gc.collections.gen2", gcGen2, "count", "counter")
+            ],
+            Metadata: new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["machineName"] = Environment.MachineName,
+                ["processId"] = process.Id.ToString(CultureInfo.InvariantCulture),
+                ["processName"] = process.ProcessName,
+                ["processorCount"] = Environment.ProcessorCount.ToString(CultureInfo.InvariantCulture)
+            });
     }
 }

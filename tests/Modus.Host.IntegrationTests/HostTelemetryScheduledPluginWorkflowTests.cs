@@ -44,12 +44,51 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal(new CorrelationId("corr-telemetry"), response.CorrelationId);
-        Assert.Contains("cpuPercent=", response.Payload, StringComparison.Ordinal);
-        Assert.Contains("workingSetBytes=", response.Payload, StringComparison.Ordinal);
-        Assert.Contains("managedHeapBytes=", response.Payload, StringComparison.Ordinal);
-        Assert.Contains("gcGen0=", response.Payload, StringComparison.Ordinal);
-        Assert.Contains("gcGen1=", response.Payload, StringComparison.Ordinal);
-        Assert.Contains("gcGen2=", response.Payload, StringComparison.Ordinal);
+        Assert.Contains("\"PluginId\":\"Plugin.Host.Telemetry\"", response.Payload, StringComparison.Ordinal);
+        var payload = Assert.IsType<TelemetryResult>(response.PayloadObject);
+        Assert.Equal("Plugin.Host.Telemetry", payload.PluginId);
+        Assert.Equal("Telemetry.Host.CollectSnapshot", payload.Operation);
+        Assert.Equal("host", payload.Source);
+        Assert.Equal("runtime", payload.Category);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "cpu.percent", Unit: "percent", Kind: "gauge" } && m.Value >= 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.workingSet.bytes", Unit: "bytes", Kind: "gauge" } && m.Value > 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.managedHeap.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen0", Unit: "count", Kind: "counter" });
+        Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen1", Unit: "count", Kind: "counter" });
+        Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen2", Unit: "count", Kind: "counter" });
+        Assert.False(string.IsNullOrWhiteSpace(payload.Metadata["machineName"]));
+        Assert.False(string.IsNullOrWhiteSpace(payload.Metadata["processName"]));
+        Assert.True(int.TryParse(payload.Metadata["processId"], out _));
+        Assert.True(int.TryParse(payload.Metadata["processorCount"], out var processorCount));
+        Assert.True(processorCount > 0);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Refactor machine and host telemetry plugin handlers to return typed measurements and structured metadata instead of log-only outputs")]
+    public void MachineTelemetryPluginOperations_GivenHandleTelemetryCollection_ExpectedPayloadContainsStructuredMeasurementsAndMetadata()
+    {
+        var plugin = new MachineTelemetryPlugin();
+        plugin.Start(new PluginStartContext(plugin.PluginId, CancellationToken.None));
+
+        var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Telemetry.Machine.CollectSnapshot"), correlationId: new CorrelationId("corr-machine")));
+
+        Assert.True(response.Success);
+        Assert.Equal(SyncResponseStatus.Success, response.Status);
+        Assert.Equal(new CorrelationId("corr-machine"), response.CorrelationId);
+        Assert.Contains("\"PluginId\":\"Plugin.Machine.Telemetry\"", response.Payload, StringComparison.Ordinal);
+        var payload = Assert.IsType<TelemetryResult>(response.PayloadObject);
+        Assert.Equal("Plugin.Machine.Telemetry", payload.PluginId);
+        Assert.Equal("Telemetry.Machine.CollectSnapshot", payload.Operation);
+        Assert.Equal("machine", payload.Source);
+        Assert.Equal("system", payload.Category);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "cpu.percent", Unit: "percent", Kind: "gauge" } && m.Value >= 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.totalPhysical.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.used.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.load.percent", Unit: "percent", Kind: "gauge" } && m.Value >= 0d);
+        Assert.True(int.TryParse(payload.Metadata["processorCount"], out var processorCount));
+        Assert.True(processorCount > 0);
+        Assert.False(string.IsNullOrWhiteSpace(payload.Metadata["osDescription"]));
+        Assert.False(string.IsNullOrWhiteSpace(payload.Metadata["frameworkDescription"]));
     }
 
     [Fact]

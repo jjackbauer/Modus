@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.TestHost;
@@ -7,8 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
+using Modus.Host.Domain.Hosting;
+using Modus.Host.Domain.Telemetry;
 using Modus.Host.Domain.WebApi;
 using Modus.Host.Hosting;
+using Modus.SamplePlugins.Telemetry;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -204,11 +208,394 @@ public sealed class PluginWebApiEndpointTests
         {
             Success = true,
             Payload = "ok",
+            PayloadObject = new { message = "ok" },
             Status = SyncResponseStatus.Success,
         };
 
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.IsType<SyncResponseStatus>(response.Status!.Value);
+        Assert.NotNull(response.PayloadObject);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Reuse existing telemetry plugin abstractions and evolve handler return payloads to typed object responses")]
+    public async Task HandlePluginOperation_GivenTypedSyncPayload_ExpectedHttpResponseIncludesPayloadObject()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Typed", ["Typed.Op"]);
+        var mapper = new PluginEndpointMapper([catalog], [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<ISyncResponder>(_ => new TypedPayloadResponder("Plugin.Typed", "Typed.Op"));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Typed/Typed.Op",
+            new PluginOperationHttpRequest { CorrelationId = "typed-corr" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.True(response!.Success);
+        Assert.NotNull(response.PayloadObject);
+        var payloadObject = Assert.IsType<JsonElement>(response.PayloadObject);
+        Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
+        Assert.Equal("typed", payloadObject.GetProperty("mode").GetString());
+        Assert.Equal(2, payloadObject.GetProperty("count").GetInt32());
+        Assert.Contains("\"mode\":\"typed\"", response.Payload, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Refactor machine and host telemetry plugin handlers to return typed measurements and structured metadata instead of log-only outputs")]
+    public async Task HandlePluginOperation_GivenHostTelemetryPlugin_ExpectedHttpResponseIncludesTelemetryMeasurementsAndMetadata()
+    {
+        var plugin = new HostTelemetryPlugin();
+        plugin.Start(new PluginStartContext(plugin.PluginId, CancellationToken.None));
+        var mapper = new PluginEndpointMapper([plugin], [plugin]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<ISyncResponder>(plugin);
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Host.Telemetry/Telemetry.Host.CollectSnapshot",
+            new PluginOperationHttpRequest { CorrelationId = "telemetry-http" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.True(response!.Success);
+        Assert.Equal(SyncResponseStatus.Success, response.Status);
+        Assert.NotNull(response.PayloadObject);
+        var payloadObject = Assert.IsType<JsonElement>(response.PayloadObject);
+        Assert.Equal("Plugin.Host.Telemetry", payloadObject.GetProperty("pluginId").GetString());
+        Assert.Equal("Telemetry.Host.CollectSnapshot", payloadObject.GetProperty("operation").GetString());
+        Assert.Equal("host", payloadObject.GetProperty("source").GetString());
+        Assert.Equal("runtime", payloadObject.GetProperty("category").GetString());
+
+        var measurements = payloadObject.GetProperty("measurements").EnumerateArray().ToArray();
+        Assert.Contains(measurements, static measurement =>
+            measurement.GetProperty("name").GetString() == "cpu.percent"
+            && measurement.GetProperty("unit").GetString() == "percent"
+            && measurement.GetProperty("kind").GetString() == "gauge");
+        Assert.Contains(measurements, static measurement =>
+            measurement.GetProperty("name").GetString() == "memory.workingSet.bytes"
+            && measurement.GetProperty("unit").GetString() == "bytes");
+
+        var metadata = payloadObject.GetProperty("metadata");
+        Assert.True(metadata.TryGetProperty("processId", out var processId));
+        Assert.False(string.IsNullOrWhiteSpace(processId.GetString()));
+        Assert.True(metadata.TryGetProperty("processorCount", out var processorCount));
+        Assert.True(processorCount.GetString() is { Length: > 0 });
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Standardize telemetry endpoint envelope with source, collectedAt, and measurement list metadata [depends on machine and host telemetry endpoints]")]
+    public async Task BuildTelemetryEnvelope_GivenTelemetryResult_IncludesSourceTimestampAndMeasurements()
+    {
+        var plugin = new HostTelemetryPlugin();
+        plugin.Start(new PluginStartContext(plugin.PluginId, CancellationToken.None));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<IHostTelemetryPluginContract>(plugin);
+        builder.Services.AddSingleton<TelemetryAggregationService>();
+        builder.Services.AddSingleton<ManagementTelemetryEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementTelemetryEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/telemetry/host");
+        var response = await httpResponse.Content.ReadFromJsonAsync<JsonElement[]>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        var payload = Assert.Single(response!);
+        Assert.Equal("Plugin.Host.Telemetry", payload.GetProperty("pluginId").GetString());
+        Assert.Equal("Telemetry.Host.CollectSnapshot", payload.GetProperty("operation").GetString());
+        Assert.Equal("host", payload.GetProperty("source").GetString());
+        Assert.Equal("runtime", payload.GetProperty("category").GetString());
+        Assert.True(payload.TryGetProperty("collectedAt", out var collectedAt));
+        Assert.Equal(JsonValueKind.String, collectedAt.ValueKind);
+
+        var measurements = payload.GetProperty("measurements");
+        Assert.Equal(7, measurements.GetProperty("count").GetInt32());
+        var items = measurements.GetProperty("items").EnumerateArray().ToArray();
+        Assert.Equal(measurements.GetProperty("count").GetInt32(), items.Length);
+        Assert.Contains(items, static measurement =>
+            measurement.GetProperty("name").GetString() == "cpu.percent"
+            && measurement.GetProperty("unit").GetString() == "percent"
+            && measurement.GetProperty("kind").GetString() == "gauge"
+            && measurement.GetProperty("value").GetDouble() >= 0d);
+        Assert.Contains(items, static measurement =>
+            measurement.GetProperty("name").GetString() == "memory.workingSet.bytes"
+            && measurement.GetProperty("unit").GetString() == "bytes"
+            && measurement.GetProperty("kind").GetString() == "gauge"
+            && measurement.GetProperty("value").GetDouble() >= 0d);
+
+        var metadata = payload.GetProperty("metadata");
+        Assert.False(string.IsNullOrWhiteSpace(metadata.GetProperty("processId").GetString()));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement GET /management/telemetry/host endpoint returning typed host measurements [depends on telemetry aggregation service]")]
+    public async Task GetHostTelemetry_GivenNoMeasurements_ReturnsOkWithEmptyCollection()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<TelemetryAggregationService>();
+        builder.Services.AddSingleton<ManagementTelemetryEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementTelemetryEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/telemetry/host");
+        var response = await httpResponse.Content.ReadFromJsonAsync<TelemetryResult[]>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.Empty(response!);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Standardize telemetry endpoint envelope with source, collectedAt, and measurement list metadata [depends on machine and host telemetry endpoints]")]
+    public async Task BuildTelemetryEnvelope_GivenMixedMeasurementUnits_PreservesUnitPerMeasurement()
+    {
+        var plugin = new MachineTelemetryPlugin();
+        plugin.Start(new PluginStartContext(plugin.PluginId, CancellationToken.None));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<IMachineTelemetryPluginContract>(plugin);
+        builder.Services.AddSingleton<TelemetryAggregationService>();
+        builder.Services.AddSingleton<ManagementTelemetryEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementTelemetryEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/telemetry/machine");
+        var response = await httpResponse.Content.ReadFromJsonAsync<JsonElement[]>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        var payload = Assert.Single(response!);
+        Assert.Equal("Plugin.Machine.Telemetry", payload.GetProperty("pluginId").GetString());
+        Assert.Equal("Telemetry.Machine.CollectSnapshot", payload.GetProperty("operation").GetString());
+        Assert.Equal("machine", payload.GetProperty("source").GetString());
+        Assert.Equal("system", payload.GetProperty("category").GetString());
+        Assert.True(payload.TryGetProperty("collectedAt", out var collectedAt));
+        Assert.Equal(JsonValueKind.String, collectedAt.ValueKind);
+
+        var measurements = payload.GetProperty("measurements");
+        Assert.Equal(4, measurements.GetProperty("count").GetInt32());
+        var items = measurements.GetProperty("items").EnumerateArray().ToArray();
+        Assert.Equal(measurements.GetProperty("count").GetInt32(), items.Length);
+        Assert.Contains(items, static measurement =>
+            measurement.GetProperty("name").GetString() == "cpu.percent"
+            && measurement.GetProperty("unit").GetString() == "percent"
+            && measurement.GetProperty("kind").GetString() == "gauge");
+        Assert.Contains(items, static measurement =>
+            measurement.GetProperty("name").GetString() == "memory.totalPhysical.bytes"
+            && measurement.GetProperty("unit").GetString() == "bytes"
+            && measurement.GetProperty("kind").GetString() == "gauge");
+        Assert.Contains(items, static measurement =>
+            measurement.GetProperty("name").GetString() == "memory.load.percent"
+            && measurement.GetProperty("unit").GetString() == "percent"
+            && measurement.GetProperty("kind").GetString() == "gauge");
+
+        var metadata = payload.GetProperty("metadata");
+        Assert.False(string.IsNullOrWhiteSpace(metadata.GetProperty("osDescription").GetString()));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement GET /management/status endpoint exposing loaded plugins, capabilities, versions, and lifecycle state [depends on host status snapshot contract]")]
+    public async Task GetHostStatus_GivenRunningHost_ReturnsOkWithPluginInventory()
+    {
+        var registry = new HostStatusRegistry();
+        registry.Update(
+            new HostStatusSnapshot(
+                State: HostRuntimeState.Running,
+                LoadedPlugins:
+                [
+                    new LoadedPluginMetadata(
+                        PluginId: new PluginId("Plugin.Inventory"),
+                        AssemblyName: "Plugin.Inventory",
+                        Version: new Version(2, 1, 0),
+                        LifecycleState: PluginRuntimeState.Active,
+                        Capabilities: [new CapabilityName("Cap.Inventory"), new CapabilityName("Cap.Shared")]),
+                    new LoadedPluginMetadata(
+                        PluginId: new PluginId("Plugin.Orders"),
+                        AssemblyName: "Plugin.Orders",
+                        Version: new Version(1, 5, 0),
+                        LifecycleState: PluginRuntimeState.Active,
+                        Capabilities: [new CapabilityName("Cap.Orders")]),
+                ],
+                CapabilityOwnership:
+                [
+                    new CapabilityOwnershipSnapshot(
+                        Capability: new CapabilityName("Cap.Inventory"),
+                        OwnerPluginId: new PluginId("Plugin.Inventory")),
+                    new CapabilityOwnershipSnapshot(
+                        Capability: new CapabilityName("Cap.Orders"),
+                        OwnerPluginId: new PluginId("Plugin.Orders")),
+                ]),
+            ["stage=startup outcome=success watcher=registered path=C:/temp/plugins"]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(registry);
+        builder.Services.AddSingleton<ManagementStatusEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementStatusEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/status");
+        var response = await httpResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.Equal("Running", response.GetProperty("state").GetString());
+
+        var loadedPlugins = response.GetProperty("loadedPlugins").EnumerateArray().ToArray();
+        Assert.Equal(2, loadedPlugins.Length);
+        Assert.Collection(
+            loadedPlugins,
+            inventory =>
+            {
+                Assert.Equal("Plugin.Inventory", inventory.GetProperty("pluginId").GetString());
+                Assert.Equal("Plugin.Inventory", inventory.GetProperty("assemblyName").GetString());
+                Assert.Equal("2.1.0", inventory.GetProperty("version").GetString());
+                Assert.Equal("Active", inventory.GetProperty("lifecycleState").GetString());
+                Assert.Equal(
+                    ["Cap.Inventory", "Cap.Shared"],
+                    inventory.GetProperty("capabilities").EnumerateArray().Select(static item => item.GetString()!).ToArray());
+            },
+            orders =>
+            {
+                Assert.Equal("Plugin.Orders", orders.GetProperty("pluginId").GetString());
+                Assert.Equal("1.5.0", orders.GetProperty("version").GetString());
+                Assert.Equal("Active", orders.GetProperty("lifecycleState").GetString());
+                Assert.Equal(
+                    ["Cap.Orders"],
+                    orders.GetProperty("capabilities").EnumerateArray().Select(static item => item.GetString()!).ToArray());
+            });
+
+        var capabilityOwnership = response.GetProperty("capabilityOwnership").EnumerateArray().ToArray();
+        Assert.Equal(2, capabilityOwnership.Length);
+        Assert.Collection(
+            capabilityOwnership,
+            inventory =>
+            {
+                Assert.Equal("Cap.Inventory", inventory.GetProperty("capability").GetString());
+                Assert.Equal("Plugin.Inventory", inventory.GetProperty("ownerPluginId").GetString());
+            },
+            orders =>
+            {
+                Assert.Equal("Cap.Orders", orders.GetProperty("capability").GetString());
+                Assert.Equal("Plugin.Orders", orders.GetProperty("ownerPluginId").GetString());
+            });
+
+        var diagnostics = response.GetProperty("diagnostics").EnumerateArray().Select(static item => item.GetString()!).ToArray();
+        Assert.Equal(["stage=startup outcome=success watcher=registered path=C:/temp/plugins"], diagnostics);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement GET /management/status endpoint exposing loaded plugins, capabilities, versions, and lifecycle state [depends on host status snapshot contract]")]
+    public async Task GetHostStatus_GivenPluginLoadErrors_ExposesFailedPluginDiagnostics()
+    {
+        var registry = new HostStatusRegistry();
+        registry.Update(
+            new HostStatusSnapshot(
+                State: HostRuntimeState.Degraded,
+                LoadedPlugins:
+                [
+                    new LoadedPluginMetadata(
+                        PluginId: new PluginId("Plugin.Inventory"),
+                        AssemblyName: "Plugin.Inventory",
+                        Version: new Version(2, 1, 0),
+                        LifecycleState: PluginRuntimeState.Active,
+                        Capabilities: [new CapabilityName("Cap.Inventory")]),
+                ],
+                CapabilityOwnership:
+                [
+                    new CapabilityOwnershipSnapshot(
+                        Capability: new CapabilityName("Cap.Inventory"),
+                        OwnerPluginId: new PluginId("Plugin.Inventory")),
+                ]),
+            [
+                "stage=activation plugin=Plugin.Legacy outcome=failure reason=boom",
+                "stage=isolation plugin=Plugin.Legacy failed-stage=activation outcome=isolated",
+            ]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(registry);
+        builder.Services.AddSingleton<ManagementStatusEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementStatusEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/status");
+        var response = await httpResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.Equal("Degraded", response.GetProperty("state").GetString());
+
+        var loadedPlugin = Assert.Single(response.GetProperty("loadedPlugins").EnumerateArray().ToArray());
+        Assert.Equal("Plugin.Inventory", loadedPlugin.GetProperty("pluginId").GetString());
+
+        var diagnostics = response.GetProperty("diagnostics").EnumerateArray().Select(static item => item.GetString()!).ToArray();
+        Assert.Equal(2, diagnostics.Length);
+        Assert.Contains("stage=activation plugin=Plugin.Legacy outcome=failure reason=boom", diagnostics, StringComparer.Ordinal);
+        Assert.Contains("stage=isolation plugin=Plugin.Legacy failed-stage=activation outcome=isolated", diagnostics, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement GET /management/telemetry/machine endpoint returning typed machine measurements [depends on telemetry aggregation service]")]
+    public async Task GetMachineTelemetry_GivenProviderFailure_ReturnsProblemDetailsWithCorrelationId()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<IMachineTelemetryPluginContract>(new FailingMachineTelemetryProvider());
+        builder.Services.AddSingleton<TelemetryAggregationService>();
+        builder.Services.AddSingleton<ManagementTelemetryEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementTelemetryEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/telemetry/machine");
+        var problem = await httpResponse.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, httpResponse.StatusCode);
+        Assert.Equal("application/problem+json", httpResponse.Content.Headers.ContentType?.MediaType);
+        Assert.NotNull(problem);
+        Assert.Equal("Machine telemetry collection failed.", problem!.Title);
+        Assert.Contains("Plugin.Machine.Telemetry.Failing", problem.Detail, StringComparison.Ordinal);
+        Assert.True(problem.Extensions.TryGetValue("correlationId", out var correlationId));
+        Assert.NotNull(correlationId);
+        Assert.Contains("management-machine:", correlationId!.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -352,6 +739,26 @@ public sealed class PluginWebApiEndpointTests
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
         Assert.Equal(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    private sealed class FailingMachineTelemetryProvider : IMachineTelemetryPluginContract, IPluginOperationCatalog, ISyncResponder
+    {
+        public PluginId PluginId => new("Plugin.Machine.Telemetry.Failing");
+
+        public ContractName ContractName => new("Modus.PluginContract");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName("Telemetry.Machine.CollectSnapshot")];
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: false,
+                Payload: "machine-provider-failure",
+                Status: SyncResponseStatus.Failed,
+                CorrelationId: request.CorrelationId);
+        }
     }
 
     // Test helper classes
@@ -530,6 +937,40 @@ public sealed class PluginWebApiEndpointTests
                 Success: true,
                 Payload: _payload,
                 Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class TypedPayloadResponder : IPluginContract, ISyncResponder
+    {
+        private readonly string _expectedOperation;
+
+        public TypedPayloadResponder(string pluginId, string expectedOperation)
+        {
+            PluginId = new PluginId(pluginId);
+            _expectedOperation = expectedOperation;
+        }
+
+        public PluginId PluginId { get; }
+
+        public ContractName ContractName => new("Test.TypedPayloadResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            if (!string.Equals(request.Operation.Value, _expectedOperation, StringComparison.Ordinal))
+            {
+                return new SyncResponse(
+                    Success: false,
+                    Payload: "unsupported-operation",
+                    Status: SyncResponseStatus.Rejected,
+                    CorrelationId: request.CorrelationId);
+            }
+
+            return new SyncResponse(
+                Success: true,
+                PayloadObject: new { mode = "typed", count = 2 },
                 CorrelationId: request.CorrelationId);
         }
     }

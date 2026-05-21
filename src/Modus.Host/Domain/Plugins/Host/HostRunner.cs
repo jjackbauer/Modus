@@ -48,7 +48,13 @@ public sealed class HostRunner
                     WatcherRegistered: false,
                     PluginsPath: string.Empty,
                     PluginsDirectoryExists: false,
-                    Diagnostics: ["stage=startup outcome=failure reason=startup canceled"]));
+                    Diagnostics: ["stage=startup outcome=failure reason=startup canceled"])
+                {
+                    StatusSnapshot = new HostStatusSnapshot(
+                        State: HostRuntimeState.Failed,
+                        LoadedPlugins: [],
+                        CapabilityOwnership: [])
+                });
         }
 
         var result = _watcher.Start(pluginsPath);

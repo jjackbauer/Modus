@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Modus.Core.Events;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
@@ -83,15 +84,15 @@ public sealed class MachineTelemetryPlugin :
                 CorrelationId: request.CorrelationId);
         }
 
-        var snapshot = BuildTelemetrySnapshot();
-        Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationNameValue} {snapshot}");
+        var snapshot = BuildTelemetryResult();
+        Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationNameValue} payload={JsonSerializer.Serialize(snapshot)}");
         return new SyncResponse(
             Success: true,
-            Payload: snapshot,
+            PayloadObject: snapshot,
             CorrelationId: request.CorrelationId);
     }
 
-    private string BuildTelemetrySnapshot()
+    private TelemetryResult BuildTelemetryResult()
     {
         var memInfo = GC.GetGCMemoryInfo();
         var totalPhysicalBytes = memInfo.TotalAvailableMemoryBytes;
@@ -120,9 +121,26 @@ public sealed class MachineTelemetryPlugin :
             _lastAllProcessesCpuMs = currentCpuMs;
         }
 
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"cpuPercent={cpuPercent:F2};totalPhysicalBytes={totalPhysicalBytes};usedMemoryBytes={usedMemoryBytes};memoryLoadPercent={memoryLoadPercent:F2};processorCount={Environment.ProcessorCount};os={RuntimeInformation.OSDescription}");
+        return new TelemetryResult(
+            PluginId: PluginId.Value,
+            Operation: OperationNameValue,
+            Source: "machine",
+            Category: "system",
+            CollectedAtUtc: now,
+            Measurements:
+            [
+                new TelemetryMeasurement("cpu.percent", cpuPercent, "percent", "gauge"),
+                new TelemetryMeasurement("memory.totalPhysical.bytes", totalPhysicalBytes, "bytes", "gauge"),
+                new TelemetryMeasurement("memory.used.bytes", usedMemoryBytes, "bytes", "gauge"),
+                new TelemetryMeasurement("memory.load.percent", memoryLoadPercent, "percent", "gauge")
+            ],
+            Metadata: new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["processorCount"] = Environment.ProcessorCount.ToString(CultureInfo.InvariantCulture),
+                ["osDescription"] = RuntimeInformation.OSDescription,
+                ["frameworkDescription"] = RuntimeInformation.FrameworkDescription,
+                ["osArchitecture"] = RuntimeInformation.OSArchitecture.ToString()
+            });
     }
 
     private static double SampleAllProcessesCpuMs()

@@ -25,6 +25,9 @@ public sealed class EmbeddedHostingTests
 
             Assert.True(result.HostHealthy);
             Assert.True(result.WatcherRegistered);
+            Assert.NotNull(result.StatusSnapshot);
+            Assert.Equal(HostRuntimeState.Running, result.StatusSnapshot!.State);
+            Assert.Empty(result.StatusSnapshot.LoadedPlugins);
         }
         finally
         {

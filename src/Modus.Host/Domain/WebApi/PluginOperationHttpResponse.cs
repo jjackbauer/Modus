@@ -20,6 +20,12 @@ public class PluginOperationHttpResponse
     public string? Payload { get; set; }
 
     /// <summary>
+    /// Optional structured payload for typed responses.
+    /// This preserves object shape for callers that need schema-aware processing.
+    /// </summary>
+    public object? PayloadObject { get; set; }
+
+    /// <summary>
     /// Status descriptor for the operation outcome.
     /// </summary>
     public SyncResponseStatus? Status { get; set; }

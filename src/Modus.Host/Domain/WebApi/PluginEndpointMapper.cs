@@ -135,6 +135,7 @@ public class PluginEndpointMapper
             {
                 Success = response.Success,
                 Payload = response.Payload,
+                PayloadObject = response.PayloadObject,
                 Status = response.Status,
                 CorrelationId = response.CorrelationId?.Value
             };

@@ -1,4 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Plugins;
+using Modus.Host.Domain.Hosting;
 using Modus.Host.Plugins.Descriptors;
 using Modus.Host.Plugins.Host;
 using Modus.Host.Plugins.Lifecycle;
@@ -11,6 +13,8 @@ public sealed class PluginFolderWatcher
     private readonly PluginProjectDescriptorFactory _descriptorFactory = new();
     private readonly PluginLoader _loader = new();
     private readonly InMemoryHostRuntime _runtime = new();
+    private readonly HostStatusSnapshotBuilder _statusSnapshotBuilder = new();
+    private readonly HostStatusRegistry? _statusRegistry;
     private readonly AssemblyLifecycleHost _assemblyLifecycleHost;
     private readonly HashSet<string> _processedProjectPaths = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _activePluginIds = new(StringComparer.Ordinal);
@@ -26,6 +30,7 @@ public sealed class PluginFolderWatcher
 
     internal PluginFolderWatcher(IServiceProvider? serviceProvider)
     {
+        _statusRegistry = serviceProvider?.GetService<HostStatusRegistry>();
         _assemblyLifecycleHost = serviceProvider is null
             ? new AssemblyLifecycleHost()
             : new AssemblyLifecycleHost(serviceProvider);
@@ -35,12 +40,23 @@ public sealed class PluginFolderWatcher
     {
         if (string.IsNullOrWhiteSpace(pluginsPath))
         {
+            var snapshot = _statusSnapshotBuilder.Build(
+                hostHealthy: false,
+                descriptors: [],
+                activatedPluginIds: [],
+                failedPluginIds: [],
+                capabilityOwners: null);
+            _statusRegistry?.Update(snapshot, ["stage=startup outcome=failure reason=plugins path missing"]);
+
             return new PluginWatcherStartResult(
                 HostHealthy: false,
                 WatcherRegistered: false,
                 PluginsPath: string.Empty,
                 PluginsDirectoryExists: false,
-                Diagnostics: ["stage=startup outcome=failure reason=plugins path missing"]);
+                Diagnostics: ["stage=startup outcome=failure reason=plugins path missing"])
+            {
+                StatusSnapshot = snapshot
+            };
         }
 
         _pluginsPath = Path.GetFullPath(pluginsPath);
@@ -53,6 +69,10 @@ public sealed class PluginFolderWatcher
             $"stage=startup outcome=success watcher=registered path={_pluginsPath}",
         };
         var hostHealthy = true;
+        IReadOnlyList<PluginDescriptor> startupDescriptors = [];
+        IReadOnlyCollection<string> activatedPluginIds = [];
+        IReadOnlyCollection<string> failedPluginIds = [];
+        IReadOnlyDictionary<string, string>? capabilityOwners = null;
 
         if (!pluginsDirectoryExists)
         {
@@ -62,11 +82,15 @@ public sealed class PluginFolderWatcher
         else
         {
             var scan = _loader.ScanRuntimeAssemblies(_pluginsPath);
+            startupDescriptors = scan.Descriptors;
             diagnostics.AddRange(scan.Diagnostics);
 
             if (scan.Descriptors.Count > 0)
             {
                 var startupLoad = _runtime.Start(scan.Descriptors);
+                activatedPluginIds = startupLoad.ActivatedPluginIds;
+                failedPluginIds = startupLoad.FailedPluginIds;
+                capabilityOwners = startupLoad.CapabilityOwners;
                 foreach (var pluginId in startupLoad.ActivatedPluginIds)
                 {
                     _activePluginIds.Add(pluginId);
@@ -91,12 +115,23 @@ public sealed class PluginFolderWatcher
             }
         }
 
+        var statusSnapshot = _statusSnapshotBuilder.Build(
+            hostHealthy,
+            startupDescriptors,
+            activatedPluginIds,
+            failedPluginIds,
+            capabilityOwners);
+        _statusRegistry?.Update(statusSnapshot, diagnostics);
+
         return new PluginWatcherStartResult(
             HostHealthy: hostHealthy,
             WatcherRegistered: true,
             PluginsPath: _pluginsPath,
             PluginsDirectoryExists: pluginsDirectoryExists,
-            Diagnostics: diagnostics);
+            Diagnostics: diagnostics)
+        {
+            StatusSnapshot = statusSnapshot
+        };
     }
 
     public PluginOnboardingResult OnProjectCreated(string csprojPath)

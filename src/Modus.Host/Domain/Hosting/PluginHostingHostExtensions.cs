@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
+using Modus.Host.Domain.Hosting;
+using Modus.Host.Domain.Telemetry;
 using Modus.Host.Domain.WebApi;
 using Modus.Host.Plugins.Scanning;
 using Modus.Host.Plugins;
@@ -83,9 +85,14 @@ public static class PluginHostingHostExtensions
                 sp.GetRequiredService<PluginHostingOptions>(),
                 sp,
                 sp.GetRequiredService<PluginFolderWatcher>()));
+        services.TryAddSingleton<HostStatusRegistry>();
+        services.TryAddSingleton<HostStatusSnapshotBuilder>();
+        services.TryAddSingleton<TelemetryAggregationService>();
         
         // Register the endpoint mapper that registers plugin operation routes
         services.TryAddSingleton<PluginEndpointMapper>();
+        services.TryAddSingleton<ManagementTelemetryEndpointMapper>();
+        services.TryAddSingleton<ManagementStatusEndpointMapper>();
 
         return services;
     }

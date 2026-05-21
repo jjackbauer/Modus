@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Hosting;
 using Modus.Core.Plugins;
+using Modus.Host.Domain.Telemetry;
 using Modus.Host.Hosting;
 using Modus.SamplePlugins.Telemetry;
 using Xunit;
@@ -268,5 +269,64 @@ public sealed class HostDiInterfaceMappingTests
         {
             _ = TryDeleteDirectory(tempDir);
         }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Register telemetry provider abstractions and aggregation service in host DI with deterministic composition, without adding a new contract layer")]
+    public void RegisterTelemetryAggregationServices_GivenHostStartup_ResolvesAllTelemetryProviders()
+    {
+        var tempDir = CopyPluginsToTemporaryDirectory();
+
+        try
+        {
+            var services = new ServiceCollection();
+            var pluginsPath = Path.Combine(tempDir, "plugins");
+
+            services.AddModusPluginHosting(opts => opts.PluginsPath = pluginsPath);
+
+            using var provider = services.BuildServiceProvider();
+
+            var aggregation = provider.GetRequiredService<TelemetryAggregationService>();
+
+            var hostProvider = Assert.Single(aggregation.HostProviders);
+            Assert.Equal(new PluginId("Plugin.Host.Telemetry"), hostProvider.PluginId);
+
+            var machineProvider = Assert.Single(aggregation.MachineProviders);
+            Assert.Equal(new PluginId("Plugin.Machine.Telemetry"), machineProvider.PluginId);
+        }
+        finally
+        {
+            _ = TryDeleteDirectory(tempDir);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Register telemetry provider abstractions and aggregation service in host DI with deterministic composition, without adding a new contract layer")]
+    public void RegisterTelemetryAggregationServices_GivenDuplicateProviderRegistration_PreservesDeterministicOrdering()
+    {
+        var services = new ServiceCollection();
+        services.AddPluginHostingCore();
+
+        services.AddSingleton<IHostTelemetryPluginContract>(new TestHostTelemetryProvider("Plugin.Host.Telemetry.Zeta"));
+        services.AddSingleton<IHostTelemetryPluginContract>(new TestHostTelemetryProvider("Plugin.Host.Telemetry.Alpha"));
+        services.AddModusPluginHostingRuntime();
+
+        using var provider = services.BuildServiceProvider();
+
+        var aggregation = provider.GetRequiredService<TelemetryAggregationService>();
+        var orderedPluginIds = aggregation.HostProviders.Select(static plugin => plugin.PluginId.Value).ToArray();
+
+        Assert.Equal(
+            ["Plugin.Host.Telemetry.Alpha", "Plugin.Host.Telemetry.Zeta"],
+            orderedPluginIds);
+    }
+
+    private sealed class TestHostTelemetryProvider(string pluginId) : IHostTelemetryPluginContract
+    {
+        public PluginId PluginId { get; } = new PluginId(pluginId);
+
+        public ContractName ContractName { get; } = new ContractName("Modus.PluginContract");
+
+        public Version ContractVersion { get; } = new(1, 0, 0);
     }
 }

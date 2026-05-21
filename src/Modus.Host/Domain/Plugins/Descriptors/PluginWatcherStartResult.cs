@@ -5,4 +5,7 @@ public sealed record PluginWatcherStartResult(
     bool WatcherRegistered,
     string PluginsPath,
     bool PluginsDirectoryExists,
-    IReadOnlyList<string> Diagnostics);
+    IReadOnlyList<string> Diagnostics)
+{
+    public Modus.Core.Hosting.HostStatusSnapshot? StatusSnapshot { get; init; }
+}

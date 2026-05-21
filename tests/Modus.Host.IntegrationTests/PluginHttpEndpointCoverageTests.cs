@@ -84,6 +84,21 @@ public sealed class PluginHttpEndpointCoverageTests
                 Assert.Equal(SyncResponseStatus.Success, response.Body.Status);
                 Assert.Equal(correlationId, response.Body.CorrelationId);
                 Assert.False(string.IsNullOrWhiteSpace(response.Body.Payload));
+
+                if (endpoint.PluginId is "Plugin.Host.Telemetry" or "Plugin.Machine.Telemetry")
+                {
+                    Assert.NotNull(response.Body.PayloadObject);
+                    var payloadObject = Assert.IsType<JsonElement>(response.Body.PayloadObject);
+                    Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
+                    Assert.True(payloadObject.TryGetProperty("pluginId", out var pluginId));
+                    Assert.Equal(endpoint.PluginId, pluginId.GetString());
+                    Assert.True(payloadObject.TryGetProperty("collectedAtUtc", out _));
+                    Assert.True(payloadObject.TryGetProperty("measurements", out var measurements));
+                    Assert.Equal(JsonValueKind.Array, measurements.ValueKind);
+                    Assert.NotEmpty(measurements.EnumerateArray());
+                    Assert.True(payloadObject.TryGetProperty("metadata", out var metadata));
+                    Assert.Equal(JsonValueKind.Object, metadata.ValueKind);
+                }
             }
         }
         finally

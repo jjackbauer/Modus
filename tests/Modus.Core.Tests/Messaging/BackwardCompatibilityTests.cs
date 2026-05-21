@@ -36,5 +36,19 @@ public sealed class BackwardCompatibilityTests
         var response = new SyncResponse(Success: true, Payload: "hello");
         Assert.Equal("hello", response.Payload);
         Assert.True(response.Success);
+        Assert.Null(response.PayloadObject);
+    }
+
+    [Fact]
+    public void SyncResponse_GivenTypedPayloadObject_ExpectedSerializedStringAndObjectPreserved()
+    {
+        var payload = new { metric = "cpu", value = 42 };
+
+        var response = new SyncResponse(Success: true, PayloadObject: payload);
+
+        Assert.True(response.Success);
+        Assert.NotNull(response.PayloadObject);
+        Assert.Same(payload, response.PayloadObject);
+        Assert.Contains("\"metric\":\"cpu\"", response.Payload);
     }
 }
