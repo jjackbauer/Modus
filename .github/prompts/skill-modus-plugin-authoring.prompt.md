@@ -42,7 +42,7 @@ Use these mandatory checklist items:
 
 - Document plugin artifact and metadata requirements for Host discovery [onboarding]
 - Document plugin contract and lifecycle requirements (`IPluginContract`, `IPluginLifecycle`) [contracts]
-- Document plugin-owned contract interface requirements (for example `I<PluginName>Contract : IPluginContract`) and DI registration under that interface [plugin-contract-interface]
+- Document plugin-owned contract interface requirements (for example `I<PluginName>Contract : IPluginContract`) and host automatic exposure under that interface [plugin-contract-interface]
 - Document plugin operation catalog behavior and deterministic ordering [operations]
 - Document diagnostics and failure semantics for startup/activation/operation [diagnostics]
 - Document regression workflow and runtime CLI evidence requirements [verification]
@@ -62,7 +62,7 @@ For `PluginType=timer-extension`, add:
 3. Final validation must include real Host CLI execution with observable plugin output.
 4. Do not accept validation based only on automated tests.
 5. On failures, run repair loops up to `MaxRepairRounds` per item.
-6. Every plugin must declare its own contract interface in plugin code (for example `I<PluginName>Contract : IPluginContract`) and register the plugin instance under that interface in `IPluginDependencyRegistrar.Register`.
+6. Every plugin must declare its own contract interface in plugin code (for example `I<PluginName>Contract : IPluginContract`), and the host must expose the plugin instance under that interface automatically. Only use plugin-side registration overrides when adding extra services beyond the contract itself.
 
 ## Procedure
 

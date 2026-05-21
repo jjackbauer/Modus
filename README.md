@@ -185,7 +185,6 @@ Update `plugins/Plugin.Weather/Plugin.Weather.csproj`:
 Create `plugins/Plugin.Weather/WeatherPlugin.cs`:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Plugins;
 
 namespace Modus.SamplePlugins.Weather;
@@ -203,13 +202,6 @@ public sealed class WeatherPlugin : SingletonPlugin<WeatherPlugin>, IWeatherPlug
         public override Version ContractVersion => new(1, 0, 0);
 
         public override IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName("Weather.GetCurrent")];
-
-        protected override void RegisterPluginServices(IServiceCollection services)
-        {
-                ArgumentNullException.ThrowIfNull(services);
-                base.RegisterPluginServices(services);
-                services.AddPluginServiceInterface<IWeatherPluginContract, WeatherPlugin>(DeclaredServiceLifetime);
-        }
 }
 ```
 

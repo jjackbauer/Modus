@@ -29,7 +29,6 @@ public sealed class DeveloperQuickstartAlignmentTests
         Assert.Contains("public override PluginId PluginId => new(\"Plugin.Weather\");", rootReadme, StringComparison.Ordinal);
         Assert.Contains("public override ContractName ContractName => new(\"Modus.PluginContract\");", rootReadme, StringComparison.Ordinal);
         Assert.Contains("public override IReadOnlyCollection<OperationName> SupportedOperations => [new OperationName(\"Weather.GetCurrent\")];", rootReadme, StringComparison.Ordinal);
-        Assert.Contains("services.AddPluginServiceInterface<IWeatherPluginContract, WeatherPlugin>(DeclaredServiceLifetime);", rootReadme, StringComparison.Ordinal);
         Assert.Contains("<ModusOperations>Weather.GetCurrent</ModusOperations>", rootReadme, StringComparison.Ordinal);
     }
 
