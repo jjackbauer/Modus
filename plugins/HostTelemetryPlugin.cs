@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Globalization;
-using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Events;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
@@ -63,14 +62,6 @@ public sealed class HostTelemetryPlugin :
     {
         ArgumentNullException.ThrowIfNull(scheduler);
         scheduler.ScheduleRecurring(new JobName(RecurringJobName), RecurringInterval, new OperationName(OperationNameValue));
-    }
-
-    protected override void RegisterPluginServices(IServiceCollection services)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        base.RegisterPluginServices(services);
-        // Register the interface contract using the explicit interface-mapping extension
-        services.AddPluginServiceInterface<IHostTelemetryPluginContract, HostTelemetryPlugin>(DeclaredServiceLifetime);
     }
 
     public void Subscribe(IEventPublisher publisher)

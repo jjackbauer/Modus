@@ -28,6 +28,15 @@ public sealed class PublicApiReferenceRefreshTests
         Assert.Contains("- Intent: register plugin dependencies through DI without leaking host internals.", coreReadme, StringComparison.Ordinal);
         Assert.Contains("- Usage: call `services.AddPluginService<TService, TImplementation>(...)` from `Register`.", coreReadme, StringComparison.Ordinal);
         Assert.Contains("- Constraints: registrations must be idempotent and consistent with declared plugin lifetime.", coreReadme, StringComparison.Ordinal);
+
+        Assert.Contains("### `PluginBase`, `SingletonPlugin<TPluginImpl>`, `ScopedPlugin<TPluginImpl>`, and `TransientPlugin<TPluginImpl>`", coreReadme, StringComparison.Ordinal);
+        Assert.Contains("- Intent: provide deterministic plugin identity, lifecycle hooks, and an explicit declared service lifetime for plugin implementations.", coreReadme, StringComparison.Ordinal);
+        Assert.Contains("- Usage: derive from `SingletonPlugin<TPluginImpl>`, `ScopedPlugin<TPluginImpl>`, or `TransientPlugin<TPluginImpl>`; the host registers the concrete plugin and any plugin contract interfaces automatically.", coreReadme, StringComparison.Ordinal);
+        Assert.Contains("- Constraints: override `RegisterPluginServices(IServiceCollection services)` only when the plugin needs additional dependencies beyond its own registration.", coreReadme, StringComparison.Ordinal);
+
+        Assert.Contains("public override void RegisterSchedules(IPluginScheduler scheduler)", coreReadme, StringComparison.Ordinal);
+        Assert.Contains("scheduler.ScheduleRecurring(", coreReadme, StringComparison.Ordinal);
+        Assert.Contains("scheduler.ScheduleAt(", coreReadme, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -36,8 +45,19 @@ public sealed class PublicApiReferenceRefreshTests
     {
         var hostReadme = ReadRepositoryFile(Path.Combine("src", "Modus.Host", "README.md"));
 
+        Assert.Contains("## Built-in HTTP Surface", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("POST /api/{pluginId}/{operation}", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("AddOpenApi()", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("app.MapOpenApi()", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("/openapi/v1.json", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("## Embedded Host Integration", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("AddModusPluginHosting", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("SingletonPlugin<T>", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("ScopedPlugin<T>", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("TransientPlugin<T>", hostReadme, StringComparison.Ordinal);
+        Assert.Contains("Plugin contract interfaces that extend `IPluginContract` are registered automatically", hostReadme, StringComparison.Ordinal);
+
         Assert.Contains("## Lifecycle and Runtime Extension Points", hostReadme, StringComparison.Ordinal);
-        Assert.Contains("`AddModusPluginHosting`", hostReadme, StringComparison.Ordinal);
         Assert.Contains("`AddPluginHostingCore`", hostReadme, StringComparison.Ordinal);
         Assert.Contains("`AddDiscoveredPlugins`", hostReadme, StringComparison.Ordinal);
         Assert.Contains("`AddModusPluginHostingRuntime`", hostReadme, StringComparison.Ordinal);

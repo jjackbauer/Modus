@@ -19,6 +19,8 @@ internal sealed class PluginDiDescriptorPolicy
         typeof(ISyncResponder)
     ];
 
+    private static readonly HashSet<Type> KnownCapabilityContractSet = new(KnownCapabilityContracts);
+
     public IReadOnlyList<ServiceDescriptor> BuildDescriptors(Type pluginType, ServiceLifetime lifetime)
     {
         ArgumentNullException.ThrowIfNull(pluginType);
@@ -28,7 +30,9 @@ internal sealed class PluginDiDescriptorPolicy
             return [];
         }
 
-        return KnownCapabilityContracts
+        var contractTypes = KnownCapabilityContracts
+            .Concat(GetPluginContractInterfaces(pluginType))
+            .Distinct()
             .Where(contractType => contractType.IsAssignableFrom(pluginType))
             .OrderBy(contractType => contractType.FullName, StringComparer.Ordinal)
             .Select(contractType => ServiceDescriptor.Describe(
@@ -36,5 +40,16 @@ internal sealed class PluginDiDescriptorPolicy
                 provider => provider.GetRequiredService(pluginType),
                 lifetime))
             .ToArray();
+
+        return contractTypes;
+    }
+
+    private static IEnumerable<Type> GetPluginContractInterfaces(Type pluginType)
+    {
+        return pluginType
+            .GetInterfaces()
+            .Where(static interfaceType => interfaceType != typeof(IPluginContract))
+            .Where(static interfaceType => typeof(IPluginContract).IsAssignableFrom(interfaceType))
+            .Where(static interfaceType => !KnownCapabilityContractSet.Contains(interfaceType));
     }
 }

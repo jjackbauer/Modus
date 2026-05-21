@@ -2,6 +2,28 @@
 
 Host runtime for the [Modus](https://github.com/jackbauer/Modus) modular monolith framework. Discovers, validates, composes, and activates plugins with failure isolation and deterministic lifecycle management.
 
+## Built-in HTTP Surface
+
+Every plugin operation is mapped to `POST /api/{pluginId}/{operation}` by `PluginEndpointMapper`. The host also registers OpenAPI through `AddOpenApi()` and `app.MapOpenApi()`, which means `/openapi/v1.json` and Swagger UI are available as soon as the host starts.
+
+## Embedded Host Integration
+
+Use `AddModusPluginHosting` when Modus is embedded inside another application or when you want the host to discover plugin assemblies and wire runtime services for you.
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Modus.Host.Hosting;
+
+var services = new ServiceCollection();
+services.AddModusPluginHosting(options =>
+{
+	options.PluginsPath = "plugins";
+	options.RunOnce = false;
+});
+```
+
+The host honors the plugin lifetime declarations exposed by `SingletonPlugin<T>`, `ScopedPlugin<T>`, and `TransientPlugin<T>`. Plugin contract interfaces that extend `IPluginContract` are registered automatically, and `RegisterPluginServices(IServiceCollection services)` remains available for any extra plugin-only dependencies.
+
 ## Installation
 
 ```sh
@@ -45,7 +67,7 @@ modus plugins/          ← discovers, validates, activates
 
 - Plugins communicate through domain events, never by direct assembly reference
 - The host is the only composition root — plugins never reach into host internals
-- Scheduled and timer-driven plugins are supported via core lifecycle hooks
+- Scheduled and timer-driven plugins are supported via `IPluginScheduledEvents.RegisterSchedules(IPluginScheduler scheduler)` and host-visible diagnostics
 
 The host runtime composes dependencies, orchestrates lifecycle stages, and enforces boundary validation before activation.
 
@@ -66,6 +88,10 @@ The host runtime composes dependencies, orchestrates lifecycle stages, and enfor
 2. `Start(PluginStartContext)`
 3. `Stop(PluginStopContext)`
 4. `Unload(PluginUnloadContext)`
+
+### REST endpoint mapping and OpenAPI
+
+`PluginEndpointMapper` joins plugin contract metadata and supported operations to register HTTP endpoints for the live host. Every declared operation is exposed as `POST /api/{pluginId}/{operation}`, and the same pipeline makes the generated OpenAPI document visible at `/openapi/v1.json` with Swagger UI at `/swagger`.
 
 ### Runtime resolution helpers
 

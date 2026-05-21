@@ -1,10 +1,67 @@
 
 ![Modus logo](.github/assets/modus-logo.png)
 
-Modus is an open-source plugin platform built with .NET and C# to support two goals:
+Modus is an open-source plugin platform built with .NET and C# that ships three built-in capabilities from the first host start:
 
-- Multi-service orchestration with deterministic runtime behavior
-- Modular monolith architectures with strict boundaries and explicit extension points
+- Automatic REST endpoint mapping for every plugin operation
+- First-class DI integration with explicit lifetime selection
+- Scheduled job support for recurring and point-in-time plugin work
+
+The host also publishes OpenAPI and Swagger UI immediately, so plugin authors can validate their work through live HTTP endpoints instead of adding their own routing layer.
+
+## Built-in Capabilities
+
+### Automatic REST Out of the Box
+
+Every declared plugin operation is exposed as `POST /api/{pluginId}/{operation}` by `PluginEndpointMapper`. The default host startup also calls `AddOpenApi()` and `app.MapOpenApi()`, so `/openapi/v1.json` and Swagger UI are available immediately.
+
+```bash
+dotnet run --project src/Modus.Host/Modus.Host.csproj -- plugins --run-once
+```
+
+A successful startup prints these markers:
+
+- `stage=di outcome=success`
+- `stage=discovery outcome=success`
+- `stage=validation outcome=success`
+- `stage=activation outcome=success`
+
+### First-Class DI Integration and Lifetime Selection
+
+Use `services.AddModusPluginHosting(...)` at the composition root, then derive plugin implementations from `SingletonPlugin<T>`, `ScopedPlugin<T>`, or `TransientPlugin<T>`. Plugin contract interfaces that extend `IPluginContract` are mapped automatically; override `RegisterPluginServices(IServiceCollection services)` only when the plugin needs extra services beyond its own contract.
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using Modus.Host.Hosting;
+
+var services = new ServiceCollection();
+services.AddModusPluginHosting(options =>
+{
+    options.PluginsPath = "plugins";
+    options.RunOnce = false;
+});
+```
+
+When a plugin needs extra services, register them alongside the declared lifetime in `RegisterPluginServices(IServiceCollection services)`.
+
+### Scheduled Jobs Support
+
+Implement `IPluginScheduledEvents.RegisterSchedules(IPluginScheduler scheduler)` to declare recurring or one-off work. `PluginBase` already exposes the hook, and `ScheduleRecurring`/`ScheduleAt` map plugin scheduling into host-observable diagnostics.
+
+```csharp
+public override void RegisterSchedules(IPluginScheduler scheduler)
+{
+    scheduler.ScheduleRecurring(
+        new JobName("Telemetry.Host.CollectSnapshot.EverySecond"),
+        TimeSpan.FromSeconds(1),
+        new OperationName("Telemetry.Host.CollectSnapshot"));
+
+    scheduler.ScheduleAt(
+        new JobName("Telemetry.Host.CollectSnapshot.Once"),
+        DateTimeOffset.UtcNow.AddMinutes(5),
+        new OperationName("Telemetry.Host.CollectSnapshot"));
+}
+```
 
 At its core, Modus provides a host runtime that discovers plugin artifacts, validates contracts, wires dependencies, activates safe capabilities, and isolates failures so healthy plugins continue running.
 
