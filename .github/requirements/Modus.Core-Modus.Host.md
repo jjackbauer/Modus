@@ -86,12 +86,25 @@ classDiagram
    - Evidence: `PluginWebApiEndpointTests.GetHostStatus_GivenRunningHost_ReturnsOkWithPluginInventory`
    - Evidence: `PluginWebApiEndpointTests.GetHostStatus_GivenPluginLoadErrors_ExposesFailedPluginDiagnostics`
    - Audit: `.github/artifacts/iterative-implementation-modus-core-modus-host-management-status-transition-proof-2026-05-21.md` records the prior unchecked input snapshot, current checked state, line-addressable source/test evidence, and fresh build/test command results for this exact checklist item.
-- [ ] Implement asymmetric signature verification pipeline for plugin upload authorization [mandatory - authorized plugin author]
-- [ ] Implement POST /management/plugins/uploads as async upload endpoint to extract, validate, load, and run plugin packages [mandatory - plugin upload endpoint]
-- [ ] Implement GET /management/plugins/uploads/{operationId} for upload progress and final result status [depends on async upload pipeline]
-- [ ] Add helper script to package plugins for signed upload payload creation [mandatory - operator gate script]
-- [ ] Add helper script to call upload API and poll operation status until completion [mandatory - operator gate script]
-- [ ] Implement GET /management/plugins/capabilities endpoint for runtime capability catalog and ownership mapping [proposed - operational discoverability]
+- [x] Implement asymmetric signature verification pipeline for plugin upload authorization [mandatory - authorized plugin author]
+   - Evidence: `PluginUploadAuthorizationPipelineTests.VerifyPluginUploadSignature_GivenTrustedPublicKeyAndValidSignature_ReturnsAuthorized`
+   - Evidence: `PluginUploadAuthorizationPipelineTests.VerifyPluginUploadSignature_GivenInvalidSignature_ReturnsUnauthorized`
+   - Audit: `.github/artifacts/iterative-implementation-modus-core-modus-host-upload-signature-transition-proof-2026-05-21.md` records the prior unchecked input snapshot, current checked state, line-addressable source/test evidence, and fresh build/test command results for this exact checklist item.
+- [x] Implement POST /management/plugins/uploads as async upload endpoint to extract, validate, load, and run plugin packages [mandatory - plugin upload endpoint]
+   - Evidence: `PluginUploadEndpointTests.StartPluginUpload_GivenValidSignedPackage_QueuesAsyncOperationAndReturnsAccepted`
+   - Evidence: `PluginUploadEndpointTests.StartPluginUpload_GivenPackageValidationFailure_MarksOperationFailedWithReason`
+- [x] Implement GET /management/plugins/uploads/{operationId} for upload progress and final result status [depends on async upload pipeline]
+   - Evidence: `PluginUploadEndpointTests.GetPluginUploadOperationStatus_GivenActiveOperation_ReturnsProgressState`
+   - Evidence: `PluginUploadEndpointTests.GetPluginUploadOperationStatus_GivenCompletedOperation_ReturnsTerminalResult`
+- [x] Add helper script to package plugins for signed upload payload creation [mandatory - operator gate script]
+   - Evidence: `PluginUploadPackagingScriptTests.PackPluginForUploadScript_GivenPluginArtifacts_ProducesSignedUploadPackage`
+   - Evidence: `PluginUploadPackagingScriptTests.PackPluginForUploadScript_GivenMissingArtifacts_ExitsNonZeroWithActionableError`
+- [x] Add helper script to call upload API and poll operation status until completion [mandatory - operator gate script]
+   - Evidence: `UploadPluginViaApiScriptTests.UploadPluginViaApiScript_GivenValidPackage_SubmitsUploadAndPollsUntilCompletion`
+   - Evidence: `UploadPluginViaApiScriptTests.UploadPluginViaApiScript_GivenApiAuthorizationFailure_StopsAndPrintsRemediationHint`
+- [x] Implement GET /management/plugins/capabilities endpoint for runtime capability catalog and ownership mapping [proposed - operational discoverability]
+   - Evidence: `PluginWebApiEndpointTests.GetPluginCapabilitiesCatalog_GivenLoadedPlugins_ReturnsCapabilityOwnershipMatrix`
+   - Evidence: `PluginWebApiEndpointTests.GetPluginCapabilitiesCatalog_GivenNoPluginsLoaded_ReturnsOkWithEmptyCatalog`
 
 ---
 
