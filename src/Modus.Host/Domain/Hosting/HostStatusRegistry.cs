@@ -27,6 +27,25 @@ internal sealed class HostStatusRegistry
         }
     }
 
+    public void AppendDiagnostics(IEnumerable<string> diagnostics)
+    {
+        ArgumentNullException.ThrowIfNull(diagnostics);
+
+        var normalizedDiagnostics = diagnostics
+            .Where(static diagnostic => !string.IsNullOrWhiteSpace(diagnostic))
+            .ToArray();
+
+        if (normalizedDiagnostics.Length == 0)
+        {
+            return;
+        }
+
+        lock (_gate)
+        {
+            _diagnostics = [.. _diagnostics, .. normalizedDiagnostics];
+        }
+    }
+
     public ManagementStatusEndpointResponse GetCurrent()
     {
         lock (_gate)

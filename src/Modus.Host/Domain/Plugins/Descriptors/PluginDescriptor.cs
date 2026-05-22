@@ -15,4 +15,6 @@ public sealed record PluginDescriptor(
     IReadOnlyList<OperationName>? DeclaredOperations = null,
     IReadOnlyList<OperationName>? FailingOperations = null,
     string? AssemblyPath = null,
-    long AssemblyFileSizeBytes = 0);
+    long AssemblyFileSizeBytes = 0,
+    string? RuntimePluginTypeFullName = null,
+    PluginServiceLifetime? DeclaredServiceLifetime = null);

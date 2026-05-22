@@ -20,8 +20,9 @@ namespace Modus.Host.IntegrationTests;
 public sealed class PluginHttpEndpointCoverageTests
 {
     [Fact]
-    [Trait("ChecklistItem", "Map_GivenDiscoveredPluginOperations_ExpectedOnePostRoutePerOperation")]
-    public async Task Map_GivenDiscoveredPluginOperations_ExpectedOnePostRoutePerOperation_AndOpenApiContainsAllMappedPaths()
+    [Trait("ChecklistItem", "Replace per-plugin startup route expansion with one stable dynamic POST /api/{pluginId}/{operation} endpoint [mandatory - live endpoint resolve]")]
+    [Trait("AuditArtifact", "iterative-implementation-modus-host-live-endpoint-resolve-transition-proof-2026-05-21")]
+    public async Task PluginEndpointMapper_GivenHostStartup_ExpectedCatchAllPluginRouteMappedOnce()
     {
         var hostTelemetry = new HostTelemetryPlugin();
         var machineTelemetry = new MachineTelemetryPlugin();
@@ -40,16 +41,47 @@ public sealed class PluginHttpEndpointCoverageTests
 
         var endpoints = app.Services.GetRequiredService<EndpointDataSource>().Endpoints
             .OfType<RouteEndpoint>()
+            .Where(static endpoint => string.Equals(endpoint.RoutePattern.RawText, "/api/{pluginId}/{operation}", StringComparison.Ordinal))
             .ToArray();
 
-        AssertRouteExists(endpoints, "/api/Plugin.Host.Telemetry/Telemetry.Host.CollectSnapshot");
-        AssertRouteExists(endpoints, "/api/Plugin.Machine.Telemetry/Telemetry.Machine.CollectSnapshot");
+        Assert.Single(endpoints);
+        Assert.True(
+            endpoints[0].Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Contains("POST", StringComparer.OrdinalIgnoreCase) == true,
+            "Expected the stable plugin endpoint to accept POST requests.");
 
         var client = app.GetTestClient();
         var openApi = await client.GetStringAsync("/openapi/v1.json");
 
-        Assert.Contains("/api/Plugin.Host.Telemetry/Telemetry.Host.CollectSnapshot", openApi, StringComparison.Ordinal);
-        Assert.Contains("/api/Plugin.Machine.Telemetry/Telemetry.Machine.CollectSnapshot", openApi, StringComparison.Ordinal);
+        Assert.Contains("/api/{pluginId}/{operation}", openApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("/api/Plugin.Host.Telemetry/Telemetry.Host.CollectSnapshot", openApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("/api/Plugin.Machine.Telemetry/Telemetry.Machine.CollectSnapshot", openApi, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Replace per-plugin startup route expansion with one stable dynamic POST /api/{pluginId}/{operation} endpoint [mandatory - live endpoint resolve]")]
+    [Trait("AuditArtifact", "iterative-implementation-modus-host-live-endpoint-resolve-transition-proof-2026-05-21")]
+    public async Task PluginEndpointMapper_GivenMultiplePluginOperations_ExpectedNoRouteTableRemapRequired()
+    {
+        var hostTelemetry = new HostTelemetryPlugin();
+        var machineTelemetry = new MachineTelemetryPlugin();
+        var mapper = new PluginEndpointMapper(
+            [hostTelemetry, machineTelemetry],
+            [hostTelemetry, machineTelemetry]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var endpoints = app.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(static endpoint => endpoint.RoutePattern.RawText?.StartsWith("/api/", StringComparison.Ordinal) == true)
+            .ToArray();
+
+        Assert.Single(endpoints);
+        Assert.Equal("/api/{pluginId}/{operation}", endpoints[0].RoutePattern.RawText);
     }
 
     [Fact]
@@ -66,8 +98,7 @@ public sealed class PluginHttpEndpointCoverageTests
         {
             await WaitForHostApiAsync(port);
 
-            var endpoints = await GetDiscoveredPluginEndpointsAsync(port);
-            Assert.NotEmpty(endpoints);
+            var endpoints = GetKnownPluginEndpoints();
 
             foreach (var endpoint in endpoints)
             {
@@ -108,13 +139,6 @@ public sealed class PluginHttpEndpointCoverageTests
         }
     }
 
-    private static void AssertRouteExists(RouteEndpoint[] endpoints, string routePattern)
-    {
-        Assert.Contains(endpoints, endpoint =>
-            string.Equals(endpoint.RoutePattern.RawText, routePattern, StringComparison.Ordinal)
-            && endpoint.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Contains("POST", StringComparer.OrdinalIgnoreCase) == true);
-    }
-
     private static async Task WaitForHostApiAsync(int port)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
@@ -133,43 +157,16 @@ public sealed class PluginHttpEndpointCoverageTests
         throw new TimeoutException($"Host API on port {port} did not become ready in time.");
     }
 
-    private static async Task<IReadOnlyList<(string PluginId, string Operation)>> GetDiscoveredPluginEndpointsAsync(int port)
+    private static IReadOnlyList<(string PluginId, string Operation)> GetKnownPluginEndpoints()
     {
-        var result = await RunCurlAsync(port, "/openapi/v1.json", "GET", jsonBody: null, includeResponseBody: true);
-        if (result.ExitCode != 0)
-        {
-            throw new InvalidOperationException($"Unable to fetch OpenAPI document from live host: {result.StdErr}");
-        }
-
-        var lastNewLine = result.StdOut.LastIndexOf('\n');
-        if (lastNewLine < 0)
-        {
-            throw new InvalidOperationException($"Unable to parse OpenAPI response body from output: {result.StdOut}");
-        }
-
-        var body = result.StdOut[..lastNewLine];
-        using var document = JsonDocument.Parse(body);
-
-        var paths = document.RootElement.GetProperty("paths");
-        var endpoints = new List<(string PluginId, string Operation)>();
-
-        foreach (var pathProperty in paths.EnumerateObject())
-        {
-            if (!pathProperty.Name.StartsWith("/api/", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            var segments = pathProperty.Name.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (segments.Length != 3)
-            {
-                continue;
-            }
-
-            endpoints.Add((segments[1], segments[2]));
-        }
-
-        return endpoints;
+        return
+        [
+            ("Plugin.Host.Telemetry", "Telemetry.Host.CollectSnapshot"),
+            ("Plugin.Machine.Telemetry", "Telemetry.Machine.CollectSnapshot"),
+            ("Plugin.Lifetime.Scoped", "Lifetime.Scoped.PrintId"),
+            ("Plugin.Lifetime.Singleton", "Lifetime.Singleton.PrintId"),
+            ("Plugin.Lifetime.Transient", "Lifetime.Transient.PrintId")
+        ];
     }
 
     private static async Task<(int ExitCode, string StdOut, string StdErr, HttpStatusCode StatusCode, PluginOperationHttpResponse? Body)> CurlPostJsonAsync(

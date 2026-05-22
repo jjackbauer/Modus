@@ -1,4 +1,5 @@
 using System.Reflection;
+using Modus.Core.Messaging;
 using Modus.Core.Plugins;
 
 namespace Modus.Host.Plugins;
@@ -37,6 +38,7 @@ public sealed class PluginAssemblyDescriptorFactory
         var version = assemblyName.Version ?? new Version(1, 0, 0, 0);
         var fullPath = Path.GetFullPath(assemblyPath);
         var fileSize = new FileInfo(fullPath).Length;
+        var dispatchMetadata = TryResolveDispatchMetadata(fullPath);
 
         return new PluginDescriptor(
             PluginId: new PluginId(pluginId),
@@ -45,7 +47,65 @@ public sealed class PluginAssemblyDescriptorFactory
             Capabilities: [new CapabilityName($"Cap.{pluginId}")],
             DependsOn: [],
             AssemblyPath: fullPath,
-            AssemblyFileSizeBytes: fileSize);
+            AssemblyFileSizeBytes: fileSize,
+            RuntimePluginTypeFullName: dispatchMetadata.PluginTypeFullName,
+            DeclaredServiceLifetime: dispatchMetadata.ServiceLifetime);
+    }
+
+    private static (string? PluginTypeFullName, PluginServiceLifetime? ServiceLifetime) TryResolveDispatchMetadata(string assemblyPath)
+    {
+        try
+        {
+            var assembly = Assembly.LoadFrom(assemblyPath);
+            var pluginType = assembly
+                .GetTypes()
+                .Where(static type =>
+                    type is { IsAbstract: false, IsInterface: false }
+                    && typeof(IPluginContract).IsAssignableFrom(type)
+                    && typeof(ISyncResponder).IsAssignableFrom(type))
+                .OrderBy(static type => type.FullName, StringComparer.Ordinal)
+                .FirstOrDefault();
+
+            if (pluginType is null)
+            {
+                return (null, null);
+            }
+
+            return (pluginType.FullName, TryResolveDeclaredServiceLifetime(pluginType));
+        }
+        catch
+        {
+            return (null, null);
+        }
+    }
+
+    private static PluginServiceLifetime? TryResolveDeclaredServiceLifetime(Type pluginType)
+    {
+        for (var current = pluginType; current is not null && current != typeof(object); current = current.BaseType!)
+        {
+            if (!current.IsGenericType)
+            {
+                continue;
+            }
+
+            var genericDefinition = current.GetGenericTypeDefinition();
+            if (genericDefinition == typeof(SingletonPlugin<>))
+            {
+                return PluginServiceLifetime.Singleton;
+            }
+
+            if (genericDefinition == typeof(ScopedPlugin<>))
+            {
+                return PluginServiceLifetime.Scoped;
+            }
+
+            if (genericDefinition == typeof(TransientPlugin<>))
+            {
+                return PluginServiceLifetime.Transient;
+            }
+        }
+
+        return null;
     }
 
     private static string NormalizeIdentifier(string value)

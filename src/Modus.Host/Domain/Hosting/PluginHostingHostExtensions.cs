@@ -6,6 +6,8 @@ using Modus.Core.Plugins;
 using Modus.Host.Domain.Hosting;
 using Modus.Host.Domain.Telemetry;
 using Modus.Host.Domain.WebApi;
+using Modus.Host.Plugins.Authorization;
+using Modus.Host.Plugins.Uploads;
 using Modus.Host.Plugins.Scanning;
 using Modus.Host.Plugins;
 using Modus.Host.Plugins.Validation;
@@ -77,6 +79,9 @@ public static class PluginHostingHostExtensions
 
         services.TryAddSingleton<PluginDiscoveryService>();
         services.TryAddSingleton<PluginValidationService>();
+        services.TryAddSingleton(static sp => new RuntimePluginRegistry(
+            sp.GetServices<IPluginContract>(),
+            sp.GetServices<IPluginOperationCatalog>()));
         services.TryAddSingleton<InMemoryHostRuntime>();
         services.TryAddSingleton<PluginFolderWatcher>(
             static sp => new PluginFolderWatcher(sp));
@@ -88,11 +93,19 @@ public static class PluginHostingHostExtensions
         services.TryAddSingleton<HostStatusRegistry>();
         services.TryAddSingleton<HostStatusSnapshotBuilder>();
         services.TryAddSingleton<TelemetryAggregationService>();
+        services.TryAddSingleton<PluginUploadAuthorizationOptions>();
+        services.TryAddSingleton<PluginUploadAuthorizationPipeline>();
+        services.TryAddSingleton<PluginUploadOperationStore>();
+        services.TryAddSingleton<PluginLoader>();
+        services.TryAddSingleton<PluginUploadPipeline>();
         
         // Register the endpoint mapper that registers plugin operation routes
-        services.TryAddSingleton<PluginEndpointMapper>();
+        services.TryAddSingleton(static sp => new PluginEndpointMapper(
+            sp.GetRequiredService<RuntimePluginRegistry>()));
         services.TryAddSingleton<ManagementTelemetryEndpointMapper>();
         services.TryAddSingleton<ManagementStatusEndpointMapper>();
+        services.TryAddSingleton<ManagementPluginCapabilitiesEndpointMapper>();
+        services.TryAddSingleton<ManagementPluginUploadsEndpointMapper>();
 
         return services;
     }

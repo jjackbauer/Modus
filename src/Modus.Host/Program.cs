@@ -1,5 +1,6 @@
 using Modus.Core.Hosting;
 using Modus.Core.Plugins;
+using Modus.Host.Domain.Hosting;
 using Modus.Host.Domain.WebApi;
 using Modus.Host.Hosting;
 using Modus.Host.Plugins;
@@ -9,7 +10,7 @@ var pluginsPath = args.FirstOrDefault(x => !x.StartsWith("--", StringComparison.
     ?? Path.Combine(Directory.GetCurrentDirectory(), "plugins");
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer<PluginOpenApiDocumentTransformer>());
 builder.Services.AddModusPluginHosting(opts =>
 {
     opts.PluginsPath = pluginsPath;
@@ -19,6 +20,7 @@ builder.Services.AddModusPluginHosting(opts =>
 await using var app = builder.Build();
 var provider = app.Services;
 var registrationDiagnostics = provider.GetService<PluginDiRegistrationDiagnostics>();
+var runtimePluginRegistry = provider.GetRequiredService<RuntimePluginRegistry>();
 
 string DescribeSelectedLifetime(string pluginId)
     => registrationDiagnostics?.Entries
@@ -34,15 +36,15 @@ string DescribeSkipReason(string pluginId)
         ?.Reason
         ?? "no matching registration";
 
-var pluginContracts = provider.GetServices<IPluginContract>().ToArray();
-if (pluginContracts.Length == 0)
+var pluginContracts = runtimePluginRegistry.GetSnapshot().Contracts;
+if (pluginContracts.Count == 0)
 {
     Console.WriteLine("stage=di outcome=failure reason=no plugin contracts resolved from host provider");
 }
 else
 {
     var pluginIds = string.Join(",", pluginContracts.Select(static x => x.PluginId.Value).OrderBy(static x => x, StringComparer.Ordinal));
-    Console.WriteLine($"stage=di outcome=success pluginContracts={pluginContracts.Length} pluginIds={pluginIds}");
+    Console.WriteLine($"stage=di outcome=success pluginContracts={pluginContracts.Count} pluginIds={pluginIds}");
 }
 
 var hostTelemetryContracts = provider.GetServices<IHostTelemetryPluginContract>().ToArray();
@@ -79,6 +81,14 @@ if (!start.HostHealthy)
 // Register plugin operation endpoints on the WebApplication
 var mapper = provider.GetRequiredService<PluginEndpointMapper>();
 mapper.Map(app);
+var managementTelemetryMapper = provider.GetRequiredService<ManagementTelemetryEndpointMapper>();
+managementTelemetryMapper.Map(app);
+var managementStatusMapper = provider.GetRequiredService<ManagementStatusEndpointMapper>();
+managementStatusMapper.Map(app);
+var managementPluginCapabilitiesMapper = provider.GetRequiredService<ManagementPluginCapabilitiesEndpointMapper>();
+managementPluginCapabilitiesMapper.Map(app);
+var managementPluginUploadsMapper = provider.GetRequiredService<ManagementPluginUploadsEndpointMapper>();
+managementPluginUploadsMapper.Map(app);
 
 app.MapOpenApi();
 app.UseSwaggerUI(options =>

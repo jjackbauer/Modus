@@ -571,6 +571,128 @@ public sealed class PluginWebApiEndpointTests
     }
 
     [Fact]
+    [Trait("ChecklistItem", "Implement GET /management/plugins/capabilities endpoint for runtime capability catalog and ownership mapping [proposed - operational discoverability]")]
+    public async Task GetPluginCapabilitiesCatalog_GivenLoadedPlugins_ReturnsCapabilityOwnershipMatrix()
+    {
+        var registry = new HostStatusRegistry();
+        registry.Update(
+            new HostStatusSnapshot(
+                State: HostRuntimeState.Running,
+                LoadedPlugins:
+                [
+                    new LoadedPluginMetadata(
+                        PluginId: new PluginId("Plugin.Orders"),
+                        AssemblyName: "Plugin.Orders",
+                        Version: new Version(1, 5, 0),
+                        LifecycleState: PluginRuntimeState.Active,
+                        Capabilities: [new CapabilityName("Cap.Orders")]),
+                    new LoadedPluginMetadata(
+                        PluginId: new PluginId("Plugin.Inventory"),
+                        AssemblyName: "Plugin.Inventory",
+                        Version: new Version(2, 1, 0),
+                        LifecycleState: PluginRuntimeState.Active,
+                        Capabilities: [new CapabilityName("Cap.Shared"), new CapabilityName("Cap.Inventory")]),
+                ],
+                CapabilityOwnership:
+                [
+                    new CapabilityOwnershipSnapshot(
+                        Capability: new CapabilityName("Cap.Shared"),
+                        OwnerPluginId: new PluginId("Plugin.Inventory")),
+                    new CapabilityOwnershipSnapshot(
+                        Capability: new CapabilityName("Cap.Inventory"),
+                        OwnerPluginId: new PluginId("Plugin.Inventory")),
+                    new CapabilityOwnershipSnapshot(
+                        Capability: new CapabilityName("Cap.Orders"),
+                        OwnerPluginId: new PluginId("Plugin.Orders")),
+                ]),
+            []);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(registry);
+        builder.Services.AddSingleton<ManagementPluginCapabilitiesEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementPluginCapabilitiesEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/plugins/capabilities");
+        var response = await httpResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+
+        var capabilities = response.GetProperty("capabilities").EnumerateArray().ToArray();
+        Assert.Equal(3, capabilities.Length);
+        Assert.Collection(
+            capabilities,
+            inventory =>
+            {
+                Assert.Equal("Cap.Inventory", inventory.GetProperty("capability").GetString());
+                Assert.Equal("Plugin.Inventory", inventory.GetProperty("ownerPluginId").GetString());
+            },
+            orders =>
+            {
+                Assert.Equal("Cap.Orders", orders.GetProperty("capability").GetString());
+                Assert.Equal("Plugin.Orders", orders.GetProperty("ownerPluginId").GetString());
+            },
+            shared =>
+            {
+                Assert.Equal("Cap.Shared", shared.GetProperty("capability").GetString());
+                Assert.Equal("Plugin.Inventory", shared.GetProperty("ownerPluginId").GetString());
+            });
+
+        var plugins = response.GetProperty("plugins").EnumerateArray().ToArray();
+        Assert.Equal(2, plugins.Length);
+        Assert.Collection(
+            plugins,
+            inventory =>
+            {
+                Assert.Equal("Plugin.Inventory", inventory.GetProperty("pluginId").GetString());
+                Assert.Equal(
+                    ["Cap.Inventory", "Cap.Shared"],
+                    inventory.GetProperty("capabilities").EnumerateArray().Select(static item => item.GetString()!).ToArray());
+            },
+            orders =>
+            {
+                Assert.Equal("Plugin.Orders", orders.GetProperty("pluginId").GetString());
+                Assert.Equal(
+                    ["Cap.Orders"],
+                    orders.GetProperty("capabilities").EnumerateArray().Select(static item => item.GetString()!).ToArray());
+            });
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement GET /management/plugins/capabilities endpoint for runtime capability catalog and ownership mapping [proposed - operational discoverability]")]
+    public async Task GetPluginCapabilitiesCatalog_GivenNoPluginsLoaded_ReturnsOkWithEmptyCatalog()
+    {
+        var registry = new HostStatusRegistry();
+        registry.Update(
+            new HostStatusSnapshot(
+                State: HostRuntimeState.Running,
+                LoadedPlugins: [],
+                CapabilityOwnership: []),
+            []);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(registry);
+        builder.Services.AddSingleton<ManagementPluginCapabilitiesEndpointMapper>();
+
+        await using var app = builder.Build();
+        app.Services.GetRequiredService<ManagementPluginCapabilitiesEndpointMapper>().Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.GetAsync("/management/plugins/capabilities");
+        var response = await httpResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.Empty(response.GetProperty("capabilities").EnumerateArray());
+        Assert.Empty(response.GetProperty("plugins").EnumerateArray());
+    }
+
+    [Fact]
     [Trait("ChecklistItem", "Implement GET /management/telemetry/machine endpoint returning typed machine measurements [depends on telemetry aggregation service]")]
     public async Task GetMachineTelemetry_GivenProviderFailure_ReturnsProblemDetailsWithCorrelationId()
     {
@@ -663,6 +785,124 @@ public sealed class PluginWebApiEndpointTests
     }
 
     [Fact]
+    [Trait("ChecklistItem", "Refactor dispatcher path to resolve plugin operation owners from RuntimePluginRegistry snapshot per request [mandatory - live DI resolve]")]
+    public async Task HandlePluginOperation_GivenRuntimeRegistryNoLongerOwnsOperation_ExpectedDispatchRejectedFromCurrentSnapshot()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Catalog", ["Catalog.Op"]);
+        var registry = new RuntimePluginRegistry([catalog], [catalog]);
+        var mapper = new PluginEndpointMapper(registry);
+        var statusRegistry = new HostStatusRegistry();
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton(statusRegistry);
+        builder.Services.AddScoped<ISyncResponder>(_ =>
+            new ScopeResolvedResponder("Plugin.Catalog", "Catalog.Op", "resolved-from-scope"));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        registry.Update([], []);
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Catalog/Catalog.Op",
+            new PluginOperationHttpRequest { CorrelationId = "corr-live-registry", Payload = "payload" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.False(response!.Success);
+        Assert.Contains("No runtime plugin operation owner found for plugin 'Plugin.Catalog' and operation 'Catalog.Op'.", response.Payload);
+
+        var diagnostics = statusRegistry.GetCurrent().Diagnostics;
+        Assert.Contains(
+            diagnostics,
+            diagnostic => diagnostic.Contains("stage=dispatch outcome=miss", StringComparison.Ordinal)
+                && diagnostic.Contains("plugin=Plugin.Catalog", StringComparison.Ordinal)
+                && diagnostic.Contains("operation=Catalog.Op", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Ensure dynamic endpoint pipeline can execute newly onboarded plugin operations without host restart [mandatory - live endpoint resolve]")]
+    public async Task HandlePluginOperation_GivenRuntimeOnboardedPlugin_ExpectedOperationExecutesWithoutHostRestart()
+    {
+        var existing = new TestPlugin("Plugin.Existing", ["Existing.Op"]);
+        var runtimeOnboarded = new TestPlugin("Plugin.Onboarded", ["Onboarded.Op"]);
+        var registry = new RuntimePluginRegistry([existing], [existing]);
+        var mapper = new PluginEndpointMapper(registry);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var beforeOnboarding = await client.PostAsJsonAsync(
+            "/api/Plugin.Onboarded/Onboarded.Op",
+            new PluginOperationHttpRequest { CorrelationId = "runtime-before", Payload = "payload" });
+        var beforeBody = await beforeOnboarding.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, beforeOnboarding.StatusCode);
+        Assert.NotNull(beforeBody);
+        Assert.False(beforeBody!.Success);
+        Assert.Contains("No runtime plugin operation owner found", beforeBody.Payload, StringComparison.Ordinal);
+
+        registry.Update([existing, runtimeOnboarded], [existing, runtimeOnboarded]);
+
+        var afterOnboarding = await client.PostAsJsonAsync(
+            "/api/Plugin.Onboarded/Onboarded.Op",
+            new PluginOperationHttpRequest { CorrelationId = "runtime-after", Payload = "payload" });
+        var afterBody = await afterOnboarding.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, afterOnboarding.StatusCode);
+        Assert.NotNull(afterBody);
+        Assert.True(afterBody!.Success);
+        Assert.Equal(SyncResponseStatus.Success, afterBody.Status);
+        Assert.Equal("runtime-after", afterBody.CorrelationId);
+        Assert.Contains("Onboarded.Op", afterBody.Payload, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Add thread-safety guards for registry mutation and snapshot reads during concurrent requests and onboarding [depends on runtime registry abstraction]")]
+    public async Task HandlePluginOperation_GivenRegistryMutatedMidRequest_ExpectedDispatchUsesConsistentSnapshot()
+    {
+        var runtimePlugin = new TestPlugin("Plugin.Concurrent", ["Concurrent.Op"]);
+        var registry = new RuntimePluginRegistry([runtimePlugin], [runtimePlugin]);
+        var mapper = new PluginEndpointMapper(registry);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTransient<ISyncResponder>(_ =>
+        {
+            registry.Update(Array.Empty<IPluginContract>(), Array.Empty<IPluginOperationCatalog>());
+            return new ScopeResolvedResponder("Plugin.Unrelated", "Other.Op", "ignored");
+        });
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Concurrent/Concurrent.Op",
+            new PluginOperationHttpRequest { CorrelationId = "corr-concurrent", Payload = "payload" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.True(response!.Success);
+        Assert.Equal(SyncResponseStatus.Success, response.Status);
+        Assert.Equal("corr-concurrent", response.CorrelationId);
+        Assert.Contains("Concurrent.Op", response.Payload, StringComparison.Ordinal);
+    }
+
+    [Fact]
     [Trait("ChecklistItem", "HandlePluginOperation_GivenScopedPluginAcrossDifferentRequests_ExpectedDifferentInstanceIds")]
     public async Task HandlePluginOperation_GivenScopedPluginAcrossDifferentRequests_ExpectedDifferentInstanceIds()
     {
@@ -739,6 +979,170 @@ public sealed class PluginWebApiEndpointTests
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
         Assert.Equal(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement explicit lifetime policy in dispatcher: singleton cache, scoped-per-request, transient-per-call using DI scopes [depends on runtime DI resolve]")]
+    public async Task HandlePluginOperation_GivenRuntimeSingletonDispatchTarget_ExpectedSameInstanceAcrossRequests()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Runtime.Singleton",
+            supportedOperation: "Singleton.Op",
+            pluginTypeFullName: typeof(RuntimeSingletonResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Singleton);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<RuntimeSingletonResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var firstResponse = await PostPluginOperationAsync(client, "Plugin.Runtime.Singleton", "Singleton.Op", "runtime-singleton-1");
+        var secondResponse = await PostPluginOperationAsync(client, "Plugin.Runtime.Singleton", "Singleton.Op", "runtime-singleton-2");
+
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        Assert.NotNull(firstResponse.Body);
+        Assert.NotNull(secondResponse.Body);
+        Assert.Equal(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement plugin unload path with deterministic disposal and registry eviction [depends on runtime registry abstraction]")]
+    public async Task HandlePluginOperation_GivenRuntimeSingletonPluginUnloaded_ExpectedCachedResponderDisposedAndRegistryEvicted()
+    {
+        DisposableRuntimeSingletonResponder.Reset();
+
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Runtime.Unload",
+            supportedOperation: "Unload.Op",
+            pluginTypeFullName: typeof(DisposableRuntimeSingletonResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Singleton);
+        var registry = new RuntimePluginRegistry([projection], [projection]);
+        var mapper = new PluginEndpointMapper(registry);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<DisposableRuntimeSingletonResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var beforeUnload = await PostPluginOperationAsync(client, "Plugin.Runtime.Unload", "Unload.Op", "runtime-unload-1");
+
+        Assert.Equal(HttpStatusCode.OK, beforeUnload.StatusCode);
+        Assert.NotNull(beforeUnload.Body);
+        Assert.Equal(0, DisposableRuntimeSingletonResponder.DisposeCount);
+
+        registry.Update(Array.Empty<IPluginContract>(), Array.Empty<IPluginOperationCatalog>());
+        var snapshot = registry.GetSnapshot();
+
+        Assert.Equal(1, DisposableRuntimeSingletonResponder.DisposeCount);
+        Assert.DoesNotContain(snapshot.Contracts, x => string.Equals(x.PluginId.Value, "Plugin.Runtime.Unload", StringComparison.Ordinal));
+        Assert.DoesNotContain(snapshot.Catalogs, x => string.Equals((x as IPluginContract)?.PluginId.Value, "Plugin.Runtime.Unload", StringComparison.Ordinal));
+
+        var afterUnload = await PostPluginOperationAsync(client, "Plugin.Runtime.Unload", "Unload.Op", "runtime-unload-2");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, afterUnload.StatusCode);
+        Assert.NotNull(afterUnload.Body);
+        Assert.False(afterUnload.Body!.Success);
+        Assert.Equal(SyncResponseStatus.Failed, afterUnload.Body.Status);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement explicit lifetime policy in dispatcher: singleton cache, scoped-per-request, transient-per-call using DI scopes [depends on runtime DI resolve]")]
+    public async Task HandlePluginOperation_GivenRuntimeTransientDispatchTarget_ExpectedNewInstancePerCall()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Runtime.Transient",
+            supportedOperation: "Transient.Op",
+            pluginTypeFullName: typeof(RuntimeTransientResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Transient);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTransient<RuntimeTransientResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var firstResponse = await PostPluginOperationAsync(client, "Plugin.Runtime.Transient", "Transient.Op", "runtime-transient-1");
+        var secondResponse = await PostPluginOperationAsync(client, "Plugin.Runtime.Transient", "Transient.Op", "runtime-transient-2");
+
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        Assert.NotNull(firstResponse.Body);
+        Assert.NotNull(secondResponse.Body);
+        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Implement explicit lifetime policy in dispatcher: singleton cache, scoped-per-request, transient-per-call using DI scopes [depends on runtime DI resolve]")]
+    public async Task HandlePluginOperation_GivenRuntimeScopedDispatchTarget_ExpectedResolvedWithinRequestBoundary()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Runtime.Scoped",
+            supportedOperation: "Scoped.Op",
+            pluginTypeFullName: typeof(RuntimeScopedResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Scoped);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<RequestBoundaryMarker>();
+        builder.Services.AddScoped<RuntimeScopedResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var firstResponse = await PostPluginOperationAsync(client, "Plugin.Runtime.Scoped", "Scoped.Op", "runtime-scoped-1");
+        var secondResponse = await PostPluginOperationAsync(client, "Plugin.Runtime.Scoped", "Scoped.Op", "runtime-scoped-2");
+
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
+        Assert.NotNull(firstResponse.Body);
+        Assert.NotNull(secondResponse.Body);
+        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+    }
+
+    [Fact]
+    public async Task HandlePluginOperation_GivenRuntimeDispatchTargetWithoutLifetime_ExpectedResolvedFromRequestScope()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Modus.Core",
+            supportedOperation: "Op.Modus.Core.HealthCheck",
+            pluginTypeFullName: typeof(RuntimeNoLifetimeResponder).FullName!,
+            serviceLifetime: null);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddTransient<RuntimeNoLifetimeResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var response = await PostPluginOperationAsync(client, "Modus.Core", "Op.Modus.Core.HealthCheck", "runtime-no-lifetime");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Body);
+        Assert.True(response.Body!.Success);
+        Assert.Equal(SyncResponseStatus.Success, response.Body.Status);
+        Assert.Equal("runtime-no-lifetime", response.Body.CorrelationId);
+        Assert.Contains("health-ok", response.Body.Payload, StringComparison.Ordinal);
     }
 
     private sealed class FailingMachineTelemetryProvider : IMachineTelemetryPluginContract, IPluginOperationCatalog, ISyncResponder
@@ -939,6 +1343,155 @@ public sealed class PluginWebApiEndpointTests
                 Status: SyncResponseStatus.Success,
                 CorrelationId: request.CorrelationId);
         }
+    }
+
+    private sealed class RuntimeDispatchProjection : IRuntimePluginDispatchTarget
+    {
+        private readonly IReadOnlyCollection<OperationName> _supportedOperations;
+
+        public RuntimeDispatchProjection(
+            string pluginId,
+            string supportedOperation,
+            string pluginTypeFullName,
+            PluginServiceLifetime? serviceLifetime)
+        {
+            PluginId = new PluginId(pluginId);
+            _supportedOperations = [new OperationName(supportedOperation)];
+            PluginTypeFullName = pluginTypeFullName;
+            ServiceLifetime = serviceLifetime;
+        }
+
+        public PluginId PluginId { get; }
+
+        public ContractName ContractName => new("Test.RuntimeDispatchProjection");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public IReadOnlyCollection<OperationName> SupportedOperations => _supportedOperations;
+
+        public string? PluginTypeFullName { get; }
+
+        public PluginServiceLifetime? ServiceLifetime { get; }
+    }
+
+    private sealed class RuntimeSingletonResponder : IPluginContract, ISyncResponder
+    {
+        private readonly string _instanceId = Guid.NewGuid().ToString("N");
+
+        public PluginId PluginId => new("Plugin.Runtime.Singleton");
+
+        public ContractName ContractName => new("Test.RuntimeSingletonResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: _instanceId,
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class RuntimeNoLifetimeResponder : IPluginContract, ISyncResponder
+    {
+        public PluginId PluginId => new("Modus.Core");
+
+        public ContractName ContractName => new("Test.RuntimeNoLifetimeResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: "health-ok",
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class DisposableRuntimeSingletonResponder : IPluginContract, ISyncResponder, IDisposable
+    {
+        private readonly string _instanceId = Guid.NewGuid().ToString("N");
+
+        public static int DisposeCount { get; private set; }
+
+        public static void Reset()
+        {
+            DisposeCount = 0;
+        }
+
+        public PluginId PluginId => new("Plugin.Runtime.Unload");
+
+        public ContractName ContractName => new("Test.DisposableRuntimeSingletonResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: _instanceId,
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+
+        public void Dispose()
+        {
+            DisposeCount++;
+        }
+    }
+
+    private sealed class RuntimeTransientResponder : IPluginContract, ISyncResponder
+    {
+        private readonly string _instanceId = Guid.NewGuid().ToString("N");
+
+        public PluginId PluginId => new("Plugin.Runtime.Transient");
+
+        public ContractName ContractName => new("Test.RuntimeTransientResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: _instanceId,
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class RuntimeScopedResponder : IPluginContract, ISyncResponder
+    {
+        private readonly RequestBoundaryMarker _boundaryMarker;
+
+        public RuntimeScopedResponder(RequestBoundaryMarker boundaryMarker)
+        {
+            _boundaryMarker = boundaryMarker;
+        }
+
+        public PluginId PluginId => new("Plugin.Runtime.Scoped");
+
+        public ContractName ContractName => new("Test.RuntimeScopedResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return new SyncResponse(
+                Success: true,
+                Payload: _boundaryMarker.Id,
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class RequestBoundaryMarker
+    {
+        public string Id { get; } = Guid.NewGuid().ToString("N");
     }
 
     private sealed class TypedPayloadResponder : IPluginContract, ISyncResponder
