@@ -30,8 +30,8 @@
 - [x] Create `.github/workflows/tests-ci.yml` with a single authoritative `tests` job running on GitHub-hosted Ubuntu runner [prerequisite for all CI behavior]
 - [x] Configure workflow triggers for `push` and `pull_request` to ensure test execution on mainline and review paths [depends on workflow file]
    Checklist transition evidence (2026-05-22): [ ] -> [x] verified by `tests/Modus.Host.IntegrationTests/TestsCiWorkflowTriggerPolicyTests.cs`, which now proves trigger semantics with executable event/branch matrices (`push/main` and `pull_request/main` must run; `push/feature/*`, `pull_request/release/*`, and `workflow_dispatch/main` must not run), replacing prior metadata-only YAML string assertions.
-- [x] Add `actions/setup-dotnet` for `net10.0.x` to guarantee runtime-compatible SDK provisioning before test commands [depends on workflow file]
-   Checklist transition evidence (2026-05-22): completion is enforced by executable behavior checks in `tests/Modus.Host.IntegrationTests/TestsCiWorkflowDotnetSdkProvisioningTests.cs`, proving `actions/setup-dotnet` with `dotnet-version: net10.0.x` appears before the first real `dotnet` workflow command, enables execution on runners that start without .NET 10, and deterministically fails when downgraded to `net9.0.x`.
+- [x] Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands [depends on workflow file]
+   Checklist transition evidence (2026-05-22): completion is enforced by executable behavior checks in `tests/Modus.Host.IntegrationTests/TestsCiWorkflowDotnetSdkProvisioningTests.cs`, proving `actions/setup-dotnet` with `dotnet-version: 10.0.x` appears before the first real `dotnet` workflow command, enables execution on runners that start without .NET 10, and deterministically fails when downgraded to `9.0.x`.
 - [x] Execute `dotnet restore` and `dotnet build --configuration Release --no-restore` against `Modus.slnx` before tests [depends on SDK setup]
    Checklist transition evidence (2026-05-22): [ ] -> [x] verified by `tests/Modus.Host.IntegrationTests/TestsCiWorkflowRestoreBuildGateTests.cs`, which now proves restore/build stage ordering and `--no-restore` build gating before any `dotnet test` execution, plus runtime command-chain evidence from `dotnet restore Modus.slnx`, `dotnet build Modus.slnx --configuration Release --no-restore`, `dotnet build tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-restore`, and `dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build`.
 - [x] Execute `dotnet test --configuration Release --no-build --logger trx` across unit and integration projects, and fail job on any failing test [depends on restore/build]
@@ -61,7 +61,7 @@
 ### `.NET SDK provisioning`
 
 3. `TestsWorkflow_GivenRunnerWithoutDotnet10_ExpectedSetupDotnetInstallsNet10BeforeBuild`
-   *Assumption*: On a clean runner image, the workflow installs `net10.0.x` and subsequent build/test commands execute with that runtime, proving SDK setup is behaviorally effective.
+   *Assumption*: On a clean runner image, the workflow installs `10.0.x` and subsequent build/test commands execute with that runtime, proving SDK setup is behaviorally effective.
 
 4. `TestsWorkflow_GivenSdkSetupFailure_ExpectedWorkflowFailsBeforeTestPhase`
    *Assumption*: If SDK setup is intentionally misconfigured, the run fails deterministically before restore/build/test and records the failure contract in job logs.

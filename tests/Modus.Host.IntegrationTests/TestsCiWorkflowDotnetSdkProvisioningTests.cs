@@ -5,14 +5,14 @@ namespace Modus.Host.IntegrationTests;
 public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
 {
     [Fact]
-    [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `net10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
+    [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
     public void TestsWorkflow_GivenRunnerWithoutDotnet10_ExpectedSetupDotnetProvisioningEnablesDotnetCommands()
     {
         var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var setupStep = Assert.Single(steps, IsSetupDotnetStep);
-        Assert.Equal("net10.0.x", setupStep.DotnetVersion);
+        Assert.Equal("10.0.x", setupStep.DotnetVersion);
 
         var simulation = SimulateRunnerExecution(
             steps,
@@ -25,7 +25,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
     }
 
     [Fact]
-    [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `net10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
+    [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
     public void TestsWorkflow_GivenSdkVersionDowngraded_ExpectedDotnetCommandSimulationFails()
     {
         var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
@@ -33,7 +33,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
 
         var downgraded = steps
             .Select(static step => IsSetupDotnetStep(step)
-                ? step with { DotnetVersion = "net9.0.x" }
+                ? step with { DotnetVersion = "9.0.x" }
                 : step)
             .ToArray();
 
@@ -47,7 +47,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
     }
 
     [Fact]
-    [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `net10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
+    [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
     public void TestsWorkflow_GivenConfiguredDotnetRunSteps_ExpectedSetupDotnetAppearsBeforeFirstDotnetCommand()
     {
         var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
@@ -72,7 +72,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
 
         foreach (var step in steps)
         {
-            if (IsSetupDotnetStep(step) && string.Equals(step.DotnetVersion, "net10.0.x", StringComparison.Ordinal))
+            if (IsSetupDotnetStep(step) && string.Equals(step.DotnetVersion, "10.0.x", StringComparison.Ordinal))
             {
                 hasNet10Sdk = true;
             }
