@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
@@ -30,7 +31,7 @@ internal sealed class AssemblyLifecycleHost
         ArgumentNullException.ThrowIfNull(descriptors);
         ArgumentNullException.ThrowIfNull(activatedPluginIds);
 
-        var diagnostics = new List<string>();
+        var diagnostics = new LiveDiagnosticBuffer();
         var activatedSet = activatedPluginIds.ToHashSet(StringComparer.Ordinal);
 
         foreach (var descriptor in descriptors.OrderBy(x => x.PluginId.Value, StringComparer.Ordinal))
@@ -56,6 +57,7 @@ internal sealed class AssemblyLifecycleHost
                         && CanActivateLifecycleType(type))
                     .OrderBy(type => type.FullName, StringComparer.Ordinal)
                     .ToArray();
+                var scheduledLifecycleTypeCount = lifecycleTypes.Count(static type => typeof(IPluginScheduledEvents).IsAssignableFrom(type));
 
                 foreach (var lifecycleType in lifecycleTypes)
                 {
@@ -63,6 +65,16 @@ internal sealed class AssemblyLifecycleHost
                     var plugin = ResolveActivationLifecyclePluginInstance(lifecycleType, activationScope?.ServiceProvider);
                     if (plugin is null)
                     {
+                        if (ShouldEmitUnresolvableActivationDiagnostic(descriptor, lifecycleType, scheduledLifecycleTypeCount))
+                        {
+                            diagnostics.Add(
+                                CreateUnresolvableScheduledLifecycleDiagnostic(
+                                    lifecycleType,
+                                    descriptor.PluginId.Value,
+                                    "registration",
+                                    "unresolved"));
+                        }
+
                         continue;
                     }
 
@@ -77,7 +89,7 @@ internal sealed class AssemblyLifecycleHost
                     diagnostics.Add($"stage=lifecycle plugin={pluginId} outcome=started source={descriptor.PluginId}");
                     if (plugin is IPluginScheduledEvents scheduledPlugin)
                     {
-                        diagnostics.AddRange(RegisterAndRunSchedules(scheduledPlugin, lifecycleType, pluginId.Value));
+                        diagnostics.AddRange(RegisterAndRunSchedules(scheduledPlugin, lifecycleType, pluginId.Value, diagnostics));
                     }
                 }
             }
@@ -93,7 +105,8 @@ internal sealed class AssemblyLifecycleHost
     private IReadOnlyList<string> RegisterAndRunSchedules(
         IPluginScheduledEvents scheduledPlugin,
         Type lifecycleType,
-        string pluginId)
+        string pluginId,
+        LiveDiagnosticBuffer liveDiagnostics)
     {
         var diagnostics = new List<string>();
 
@@ -127,7 +140,7 @@ internal sealed class AssemblyLifecycleHost
                 using var timer = new PeriodicTimer(interval);
                 while (await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
                 {
-                    ExecuteScheduledOperation(lifecycleType, pluginId, jobName, operation);
+                    liveDiagnostics.AddRange(ExecuteScheduledOperation(lifecycleType, pluginId, jobName, operation));
                 }
             }, CancellationToken.None);
         }
@@ -238,6 +251,29 @@ internal sealed class AssemblyLifecycleHost
         return provider?.GetService(lifecycleType) as IPluginLifecycle;
     }
 
+    private bool ShouldEmitUnresolvableActivationDiagnostic(
+        PluginDescriptor descriptor,
+        Type lifecycleType,
+        int scheduledLifecycleTypeCount)
+    {
+        if (_serviceProvider is null || !typeof(IPluginScheduledEvents).IsAssignableFrom(lifecycleType))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(descriptor.RuntimePluginTypeFullName))
+        {
+            return string.Equals(
+                descriptor.RuntimePluginTypeFullName,
+                lifecycleType.FullName,
+                StringComparison.Ordinal);
+        }
+
+        // Without an explicit runtime type hint, only emit this activation-time unresolved
+        // diagnostic when the assembly has a single scheduled lifecycle type.
+        return scheduledLifecycleTypeCount == 1;
+    }
+
     private IServiceScope? CreateScope()
     {
         if (_scopeFactory is null)
@@ -268,5 +304,59 @@ internal sealed class AssemblyLifecycleHost
         public sealed record RecurringSchedule(string JobName, TimeSpan Interval, string Operation);
 
         public sealed record OneTimeSchedule(string JobName, DateTimeOffset RunAt, string Operation);
+    }
+
+    private sealed class LiveDiagnosticBuffer : IReadOnlyList<string>
+    {
+        private readonly object _gate = new();
+        private readonly List<string> _items = [];
+
+        public int Count
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    return _items.Count;
+                }
+            }
+        }
+
+        public string this[int index]
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    return _items[index];
+                }
+            }
+        }
+
+        public void Add(string item)
+        {
+            lock (_gate)
+            {
+                _items.Add(item);
+            }
+        }
+
+        public void AddRange(IEnumerable<string> items)
+        {
+            lock (_gate)
+            {
+                _items.AddRange(items);
+            }
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            lock (_gate)
+            {
+                return ((IEnumerable<string>)_items.ToArray()).GetEnumerator();
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

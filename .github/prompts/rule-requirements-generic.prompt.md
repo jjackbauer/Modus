@@ -5,6 +5,7 @@ description: Generic requirements rule - pre-configures requirements gathering f
 ---
 
 #file:.github/prompts/workflow-requirements-gathering.prompt.md
+#file:.github/prompts/rule-verification-absolute-behavior.prompt.md
 
 # Rule: Requirements Gathering (Generic)
 
@@ -37,4 +38,6 @@ Follow workflow-requirements-gathering with:
 
 - If MandatoryItems is none, skip mandatory-item enforcement.
 - Keep test planning aligned to xUnit conventions unless caller specifies otherwise.
+- Enforce absolute behavior-proof verification for every checklist item and test plan section.
+- Metadata-only assertions are not valid completion evidence for any plan item.
 ````

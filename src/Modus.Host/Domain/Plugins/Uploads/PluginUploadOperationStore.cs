@@ -45,6 +45,8 @@ public sealed class PluginUploadOperationStore
     {
         Update(operationId, status =>
         {
+            var effectiveStage = stage < status.Stage ? status.Stage : stage;
+            var effectiveProgress = Math.Max(status.ProgressPercent, Clamp(progressPercent));
             var diagnostics = status.Diagnostics.ToList();
             if (!string.IsNullOrWhiteSpace(diagnostic))
             {
@@ -53,8 +55,8 @@ public sealed class PluginUploadOperationStore
 
             return status with
             {
-                Stage = stage,
-                ProgressPercent = Clamp(progressPercent),
+                Stage = effectiveStage,
+                ProgressPercent = effectiveProgress,
                 UpdatedAt = DateTimeOffset.UtcNow,
                 Diagnostics = diagnostics,
             };
@@ -113,6 +115,11 @@ public sealed class PluginUploadOperationStore
         lock (_gate)
         {
             if (!_operations.TryGetValue(operationId, out var current))
+            {
+                return;
+            }
+
+            if (current.IsTerminal)
             {
                 return;
             }

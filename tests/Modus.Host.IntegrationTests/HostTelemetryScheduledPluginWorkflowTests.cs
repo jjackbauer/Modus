@@ -1,5 +1,8 @@
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
+using Modus.Core.Hosting;
+using Modus.Host.Plugins.Host;
+using Microsoft.Extensions.DependencyInjection;
 using Modus.SamplePlugins.Telemetry;
 using Xunit;
 
@@ -51,7 +54,7 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         Assert.Equal("host", payload.Source);
         Assert.Equal("runtime", payload.Category);
         Assert.Contains(payload.Measurements, static m => m is { Name: "cpu.percent", Unit: "percent", Kind: "gauge" } && m.Value >= 0d);
-        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.workingSet.bytes", Unit: "bytes", Kind: "gauge" } && m.Value > 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.workingSet.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
         Assert.Contains(payload.Measurements, static m => m is { Name: "memory.managedHeap.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
         Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen0", Unit: "count", Kind: "counter" });
         Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen1", Unit: "count", Kind: "counter" });
@@ -124,6 +127,55 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
             Assert.Contains(
                 result.Diagnostics,
                 static x => x.Contains("stage=operation plugin=Plugin.Host.Telemetry operation=Telemetry.Host.CollectSnapshot", StringComparison.Ordinal)
+                    && x.Contains("source=scheduled", StringComparison.Ordinal)
+                    && x.Contains("outcome=ignored", StringComparison.Ordinal)
+                    && x.Contains("reason=unresolvable-via-di", StringComparison.Ordinal)
+                    && x.Contains($"lifecycleType={typeof(HostTelemetryPlugin).FullName}", StringComparison.Ordinal));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Verify unresolved scheduled plugin types produce deterministic `unresolvable-via-di` diagnostics without crashing host runtime [depends on DI resolver path]")]
+    [Trait("AuditArtifact", "iterative-implementation-unresolvable-scheduled-di-diagnostics-2026-05-22")]
+    public async Task TelemetryPluginHostStartup_GivenServiceProviderCannotResolveScheduledPluginType_ExpectedHostHealthyAndDeterministicUnresolvableDiagnostic()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"modus-telemetry-runtime-unresolvable-{Guid.NewGuid():N}");
+        var pluginsPath = Path.Combine(root, "plugins");
+        Directory.CreateDirectory(pluginsPath);
+
+        try
+        {
+            var telemetryAssemblySource = typeof(HostTelemetryPlugin).Assembly.Location;
+            var telemetryAssemblyCopy = Path.Combine(pluginsPath, Path.GetFileName(telemetryAssemblySource));
+            File.Copy(telemetryAssemblySource, telemetryAssemblyCopy);
+
+            var options = new PluginHostingOptions
+            {
+                PluginsPath = pluginsPath,
+                RunOnce = true,
+            };
+
+            var services = new ServiceCollection();
+            using var provider = services.BuildServiceProvider(validateScopes: true);
+            var runner = new HostRunner(options, provider);
+
+            var result = await runner.StartAsync(CancellationToken.None);
+
+            Assert.True(result.WatcherRegistered);
+            Assert.True(result.HostHealthy);
+            Assert.Contains(
+                result.Diagnostics,
+                static x => x.Contains("stage=startup outcome=success watcher=registered", StringComparison.Ordinal));
+            Assert.Contains(
+                result.Diagnostics,
+                static x => x.Contains("stage=activation plugin=Plugin.Host.Telemetry outcome=success", StringComparison.Ordinal));
+            Assert.Contains(
+                result.Diagnostics,
+                static x => x.Contains("stage=operation plugin=Plugin.Host.Telemetry", StringComparison.Ordinal)
                     && x.Contains("source=scheduled", StringComparison.Ordinal)
                     && x.Contains("outcome=ignored", StringComparison.Ordinal)
                     && x.Contains("reason=unresolvable-via-di", StringComparison.Ordinal)

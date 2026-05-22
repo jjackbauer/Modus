@@ -53,6 +53,8 @@ public sealed class PluginProjectDescriptorFactory
         var dependsOn = ParseCapabilityList(ReadProperty(document, "ModusDependsOn"));
         var declaredOperations = ParseOperationList(ReadProperty(document, "ModusOperations"));
         var failingOperations = ParseOperationList(ReadProperty(document, "ModusFailingOperations"));
+        var runtimePluginTypeFullName = ParseTextOrNull(ReadProperty(document, "ModusRuntimePluginType"));
+        var declaredServiceLifetime = ParseServiceLifetimeOrNull(ReadProperty(document, "ModusServiceLifetime"));
 
         if (capabilities.Count == 0)
         {
@@ -70,7 +72,9 @@ public sealed class PluginProjectDescriptorFactory
             UsesOnlyStandardLibrary: usesOnlyStandardLibrary,
                 FailOnActivation: failOnActivation,
                 DeclaredOperations: declaredOperations,
-                FailingOperations: failingOperations);
+                FailingOperations: failingOperations,
+                RuntimePluginTypeFullName: runtimePluginTypeFullName,
+                DeclaredServiceLifetime: declaredServiceLifetime);
     }
 
     private static string? ReadProperty(XDocument document, string propertyName)
@@ -154,5 +158,27 @@ public sealed class PluginProjectDescriptorFactory
                 .Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 
         return collapsed;
+    }
+
+    private static string? ParseTextOrNull(string? rawValue)
+    {
+        return string.IsNullOrWhiteSpace(rawValue)
+            ? null
+            : rawValue.Trim();
+    }
+
+    private static PluginServiceLifetime? ParseServiceLifetimeOrNull(string? rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return null;
+        }
+
+        if (Enum.TryParse<PluginServiceLifetime>(rawValue, ignoreCase: true, out var lifetime))
+        {
+            return lifetime;
+        }
+
+        throw new InvalidOperationException("Invalid ModusServiceLifetime metadata.");
     }
 }

@@ -13,6 +13,7 @@ public sealed class PluginFolderWatcher
     private readonly PluginProjectDescriptorFactory _descriptorFactory = new();
     private readonly PluginLoader _loader = new();
     private readonly InMemoryHostRuntime _runtime = new();
+    private readonly PluginUnloadCoordinator _unloadCoordinator = new();
     private readonly HostStatusSnapshotBuilder _statusSnapshotBuilder = new();
     private readonly IServiceProvider? _serviceProvider;
     private readonly HostStatusRegistry? _statusRegistry;
@@ -318,19 +319,25 @@ public sealed class PluginFolderWatcher
             pluginId = Path.GetFileNameWithoutExtension(fullPath);
         }
 
-        _activePluginIds.Remove(pluginId);
+        var wasActive = _activePluginIds.Remove(pluginId);
+        var unload = _unloadCoordinator.OrchestrateHotUnload(pluginId, wasActive, hostHealthy: true);
         _failedPluginIds.Remove(pluginId);
         _runtimeProjectionsByPluginId.Remove(pluginId);
         var registryDiagnostics = PublishRuntimeRegistrySnapshot();
 
         return new PluginOnboardingResult(
-            HostHealthy: true,
+            HostHealthy: unload.HostHealthy,
             EventAccepted: true,
             PluginActivated: false,
             PluginId: new PluginId(pluginId),
             ActivePluginIds: Snapshot(_activePluginIds),
             FailedPluginIds: Snapshot(_failedPluginIds),
-            Diagnostics: [$"stage=unload sequence={sequence:D4} plugin={pluginId} outcome=success path={fullPath}", .. registryDiagnostics]);
+            Diagnostics:
+            [
+                $"stage=unload sequence={sequence:D4} plugin={pluginId} outcome=success path={fullPath}",
+                .. unload.Diagnostics,
+                .. registryDiagnostics
+            ]);
     }
 
     private long NextDiscoverySequence()

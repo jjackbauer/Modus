@@ -7,6 +7,7 @@ description: Produce a requirements checklist and xUnit test plan for a C# proje
 #file:.github/prompts/codebase-patterns.md
 #file:.github/prompts/skill-test-standards.prompt.md
 #file:.github/prompts/skill-plan-format-gate.prompt.md
+#file:.github/prompts/rule-verification-absolute-behavior.prompt.md
 
 # Workflow: Requirements Gathering
 
@@ -16,6 +17,12 @@ For a given C# project, produce:
 2. A **Test Plan** — a named xUnit test list for every unchecked checklist item, produced by the Test Standards skill.
 
 Deliver both artefacts in a single structured document so the developer can start implementation immediately.
+
+All outputs from this workflow must satisfy the Absolute Behavior Verification rule:
+- Every checklist item must map to tests that prove executable runtime behavior.
+- Metadata-only assertions are insufficient and cannot satisfy checklist completion.
+- API tests must always verify runtime behavior thoroughly in integration (owner resolution, business semantics, DI lifetime path, correlation continuity, and isolation).
+- Plans that fail this rule must be revised before save.
 
 ## Input (supplied by caller or collected interactively)
 
@@ -46,6 +53,8 @@ For every unchecked item in the checklist (in dependency order):
 1. Derive a plain-English functional description from `AnalysisSource` (e.g. from a `.cpp` implementation, interface contract, or provided description).
 2. Invoke the Test Standards skill with the C# method signature and that description.
 3. Wait for the skill to finish (zero Falsified rows) and collect the named test list.
+4. Ensure each planned test for the item contains behavior-proof assertions (DI resolution, runtime dispatch, scheduled execution, or deterministic runtime block).
+5. If the item only has metadata/documentation assertions, add behavior-proof tests until compliant.
 
 ### Step 3 — Enforce mandatory items
 
@@ -55,6 +64,9 @@ For each entry in `MandatoryItems`:
 - For each newly added mandatory item, generate test cases following Step 2 rules.
 
 If `MandatoryItems` is `"none"`, skip this step.
+
+Regardless of caller input, inject the following mandatory compliance item when missing:
+- `Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]`
 
 ### Step 4 — Assemble the output
 
@@ -66,6 +78,11 @@ Invoke the Plan Format Gate skill with the value of `PlanType` against the assem
 
 - If the verdict is **FAIL**, fix every listed violation in-place and re-run the gate until it returns **PASS**.
 - Only proceed to Step 6 after a **PASS** verdict.
+
+After format PASS, run an explicit compliance check against Absolute Behavior Verification:
+- If any checklist item lacks behavior-proof tests, treat as FAIL and repair before save.
+- If any planned test is metadata-only, treat as FAIL and repair before save.
+- If any API-focused test lacks thorough integration gates, treat as FAIL and repair before save.
 
 ### Step 6 — Save to the output path
 
@@ -83,6 +100,13 @@ Create the file if it does not exist; overwrite it if it does.
 ---
 
 ## Functionality Worktree
+
+### Verification Policy
+
+- Non-negotiable: behavior-proof assertions required for every checklist item.
+- Metadata-only assertions are supporting evidence only.
+- API tests are valid only when thorough integration gates are asserted.
+- Include absolute schedule gates when scheduled jobs are in scope.
 
 ### Class Diagram
 

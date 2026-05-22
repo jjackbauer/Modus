@@ -273,13 +273,41 @@ public class PluginEndpointMapper
 
     private static ISyncResponder ResolveResponderByTypeName(IServiceProvider serviceProvider, string pluginTypeFullName)
     {
-        if (!serviceProvider.TryResolvePluginByTypeName(pluginTypeFullName, out var resolvedPlugin) || resolvedPlugin is not ISyncResponder responder)
+        if (serviceProvider.TryResolvePluginByTypeName(pluginTypeFullName, out var resolvedPlugin)
+            && resolvedPlugin is ISyncResponder responder)
         {
-            throw new InvalidOperationException(
-                $"No ISyncResponder could be resolved for plugin type '{pluginTypeFullName}'.");
+            return responder;
         }
 
-        return responder;
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var pluginType = assembly.GetType(pluginTypeFullName, throwOnError: false, ignoreCase: false);
+            if (pluginType is null)
+            {
+                continue;
+            }
+
+            if (!typeof(ISyncResponder).IsAssignableFrom(pluginType) || !typeof(IPluginContract).IsAssignableFrom(pluginType))
+            {
+                break;
+            }
+
+            try
+            {
+                var activated = ActivatorUtilities.CreateInstance(serviceProvider, pluginType);
+                if (activated is ISyncResponder activatedResponder)
+                {
+                    return activatedResponder;
+                }
+            }
+            catch
+            {
+                break;
+            }
+        }
+
+        throw new InvalidOperationException(
+            $"No ISyncResponder could be resolved for plugin type '{pluginTypeFullName}'.");
     }
 
     private void OnRuntimePluginRegistryChanged(object? sender, RuntimePluginRegistryChangedEventArgs change)
