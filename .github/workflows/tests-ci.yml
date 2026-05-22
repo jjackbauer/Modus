@@ -1,0 +1,57 @@
+name: Tests CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: net10.0.x
+      - name: Verify .NET SDK runtime compatibility
+        run: dotnet --version
+      - name: Restore solution
+        run: dotnet restore Modus.slnx
+      - name: Build solution (Release, no restore)
+        run: dotnet build Modus.slnx --configuration Release --no-restore
+      - name: Test Modus.Core.Tests (Release, no build, TRX)
+        run: dotnet test tests/Modus.Core.Tests/Modus.Core.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Core.Tests.trx"
+      - name: Test Modus.Architecture.Tests (Release, no build, TRX)
+        run: dotnet test tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Architecture.Tests.trx"
+      - name: Test Modus.Host.IntegrationTests (Release, no build, TRX)
+        run: dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Host.IntegrationTests.trx"
+      - name: Upload test results and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-test-results-${{ github.run_id }}
+          path: |
+            tests/**/TestResults/**/*.trx
+            tests/**/TestResults/**/*.log
+          if-no-files-found: warn
+      - name: Publish CI success flag
+        if: success()
+        run: echo "ci-tests=success" > ci-tests-success.flag
+      - name: Upload CI success flag
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-tests-success-${{ github.run_id }}
+          path: ci-tests-success.flag
+          if-no-files-found: error
