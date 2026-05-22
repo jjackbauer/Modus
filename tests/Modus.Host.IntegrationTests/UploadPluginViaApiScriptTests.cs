@@ -98,7 +98,7 @@ public sealed class UploadPluginViaApiScriptTests
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = "powershell",
+            FileName = OperatingSystem.IsWindows() ? "powershell" : "pwsh",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

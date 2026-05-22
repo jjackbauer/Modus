@@ -98,7 +98,7 @@ public sealed class HostRunnerEntrypointTests
     {
         var root = Path.Combine(Path.GetTempPath(), $"modus-program-runtime-{Guid.NewGuid():N}");
         Directory.CreateDirectory(root);
-        var pluginsPath = Path.Combine(FindRepositoryRoot(), "plugins", "bin", "Debug", "net10.0");
+        var pluginsPath = ResolvePluginOutputDirectory(FindRepositoryRoot());
 
         try
         {
@@ -206,5 +206,23 @@ public sealed class HostRunnerEntrypointTests
         }
 
         throw new InvalidOperationException("Repository root not found.");
+    }
+
+    private static string ResolvePluginOutputDirectory(string repoRoot)
+    {
+        var debugPath = Path.Combine(repoRoot, "plugins", "bin", "Debug", "net10.0");
+        if (Directory.Exists(debugPath))
+        {
+            return debugPath;
+        }
+
+        var releasePath = Path.Combine(repoRoot, "plugins", "bin", "Release", "net10.0");
+        if (Directory.Exists(releasePath))
+        {
+            return releasePath;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not find plugin binaries. Checked '{debugPath}' and '{releasePath}'.");
     }
 }

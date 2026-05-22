@@ -33,7 +33,7 @@ public sealed class HostDiInterfaceMappingTests
     private static string CopyPluginsToTemporaryDirectory()
     {
         var repoRoot = FindRepositoryRoot();
-        var pluginSourceDir = Path.Combine(repoRoot, "plugins", "bin", "Debug", "net10.0");
+        var pluginSourceDir = ResolvePluginOutputDirectory(repoRoot);
         var tempDir = Path.Combine(Path.GetTempPath(), $"modus-di-interface-test-{Guid.NewGuid():N}");
         var tempPluginsDir = Path.Combine(tempDir, "plugins");
 
@@ -53,6 +53,24 @@ public sealed class HostDiInterfaceMappingTests
         }
 
         return tempDir;
+    }
+
+    private static string ResolvePluginOutputDirectory(string repoRoot)
+    {
+        var debugPath = Path.Combine(repoRoot, "plugins", "bin", "Debug", "net10.0");
+        if (Directory.Exists(debugPath))
+        {
+            return debugPath;
+        }
+
+        var releasePath = Path.Combine(repoRoot, "plugins", "bin", "Release", "net10.0");
+        if (Directory.Exists(releasePath))
+        {
+            return releasePath;
+        }
+
+        throw new DirectoryNotFoundException(
+            $"Could not find plugin binaries. Checked '{debugPath}' and '{releasePath}'.");
     }
 
     private static bool TryDeleteDirectory(string path, int retries = 3)

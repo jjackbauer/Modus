@@ -20,7 +20,9 @@ public sealed class PluginHostingOptions : IPluginHostPortabilityContract
             : basePath.Trim();
         var configuredPath = string.IsNullOrWhiteSpace(PluginsPath)
             ? "plugins"
-            : PluginsPath.Trim();
+            : PluginsPath.Trim()
+                .Replace('\\', Path.DirectorySeparatorChar)
+                .Replace('/', Path.DirectorySeparatorChar);
 
         var absolutePath = Path.IsPathRooted(configuredPath)
             ? Path.GetFullPath(configuredPath)
