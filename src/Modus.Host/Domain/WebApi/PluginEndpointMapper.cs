@@ -82,8 +82,7 @@ public class PluginEndpointMapper
                 IsFallbackExplicit: false,
                 FallbackReason: SyncFallbackReason.None,
                 FallbackReasonCode: null,
-                CorrelationId: request.CorrelationId is not null ? new CorrelationId(request.CorrelationId) : null,
-                Payload: request.Payload);
+                CorrelationId: request.CorrelationId is not null ? new CorrelationId(request.CorrelationId) : null);
 
             string ownerPluginId;
             try

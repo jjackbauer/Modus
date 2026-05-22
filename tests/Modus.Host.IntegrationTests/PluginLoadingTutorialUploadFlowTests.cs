@@ -277,7 +277,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
         Assert.True(response!.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal("tutorial-op-success-corr", response.CorrelationId);
-        Assert.Equal($"handled:Invocation.Echo|{requestPayload}", response.Payload);
+        Assert.Equal("handled:Invocation.Echo", response.Payload);
     }
 
     [Fact]
@@ -622,7 +622,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
                     CorrelationId: request.CorrelationId);
             }
 
-            if (string.Equals(request.Payload, "please-reject", StringComparison.Ordinal))
+            if (string.Equals(request.CorrelationId?.Value, "tutorial-op-corr-rejected", StringComparison.Ordinal))
             {
                 return new SyncResponse(
                     Success: false,
@@ -633,7 +633,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
 
             return new SyncResponse(
                 Success: true,
-                Payload: $"handled:{request.Operation.Value}|{request.Payload}",
+                Payload: $"handled:{request.Operation.Value}",
                 Status: SyncResponseStatus.Success,
                 CorrelationId: request.CorrelationId);
         }
