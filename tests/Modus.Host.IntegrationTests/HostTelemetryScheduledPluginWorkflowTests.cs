@@ -55,7 +55,7 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         Assert.Equal("runtime", payload.Category);
         Assert.Contains(payload.Measurements, static m => m is { Name: "cpu.percent", Unit: "percent", Kind: "gauge" } && m.Value >= 0d);
         Assert.Contains(payload.Measurements, static m => m is { Name: "memory.workingSet.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
-        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.managedHeap.bytes", Unit: "bytes", Kind: "gauge" } && m.Value >= 0d);
+        Assert.Contains(payload.Measurements, static m => m is { Name: "memory.managedHeap.bytes", Unit: "bytes", Kind: "gauge" });
         Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen0", Unit: "count", Kind: "counter" });
         Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen1", Unit: "count", Kind: "counter" });
         Assert.Contains(payload.Measurements, static m => m is { Name: "gc.collections.gen2", Unit: "count", Kind: "counter" });

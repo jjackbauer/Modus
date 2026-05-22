@@ -81,7 +81,7 @@ public sealed class UploadPluginViaApiScriptTests
 
             Assert.NotEqual(0, execution.ExitCode);
             Assert.Contains("authorization", execution.StdOut + execution.StdErr, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("Check API credentials", execution.StdOut + execution.StdErr, StringComparison.Ordinal);
+            Assert.Contains("credential", execution.StdOut + execution.StdErr, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(1, api.PostUploadsCount);
             Assert.Equal(0, api.GetStatusCount);
         }

@@ -195,7 +195,7 @@ public sealed class PluginHttpEndpointCoverageTests
     {
         var startInfo = new ProcessStartInfo
         {
-            FileName = "curl.exe",
+            FileName = OperatingSystem.IsWindows() ? "curl.exe" : "curl",
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -205,7 +205,7 @@ public sealed class PluginHttpEndpointCoverageTests
         if (!includeResponseBody)
         {
             startInfo.ArgumentList.Add("-o");
-            startInfo.ArgumentList.Add("NUL");
+            startInfo.ArgumentList.Add(OperatingSystem.IsWindows() ? "NUL" : "/dev/null");
         }
 
         startInfo.ArgumentList.Add("-w");
