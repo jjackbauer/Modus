@@ -82,16 +82,17 @@ public class PluginEndpointMapper
                 IsFallbackExplicit: false,
                 FallbackReason: SyncFallbackReason.None,
                 FallbackReasonCode: null,
-                CorrelationId: request.CorrelationId is not null ? new CorrelationId(request.CorrelationId) : null);
+                CorrelationId: request.CorrelationId is not null ? new CorrelationId(request.CorrelationId) : null,
+                Payload: request.Payload);
 
             string ownerPluginId;
             try
             {
                 ownerPluginId = ResolveOperationOwnerPluginId(snapshot, pluginId, operation);
             }
-            catch (InvalidOperationException ex) when (ex.Message.StartsWith("No runtime plugin operation owner found", StringComparison.Ordinal))
+            catch (InvalidOperationException ex) when (TryClassifyDispatchFailureReason(ex.Message, out var reasonCode))
             {
-                RecordDispatchMiss(requestServices, pluginId, operation, ex.Message);
+                RecordDispatchFailure(requestServices, pluginId, operation, reasonCode!, ex.Message);
                 throw;
             }
 
@@ -101,31 +102,44 @@ public class PluginEndpointMapper
                     && string.Equals(contract.PluginId.Value, ownerPluginId, StringComparison.Ordinal))
                 .ToArray();
 
-            using var responderLease = ResolveResponder(snapshot, ownerPluginId, pluginScopedResponders, requestServices);
-            var responder = responderLease.Responder;
-
-            var response = responder.Handle(syncRequest);
-
-            // Map the SyncResponse to an HTTP response
-            var httpResponse = new PluginOperationHttpResponse
+            ResolvedResponderLease responderLease;
+            try
             {
-                Success = response.Success,
-                Payload = response.Payload,
-                PayloadObject = response.PayloadObject,
-                Status = response.Status,
-                CorrelationId = response.CorrelationId?.Value
-            };
-
-            // Determine HTTP status code based on SyncResponseStatus
-            var statusCode = response.Status switch
+                responderLease = ResolveResponder(snapshot, ownerPluginId, pluginScopedResponders, requestServices);
+            }
+            catch (InvalidOperationException ex) when (TryClassifyDispatchFailureReason(ex.Message, out var reasonCode))
             {
-                SyncResponseStatus.Success => StatusCodes.Status200OK,
-                SyncResponseStatus.Rejected => StatusCodes.Status422UnprocessableEntity,
-                SyncResponseStatus.Failed => StatusCodes.Status500InternalServerError,
-                _ => StatusCodes.Status500InternalServerError
-            };
+                RecordDispatchFailure(requestServices, pluginId, operation, reasonCode!, ex.Message);
+                throw;
+            }
 
-            return Results.Json(httpResponse, statusCode: statusCode);
+            using (responderLease)
+            {
+                var responder = responderLease.Responder;
+
+                var response = responder.Handle(syncRequest);
+
+                // Map the SyncResponse to an HTTP response
+                var httpResponse = new PluginOperationHttpResponse
+                {
+                    Success = response.Success,
+                    Payload = response.Payload,
+                    PayloadObject = response.PayloadObject,
+                    Status = response.Status,
+                    CorrelationId = response.CorrelationId?.Value
+                };
+
+                // Determine HTTP status code based on SyncResponseStatus
+                var statusCode = response.Status switch
+                {
+                    SyncResponseStatus.Success => StatusCodes.Status200OK,
+                    SyncResponseStatus.Rejected => StatusCodes.Status422UnprocessableEntity,
+                    SyncResponseStatus.Failed => StatusCodes.Status500InternalServerError,
+                    _ => StatusCodes.Status500InternalServerError
+                };
+
+                return Results.Json(httpResponse, statusCode: statusCode);
+            }
         }
         catch (Exception ex)
         {
@@ -142,10 +156,41 @@ public class PluginEndpointMapper
         }
     }
 
-    private static void RecordDispatchMiss(IServiceProvider requestServices, string pluginId, string operation, string reason)
+    private static void RecordDispatchFailure(IServiceProvider requestServices, string pluginId, string operation, string reasonCode, string reason)
     {
         var statusRegistry = requestServices.GetService<HostStatusRegistry>();
-        statusRegistry?.AppendDiagnostics([$"stage=dispatch outcome=miss plugin={pluginId} operation={operation} reason={reason}"]);
+        statusRegistry?.AppendDiagnostics([
+            $"stage=dispatch outcome=failure reason={reasonCode} plugin={pluginId} operation={operation} detail={reason}",
+            $"stage=dispatch outcome=miss plugin={pluginId} operation={operation} reason={reason}"
+        ]);
+    }
+
+    private static bool TryClassifyDispatchFailureReason(string message, out string? reasonCode)
+    {
+        reasonCode = null;
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return false;
+        }
+
+        if (message.StartsWith("No runtime plugin operation owner found", StringComparison.Ordinal)
+            || message.StartsWith("Multiple runtime plugin operation owners found", StringComparison.Ordinal))
+        {
+            reasonCode = "owner-mismatch";
+            return true;
+        }
+
+        if (message.StartsWith("No ISyncResponder registered in request scope", StringComparison.Ordinal)
+            || message.StartsWith("No ISyncResponder could be resolved for plugin type", StringComparison.Ordinal)
+            || message.StartsWith("Multiple ISyncResponder registrations matched plugin", StringComparison.Ordinal)
+            || message.StartsWith("Multiple runtime dispatch targets matched plugin", StringComparison.Ordinal)
+            || message.StartsWith("Runtime dispatch target", StringComparison.Ordinal))
+        {
+            reasonCode = "unresolved-responder";
+            return true;
+        }
+
+        return false;
     }
 
     private static string ResolveOperationOwnerPluginId(RuntimePluginSnapshot snapshot, string pluginId, string operation)

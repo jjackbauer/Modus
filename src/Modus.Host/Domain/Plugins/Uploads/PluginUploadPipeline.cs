@@ -16,6 +16,8 @@ internal sealed class PluginUploadPipeline
     private readonly PluginValidationService _validationService;
     private readonly InMemoryHostRuntime _runtime;
     private readonly RuntimePluginRegistry _runtimePluginRegistry;
+    private readonly HostStatusSnapshotBuilder _statusSnapshotBuilder;
+    private readonly HostStatusRegistry _hostStatusRegistry;
 
     public PluginUploadPipeline(
         PluginUploadAuthorizationPipeline authorization,
@@ -23,7 +25,9 @@ internal sealed class PluginUploadPipeline
         PluginLoader pluginLoader,
         PluginValidationService validationService,
         InMemoryHostRuntime runtime,
-        RuntimePluginRegistry runtimePluginRegistry)
+        RuntimePluginRegistry runtimePluginRegistry,
+        HostStatusSnapshotBuilder statusSnapshotBuilder,
+        HostStatusRegistry hostStatusRegistry)
     {
         _authorization = authorization ?? throw new ArgumentNullException(nameof(authorization));
         _operationStore = operationStore ?? throw new ArgumentNullException(nameof(operationStore));
@@ -31,6 +35,8 @@ internal sealed class PluginUploadPipeline
         _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
         _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
         _runtimePluginRegistry = runtimePluginRegistry ?? throw new ArgumentNullException(nameof(runtimePluginRegistry));
+        _statusSnapshotBuilder = statusSnapshotBuilder ?? throw new ArgumentNullException(nameof(statusSnapshotBuilder));
+        _hostStatusRegistry = hostStatusRegistry ?? throw new ArgumentNullException(nameof(hostStatusRegistry));
     }
 
     public void StartUpload(Guid operationId, string packageName, byte[] packageBytes, byte[] signatureBytes)
@@ -54,7 +60,7 @@ internal sealed class PluginUploadPipeline
             var authorizationResult = _authorization.VerifyPluginUploadSignature(verificationRequest);
             if (!authorizationResult.IsAuthorized)
             {
-                _operationStore.Fail(
+                FailOperation(
                     operationId,
                     authorizationResult.FailureReason ?? "Plugin upload authorization failed.",
                     ["stage=authorization outcome=failure"]);
@@ -74,10 +80,13 @@ internal sealed class PluginUploadPipeline
             var scan = _pluginLoader.ScanRuntimeAssemblies(extractionRoot);
             if (scan.Descriptors.Count == 0)
             {
-                _operationStore.Fail(
+                FailOperation(
                     operationId,
                     "No plugin assemblies were found in upload package.",
-                    scan.Diagnostics);
+                    [
+                        .. scan.Diagnostics,
+                        "stage=validation outcome=failure reason=no-plugin-assemblies"
+                    ]);
                 return Task.CompletedTask;
             }
 
@@ -86,10 +95,14 @@ internal sealed class PluginUploadPipeline
                 var validation = _validationService.Validate(descriptor);
                 if (!validation.IsValid)
                 {
-                    _operationStore.Fail(
+                    FailOperation(
                         operationId,
                         validation.FailureReason ?? "Plugin validation failed.",
-                        [.. scan.Diagnostics, $"stage=validation plugin={descriptor.PluginId} outcome=failure"]);
+                        [
+                            .. scan.Diagnostics,
+                            $"stage=validation plugin={descriptor.PluginId} outcome=failure",
+                            $"stage=validation plugin={descriptor.PluginId} outcome=failure reason={FormatDiagnosticToken(validation.FailureReason)}"
+                        ]);
                     return Task.CompletedTask;
                 }
             }
@@ -98,7 +111,7 @@ internal sealed class PluginUploadPipeline
             var runtimeStart = _runtime.Start(scan.Descriptors);
             if (runtimeStart.ActivatedPluginIds.Count == 0)
             {
-                _operationStore.Fail(
+                FailOperation(
                     operationId,
                     "No plugin assemblies were activated from upload package.",
                     [.. scan.Diagnostics, .. runtimeStart.Diagnostics]);
@@ -112,6 +125,21 @@ internal sealed class PluginUploadPipeline
                 _operationStore.MarkStage(operationId, PluginUploadOperationStage.Running, 95, registryDiagnostic);
             }
 
+            var statusSnapshot = _statusSnapshotBuilder.Build(
+                hostHealthy: runtimeStart.Started,
+                descriptors: scan.Descriptors,
+                activatedPluginIds: runtimeStart.ActivatedPluginIds,
+                failedPluginIds: runtimeStart.FailedPluginIds,
+                capabilityOwners: runtimeStart.CapabilityOwners);
+
+            _hostStatusRegistry.Update(
+                statusSnapshot,
+                [
+                    .. scan.Diagnostics,
+                    .. runtimeStart.Diagnostics,
+                    .. registryDiagnostics,
+                ]);
+
             _operationStore.Complete(
                 operationId,
                 [
@@ -122,7 +150,7 @@ internal sealed class PluginUploadPipeline
         }
         catch (Exception ex)
         {
-            _operationStore.Fail(
+            FailOperation(
                 operationId,
                 $"Plugin upload pipeline failed: {ex.Message}",
                 ["stage=pipeline outcome=failure"]);
@@ -142,6 +170,33 @@ internal sealed class PluginUploadPipeline
         }
 
         return Task.CompletedTask;
+    }
+
+    private void FailOperation(Guid operationId, string failureReason, IReadOnlyCollection<string> diagnostics)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(failureReason);
+        ArgumentNullException.ThrowIfNull(diagnostics);
+
+        var normalizedDiagnostics = diagnostics
+            .Where(static diagnostic => !string.IsNullOrWhiteSpace(diagnostic))
+            .ToArray();
+
+        _operationStore.Fail(operationId, failureReason, normalizedDiagnostics);
+
+        if (normalizedDiagnostics.Length > 0)
+        {
+            _hostStatusRegistry.AppendDiagnostics(normalizedDiagnostics);
+        }
+    }
+
+    private static string FormatDiagnosticToken(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "unspecified";
+        }
+
+        return value.Trim().Replace(' ', '-').ToLowerInvariant();
     }
 
     private IReadOnlyList<string> PublishRuntimeRegistrySnapshot(

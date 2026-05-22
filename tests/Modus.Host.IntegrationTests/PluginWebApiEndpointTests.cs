@@ -610,6 +610,7 @@ public sealed class PluginWebApiEndpointTests
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
         builder.Services.AddSingleton(registry);
+        builder.Services.AddSingleton(new RuntimePluginRegistry([], []));
         builder.Services.AddSingleton<ManagementPluginCapabilitiesEndpointMapper>();
 
         await using var app = builder.Build();
@@ -677,6 +678,7 @@ public sealed class PluginWebApiEndpointTests
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
         builder.Services.AddSingleton(registry);
+        builder.Services.AddSingleton(new RuntimePluginRegistry([], []));
         builder.Services.AddSingleton<ManagementPluginCapabilitiesEndpointMapper>();
 
         await using var app = builder.Build();

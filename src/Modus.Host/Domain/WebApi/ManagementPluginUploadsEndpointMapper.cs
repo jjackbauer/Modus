@@ -1,18 +1,22 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Modus.Host.Plugins.Authorization;
 using Modus.Host.Plugins.Uploads;
 
 namespace Modus.Host.Domain.WebApi;
 
 internal sealed class ManagementPluginUploadsEndpointMapper
 {
+    private readonly PluginUploadAuthorizationPipeline _authorizationPipeline;
     private readonly PluginUploadPipeline _uploadPipeline;
     private readonly PluginUploadOperationStore _operationStore;
 
     public ManagementPluginUploadsEndpointMapper(
+        PluginUploadAuthorizationPipeline authorizationPipeline,
         PluginUploadPipeline uploadPipeline,
         PluginUploadOperationStore operationStore)
     {
+        _authorizationPipeline = authorizationPipeline ?? throw new ArgumentNullException(nameof(authorizationPipeline));
         _uploadPipeline = uploadPipeline ?? throw new ArgumentNullException(nameof(uploadPipeline));
         _operationStore = operationStore ?? throw new ArgumentNullException(nameof(operationStore));
     }
@@ -86,6 +90,19 @@ internal sealed class ManagementPluginUploadsEndpointMapper
             {
                 error = "Package and signature files must be non-empty.",
             });
+        }
+
+        var authorization = _authorizationPipeline.VerifyPluginUploadSignature(
+            new PluginUploadSignatureVerificationRequest(packageFile.FileName, packageBytes, signatureBytes));
+        if (!authorization.IsAuthorized)
+        {
+            return Results.Json(
+                new
+                {
+                    status = "Rejected",
+                    error = authorization.FailureReason ?? "Plugin upload authorization failed.",
+                },
+                statusCode: StatusCodes.Status401Unauthorized);
         }
 
         var operation = _operationStore.CreateQueued(packageFile.FileName);

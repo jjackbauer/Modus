@@ -9,7 +9,8 @@ public sealed record SyncRequest
 		bool IsFallbackExplicit,
 		SyncFallbackReason FallbackReason = SyncFallbackReason.None,
 		string? FallbackReasonCode = null,
-		CorrelationId? CorrelationId = null)
+		 CorrelationId? CorrelationId = null,
+		 string? Payload = null)
 	{
 		if (IsFallbackExplicit)
 		{
@@ -41,6 +42,7 @@ public sealed record SyncRequest
 		this.FallbackReason = FallbackReason;
 		this.FallbackReasonCode = FallbackReasonCode;
 		this.CorrelationId = CorrelationId;
+		 this.Payload = Payload;
 	}
 
 	public OperationName Operation { get; }
@@ -53,17 +55,20 @@ public sealed record SyncRequest
 
 	public CorrelationId? CorrelationId { get; }
 
+	 public string? Payload { get; }
+
 	public static SyncRequest ForExplicitFallback(
 		OperationName operation,
 		SyncFallbackReason fallbackReason,
 		string fallbackReasonCode,
-		CorrelationId? correlationId = null)
+		 CorrelationId? correlationId = null,
+		 string? payload = null)
 	{
-		return new SyncRequest(operation, IsFallbackExplicit: true, fallbackReason, fallbackReasonCode, correlationId);
+		 return new SyncRequest(operation, IsFallbackExplicit: true, fallbackReason, fallbackReasonCode, correlationId, payload);
 	}
 
-	public static SyncRequest ForStandardPath(OperationName operation, CorrelationId? correlationId = null)
+	 public static SyncRequest ForStandardPath(OperationName operation, CorrelationId? correlationId = null, string? payload = null)
 	{
-		return new SyncRequest(operation, IsFallbackExplicit: false, SyncFallbackReason.None, null, correlationId);
+		 return new SyncRequest(operation, IsFallbackExplicit: false, SyncFallbackReason.None, null, correlationId, payload);
 	}
 }
