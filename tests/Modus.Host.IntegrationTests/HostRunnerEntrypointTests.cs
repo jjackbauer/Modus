@@ -94,6 +94,7 @@ public sealed class HostRunnerEntrypointTests
     }
 
     [Fact]
+    [Trait("ChecklistItem", "Remove or justify the redundant package dependency path producing NU1510 while preserving host runtime composition behavior [depends on project dependency graph audit]")]
     public async Task Program_GivenRuntimePluginsPath_ExpectedResolutionDiagnosticsIncludeSelectedLifetime()
     {
         var root = Path.Combine(Path.GetTempPath(), $"modus-program-runtime-{Guid.NewGuid():N}");

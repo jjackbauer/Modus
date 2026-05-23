@@ -20,7 +20,6 @@ internal sealed class ManagementStatusEndpointMapper
             "/management/status",
             () => Results.Ok(_hostStatusRegistry.GetCurrent()))
             .WithName("ManagementStatus_Get")
-            .WithOpenApi()
             .WithTags("Management")
             .WithSummary("Get current host runtime status")
             .WithDescription("Returns the current host lifecycle state, loaded plugin inventory, capability ownership, and startup diagnostics.");

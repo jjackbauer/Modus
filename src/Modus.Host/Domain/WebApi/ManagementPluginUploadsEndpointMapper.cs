@@ -29,7 +29,6 @@ internal sealed class ManagementPluginUploadsEndpointMapper
             "/management/plugins/uploads",
             (HttpContext httpContext, CancellationToken cancellationToken) => HandleUploadAsync(httpContext, cancellationToken))
             .WithName("ManagementPluginsUploads_Post")
-            .WithOpenApi()
             .WithTags("Management")
             .WithSummary("Submit a plugin package upload for asynchronous processing")
             .WithDescription("Accepts a signed plugin package upload, then runs extract, validate, load, and run stages asynchronously.");
@@ -38,7 +37,6 @@ internal sealed class ManagementPluginUploadsEndpointMapper
             "/management/plugins/uploads/{operationId:guid}",
             (Guid operationId) => HandleStatus(operationId))
             .WithName("ManagementPluginsUploads_GetByOperationId")
-            .WithOpenApi()
             .WithTags("Management")
             .WithSummary("Get plugin upload operation status")
             .WithDescription("Returns current progress for an asynchronous plugin upload operation, including terminal success or failure details.");

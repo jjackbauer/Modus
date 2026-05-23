@@ -20,6 +20,7 @@ public sealed class PluginLoadingTutorialRuntimeValidationTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("ChecklistItem", "Remove or justify the redundant package dependency path producing NU1510 while preserving host runtime composition behavior [depends on project dependency graph audit]")]
     [Trait("AuditArtifact", "iterative-implementation-tutorial-runtime-validation-stages-2026-05-22")]
     public async Task TutorialRuntimeValidation_GivenDocumentedCommandSequence_ExpectedUploadActivationInvocationAndFailurePathsAllExecutable()
     {

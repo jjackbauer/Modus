@@ -302,6 +302,7 @@ public sealed class PluginWebApiEndpointTests
 
     [Fact]
     [Trait("ChecklistItem", "Standardize telemetry endpoint envelope with source, collectedAt, and measurement list metadata [depends on machine and host telemetry endpoints]")]
+    [Trait("ChecklistItem", "Prove management API runtime contracts remain stable after OpenAPI mapping refactor [depends on management endpoint integration behavior proof]")]
     public async Task BuildTelemetryEnvelope_GivenTelemetryResult_IncludesSourceTimestampAndMeasurements()
     {
         var plugin = new HostTelemetryPlugin();
@@ -426,6 +427,7 @@ public sealed class PluginWebApiEndpointTests
 
     [Fact]
     [Trait("ChecklistItem", "Implement GET /management/status endpoint exposing loaded plugins, capabilities, versions, and lifecycle state [depends on host status snapshot contract]")]
+    [Trait("ChecklistItem", "Prove management API runtime contracts remain stable after OpenAPI mapping refactor [depends on management endpoint integration behavior proof]")]
     public async Task GetHostStatus_GivenRunningHost_ReturnsOkWithPluginInventory()
     {
         var registry = new HostStatusRegistry();
@@ -572,6 +574,7 @@ public sealed class PluginWebApiEndpointTests
 
     [Fact]
     [Trait("ChecklistItem", "Implement GET /management/plugins/capabilities endpoint for runtime capability catalog and ownership mapping [proposed - operational discoverability]")]
+    [Trait("ChecklistItem", "Prove management API runtime contracts remain stable after OpenAPI mapping refactor [depends on management endpoint integration behavior proof]")]
     public async Task GetPluginCapabilitiesCatalog_GivenLoadedPlugins_ReturnsCapabilityOwnershipMatrix()
     {
         var registry = new HostStatusRegistry();
@@ -902,6 +905,46 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal("corr-concurrent", response.CorrelationId);
         Assert.Contains("Concurrent.Op", response.Payload, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Prove plugin operation endpoint runtime dispatch remains correct after OpenAPI mapping refactor [depends on endpoint integration behavior proof]")]
+    [Trait("AuditArtifact", "iterative-implementation-openapi-dispatch-behavior-proof-2026-05-23")]
+    public async Task MapPluginOperationEndpoint_GivenSupportedOpenApiMapping_ExpectedOperationDispatchBusinessSemanticsPreserved()
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.OpenApi.Dispatch", ["OpenApi.Dispatch"]);
+        var mapper = new PluginEndpointMapper([catalog], [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddOpenApi();
+        builder.Services.AddScoped<ISyncResponder>(_ =>
+            new ScopeResolvedResponder("Plugin.OpenApi.Dispatch", "OpenApi.Dispatch", "business-ok"));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        app.MapOpenApi();
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+
+        var openApiResponse = await client.GetAsync("/openapi/v1.json");
+        var openApiDocument = await openApiResponse.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, openApiResponse.StatusCode);
+        Assert.Contains("/api/{pluginId}/{operation}", openApiDocument, StringComparison.Ordinal);
+
+        var dispatchHttpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.OpenApi.Dispatch/OpenApi.Dispatch",
+            new PluginOperationHttpRequest { CorrelationId = "openapi-dispatch-corr", Payload = "payload" });
+        var dispatchResponse = await dispatchHttpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.OK, dispatchHttpResponse.StatusCode);
+        Assert.NotNull(dispatchResponse);
+        Assert.True(dispatchResponse!.Success);
+        Assert.Equal(SyncResponseStatus.Success, dispatchResponse.Status);
+        Assert.Equal("business-ok", dispatchResponse.Payload);
+        Assert.Equal("openapi-dispatch-corr", dispatchResponse.CorrelationId);
     }
 
     [Fact]

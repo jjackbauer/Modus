@@ -22,7 +22,6 @@ internal sealed class ManagementTelemetryEndpointMapper
             "/management/telemetry/host",
             (HttpContext httpContext) => HandleHostTelemetry(httpContext))
             .WithName("ManagementTelemetry_Host")
-            .WithOpenApi()
             .WithTags("Management")
             .WithSummary("Get host telemetry measurements")
             .WithDescription("Collects typed host telemetry measurements from registered host telemetry providers.");
@@ -31,7 +30,6 @@ internal sealed class ManagementTelemetryEndpointMapper
             "/management/telemetry/machine",
             (HttpContext httpContext) => HandleMachineTelemetry(httpContext))
             .WithName("ManagementTelemetry_Machine")
-            .WithOpenApi()
             .WithTags("Management")
             .WithSummary("Get machine telemetry measurements")
             .WithDescription("Collects typed machine telemetry measurements from registered machine telemetry providers.");

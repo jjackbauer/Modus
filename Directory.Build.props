@@ -14,7 +14,7 @@
     <RepositoryUrl>https://github.com/jackbauer/Modus</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>plugin;monolith;modular;extensibility</PackageTags>
-    <PackageVersion>1.0.0</PackageVersion>
+    <PackageVersion>0.0.1</PackageVersion>
     <Copyright>Copyright © Ricardo Medeiros 2026</Copyright>
   </PropertyGroup>
 </Project>

@@ -18,6 +18,7 @@ public sealed class PluginLoadingTutorialDiLifetimeVerificationTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("ChecklistItem", "Remove or justify the redundant package dependency path producing NU1510 while preserving host runtime composition behavior [depends on project dependency graph audit]")]
     public async Task LifetimeVerification_GivenSingletonPluginAcrossRequests_ExpectedSameResponderIdentity()
     {
         var registry = new RuntimePluginRegistry();
@@ -58,6 +59,7 @@ public sealed class PluginLoadingTutorialDiLifetimeVerificationTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("ChecklistItem", "Remove or justify the redundant package dependency path producing NU1510 while preserving host runtime composition behavior [depends on project dependency graph audit]")]
     public async Task LifetimeVerification_GivenScopedPluginAcrossRequests_ExpectedDifferentScopeBoundResponderIdentities()
     {
         var registry = new RuntimePluginRegistry();
@@ -98,6 +100,7 @@ public sealed class PluginLoadingTutorialDiLifetimeVerificationTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("ChecklistItem", "Remove or justify the redundant package dependency path producing NU1510 while preserving host runtime composition behavior [depends on project dependency graph audit]")]
     public async Task LifetimeVerification_GivenTransientPluginRepeatedCalls_ExpectedNewResponderIdentityPerCall()
     {
         var registry = new RuntimePluginRegistry();

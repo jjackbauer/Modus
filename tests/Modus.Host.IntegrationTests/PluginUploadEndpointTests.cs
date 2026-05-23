@@ -336,6 +336,7 @@ public sealed class PluginUploadEndpointTests
 
     [Fact]
     [Trait("ChecklistItem", "Verify `GET /management/plugins/uploads/{operationId}` integration polling reports deterministic monotonic stage/progress transitions through terminal state [depends on async upload pipeline]")]
+    [Trait("ChecklistItem", "Prove management API runtime contracts remain stable after OpenAPI mapping refactor [depends on management endpoint integration behavior proof]")]
     [Trait("AuditArtifact", "iterative-implementation-upload-status-polling-monotonic-2026-05-22")]
     public async Task GetPluginUploadOperationStatus_GivenAsyncUploadPipeline_ExpectedMonotonicPollingTransitionsThroughTerminalState()
     {

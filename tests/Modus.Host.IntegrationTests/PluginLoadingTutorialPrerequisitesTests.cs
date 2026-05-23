@@ -20,6 +20,7 @@ public sealed class PluginLoadingTutorialPrerequisitesTests
 {
     [Fact]
     [Trait("ChecklistItem", "Document endpoint-first prerequisites for plugin loading tutorial (artifact shape, auth, upload contract, and required request correlation fields) [mandatory - tutorial entry gate]")]
+    [Trait("ChecklistItem", "Prove management API runtime contracts remain stable after OpenAPI mapping refactor [depends on management endpoint integration behavior proof]")]
     public async Task TutorialPrerequisites_GivenMissingUploadAuthorization_ExpectedUploadRejectedWithDeterministicContract()
     {
         var packageBytes = CreateArchiveWithPluginAssembly();

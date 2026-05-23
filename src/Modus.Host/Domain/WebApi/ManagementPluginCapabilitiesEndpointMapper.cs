@@ -26,7 +26,6 @@ internal sealed class ManagementPluginCapabilitiesEndpointMapper
                 _hostStatusRegistry.GetCurrent(),
                 _runtimePluginRegistry.GetSnapshot())))
             .WithName("ManagementPluginCapabilities_Get")
-            .WithOpenApi()
             .WithTags("Management")
             .WithSummary("Get plugin capability catalog")
             .WithDescription("Returns the runtime capability ownership mapping and plugin capability catalog.");

@@ -139,6 +139,38 @@ public sealed class PluginHttpEndpointCoverageTests
         }
     }
 
+    [Fact]
+    [Trait("ChecklistItem", "Replace deprecated WithOpenApi endpoint decoration usage with supported OpenAPI mapping primitives for all affected endpoint mappers [depends on API endpoint mapping refactor]")]
+    public async Task OpenApiDocument_GivenMappedHostEndpoints_ExpectedManagementAndPluginRoutesPublished()
+    {
+        var repoRoot = FindRepositoryRoot();
+        var pluginsRoot = CopyPluginsToTemporaryDirectory(repoRoot);
+        var port = GetAvailablePort();
+        var hostAssemblyPath = typeof(HostRunner).Assembly.Location;
+        var hostProcess = StartHostProcess(hostAssemblyPath, pluginsRoot, port, repoRoot);
+
+        try
+        {
+            await WaitForHostApiAsync(port);
+
+            using var client = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{port}") };
+            var openApi = await client.GetStringAsync("/openapi/v1.json");
+
+            Assert.Contains("/api/{pluginId}/{operation}", openApi, StringComparison.Ordinal);
+            Assert.Contains("/management/status", openApi, StringComparison.Ordinal);
+            Assert.Contains("/management/plugins/capabilities", openApi, StringComparison.Ordinal);
+            Assert.Contains("/management/telemetry/host", openApi, StringComparison.Ordinal);
+            Assert.Contains("/management/telemetry/machine", openApi, StringComparison.Ordinal);
+            Assert.Contains("/management/plugins/uploads", openApi, StringComparison.Ordinal);
+            Assert.Contains("/management/plugins/uploads/{operationId}", openApi, StringComparison.Ordinal);
+        }
+        finally
+        {
+            TryTerminate(hostProcess);
+            TryDeleteDirectory(pluginsRoot);
+        }
+    }
+
     private static async Task WaitForHostApiAsync(int port)
     {
         var deadline = DateTimeOffset.UtcNow.AddSeconds(30);

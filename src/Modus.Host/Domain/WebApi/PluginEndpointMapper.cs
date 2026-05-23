@@ -54,7 +54,6 @@ public class PluginEndpointMapper
                     httpContext.RequestServices);
             })
             .WithName("PluginOperation")
-            .WithOpenApi()
             .WithTags("Plugins")
             .WithSummary("Dispatch plugin operation")
             .WithDescription("Dynamically dispatches plugin operations resolved from the runtime registry.");
