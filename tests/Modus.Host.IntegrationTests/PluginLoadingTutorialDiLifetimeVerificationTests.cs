@@ -160,7 +160,7 @@ public sealed class PluginLoadingTutorialDiLifetimeVerificationTests
         Assert.Equal(SyncResponseStatus.Success, body.Status);
         Assert.Equal(correlationId, body.CorrelationId);
 
-        var payloadObject = Assert.IsType<JsonElement>(body.PayloadObject);
+        var payloadObject = PluginOperationPayload.AsJsonElement(body.Payload);
         Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
 
         var instanceId = payloadObject.GetProperty("instanceId").GetString();
@@ -249,7 +249,7 @@ public sealed class PluginLoadingTutorialDiLifetimeVerificationTests
 
             return new SyncResponse(
                 Success: true,
-                PayloadObject: payload,
+                Payload: payload,
                 CorrelationId: request.CorrelationId);
         }
     }

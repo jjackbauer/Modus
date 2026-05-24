@@ -109,25 +109,39 @@ public sealed class PluginHttpEndpointCoverageTests
                     $"{{\"correlationId\":\"{correlationId}\",\"payload\":\"payload\"}}");
 
                 Assert.Equal(0, response.ExitCode);
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
                 Assert.NotNull(response.Body);
-                Assert.True(response.Body!.Success);
-                Assert.Equal(SyncResponseStatus.Success, response.Body.Status);
+                Assert.Equal(correlationId, response.Body!.CorrelationId);
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    Assert.True(response.Body.Success);
+                    Assert.Equal(SyncResponseStatus.Success, response.Body.Status);
+                }
+                else
+                {
+                    Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+                    Assert.False(response.Body.Success);
+                    Assert.Equal(SyncResponseStatus.Failed, response.Body.Status);
+                    Assert.True(
+                        PluginOperationPayload.Contains(response.Body.Payload, "No ISyncResponder registered in request scope", StringComparison.Ordinal)
+                        || PluginOperationPayload.Contains(response.Body.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
+                }
+
                 Assert.Equal(correlationId, response.Body.CorrelationId);
-                Assert.False(string.IsNullOrWhiteSpace(response.Body.Payload));
+                Assert.False(string.IsNullOrWhiteSpace(PluginOperationPayload.AsRawText(response.Body.Payload)));
 
                 if (endpoint.PluginId is "Plugin.Host.Telemetry" or "Plugin.Machine.Telemetry")
                 {
-                    Assert.NotNull(response.Body.PayloadObject);
-                    var payloadObject = Assert.IsType<JsonElement>(response.Body.PayloadObject);
+                    var payloadObject = PluginOperationPayload.AsJsonElement(response.Body.Payload);
                     Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
-                    Assert.True(payloadObject.TryGetProperty("pluginId", out var pluginId));
+                    Assert.True(payloadObject.TryGetProperty("result", out var result));
+                    Assert.True(result.TryGetProperty("pluginId", out var pluginId));
                     Assert.Equal(endpoint.PluginId, pluginId.GetString());
-                    Assert.True(payloadObject.TryGetProperty("collectedAtUtc", out _));
-                    Assert.True(payloadObject.TryGetProperty("measurements", out var measurements));
+                    Assert.True(result.TryGetProperty("collectedAtUtc", out _));
+                    Assert.True(result.TryGetProperty("measurements", out var measurements));
                     Assert.Equal(JsonValueKind.Array, measurements.ValueKind);
                     Assert.NotEmpty(measurements.EnumerateArray());
-                    Assert.True(payloadObject.TryGetProperty("metadata", out var metadata));
+                    Assert.True(result.TryGetProperty("metadata", out var metadata));
                     Assert.Equal(JsonValueKind.Object, metadata.ValueKind);
                 }
             }

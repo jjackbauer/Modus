@@ -67,15 +67,15 @@ public sealed class PluginLoadingTutorialBehaviorProofComplianceTests
         Assert.Equal(HttpStatusCode.InternalServerError, isolationFailure.StatusCode);
         Assert.NotNull(isolationPayload);
         Assert.False(isolationPayload!.Success);
-        Assert.False(string.IsNullOrWhiteSpace(isolationPayload.Payload));
-        Assert.Contains("No runtime plugin operation owner found", isolationPayload.Payload!, StringComparison.Ordinal);
+        Assert.False(string.IsNullOrWhiteSpace(PluginOperationPayload.AsRawText(isolationPayload.Payload)));
+        Assert.True(PluginOperationPayload.Contains(isolationPayload.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
 
         var evaluated = complianceGate.Evaluate(new BehaviorProofEvidence(
             HasOwnerResolutionProof: true,
             HasBusinessSemanticProof: true,
             HasDiLifetimeProof: true,
             HasCorrelationContinuityProof: successPayload.CorrelationId == "behavior-proof-correlation",
-            HasIsolationProof: isolationPayload.Payload!.Contains("No runtime plugin operation owner found", StringComparison.Ordinal),
+            HasIsolationProof: PluginOperationPayload.Contains(isolationPayload.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal),
             IsMetadataOnly: false));
 
         Assert.True(evaluated.IsCompliant);
@@ -168,7 +168,7 @@ public sealed class PluginLoadingTutorialBehaviorProofComplianceTests
 
             return new SyncResponse(
                 Success: true,
-                PayloadObject: payload,
+                Payload: payload,
                 CorrelationId: request.CorrelationId);
         }
     }

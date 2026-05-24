@@ -223,9 +223,11 @@ public sealed class TimerPluginLifecycleTests
 
         Assert.True(defaultResponse.Success);
         Assert.True(explicitResponse.Success);
-        Assert.Equal(defaultResponse.Payload, explicitResponse.Payload);
-        Assert.Equal([defaultResponse.Payload], defaultWrites);
-        Assert.Equal([explicitResponse.Payload], explicitWrites);
+        var defaultPayload = Assert.IsType<TimerWriteCurrentTimeResult>(defaultResponse.Payload.Payload);
+        var explicitPayload = Assert.IsType<TimerWriteCurrentTimeResult>(explicitResponse.Payload.Payload);
+        Assert.Equal(defaultPayload.TimestampUtcIso8601, explicitPayload.TimestampUtcIso8601);
+        Assert.Equal([defaultPayload.TimestampUtcIso8601], defaultWrites);
+        Assert.Equal([explicitPayload.TimestampUtcIso8601], explicitWrites);
     }
 
     [Fact]
@@ -244,7 +246,8 @@ public sealed class TimerPluginLifecycleTests
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("handled:Timer.Custom.Composite", response.Payload);
+        var payload = Assert.IsType<TimerTestPayload>(response.Payload.Payload);
+        Assert.Equal("handled:Timer.Custom.Composite", payload.Value);
         Assert.Equal(new CorrelationId("corr-custom"), response.CorrelationId);
         Assert.Equal(1, extension.HandleCallCount);
     }
@@ -386,8 +389,9 @@ public sealed class TimerPluginLifecycleTests
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal(new CorrelationId("corr-1"), response.CorrelationId);
-        Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), response.Payload);
-        Assert.Equal([response.Payload], writes);
+        var payload = Assert.IsType<TimerWriteCurrentTimeResult>(response.Payload.Payload);
+        Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), payload.TimestampUtcIso8601);
+        Assert.Equal([payload.TimestampUtcIso8601], writes);
     }
 
     [Fact]
@@ -402,10 +406,12 @@ public sealed class TimerPluginLifecycleTests
         var firstResponse = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
         var secondResponse = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
 
-        Assert.NotEqual(firstResponse.Payload, secondResponse.Payload);
+        var firstPayload = Assert.IsType<TimerWriteCurrentTimeResult>(firstResponse.Payload.Payload);
+        var secondPayload = Assert.IsType<TimerWriteCurrentTimeResult>(secondResponse.Payload.Payload);
+        Assert.NotEqual(firstPayload.TimestampUtcIso8601, secondPayload.TimestampUtcIso8601);
         Assert.Equal(2, writes.Count);
-        Assert.Equal(firstResponse.Payload, writes[0]);
-        Assert.Equal(secondResponse.Payload, writes[1]);
+        Assert.Equal(firstPayload.TimestampUtcIso8601, writes[0]);
+        Assert.Equal(secondPayload.TimestampUtcIso8601, writes[1]);
     }
 
     [Fact]
@@ -418,7 +424,8 @@ public sealed class TimerPluginLifecycleTests
         var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.Custom.Beta"), new CorrelationId("corr-route")));
 
         Assert.True(response.Success);
-        Assert.Equal("handled:Timer.Custom.Beta", response.Payload);
+        var payload = Assert.IsType<TimerTestPayload>(response.Payload.Payload);
+        Assert.Equal("handled:Timer.Custom.Beta", payload.Value);
         Assert.Equal(0, alpha.HandleCallCount);
         Assert.Equal(1, beta.HandleCallCount);
     }
@@ -433,7 +440,8 @@ public sealed class TimerPluginLifecycleTests
 
         Assert.False(response.Success);
         Assert.Equal(SyncResponseStatus.Rejected, response.Status);
-        Assert.Equal("unsupported-operation", response.Payload);
+        Assert.NotNull(response.Payload.Error);
+        Assert.Equal("unsupported-operation", response.Payload.Error!.Code);
         Assert.Equal(new CorrelationId("corr-unknown"), response.CorrelationId);
         Assert.Equal(0, alpha.HandleCallCount);
     }
@@ -476,12 +484,12 @@ public sealed class TimerPluginLifecycleTests
             scheduler.ScheduleRecurring(new JobName($"{_operation}.EverySecond"), TimeSpan.FromSeconds(1), new OperationName(_operation));
         }
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<ISyncPayload> Handle(SyncRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
-            return new SyncResponse(
+            return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: _operation,
+                Payload: new TimerTestPayload(_operation),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -507,23 +515,25 @@ public sealed class TimerPluginLifecycleTests
             scheduler.ScheduleRecurring(new JobName($"{_operation}.EverySecond"), TimeSpan.FromSeconds(1), new OperationName(_operation));
         }
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<ISyncPayload> Handle(SyncRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
             if (!string.Equals(request.Operation.Value, _operation, StringComparison.Ordinal))
             {
-                return new SyncResponse(
+                return new SyncResponse<ISyncPayload>(
                     Success: false,
-                    Payload: "unsupported-operation",
+                    Payload: new SyncErrorPayload(
+                        Code: "unsupported-operation",
+                        Message: $"Operation '{request.Operation.Value}' is not supported by '{_operation}'."),
                     Status: SyncResponseStatus.Rejected,
                     ServedFromFallback: false,
                     CorrelationId: request.CorrelationId);
             }
 
             HandleCallCount++;
-            return new SyncResponse(
+            return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: $"handled:{_operation}",
+                Payload: new TimerTestPayload($"handled:{_operation}"),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -546,12 +556,12 @@ public sealed class TimerPluginLifecycleTests
             ArgumentNullException.ThrowIfNull(scheduler);
         }
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<ISyncPayload> Handle(SyncRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
-            return new SyncResponse(
+            return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: request.Operation.Value,
+                Payload: new TimerTestPayload(request.Operation.Value),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -594,16 +604,18 @@ public sealed class TimerPluginLifecycleTests
             }
         }
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<ISyncPayload> Handle(SyncRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
 
-            return new SyncResponse(
+            return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: request.Operation.Value,
+                Payload: new TimerTestPayload(request.Operation.Value),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
         }
     }
+
+    private sealed record TimerTestPayload(string Value) : ISyncPayload;
 }

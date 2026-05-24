@@ -47,8 +47,10 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal(new CorrelationId("corr-telemetry"), response.CorrelationId);
-        Assert.Contains("\"PluginId\":\"Plugin.Host.Telemetry\"", response.Payload, StringComparison.Ordinal);
-        var payload = Assert.IsType<TelemetryResult>(response.PayloadObject);
+        var operationPayload = Assert.IsType<TelemetryOperationPayload>(response.Payload);
+        Assert.Null(operationPayload.Error);
+        Assert.NotNull(operationPayload.Result);
+        var payload = operationPayload.Result!;
         Assert.Equal("Plugin.Host.Telemetry", payload.PluginId);
         Assert.Equal("Telemetry.Host.CollectSnapshot", payload.Operation);
         Assert.Equal("host", payload.Source);
@@ -78,8 +80,10 @@ public sealed class HostTelemetryScheduledPluginWorkflowTests
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal(new CorrelationId("corr-machine"), response.CorrelationId);
-        Assert.Contains("\"PluginId\":\"Plugin.Machine.Telemetry\"", response.Payload, StringComparison.Ordinal);
-        var payload = Assert.IsType<TelemetryResult>(response.PayloadObject);
+        var operationPayload = Assert.IsType<TelemetryOperationPayload>(response.Payload);
+        Assert.Null(operationPayload.Error);
+        Assert.NotNull(operationPayload.Result);
+        var payload = operationPayload.Result!;
         Assert.Equal("Plugin.Machine.Telemetry", payload.PluginId);
         Assert.Equal("Telemetry.Machine.CollectSnapshot", payload.Operation);
         Assert.Equal("machine", payload.Source);

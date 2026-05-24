@@ -28,7 +28,8 @@ public sealed class TimerExtensionWorkflowTests
         Assert.Equal(
             new[] { new OperationName("Timer.Cleanup.Expired"), new OperationName("Timer.Print.Utc") },
             plugin.SupportedOperations);
-        Assert.Equal("cleanup", response.Payload);
+        var payload = Assert.IsType<TimerTestPayload>(response.Payload.Payload);
+        Assert.Equal("cleanup", payload.Value);
         Assert.Equal(0, existingExtension.HandleCalls);
         Assert.Equal(1, newExtension.HandleCalls);
         Assert.Equal(2, scheduler.RecurringSchedules.Count);
@@ -64,14 +65,16 @@ public sealed class TimerExtensionWorkflowTests
 
         Assert.True(known.Success);
         Assert.Equal(SyncResponseStatus.Success, known.Status);
-        Assert.Equal("owner-B", known.Payload);
+        var knownPayload = Assert.IsType<TimerTestPayload>(known.Payload.Payload);
+        Assert.Equal("owner-B", knownPayload.Value);
         Assert.Equal(new CorrelationId("corr-known"), known.CorrelationId);
         Assert.Equal(0, extensionA.HandleCalls);
         Assert.Equal(1, extensionB.HandleCalls);
 
         Assert.False(unknown.Success);
         Assert.Equal(SyncResponseStatus.Rejected, unknown.Status);
-        Assert.Equal("unsupported-operation", unknown.Payload);
+        Assert.NotNull(unknown.Payload.Error);
+        Assert.Equal("unsupported-operation", unknown.Payload.Error!.Code);
         Assert.Equal(new CorrelationId("corr-unknown"), unknown.CorrelationId);
         Assert.Equal(0, extensionA.HandleCalls);
         Assert.Equal(1, extensionB.HandleCalls);
@@ -117,10 +120,15 @@ public sealed class TimerExtensionWorkflowTests
             scheduler.ScheduleRecurring(_schedule.JobName, _schedule.Interval, _schedule.Operation);
         }
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<ISyncPayload> Handle(SyncRequest request)
         {
             HandleCalls++;
-            return new SyncResponse(Success: true, Payload: _payload, CorrelationId: request.CorrelationId);
+            return new SyncResponse<ISyncPayload>(
+                Success: true,
+                Payload: new TimerTestPayload(_payload),
+                CorrelationId: request.CorrelationId);
         }
     }
+
+    private sealed record TimerTestPayload(string Value) : ISyncPayload;
 }

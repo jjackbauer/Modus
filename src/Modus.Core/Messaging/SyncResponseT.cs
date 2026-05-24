@@ -52,4 +52,6 @@ public sealed record SyncResponse<TPayload>
 		SyncResponseStatus status,
 		CorrelationId? correlationId = null)
 		=> new SyncResponse<TPayload>(Success: false, Payload: payload, Status: status, ServedFromFallback: false, CorrelationId: correlationId);
+
+	public TPayload PayloadObject => Payload;
 }

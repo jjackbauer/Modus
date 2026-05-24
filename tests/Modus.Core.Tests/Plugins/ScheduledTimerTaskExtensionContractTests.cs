@@ -22,7 +22,7 @@ public sealed class ScheduledTimerTaskExtensionContractTests
 
         var handle = extensionType.GetMethod(nameof(ISyncResponder.Handle), [typeof(SyncRequest)]);
         Assert.NotNull(handle);
-        Assert.Equal(typeof(SyncResponse), handle!.ReturnType);
+        Assert.Equal(typeof(SyncResponse<ISyncPayload>), handle!.ReturnType);
     }
 
     [Fact]
@@ -33,6 +33,6 @@ public sealed class ScheduledTimerTaskExtensionContractTests
         Assert.NotNull(extensionType);
         Assert.True(typeof(IPluginOperationCatalog).IsAssignableFrom(extensionType));
         Assert.True(typeof(IPluginScheduledEvents).IsAssignableFrom(extensionType));
-        Assert.True(typeof(ISyncResponder).IsAssignableFrom(extensionType));
+        Assert.True(typeof(ISyncResponder<SyncRequest, SyncResponse<ISyncPayload>>).IsAssignableFrom(extensionType));
     }
 }

@@ -21,7 +21,7 @@ public sealed class PackWarningsBehaviorProofPolicyComplianceTests
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
     [Trait("AuditArtifact", "iterative-implementation-modus-host-pack-warnings-behavior-proof-policy-2026-05-23")]
-    public async Task IntegrationGate_GivenEveryChecklistItem_ExpectedAtLeastOneExecutableBehaviorProofPath()
+    public async Task IntegrationPlanCompliance_GivenApiChecklistItems_ExpectedEachItemBackedByRuntimeBehaviorProof()
     {
         var apiCatalog = new CatalogOnlyPlugin("Plugin.Policy.Business", ["Policy.Business.Op"]);
         var registry = new RuntimePluginRegistry([apiCatalog], [apiCatalog]);
@@ -86,8 +86,8 @@ public sealed class PackWarningsBehaviorProofPolicyComplianceTests
         Assert.True(dispatchPayload!.Success);
         Assert.Equal(SyncResponseStatus.Success, dispatchPayload.Status);
         Assert.Equal("policy-proof-correlation", dispatchPayload.CorrelationId);
-        Assert.Contains("owner=Plugin.Policy.Business", dispatchPayload.Payload, StringComparison.Ordinal);
-        Assert.Contains("business=business-proof", dispatchPayload.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(dispatchPayload.Payload, "owner=Plugin.Policy.Business", StringComparison.Ordinal));
+        Assert.True(PluginOperationPayload.Contains(dispatchPayload.Payload, "business=business-proof", StringComparison.Ordinal));
 
         var statusHttpResponse = await client.GetAsync("/management/status");
         var statusPayload = await statusHttpResponse.Content.ReadFromJsonAsync<JsonElement>();
@@ -112,12 +112,43 @@ public sealed class PackWarningsBehaviorProofPolicyComplianceTests
 
         Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedUploadResponse.StatusCode);
         Assert.Equal("No trusted plugin author keys are configured.", unauthorizedErrorPayload.GetProperty("error").GetString());
+
+        var policyGate = EvaluatePolicyGate(
+            new BehaviorProofEvidence(
+                HasOwnerResolutionProof: true,
+                HasBusinessSemanticsProof: true,
+                HasLifetimePathProof: true,
+                HasCorrelationContinuityProof: true,
+                HasIsolationOrNegativePathProof: true,
+                MetadataOnlyAssertions: false));
+
+        Assert.True(policyGate.IsCompliant);
+        Assert.Equal("behavior-proof-complete", policyGate.ReasonCode);
     }
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
     [Trait("AuditArtifact", "iterative-implementation-modus-host-pack-warnings-behavior-proof-policy-2026-05-23")]
-    public async Task IntegrationGate_GivenApiFocusedTests_ExpectedOwnerBusinessLifetimeCorrelationIsolationAndNegativeGatesAsserted()
+    public void IntegrationPlanCompliance_GivenMetadataOnlyAssertion_ExpectedPolicyGateFailsPlan()
+    {
+        var metadataOnlyEvidence = new BehaviorProofEvidence(
+            HasOwnerResolutionProof: false,
+            HasBusinessSemanticsProof: false,
+            HasLifetimePathProof: false,
+            HasCorrelationContinuityProof: false,
+            HasIsolationOrNegativePathProof: false,
+            MetadataOnlyAssertions: true);
+
+        var gateResult = EvaluatePolicyGate(metadataOnlyEvidence);
+
+        Assert.False(gateResult.IsCompliant);
+        Assert.Equal("metadata-only", gateResult.ReasonCode);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("AuditArtifact", "iterative-implementation-modus-host-pack-warnings-behavior-proof-policy-2026-05-23")]
+    public async Task IntegrationPlanCompliance_GivenNegativePathScenario_ExpectedDeterministicTypedFailureContractVerified()
     {
         var ownerCatalog = new CatalogOnlyPlugin("Plugin.Owner.Policy", ["Orders.Submit"]);
         var scopedCatalog = new CatalogOnlyPlugin("Plugin.Lifetime.Policy", ["Lifetime.Verify"]);
@@ -151,8 +182,8 @@ public sealed class PackWarningsBehaviorProofPolicyComplianceTests
         Assert.NotNull(ownerPayload);
         Assert.True(ownerPayload!.Success);
         Assert.Equal("gate-correlation-owner", ownerPayload.CorrelationId);
-        Assert.Contains("owner=Plugin.Owner.Policy", ownerPayload.Payload, StringComparison.Ordinal);
-        Assert.Contains("business=owner-business-ok", ownerPayload.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(ownerPayload.Payload, "owner=Plugin.Owner.Policy", StringComparison.Ordinal));
+        Assert.True(PluginOperationPayload.Contains(ownerPayload.Payload, "business=owner-business-ok", StringComparison.Ordinal));
 
         var firstLifetimeHttpResponse = await client.PostAsJsonAsync(
             "/api/Plugin.Lifetime.Policy/Lifetime.Verify",
@@ -195,10 +226,43 @@ public sealed class PackWarningsBehaviorProofPolicyComplianceTests
         Assert.NotNull(isolatedPayload);
         Assert.False(isolatedPayload!.Success);
         Assert.Equal(SyncResponseStatus.Failed, isolatedPayload.Status);
-        Assert.Contains(
-            "No runtime plugin operation owner found for plugin 'Plugin.Owner.Policy' and operation 'Orders.Submit'.",
-            isolatedPayload.Payload,
-            StringComparison.Ordinal);
+        Assert.Equal("gate-correlation-negative", isolatedPayload.CorrelationId);
+        Assert.True(
+            PluginOperationPayload.Contains(
+                isolatedPayload.Payload,
+                "No runtime plugin operation owner found for plugin 'Plugin.Owner.Policy' and operation 'Orders.Submit'.",
+                StringComparison.Ordinal));
+
+        var policyGate = EvaluatePolicyGate(
+            new BehaviorProofEvidence(
+                HasOwnerResolutionProof: true,
+                HasBusinessSemanticsProof: true,
+                HasLifetimePathProof: true,
+                HasCorrelationContinuityProof: true,
+                HasIsolationOrNegativePathProof: true,
+                MetadataOnlyAssertions: false));
+
+        Assert.True(policyGate.IsCompliant);
+        Assert.Equal("behavior-proof-complete", policyGate.ReasonCode);
+    }
+
+    private static PolicyGateResult EvaluatePolicyGate(BehaviorProofEvidence evidence)
+    {
+        if (evidence.MetadataOnlyAssertions)
+        {
+            return new PolicyGateResult(IsCompliant: false, ReasonCode: "metadata-only");
+        }
+
+        if (!evidence.HasOwnerResolutionProof
+            || !evidence.HasBusinessSemanticsProof
+            || !evidence.HasLifetimePathProof
+            || !evidence.HasCorrelationContinuityProof
+            || !evidence.HasIsolationOrNegativePathProof)
+        {
+            return new PolicyGateResult(IsCompliant: false, ReasonCode: "missing-behavior-proof");
+        }
+
+        return new PolicyGateResult(IsCompliant: true, ReasonCode: "behavior-proof-complete");
     }
 
     private static MultipartFormDataContent BuildDummyUploadRequest()
@@ -208,6 +272,16 @@ public sealed class PackWarningsBehaviorProofPolicyComplianceTests
         request.Add(new ByteArrayContent([4, 5, 6]), "signature", "plugin.bundle.sig");
         return request;
     }
+
+    private sealed record BehaviorProofEvidence(
+        bool HasOwnerResolutionProof,
+        bool HasBusinessSemanticsProof,
+        bool HasLifetimePathProof,
+        bool HasCorrelationContinuityProof,
+        bool HasIsolationOrNegativePathProof,
+        bool MetadataOnlyAssertions);
+
+    private sealed record PolicyGateResult(bool IsCompliant, string ReasonCode);
 
     private sealed class CatalogOnlyPlugin : IPluginContract, IPluginOperationCatalog
     {

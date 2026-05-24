@@ -58,7 +58,7 @@ public static class PluginContractValidator
             AddMissing(nameof(IEventSubscriber));
         }
 
-        if (candidate is not ISyncResponder)
+        if (!HasSupportedSyncResponderContract(candidate))
         {
             AddMissing(nameof(ISyncResponder));
         }
@@ -144,5 +144,23 @@ public static class PluginContractValidator
         }
 
         return new ContractValidationResult(IsValid: missing.Count == 0, MissingCapabilities: missing);
+    }
+
+    private static bool HasSupportedSyncResponderContract(object candidate)
+    {
+        if (candidate is ISyncResponder)
+        {
+            return true;
+        }
+
+        return candidate
+            .GetType()
+            .GetInterfaces()
+            .Any(static interfaceType =>
+                interfaceType.IsGenericType
+                && interfaceType.GetGenericTypeDefinition() == typeof(ISyncResponder<,>)
+                && interfaceType.GenericTypeArguments[0] == typeof(SyncRequest)
+                && interfaceType.GenericTypeArguments[1].IsGenericType
+                && interfaceType.GenericTypeArguments[1].GetGenericTypeDefinition() == typeof(SyncResponse<>));
     }
 }

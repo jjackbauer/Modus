@@ -158,7 +158,7 @@ public static class PluginHostingCoreExtensions
     {
         return pluginAssemblies
             .OfType<Assembly>()
-            .SelectMany(static assembly => assembly.GetTypes())
+            .SelectMany(GetLoadableTypes)
             .Where(static type =>
                 type is { IsAbstract: false, IsInterface: false, ContainsGenericParameters: false }
                 && typeof(IPluginDependencyRegister).IsAssignableFrom(type)
@@ -167,6 +167,20 @@ public static class PluginHostingCoreExtensions
             .OrderBy(static type => type.Assembly.FullName, StringComparer.Ordinal)
             .ThenBy(static type => type.FullName, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+    {
+        ArgumentNullException.ThrowIfNull(assembly);
+
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException ex)
+        {
+            return ex.Types.Where(static type => type is not null)!;
+        }
     }
 
     private sealed class RegistrarAppliedMarker<TRegistrar>

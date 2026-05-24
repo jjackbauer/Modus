@@ -4,6 +4,7 @@ using Modus.Core.Hosting;
 using Modus.Core.Messaging;
 using Modus.Core.Plugins;
 using Modus.Host.Hosting;
+using Modus.SamplePlugins.Lifetime;
 using Modus.SamplePlugins.Telemetry;
 using Xunit;
 
@@ -343,31 +344,18 @@ public sealed class PluginDiConsumptionTests
 
             using (var provider = services.BuildServiceProvider())
             {
-                // Assert: Verify that plugin services can be resolved by their contract interfaces.
-                // IPluginOperationCatalog should resolve to the registered plugin instances.
-                var operationCatalog = provider.GetService<IPluginOperationCatalog>();
-                Assert.NotNull(operationCatalog);
-                Assert.IsAssignableFrom<IPluginContract>(operationCatalog);
+                var operationCatalogs = provider.GetServices<IPluginOperationCatalog>().OfType<IPluginContract>().ToArray();
+                var eventSubscribers = provider.GetServices<IEventSubscriber>().OfType<IPluginContract>().ToArray();
+                var lifecycles = provider.GetServices<IPluginLifecycle>().OfType<IPluginContract>().ToArray();
+                var scheduledEvents = provider.GetServices<IPluginScheduledEvents>().OfType<IPluginContract>().ToArray();
 
-                // ISyncResponder should also resolve to a plugin instance.
-                var syncResponder = provider.GetService<ISyncResponder>();
-                Assert.NotNull(syncResponder);
-                Assert.IsAssignableFrom<IPluginContract>(syncResponder);
+                Assert.NotEmpty(operationCatalogs);
+                Assert.NotEmpty(eventSubscribers);
+                Assert.NotEmpty(lifecycles);
+                Assert.NotEmpty(scheduledEvents);
 
-                // IEventSubscriber should resolve to a plugin instance.
-                var eventSubscriber = provider.GetService<IEventSubscriber>();
-                Assert.NotNull(eventSubscriber);
-                Assert.IsAssignableFrom<IPluginContract>(eventSubscriber);
-
-                // IPluginLifecycle should resolve to a plugin instance.
-                var lifecycle = provider.GetService<IPluginLifecycle>();
-                Assert.NotNull(lifecycle);
-                Assert.IsAssignableFrom<IPluginContract>(lifecycle);
-
-                // IPluginScheduledEvents should resolve to a plugin instance.
-                var scheduledEvents = provider.GetService<IPluginScheduledEvents>();
-                Assert.NotNull(scheduledEvents);
-                Assert.IsAssignableFrom<IPluginContract>(scheduledEvents);
+                // Typed-only migration: canonical object alias responder should not be required as a direct DI service.
+                Assert.Null(provider.GetService<ISyncResponder>());
             }
 
             GC.Collect();
@@ -395,28 +383,24 @@ public sealed class PluginDiConsumptionTests
 
             using (var provider = services.BuildServiceProvider())
             {
-                // Assert: Resolve plugin by ISyncResponder interface and verify it handles requests correctly.
-                var syncResponder = provider.GetRequiredService<ISyncResponder>();
-                var operationCatalog = provider.GetRequiredService<IPluginOperationCatalog>();
+                var plugin = provider.GetRequiredService<HostTelemetryPlugin>();
+                var supportedOp = Assert.Single(plugin.SupportedOperations);
 
-                // Verify the plugin's operation catalog works.
-                var supportedOps = operationCatalog.SupportedOperations;
-                Assert.NotEmpty(supportedOps);
-                
-                // Get the first supported operation from the plugin
-                var supportedOp = supportedOps.First();
-                Assert.NotNull(supportedOp);
-
-                // Verify the sync responder can handle its own operations.
                 var request = new SyncRequest(
                     Operation: supportedOp,
                     IsFallbackExplicit: false,
                     CorrelationId: new CorrelationId(Guid.NewGuid().ToString()));
-                var response = syncResponder.Handle(request);
+                var response = plugin.Handle(request);
 
                 Assert.True(response.Success);
                 Assert.NotNull(response.Payload);
-                Assert.NotEmpty(response.Payload);
+
+                var envelope = Assert.IsType<TelemetryOperationPayload>(response.Payload);
+                Assert.Null(envelope.Error);
+                Assert.NotNull(envelope.Result);
+                var telemetryPayload = envelope.Result!;
+                Assert.Equal("Plugin.Host.Telemetry", telemetryPayload.PluginId);
+                Assert.Equal("Telemetry.Host.CollectSnapshot", telemetryPayload.Operation);
             }
 
             GC.Collect();
@@ -451,8 +435,6 @@ public sealed class PluginDiConsumptionTests
                 var plugin2 = provider.GetRequiredService<HostTelemetryPlugin>();
                 var catalog1 = provider.GetServices<IPluginOperationCatalog>().OfType<HostTelemetryPlugin>().Single();
                 var catalog2 = provider.GetServices<IPluginOperationCatalog>().OfType<HostTelemetryPlugin>().Single();
-                var responder1 = provider.GetServices<ISyncResponder>().OfType<HostTelemetryPlugin>().Single();
-                var responder2 = provider.GetServices<ISyncResponder>().OfType<HostTelemetryPlugin>().Single();
                 var subscriber1 = provider.GetServices<IEventSubscriber>().OfType<HostTelemetryPlugin>().Single();
                 var subscriber2 = provider.GetServices<IEventSubscriber>().OfType<HostTelemetryPlugin>().Single();
                 var lifecycle1 = provider.GetServices<IPluginLifecycle>().OfType<HostTelemetryPlugin>().Single();
@@ -460,13 +442,18 @@ public sealed class PluginDiConsumptionTests
 
                 Assert.Same(plugin1, plugin2);
                 Assert.Same(catalog1, catalog2);
-                Assert.Same(responder1, responder2);
                 Assert.Same(subscriber1, subscriber2);
                 Assert.Same(lifecycle1, lifecycle2);
                 Assert.Same(plugin1, catalog1);
-                Assert.Same(plugin1, responder1);
                 Assert.Same(plugin1, subscriber1);
                 Assert.Same(plugin1, lifecycle1);
+
+                var response1 = plugin1.Handle(SyncRequest.ForStandardPath(new OperationName("Telemetry.Host.CollectSnapshot"), correlationId: new CorrelationId("singleton-corr-1")));
+                var response2 = plugin2.Handle(SyncRequest.ForStandardPath(new OperationName("Telemetry.Host.CollectSnapshot"), correlationId: new CorrelationId("singleton-corr-2")));
+                Assert.True(response1.Success);
+                Assert.True(response2.Success);
+                Assert.IsType<TelemetryOperationPayload>(response1.Payload);
+                Assert.IsType<TelemetryOperationPayload>(response2.Payload);
             }
 
             GC.Collect();
@@ -502,21 +489,37 @@ public sealed class PluginDiConsumptionTests
                 // Assert: Within a single scope, scoped services should return the same instance
                 using (var scope1 = provider.CreateScope())
                 {
-                    var plugin1a = scope1.ServiceProvider.GetRequiredService<ISyncResponder>();
+                    var plugin1a = scope1.ServiceProvider.GetRequiredService<ScopedLifetimePlugin>();
+                    var plugin1b = scope1.ServiceProvider.GetRequiredService<ScopedLifetimePlugin>();
                     var scopedService1a = scope1.ServiceProvider.GetRequiredService<ScopedTestService>();
                     var scopedService1b = scope1.ServiceProvider.GetRequiredService<ScopedTestService>();
 
+                    Assert.Same(plugin1a, plugin1b);
                     Assert.Same(scopedService1a, scopedService1b);
                     scopedInstanceIds.Add(scopedService1a.InstanceId);
+
+                    var response = plugin1a.Handle(SyncRequest.ForStandardPath(new OperationName("Lifetime.Scoped.PrintId"), correlationId: new CorrelationId("scope-1")));
+                    Assert.True(response.Success);
+                    Assert.NotNull(response.Payload);
+                    var scope1Result = response.Payload.GetType().GetProperty("Result")?.GetValue(response.Payload);
+                    var scope1Lifetime = scope1Result?.GetType().GetProperty("Lifetime")?.GetValue(scope1Result) as string;
+                    Assert.Equal("Scoped", scope1Lifetime);
                 }
 
                 // Assert: Across different scopes, scoped services should return different instances
                 using (var scope2 = provider.CreateScope())
                 {
-                    var plugin2 = scope2.ServiceProvider.GetRequiredService<ISyncResponder>();
+                    var plugin2 = scope2.ServiceProvider.GetRequiredService<ScopedLifetimePlugin>();
                     var scopedService2 = scope2.ServiceProvider.GetRequiredService<ScopedTestService>();
 
                     scopedInstanceIds.Add(scopedService2.InstanceId);
+
+                    var response = plugin2.Handle(SyncRequest.ForStandardPath(new OperationName("Lifetime.Scoped.PrintId"), correlationId: new CorrelationId("scope-2")));
+                    Assert.True(response.Success);
+                    Assert.NotNull(response.Payload);
+                    var scope2Result = response.Payload.GetType().GetProperty("Result")?.GetValue(response.Payload);
+                    var scope2Lifetime = scope2Result?.GetType().GetProperty("Lifetime")?.GetValue(scope2Result) as string;
+                    Assert.Equal("Scoped", scope2Lifetime);
                 }
 
                 // Verify that the two scopes got different instances
@@ -563,10 +566,12 @@ public sealed class PluginDiConsumptionTests
 
             var resolutionTasks = Enumerable.Range(0, 8)
                 .Select(_ => Task.Run(() =>
-                    provider.GetServices<IPluginLifecycle>()
-                        .OfType<TransientRuntimePlugin>()
-                        .Single()
-                        .InstanceId))
+                {
+                    using var scope = provider.CreateScope();
+                    return scope.ServiceProvider
+                        .GetRequiredService<TransientRuntimePlugin>()
+                        .InstanceId;
+                }))
                 .ToArray();
 
             var instanceIds = await Task.WhenAll(resolutionTasks);

@@ -13,4 +13,4 @@ public sealed record TelemetryResult(
     string Category,
     DateTimeOffset CollectedAtUtc,
     IReadOnlyList<TelemetryMeasurement> Measurements,
-    IReadOnlyDictionary<string, string> Metadata);
+    IReadOnlyDictionary<string, string> Metadata) : Modus.Core.Messaging.ISyncPayload;

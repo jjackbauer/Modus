@@ -150,7 +150,8 @@ public sealed class PluginWebApiEndpointTests
         // Assert: Should return operation-not-found
         Assert.False(response.Success);
         Assert.Equal(SyncResponseStatus.Rejected, response.Status);
-        Assert.Contains("operation-not-found", response.Payload);
+        var payload = Assert.IsType<SyncErrorPayload>(response.Payload);
+        Assert.Equal("operation-not-found", payload.Code);
         Assert.Equal(new CorrelationId("test-456"), response.CorrelationId);
     }
 
@@ -207,14 +208,13 @@ public sealed class PluginWebApiEndpointTests
         var response = new PluginOperationHttpResponse
         {
             Success = true,
-            Payload = "ok",
-            PayloadObject = new { message = "ok" },
+            Payload = new { message = "ok" },
             Status = SyncResponseStatus.Success,
         };
 
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.IsType<SyncResponseStatus>(response.Status!.Value);
-        Assert.NotNull(response.PayloadObject);
+        Assert.NotNull(response.Payload);
     }
 
     [Fact]
@@ -242,12 +242,52 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, httpResponse.StatusCode);
         Assert.NotNull(response);
         Assert.True(response!.Success);
-        Assert.NotNull(response.PayloadObject);
-        var payloadObject = Assert.IsType<JsonElement>(response.PayloadObject);
+        var payloadObject = PluginOperationPayload.AsJsonElement(response.Payload);
         Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
         Assert.Equal("typed", payloadObject.GetProperty("mode").GetString());
         Assert.Equal(2, payloadObject.GetProperty("count").GetInt32());
-        Assert.Contains("\"mode\":\"typed\"", response.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(response.Payload, "\"mode\":\"typed\"", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(true, HttpStatusCode.OK, SyncResponseStatus.Success)]
+    [InlineData(false, HttpStatusCode.UnprocessableEntity, SyncResponseStatus.Rejected)]
+    [Trait("ChecklistItem", "Update `PluginEndpointMapper` to map typed payloads for both success and rejection paths while preserving correlation continuity [depends on typed HTTP response DTO]")]
+    public async Task HandlePluginOperation_GivenTypedPayloadAndMissingResponseCorrelation_ExpectedTypedPayloadMappedAndRequestCorrelationPreserved(
+        bool shouldSucceed,
+        HttpStatusCode expectedStatusCode,
+        SyncResponseStatus expectedSyncStatus)
+    {
+        var catalog = new CatalogOnlyPlugin("Plugin.Correlation.Typed", ["Typed.Correlation"]);
+        var mapper = new PluginEndpointMapper([catalog], [catalog]);
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<ISyncResponder>(_ =>
+            new CorrelationFallbackTypedResponder("Plugin.Correlation.Typed", "Typed.Correlation", shouldSucceed));
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        const string requestCorrelationId = "corr-typed-fallback";
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Correlation.Typed/Typed.Correlation",
+            new PluginOperationHttpRequest { CorrelationId = requestCorrelationId, Payload = "unused" });
+
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(expectedStatusCode, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.Equal(shouldSucceed, response!.Success);
+        Assert.Equal(expectedSyncStatus, response.Status);
+        Assert.Equal(requestCorrelationId, response.CorrelationId);
+
+        var payloadObject = PluginOperationPayload.AsJsonElement(response.Payload);
+        Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
+        Assert.Equal(shouldSucceed ? "success" : "rejected", payloadObject.GetProperty("path").GetString());
+        Assert.Equal("typed", payloadObject.GetProperty("transport").GetString());
     }
 
     [Fact]
@@ -260,7 +300,7 @@ public sealed class PluginWebApiEndpointTests
 
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services.AddSingleton<ISyncResponder>(plugin);
+        builder.Services.AddSingleton<ISyncResponder>(_ => new HostTelemetryTypedAdapterResponder(plugin));
 
         await using var app = builder.Build();
         mapper.Map(app);
@@ -277,14 +317,14 @@ public sealed class PluginWebApiEndpointTests
         Assert.NotNull(response);
         Assert.True(response!.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.NotNull(response.PayloadObject);
-        var payloadObject = Assert.IsType<JsonElement>(response.PayloadObject);
-        Assert.Equal("Plugin.Host.Telemetry", payloadObject.GetProperty("pluginId").GetString());
-        Assert.Equal("Telemetry.Host.CollectSnapshot", payloadObject.GetProperty("operation").GetString());
-        Assert.Equal("host", payloadObject.GetProperty("source").GetString());
-        Assert.Equal("runtime", payloadObject.GetProperty("category").GetString());
+        var payloadObject = PluginOperationPayload.AsJsonElement(response.Payload);
+        Assert.True(payloadObject.TryGetProperty("result", out var result));
+        Assert.Equal("Plugin.Host.Telemetry", result.GetProperty("pluginId").GetString());
+        Assert.Equal("Telemetry.Host.CollectSnapshot", result.GetProperty("operation").GetString());
+        Assert.Equal("host", result.GetProperty("source").GetString());
+        Assert.Equal("runtime", result.GetProperty("category").GetString());
 
-        var measurements = payloadObject.GetProperty("measurements").EnumerateArray().ToArray();
+        var measurements = result.GetProperty("measurements").EnumerateArray().ToArray();
         Assert.Contains(measurements, static measurement =>
             measurement.GetProperty("name").GetString() == "cpu.percent"
             && measurement.GetProperty("unit").GetString() == "percent"
@@ -293,7 +333,7 @@ public sealed class PluginWebApiEndpointTests
             measurement.GetProperty("name").GetString() == "memory.workingSet.bytes"
             && measurement.GetProperty("unit").GetString() == "bytes");
 
-        var metadata = payloadObject.GetProperty("metadata");
+        var metadata = result.GetProperty("metadata");
         Assert.True(metadata.TryGetProperty("processId", out var processId));
         Assert.False(string.IsNullOrWhiteSpace(processId.GetString()));
         Assert.True(metadata.TryGetProperty("processorCount", out var processorCount));
@@ -754,7 +794,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.NotNull(response);
         Assert.True(response!.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        Assert.Equal("resolved-from-scope", response.Payload);
+        Assert.Equal("resolved-from-scope", PluginOperationPayload.AsStringValue(response.Payload));
         Assert.Equal("corr-1", response.CorrelationId);
     }
 
@@ -786,7 +826,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.InternalServerError, httpResponse.StatusCode);
         Assert.NotNull(response);
         Assert.False(response!.Success);
-        Assert.Contains("No ISyncResponder registered in request scope for plugin 'Plugin.Catalog'.", response.Payload);
+        Assert.True(PluginOperationPayload.Contains(response.Payload, "dispatch-failure", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -820,7 +860,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.InternalServerError, httpResponse.StatusCode);
         Assert.NotNull(response);
         Assert.False(response!.Success);
-        Assert.Contains("No runtime plugin operation owner found for plugin 'Plugin.Catalog' and operation 'Catalog.Op'.", response.Payload);
+        Assert.True(PluginOperationPayload.Contains(response.Payload, "No runtime plugin operation owner found for plugin 'Plugin.Catalog' and operation 'Catalog.Op'.", StringComparison.Ordinal));
 
         var diagnostics = statusRegistry.GetCurrent().Diagnostics;
         Assert.Contains(
@@ -855,7 +895,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.InternalServerError, beforeOnboarding.StatusCode);
         Assert.NotNull(beforeBody);
         Assert.False(beforeBody!.Success);
-        Assert.Contains("No runtime plugin operation owner found", beforeBody.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(beforeBody.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
 
         registry.Update([existing, runtimeOnboarded], [existing, runtimeOnboarded]);
 
@@ -869,7 +909,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.True(afterBody!.Success);
         Assert.Equal(SyncResponseStatus.Success, afterBody.Status);
         Assert.Equal("runtime-after", afterBody.CorrelationId);
-        Assert.Contains("Onboarded.Op", afterBody.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(afterBody.Payload, "Onboarded.Op", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -904,7 +944,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.True(response!.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal("corr-concurrent", response.CorrelationId);
-        Assert.Contains("Concurrent.Op", response.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(response.Payload, "Concurrent.Op", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -943,7 +983,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.NotNull(dispatchResponse);
         Assert.True(dispatchResponse!.Success);
         Assert.Equal(SyncResponseStatus.Success, dispatchResponse.Status);
-        Assert.Equal("business-ok", dispatchResponse.Payload);
+        Assert.Equal("business-ok", PluginOperationPayload.AsStringValue(dispatchResponse.Payload));
         Assert.Equal("openapi-dispatch-corr", dispatchResponse.CorrelationId);
     }
 
@@ -970,7 +1010,9 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
-        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+        Assert.NotEqual(
+            PluginOperationPayload.AsRawText(firstResponse.Body!.Payload),
+            PluginOperationPayload.AsRawText(secondResponse.Body!.Payload));
     }
 
     [Fact]
@@ -996,7 +1038,9 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
-        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+        Assert.NotEqual(
+            PluginOperationPayload.AsRawText(firstResponse.Body!.Payload),
+            PluginOperationPayload.AsRawText(secondResponse.Body!.Payload));
     }
 
     [Fact]
@@ -1023,7 +1067,9 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
-        Assert.Equal(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+        Assert.Equal(
+            PluginOperationPayload.AsStringValue(firstResponse.Body!.Payload),
+            PluginOperationPayload.AsStringValue(secondResponse.Body!.Payload));
     }
 
     [Fact]
@@ -1053,7 +1099,9 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
-        Assert.Equal(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+        Assert.Equal(
+            PluginOperationPayload.AsStringValue(firstResponse.Body!.Payload),
+            PluginOperationPayload.AsStringValue(secondResponse.Body!.Payload));
     }
 
     [Fact]
@@ -1127,7 +1175,9 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
-        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+        Assert.NotEqual(
+            PluginOperationPayload.AsRawText(firstResponse.Body!.Payload),
+            PluginOperationPayload.AsRawText(secondResponse.Body!.Payload));
     }
 
     [Fact]
@@ -1158,7 +1208,9 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal(HttpStatusCode.OK, secondResponse.StatusCode);
         Assert.NotNull(firstResponse.Body);
         Assert.NotNull(secondResponse.Body);
-        Assert.NotEqual(firstResponse.Body!.Payload, secondResponse.Body!.Payload);
+        Assert.NotEqual(
+            PluginOperationPayload.AsRawText(firstResponse.Body!.Payload),
+            PluginOperationPayload.AsRawText(secondResponse.Body!.Payload));
     }
 
     [Fact]
@@ -1187,7 +1239,70 @@ public sealed class PluginWebApiEndpointTests
         Assert.True(response.Body!.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Body.Status);
         Assert.Equal("runtime-no-lifetime", response.Body.CorrelationId);
-        Assert.Contains("health-ok", response.Body.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(response.Body.Payload, "health-ok", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Add deterministic legacy plugin migration behavior: if plugin responder is not typed, runtime must either adapt to typed payload or reject with explicit typed error contract [mandatory - legacy compatibility gate]")]
+    public async Task LegacyResponder_GivenSyncResponseOfString_ExpectedAdaptedTypedPayloadContract()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Legacy.StringResponse",
+            supportedOperation: "Legacy.Op",
+            pluginTypeFullName: typeof(LegacyStringSyncResponseResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Singleton);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<LegacyStringSyncResponseResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var response = await PostPluginOperationAsync(client, "Plugin.Legacy.StringResponse", "Legacy.Op", "legacy-adapt-correlation");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(response.Body);
+        Assert.True(response.Body!.Success);
+        Assert.Equal(SyncResponseStatus.Success, response.Body.Status);
+        Assert.Equal("legacy-adapt-correlation", response.Body.CorrelationId);
+        Assert.Equal("legacy-adapted-payload", PluginOperationPayload.AsStringValue(response.Body.Payload));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Add deterministic legacy plugin migration behavior: if plugin responder is not typed, runtime must either adapt to typed payload or reject with explicit typed error contract [mandatory - legacy compatibility gate]")]
+    public async Task LegacyResponder_GivenUnsupportedLegacyResponseType_ExpectedExplicitTypedErrorContract()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Legacy.InvalidResponse",
+            supportedOperation: "Legacy.Invalid.Op",
+            pluginTypeFullName: typeof(LegacyUnsupportedResponseResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Singleton);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddSingleton<LegacyUnsupportedResponseResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var response = await PostPluginOperationAsync(client, "Plugin.Legacy.InvalidResponse", "Legacy.Invalid.Op", "legacy-reject-correlation");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.NotNull(response.Body);
+        Assert.False(response.Body!.Success);
+        Assert.Equal(SyncResponseStatus.Rejected, response.Body.Status);
+        Assert.Equal("legacy-reject-correlation", response.Body.CorrelationId);
+
+        var payload = PluginOperationPayload.AsJsonElement(response.Body.Payload);
+        Assert.Equal("legacy-responder-unadaptable", payload.GetProperty("code").GetString());
+        Assert.True(payload.GetProperty("message").GetString()!.Contains("LegacyUnsupportedResponseResponder", StringComparison.Ordinal));
     }
 
     private sealed class FailingMachineTelemetryProvider : IMachineTelemetryPluginContract, IPluginOperationCatalog, ISyncResponder
@@ -1534,6 +1649,42 @@ public sealed class PluginWebApiEndpointTests
         }
     }
 
+    private sealed class LegacyStringSyncResponseResponder : IPluginContract, IPluginOperationCatalog, ISyncResponder<SyncRequest, SyncResponse<string>>
+    {
+        public PluginId PluginId => new("Plugin.Legacy.StringResponse");
+
+        public ContractName ContractName => new("Test.LegacyStringSyncResponseResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new("Legacy.Op")];
+
+        public SyncResponse<string> Handle(SyncRequest request)
+        {
+            return new SyncResponse<string>(
+                Success: true,
+                Payload: "legacy-adapted-payload",
+                Status: SyncResponseStatus.Success,
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class LegacyUnsupportedResponseResponder : IPluginContract, IPluginOperationCatalog, ISyncResponder<SyncRequest, string>
+    {
+        public PluginId PluginId => new("Plugin.Legacy.InvalidResponse");
+
+        public ContractName ContractName => new("Test.LegacyUnsupportedResponseResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public IReadOnlyCollection<OperationName> SupportedOperations => [new("Legacy.Invalid.Op")];
+
+        public string Handle(SyncRequest request)
+        {
+            return $"legacy-invalid:{request.Operation.Value}";
+        }
+    }
+
     private sealed class RequestBoundaryMarker
     {
         public string Id { get; } = Guid.NewGuid().ToString("N");
@@ -1568,8 +1719,83 @@ public sealed class PluginWebApiEndpointTests
 
             return new SyncResponse(
                 Success: true,
-                PayloadObject: new { mode = "typed", count = 2 },
+                Payload: new { mode = "typed", count = 2 },
                 CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class CorrelationFallbackTypedResponder : IPluginContract, ISyncResponder
+    {
+        private readonly string _expectedOperation;
+        private readonly bool _shouldSucceed;
+
+        public CorrelationFallbackTypedResponder(string pluginId, string expectedOperation, bool shouldSucceed)
+        {
+            PluginId = new PluginId(pluginId);
+            _expectedOperation = expectedOperation;
+            _shouldSucceed = shouldSucceed;
+        }
+
+        public PluginId PluginId { get; }
+
+        public ContractName ContractName => new("Test.CorrelationFallbackTypedResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            if (!string.Equals(request.Operation.Value, _expectedOperation, StringComparison.Ordinal))
+            {
+                return new SyncResponse(
+                    Success: false,
+                    Payload: new SyncErrorPayload(
+                        Code: "unsupported-operation",
+                        Message: "Operation not supported by this test responder."),
+                    Status: SyncResponseStatus.Rejected,
+                    CorrelationId: null);
+            }
+
+            if (_shouldSucceed)
+            {
+                return new SyncResponse(
+                    Success: true,
+                    Payload: new { path = "success", transport = "typed" },
+                    Status: SyncResponseStatus.Success,
+                    CorrelationId: null);
+            }
+
+            return new SyncResponse(
+                Success: false,
+                Payload: new { path = "rejected", transport = "typed" },
+                Status: SyncResponseStatus.Rejected,
+                CorrelationId: null);
+        }
+    }
+
+    private sealed class HostTelemetryTypedAdapterResponder : IPluginContract, ISyncResponder
+    {
+        private readonly HostTelemetryPlugin _inner;
+
+        public HostTelemetryTypedAdapterResponder(HostTelemetryPlugin inner)
+        {
+            _inner = inner;
+        }
+
+        public PluginId PluginId => _inner.PluginId;
+
+        public ContractName ContractName => _inner.ContractName;
+
+        public Version ContractVersion => _inner.ContractVersion;
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            var typed = _inner.Handle(request);
+            return new SyncResponse(
+                Success: typed.Success,
+                Payload: typed.Payload,
+                Status: typed.Status,
+                ServedFromFallback: typed.ServedFromFallback,
+                CorrelationId: typed.CorrelationId);
         }
     }
 }

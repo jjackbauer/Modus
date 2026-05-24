@@ -31,12 +31,12 @@ public sealed class BackwardCompatibilityTests
         Assert.True(type.IsSealed);
         var payloadProp = type.GetProperty(nameof(SyncResponse.Payload));
         Assert.NotNull(payloadProp);
-        Assert.Equal(typeof(string), payloadProp!.PropertyType);
+        Assert.Equal(typeof(object), payloadProp!.PropertyType);
 
         var response = new SyncResponse(Success: true, Payload: "hello");
         Assert.Equal("hello", response.Payload);
         Assert.True(response.Success);
-        Assert.Null(response.PayloadObject);
+        Assert.Same(response.Payload, response.PayloadObject);
     }
 
     [Fact]
@@ -44,11 +44,11 @@ public sealed class BackwardCompatibilityTests
     {
         var payload = new { metric = "cpu", value = 42 };
 
-        var response = new SyncResponse(Success: true, PayloadObject: payload);
+        var response = new SyncResponse(Success: true, Payload: payload);
 
         Assert.True(response.Success);
         Assert.NotNull(response.PayloadObject);
         Assert.Same(payload, response.PayloadObject);
-        Assert.Contains("\"metric\":\"cpu\"", response.Payload);
+        Assert.Equal(payload, response.Payload);
     }
 }

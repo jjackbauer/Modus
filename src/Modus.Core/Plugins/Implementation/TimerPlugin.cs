@@ -2,7 +2,8 @@ namespace Modus.Core.Plugins;
 
 using Modus.Core.Messaging;
 
-public sealed class TimerPlugin : PluginBase, ISyncResponder
+public sealed class TimerPlugin : PluginBase
+    , ISyncResponder<SyncRequest, SyncResponse<TimerOperationPayload>>
 {
     private readonly IReadOnlyList<IScheduledTimerTaskExtension> _scheduledTaskExtensions;
     private readonly IReadOnlyDictionary<string, IScheduledTimerTaskExtension> _operationOwners;
@@ -124,21 +125,36 @@ public sealed class TimerPlugin : PluginBase, ISyncResponder
         }
     }
 
-    public SyncResponse Handle(SyncRequest request)
+    public SyncResponse<TimerOperationPayload> Handle(SyncRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         if (!_operationOwners.TryGetValue(request.Operation.Value, out var owner))
         {
-            return new SyncResponse(
+            return new SyncResponse<TimerOperationPayload>(
                 Success: false,
-                Payload: "unsupported-operation",
+                Payload: TimerOperationPayload.FromError(
+                    code: "unsupported-operation",
+                    message: $"Operation '{request.Operation.Value}' is not supported by plugin '{PluginId.Value}'."),
                 Status: SyncResponseStatus.Rejected,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
         }
 
-        return owner.Handle(request);
+        var delegated = owner.Handle(request);
+        var payload = delegated.Payload switch
+        {
+            TimerOperationPayload timerPayload => timerPayload,
+            SyncErrorPayload syncError => new TimerOperationPayload(Payload: null, Error: syncError),
+            _ => TimerOperationPayload.FromResult(delegated.Payload)
+        };
+
+        return new SyncResponse<TimerOperationPayload>(
+            Success: delegated.Success,
+            Payload: payload,
+            Status: delegated.Status,
+            ServedFromFallback: delegated.ServedFromFallback,
+            CorrelationId: delegated.CorrelationId);
     }
 
     private async Task RunAutonomousLoopAsync(CancellationToken cancellationToken)

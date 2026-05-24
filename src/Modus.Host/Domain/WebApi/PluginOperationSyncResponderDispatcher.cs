@@ -40,7 +40,9 @@ public class PluginOperationSyncResponderDispatcher : ISyncResponder
         // No responder handled this operation
         return new SyncResponse(
             Success: false,
-            Payload: "operation-not-found",
+            Payload: new SyncErrorPayload(
+                Code: "operation-not-found",
+                Message: $"No sync responder handled operation '{request.Operation.Value}'."),
             Status: SyncResponseStatus.Rejected,
             CorrelationId: request.CorrelationId);
     }

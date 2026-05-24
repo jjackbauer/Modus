@@ -19,6 +19,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modus.Host\Modus.Host.csproj" />
     <ProjectReference Include="..\..\plugins\Plugin.Host.Telemetry.csproj" />
+    <ProjectReference Include="..\..\plugins\Plugin.Lifetime.Scoped.csproj" />
+    <ProjectReference Include="..\..\plugins\Plugin.Lifetime.Singleton.csproj" />
+    <ProjectReference Include="..\..\plugins\Plugin.Lifetime.Transient.csproj" />
     <ProjectReference Include="..\..\plugins\Plugin.Machine.Telemetry.csproj" />
   </ItemGroup>
 </Project>

@@ -34,15 +34,17 @@ public sealed class FiveSecondIntervalsTimerPrint : IScheduledTimerTaskExtension
         scheduler.ScheduleRecurring(new JobName(RecurringJobName), _recurringInterval, new OperationName(OperationNameValue));
     }
 
-    public SyncResponse Handle(SyncRequest request)
+    public SyncResponse<ISyncPayload> Handle(SyncRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         if (!string.Equals(request.Operation.Value, OperationNameValue, StringComparison.Ordinal))
         {
-            return new SyncResponse(
+            return new SyncResponse<ISyncPayload>(
                 Success: false,
-                Payload: "unsupported-operation",
+                Payload: new SyncErrorPayload(
+                    Code: "unsupported-operation",
+                    Message: $"Operation '{request.Operation.Value}' is not supported by '{OperationNameValue}'."),
                 Status: SyncResponseStatus.Rejected,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -51,9 +53,9 @@ public sealed class FiveSecondIntervalsTimerPrint : IScheduledTimerTaskExtension
         var timestamp = _utcNowProvider().ToString("O", CultureInfo.InvariantCulture);
         _writeLine(timestamp);
 
-        return new SyncResponse(
+        return new SyncResponse<ISyncPayload>(
             Success: true,
-            Payload: timestamp,
+            Payload: new TimerWriteCurrentTimeResult(timestamp),
             Status: SyncResponseStatus.Success,
             ServedFromFallback: false,
             CorrelationId: request.CorrelationId);

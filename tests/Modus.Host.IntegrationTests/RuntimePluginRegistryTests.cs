@@ -130,7 +130,6 @@ public sealed class RuntimePluginRegistryTests
             return new SyncResponse(
                 Success: true,
                 Payload: "ok",
-                PayloadObject: null,
                 Status: SyncResponseStatus.Success,
                 CorrelationId: request.CorrelationId);
         }

@@ -14,16 +14,10 @@ public class PluginOperationHttpResponse
     public bool Success { get; set; }
 
     /// <summary>
-    /// Freeform response payload as a string.
-    /// The schema and content are determined by the specific plugin operation.
+    /// Structured or primitive payload produced by the sync operation.
+    /// Serialized to JSON preserving object or primitive shape.
     /// </summary>
-    public string? Payload { get; set; }
-
-    /// <summary>
-    /// Optional structured payload for typed responses.
-    /// This preserves object shape for callers that need schema-aware processing.
-    /// </summary>
-    public object? PayloadObject { get; set; }
+    public object? Payload { get; set; }
 
     /// <summary>
     /// Status descriptor for the operation outcome.

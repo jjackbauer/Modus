@@ -32,8 +32,9 @@ public sealed class FiveSecondIntervalsTimerPrintTests
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal(new CorrelationId("corr-1"), response.CorrelationId);
-        Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), response.Payload);
-        Assert.Equal([response.Payload], writes);
+        var payload = Assert.IsType<TimerWriteCurrentTimeResult>(response.Payload);
+        Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), payload.TimestampUtcIso8601);
+        Assert.Equal([payload.TimestampUtcIso8601], writes);
     }
 
     [Fact]
@@ -45,7 +46,8 @@ public sealed class FiveSecondIntervalsTimerPrintTests
 
         Assert.False(response.Success);
         Assert.Equal(SyncResponseStatus.Rejected, response.Status);
-        Assert.Equal("unsupported-operation", response.Payload);
+        var error = Assert.IsType<SyncErrorPayload>(response.Payload);
+        Assert.Equal("unsupported-operation", error.Code);
         Assert.Equal(new CorrelationId("corr-unsupported"), response.CorrelationId);
     }
 

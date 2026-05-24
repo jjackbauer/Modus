@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Hosting;
 using Modus.Core.Messaging;
@@ -122,9 +123,8 @@ public class PluginEndpointMapper
                 {
                     Success = response.Success,
                     Payload = response.Payload,
-                    PayloadObject = response.PayloadObject,
                     Status = response.Status,
-                    CorrelationId = response.CorrelationId?.Value
+                    CorrelationId = response.CorrelationId?.Value ?? request.CorrelationId
                 };
 
                 // Determine HTTP status code based on SyncResponseStatus
@@ -145,7 +145,9 @@ public class PluginEndpointMapper
             var errorResponse = new PluginOperationHttpResponse
             {
                 Success = false,
-                Payload = ex.Message,
+                Payload = new SyncErrorPayload(
+                    Code: "dispatch-failure",
+                    Message: ex.Message),
                 Status = SyncResponseStatus.Failed,
                 CorrelationId = request.CorrelationId
             };
@@ -236,7 +238,20 @@ public class PluginEndpointMapper
 
         if (runtimeDispatchTargets.Length == 1)
         {
-            return ResolveRuntimeDispatchTarget(runtimeDispatchTargets[0], requestServices);
+            try
+            {
+                return ResolveRuntimeDispatchTarget(runtimeDispatchTargets[0], requestServices);
+            }
+            catch (InvalidOperationException)
+            {
+                var fallbackResponders = ResolveRuntimeContractResponders(snapshot, ownerPluginId);
+                if (fallbackResponders.Length == 1)
+                {
+                    return new ResolvedResponderLease(fallbackResponders[0], scope: null);
+                }
+
+                throw;
+            }
         }
 
         if (runtimeDispatchTargets.Length > 1)
@@ -245,10 +260,7 @@ public class PluginEndpointMapper
                 $"Multiple runtime dispatch targets matched plugin '{ownerPluginId}'.");
         }
 
-        var runtimeResponders = snapshot.Contracts
-            .Where(contract => string.Equals(contract.PluginId.Value, ownerPluginId, StringComparison.Ordinal))
-            .OfType<ISyncResponder>()
-            .ToArray();
+        var runtimeResponders = ResolveRuntimeContractResponders(snapshot, ownerPluginId);
 
         return runtimeResponders.Length switch
         {
@@ -258,6 +270,35 @@ public class PluginEndpointMapper
             _ => throw new InvalidOperationException(
                 $"Multiple ISyncResponder registrations matched plugin '{ownerPluginId}'.")
         };
+    }
+
+    private static ISyncResponder[] ResolveRuntimeContractResponders(RuntimePluginSnapshot snapshot, string ownerPluginId)
+    {
+        return snapshot.Contracts
+            .Where(contract => string.Equals(contract.PluginId.Value, ownerPluginId, StringComparison.Ordinal))
+            .Select(contract =>
+            {
+                if (contract is ISyncResponder responder)
+                {
+                    return responder;
+                }
+
+                var pluginContract = contract as IPluginContract;
+                if (pluginContract is null)
+                {
+                    return null;
+                }
+
+                return TryResolveTypedOrLegacyResponder(
+                        pluginContract,
+                        pluginContract.GetType().FullName ?? pluginContract.GetType().Name,
+                        out var adapted)
+                    ? adapted
+                    : null;
+            })
+            .Where(static responder => responder is not null)
+            .Cast<ISyncResponder>()
+            .ToArray();
     }
 
     private ResolvedResponderLease ResolveRuntimeDispatchTarget(
@@ -317,7 +358,8 @@ public class PluginEndpointMapper
     private static ISyncResponder ResolveResponderByTypeName(IServiceProvider serviceProvider, string pluginTypeFullName)
     {
         if (serviceProvider.TryResolvePluginByTypeName(pluginTypeFullName, out var resolvedPlugin)
-            && resolvedPlugin is ISyncResponder responder)
+            && resolvedPlugin is not null
+            && TryResolveTypedOrLegacyResponder(resolvedPlugin, pluginTypeFullName, out var responder))
         {
             return responder;
         }
@@ -330,27 +372,92 @@ public class PluginEndpointMapper
                 continue;
             }
 
-            if (!typeof(ISyncResponder).IsAssignableFrom(pluginType) || !typeof(IPluginContract).IsAssignableFrom(pluginType))
+            if (!typeof(IPluginContract).IsAssignableFrom(pluginType)
+                || !ImplementsSupportedSyncResponderContract(pluginType))
             {
-                break;
+                continue;
             }
 
             try
             {
                 var activated = ActivatorUtilities.CreateInstance(serviceProvider, pluginType);
-                if (activated is ISyncResponder activatedResponder)
+                if (activated is IPluginContract activatedPlugin
+                    && TryResolveTypedOrLegacyResponder(activatedPlugin, pluginTypeFullName, out var activatedResponder))
                 {
                     return activatedResponder;
                 }
             }
             catch
             {
-                break;
+                continue;
             }
         }
 
         throw new InvalidOperationException(
             $"No ISyncResponder could be resolved for plugin type '{pluginTypeFullName}'.");
+    }
+
+    private static bool ImplementsSupportedSyncResponderContract(Type pluginType)
+    {
+        if (typeof(ISyncResponder).IsAssignableFrom(pluginType))
+        {
+            return true;
+        }
+
+        return pluginType
+            .GetInterfaces()
+            .Any(static candidate =>
+                candidate.IsGenericType
+                && candidate.GetGenericTypeDefinition() == typeof(ISyncResponder<,>)
+                && candidate.GenericTypeArguments[0] == typeof(SyncRequest)
+                && candidate.GenericTypeArguments[1].IsGenericType
+                && candidate.GenericTypeArguments[1].GetGenericTypeDefinition() == typeof(SyncResponse<>));
+    }
+
+    private static bool TryResolveTypedOrLegacyResponder(IPluginContract plugin, string pluginTypeFullName, out ISyncResponder responder)
+    {
+        if (plugin is ISyncResponder typedResponder)
+        {
+            responder = typedResponder;
+            return true;
+        }
+
+        var legacySyncResponderInterface = plugin.GetType()
+            .GetInterfaces()
+            .FirstOrDefault(static candidate =>
+                candidate.IsGenericType
+                && candidate.GetGenericTypeDefinition() == typeof(ISyncResponder<,>)
+                && candidate.GenericTypeArguments[0] == typeof(SyncRequest));
+
+        if (legacySyncResponderInterface is null)
+        {
+            responder = null!;
+            return false;
+        }
+
+        var responseType = legacySyncResponderInterface.GenericTypeArguments[1];
+        var handleMethod = legacySyncResponderInterface.GetMethod(nameof(ISyncResponder<SyncRequest, SyncResponse<object>>.Handle));
+
+        if (handleMethod is null)
+        {
+            responder = new LegacyUnsupportedResponderAdapter(
+                pluginTypeFullName,
+                responseType,
+                "Legacy responder does not expose a callable Handle(SyncRequest) method.");
+            return true;
+        }
+
+        if (!responseType.IsGenericType || responseType.GetGenericTypeDefinition() != typeof(SyncResponse<>))
+        {
+            responder = new LegacyUnsupportedResponderAdapter(
+                pluginTypeFullName,
+                responseType,
+                $"Legacy responder returns '{responseType.FullName}', expected SyncResponse<TPayload>.");
+            return true;
+        }
+
+        responder = new LegacySyncResponseAdapter(plugin, handleMethod, pluginTypeFullName, responseType);
+        return true;
     }
 
     private void OnRuntimePluginRegistryChanged(object? sender, RuntimePluginRegistryChangedEventArgs change)
@@ -392,6 +499,106 @@ public class PluginEndpointMapper
         public void Dispose()
         {
             _scope?.Dispose();
+        }
+    }
+
+    private sealed class LegacySyncResponseAdapter : ISyncResponder
+    {
+        private readonly IPluginContract _plugin;
+        private readonly MethodInfo _handleMethod;
+        private readonly string _pluginTypeFullName;
+        private readonly Type _legacyResponseType;
+
+        public LegacySyncResponseAdapter(
+            IPluginContract plugin,
+            MethodInfo handleMethod,
+            string pluginTypeFullName,
+            Type legacyResponseType)
+        {
+            _plugin = plugin;
+            _handleMethod = handleMethod;
+            _pluginTypeFullName = pluginTypeFullName;
+            _legacyResponseType = legacyResponseType;
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            var response = _handleMethod.Invoke(_plugin, [request]);
+            if (response is null)
+            {
+                return LegacyUnsupportedResponderAdapter.Reject(
+                    request,
+                    _pluginTypeFullName,
+                    _legacyResponseType,
+                    "Legacy responder returned null instead of SyncResponse<TPayload>.");
+            }
+
+            var responseType = response.GetType();
+            var successProperty = responseType.GetProperty(nameof(SyncResponse.Success));
+            var payloadProperty = responseType.GetProperty(nameof(SyncResponse.Payload));
+            var statusProperty = responseType.GetProperty(nameof(SyncResponse.Status));
+            var correlationIdProperty = responseType.GetProperty(nameof(SyncResponse.CorrelationId));
+
+            if (successProperty is null || payloadProperty is null || statusProperty is null)
+            {
+                return LegacyUnsupportedResponderAdapter.Reject(
+                    request,
+                    _pluginTypeFullName,
+                    _legacyResponseType,
+                    "Legacy SyncResponse<TPayload> does not expose required response properties.");
+            }
+
+            var success = (bool)successProperty.GetValue(response)!;
+            var payload = payloadProperty.GetValue(response);
+            var status = (SyncResponseStatus)statusProperty.GetValue(response)!;
+            var correlation = correlationIdProperty?.GetValue(response) is CorrelationId correlationValue
+                ? correlationValue
+                : (CorrelationId?)null;
+
+            if (payload is null)
+            {
+                return LegacyUnsupportedResponderAdapter.Reject(
+                    request,
+                    _pluginTypeFullName,
+                    _legacyResponseType,
+                    "Legacy SyncResponse<TPayload> returned a null payload.");
+            }
+
+            return new SyncResponse(
+                Success: success,
+                Payload: payload,
+                Status: status,
+                CorrelationId: correlation ?? request.CorrelationId);
+        }
+    }
+
+    private sealed class LegacyUnsupportedResponderAdapter : ISyncResponder
+    {
+        private readonly string _pluginTypeFullName;
+        private readonly Type _responseType;
+        private readonly string _reason;
+
+        public LegacyUnsupportedResponderAdapter(string pluginTypeFullName, Type responseType, string reason)
+        {
+            _pluginTypeFullName = pluginTypeFullName;
+            _responseType = responseType;
+            _reason = reason;
+        }
+
+        public SyncResponse Handle(SyncRequest request)
+        {
+            return Reject(request, _pluginTypeFullName, _responseType, _reason);
+        }
+
+        public static SyncResponse Reject(SyncRequest request, string pluginTypeFullName, Type responseType, string reason)
+        {
+            return new SyncResponse(
+                Success: false,
+                Payload: new SyncErrorPayload(
+                    Code: "legacy-responder-unadaptable",
+                    Message: $"Plugin '{pluginTypeFullName}' cannot be adapted from legacy response type '{responseType.FullName}'. {reason}"),
+                Status: SyncResponseStatus.Rejected,
+                CorrelationId: request.CorrelationId);
         }
     }
 }

@@ -277,7 +277,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
         Assert.True(response!.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal("tutorial-op-success-corr", response.CorrelationId);
-        Assert.Equal("handled:Invocation.Echo", response.Payload);
+        Assert.Equal("handled:Invocation.Echo", PluginOperationPayload.AsStringValue(response.Payload));
     }
 
     [Fact]
@@ -324,7 +324,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
         Assert.False(rejectionBody!.Success);
         Assert.Equal(SyncResponseStatus.Rejected, rejectionBody.Status);
         Assert.Equal("tutorial-op-corr-rejected", rejectionBody.CorrelationId);
-        Assert.Equal("rejected:payload-policy", rejectionBody.Payload);
+        Assert.Equal("rejected:payload-policy", PluginOperationPayload.AsStringValue(rejectionBody.Payload));
     }
 
     [Fact]
@@ -397,7 +397,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
         Assert.False(dispatchBody!.Success);
         Assert.Equal(SyncResponseStatus.Failed, dispatchBody.Status);
         Assert.Equal("tutorial-failure-invalid-package-corr", dispatchBody.CorrelationId);
-        Assert.Contains("No runtime plugin operation owner found", dispatchBody.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(dispatchBody.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
         Assert.Equal(0, sideEffectProbe.InvocationCount);
 
         var diagnostics = statusRegistry.GetCurrent().Diagnostics;
@@ -440,7 +440,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
         Assert.False(body!.Success);
         Assert.Equal(SyncResponseStatus.Failed, body.Status);
         Assert.Equal("tutorial-failure-owner-mismatch-corr", body.CorrelationId);
-        Assert.Contains("No runtime plugin operation owner found", body.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(body.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
         Assert.Equal(0, ownedResponder.InvocationCount);
 
         var diagnostics = statusRegistry.GetCurrent().Diagnostics;
@@ -484,7 +484,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
         Assert.False(body!.Success);
         Assert.Equal(SyncResponseStatus.Failed, body.Status);
         Assert.Equal("tutorial-failure-unresolved-responder-corr", body.CorrelationId);
-        Assert.Contains("No ISyncResponder registered in request scope for plugin 'Plugin.Catalog.Only'.", body.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(body.Payload, "No ISyncResponder registered in request scope for plugin 'Plugin.Catalog.Only'.", StringComparison.Ordinal));
         Assert.Equal(0, unrelatedResponder.InvocationCount);
 
         var diagnostics = statusRegistry.GetCurrent().Diagnostics;

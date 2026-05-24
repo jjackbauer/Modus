@@ -133,10 +133,15 @@ public sealed class TimerAutonomousLoopWorkflowTests
             scheduler.ScheduleRecurring(new JobName($"{_operation}.Every5Seconds"), TimeSpan.FromSeconds(5), new OperationName(_operation));
         }
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<ISyncPayload> Handle(SyncRequest request)
         {
             HandleCalls++;
-            return new SyncResponse(Success: true, Payload: _operation, CorrelationId: request.CorrelationId);
+            return new SyncResponse<ISyncPayload>(
+                Success: true,
+                Payload: new TimerTestPayload(_operation),
+                CorrelationId: request.CorrelationId);
         }
     }
+
+    private sealed record TimerTestPayload(string Value) : ISyncPayload;
 }

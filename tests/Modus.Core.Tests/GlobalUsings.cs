@@ -1,0 +1,2 @@
+global using ISyncResponder = Modus.Core.Messaging.ISyncResponder<Modus.Core.Messaging.SyncRequest, Modus.Core.Messaging.SyncResponse<object>>;
+global using SyncResponse = Modus.Core.Messaging.SyncResponse<object>;

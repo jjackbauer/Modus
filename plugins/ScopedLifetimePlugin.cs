@@ -11,7 +11,7 @@ namespace Modus.SamplePlugins.Lifetime;
 public sealed class ScopedLifetimePlugin :
     ScopedPlugin<ScopedLifetimePlugin>,
     IEventSubscriber,
-    ISyncResponder
+    ISyncResponder<SyncRequest, SyncResponse<LifetimeOperationPayload>>
 {
     private static int _totalCreated;
 
@@ -71,15 +71,17 @@ public sealed class ScopedLifetimePlugin :
         ArgumentNullException.ThrowIfNull(publisher);
     }
 
-    public SyncResponse Handle(SyncRequest request)
+    public SyncResponse<LifetimeOperationPayload> Handle(SyncRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         if (!string.Equals(request.Operation.Value, OperationNameValue, StringComparison.Ordinal))
         {
-            return new SyncResponse(
+            return new SyncResponse<LifetimeOperationPayload>(
                 Success: false,
-                Payload: "unsupported-operation",
+                Payload: LifetimeOperationPayload.FromError(
+                    code: "unsupported-operation",
+                    message: $"Operation '{request.Operation.Value}' is not supported by '{OperationNameValue}'."),
                 Status: SyncResponseStatus.Rejected,
                 CorrelationId: request.CorrelationId);
         }
@@ -87,9 +89,14 @@ public sealed class ScopedLifetimePlugin :
         var count = Interlocked.Increment(ref _invocationCount);
         Console.WriteLine($"lifetime-demo plugin={PluginId} lifetime=Scoped instance-id={InstanceId:N} creation-index={_creationIndex} invocation={count}");
 
-        return new SyncResponse(
+        return new SyncResponse<LifetimeOperationPayload>(
             Success: true,
-            Payload: $"lifetime=Scoped instance-id={InstanceId:N} invocation={count}",
+            Payload: LifetimeOperationPayload.FromResult(new LifetimeOperationResult(
+                Lifetime: "Scoped",
+                InstanceId: InstanceId.ToString("N"),
+                CreationIndex: _creationIndex,
+                Invocation: count)),
             CorrelationId: request.CorrelationId);
     }
+
 }

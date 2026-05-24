@@ -139,7 +139,7 @@ public sealed class PluginLoadingTutorialRuntimeValidationTests
         Assert.False(failureInvocationPayload!.Success);
         Assert.Equal(SyncResponseStatus.Failed, failureInvocationPayload.Status);
         Assert.Equal("tutorial-runtime-validation-failure-corr", failureInvocationPayload.CorrelationId);
-        Assert.Contains("No runtime plugin operation owner found", failureInvocationPayload.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(failureInvocationPayload.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
     }
 
     private static MultipartFormDataContent BuildUploadRequest(byte[] packageBytes, byte[] signatureBytes)

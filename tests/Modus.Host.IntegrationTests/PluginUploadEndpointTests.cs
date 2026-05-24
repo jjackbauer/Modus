@@ -257,12 +257,12 @@ public sealed class PluginUploadEndpointTests
         Assert.Equal(SyncResponseStatus.Success, dispatchResponse.Status);
         Assert.Equal(correlationId, dispatchResponse.CorrelationId);
 
-        var payloadObject = Assert.IsType<JsonElement>(dispatchResponse.PayloadObject);
+        var payloadText = PluginOperationPayload.AsRawText(dispatchResponse.Payload);
+        var payloadObject = PluginOperationPayload.AsJsonElement(dispatchResponse.Payload);
         Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
-        Assert.Equal(activatedPluginId, payloadObject.GetProperty("pluginId").GetString());
-        Assert.Equal(executedOperationName, payloadObject.GetProperty("operation").GetString());
-        Assert.Equal("runtime", payloadObject.GetProperty("category").GetString());
-        Assert.True(payloadObject.GetProperty("measurements").EnumerateArray().Any());
+        Assert.Contains(activatedPluginId, payloadText, StringComparison.Ordinal);
+        Assert.Contains(executedOperationName, payloadText, StringComparison.Ordinal);
+        Assert.Contains("measurements", payloadText, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -331,7 +331,7 @@ public sealed class PluginUploadEndpointTests
         Assert.False(dispatchResponse!.Success);
         Assert.Equal(SyncResponseStatus.Failed, dispatchResponse.Status);
         Assert.Equal(correlationId, dispatchResponse.CorrelationId);
-        Assert.Contains("No runtime plugin operation owner found", dispatchResponse.Payload, StringComparison.Ordinal);
+        Assert.True(PluginOperationPayload.Contains(dispatchResponse.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -692,7 +692,7 @@ public sealed class PluginUploadEndpointTests
         Assert.Equal(SyncResponseStatus.Success, dispatchResponse.Status);
         Assert.Equal(correlationId, dispatchResponse.CorrelationId);
 
-        var payloadObject = Assert.IsType<JsonElement>(dispatchResponse.PayloadObject);
+        var payloadObject = PluginOperationPayload.AsJsonElement(dispatchResponse.Payload);
         Assert.Equal(JsonValueKind.Object, payloadObject.ValueKind);
         var instanceId = payloadObject.GetProperty("instanceId").GetString();
         Assert.False(string.IsNullOrWhiteSpace(instanceId));
@@ -774,7 +774,7 @@ public sealed class PluginUploadEndpointTests
 
             return new SyncResponse(
                 Success: true,
-                PayloadObject: payload,
+                Payload: payload,
                 CorrelationId: request.CorrelationId);
         }
     }

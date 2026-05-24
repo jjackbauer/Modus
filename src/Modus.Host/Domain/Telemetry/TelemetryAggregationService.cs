@@ -58,15 +58,12 @@ internal sealed class TelemetryAggregationService
         var results = new List<TelemetryResult>(providers.Count);
         foreach (var provider in providers)
         {
-            var responder = provider as ISyncResponder
-                ?? throw new InvalidOperationException(
-                    $"Telemetry provider '{provider.PluginId.Value}' must implement {nameof(ISyncResponder)}.");
             var operationCatalog = provider as IPluginOperationCatalog
                 ?? throw new InvalidOperationException(
                     $"Telemetry provider '{provider.PluginId.Value}' must implement {nameof(IPluginOperationCatalog)}.");
 
             var operation = ResolveTelemetryOperation(operationCatalog, expectedOperationPrefix, provider.PluginId);
-            var response = responder.Handle(SyncRequest.ForStandardPath(operation, correlationId));
+            var response = InvokeProvider(provider, operation, correlationId);
 
             if (!response.Success || response.Status != SyncResponseStatus.Success)
             {
@@ -74,16 +71,85 @@ internal sealed class TelemetryAggregationService
                     $"Telemetry provider '{provider.PluginId.Value}' failed with status '{response.Status}'.");
             }
 
-            if (response.PayloadObject is not TelemetryResult telemetry)
+            var telemetry = response.Payload switch
             {
-                throw new InvalidOperationException(
-                    $"Telemetry provider '{provider.PluginId.Value}' did not return a {nameof(TelemetryResult)} payload.");
-            }
+                TelemetryResult direct => direct,
+                TelemetryOperationPayload { Result: not null } envelope => envelope.Result,
+                _ => throw new InvalidOperationException(
+                    $"Telemetry provider '{provider.PluginId.Value}' did not return a {nameof(TelemetryResult)} payload.")
+            };
 
             results.Add(telemetry);
         }
 
         return results;
+    }
+
+    private static SyncResponse InvokeProvider<TProvider>(
+        TProvider provider,
+        OperationName operation,
+        CorrelationId? correlationId)
+        where TProvider : IPluginContract
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+
+        var request = SyncRequest.ForStandardPath(operation, correlationId);
+
+        if (provider is ISyncResponder responder)
+        {
+            return responder.Handle(request);
+        }
+
+        var typedResponderInterface = provider.GetType()
+            .GetInterfaces()
+            .FirstOrDefault(static candidate =>
+                candidate.IsGenericType
+                && candidate.GetGenericTypeDefinition() == typeof(ISyncResponder<,>)
+                && candidate.GenericTypeArguments[0] == typeof(SyncRequest));
+
+        if (typedResponderInterface is null)
+        {
+            throw new InvalidOperationException(
+                $"Telemetry provider '{provider.PluginId.Value}' must implement {nameof(ISyncResponder)} or a typed sync responder contract.");
+        }
+
+        var handleMethod = typedResponderInterface.GetMethod("Handle", [typeof(SyncRequest)]);
+        if (handleMethod is null)
+        {
+            throw new InvalidOperationException(
+                $"Telemetry provider '{provider.PluginId.Value}' does not expose a callable Handle(SyncRequest) method.");
+        }
+
+        var typedResponse = handleMethod.Invoke(provider, [request])
+            ?? throw new InvalidOperationException(
+                $"Telemetry provider '{provider.PluginId.Value}' returned null response.");
+
+        var responseType = typedResponse.GetType();
+        var successProperty = responseType.GetProperty(nameof(SyncResponse.Success));
+        var payloadProperty = responseType.GetProperty(nameof(SyncResponse.Payload));
+        var statusProperty = responseType.GetProperty(nameof(SyncResponse.Status));
+        var correlationProperty = responseType.GetProperty(nameof(SyncResponse.CorrelationId));
+
+        if (successProperty is null || payloadProperty is null || statusProperty is null)
+        {
+            throw new InvalidOperationException(
+                $"Telemetry provider '{provider.PluginId.Value}' returned an unsupported typed response contract.");
+        }
+
+        var success = (bool)successProperty.GetValue(typedResponse)!;
+        var payload = payloadProperty.GetValue(typedResponse)
+            ?? throw new InvalidOperationException(
+                $"Telemetry provider '{provider.PluginId.Value}' returned null payload.");
+        var status = (SyncResponseStatus)statusProperty.GetValue(typedResponse)!;
+        var correlation = correlationProperty?.GetValue(typedResponse) is CorrelationId correlationValue
+            ? correlationValue
+            : (CorrelationId?)null;
+
+        return new SyncResponse(
+            Success: success,
+            Payload: payload,
+            Status: status,
+            CorrelationId: correlation ?? request.CorrelationId);
     }
 
     private static OperationName ResolveTelemetryOperation(

@@ -71,7 +71,7 @@ public sealed class PluginFolderWatcherRuntimeRegistryTests
             Assert.True(response!.Success);
             Assert.Equal(SyncResponseStatus.Success, response.Status);
             Assert.Equal("folder-hot-load", response.CorrelationId);
-            Assert.Contains("folder-hot-load-dispatch-ok", response.Payload, StringComparison.Ordinal);
+            Assert.True(PluginOperationPayload.Contains(response.Payload, "folder-hot-load-dispatch-ok", StringComparison.Ordinal));
         }
         finally
         {
@@ -173,7 +173,7 @@ public sealed class PluginFolderWatcherRuntimeRegistryTests
             Assert.True(preDeleteResponse!.Success);
             Assert.Equal(SyncResponseStatus.Success, preDeleteResponse.Status);
             Assert.Equal("folder-offboard-pre", preDeleteResponse.CorrelationId);
-            Assert.Contains("folder-offboard-dispatch-ok", preDeleteResponse.Payload, StringComparison.Ordinal);
+            Assert.True(PluginOperationPayload.Contains(preDeleteResponse.Payload, "folder-offboard-dispatch-ok", StringComparison.Ordinal));
 
             File.Delete(projectPath);
             var offboarding = watcher.OnProjectDeleted(projectPath);
@@ -209,7 +209,7 @@ public sealed class PluginFolderWatcherRuntimeRegistryTests
             Assert.False(postDeleteResponse!.Success);
             Assert.Equal(SyncResponseStatus.Failed, postDeleteResponse.Status);
             Assert.Equal("folder-offboard-post", postDeleteResponse.CorrelationId);
-            Assert.Contains("No runtime plugin operation owner found", postDeleteResponse.Payload, StringComparison.Ordinal);
+            Assert.True(PluginOperationPayload.Contains(postDeleteResponse.Payload, "No runtime plugin operation owner found", StringComparison.Ordinal));
         }
         finally
         {

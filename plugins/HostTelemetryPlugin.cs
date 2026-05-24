@@ -12,7 +12,7 @@ public sealed class HostTelemetryPlugin :
     SingletonPlugin<HostTelemetryPlugin>,
     IHostTelemetryPluginContract,
     IEventSubscriber,
-    ISyncResponder
+    ISyncResponder<SyncRequest, SyncResponse<TelemetryOperationPayload>>
 {
     private readonly object _sync = new();
     private TimeSpan _lastCpuTime;
@@ -70,24 +70,26 @@ public sealed class HostTelemetryPlugin :
         ArgumentNullException.ThrowIfNull(publisher);
     }
 
-    public SyncResponse Handle(SyncRequest request)
+    public SyncResponse<TelemetryOperationPayload> Handle(SyncRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         if (!string.Equals(request.Operation.Value, OperationNameValue, StringComparison.Ordinal))
         {
-            return new SyncResponse(
+            return new SyncResponse<TelemetryOperationPayload>(
                 Success: false,
-                Payload: "unsupported-operation",
+                Payload: TelemetryOperationPayload.FromError(
+                    code: "unsupported-operation",
+                    message: $"Operation '{request.Operation.Value}' is not supported by '{OperationNameValue}'."),
                 Status: SyncResponseStatus.Rejected,
                 CorrelationId: request.CorrelationId);
         }
 
         var snapshot = BuildTelemetryResult();
         Console.WriteLine($"plugin-telemetry plugin={PluginId} operation={OperationNameValue} payload={JsonSerializer.Serialize(snapshot)}");
-        return new SyncResponse(
+        return new SyncResponse<TelemetryOperationPayload>(
             Success: true,
-            PayloadObject: snapshot,
+            Payload: TelemetryOperationPayload.FromResult(snapshot),
             CorrelationId: request.CorrelationId);
     }
 

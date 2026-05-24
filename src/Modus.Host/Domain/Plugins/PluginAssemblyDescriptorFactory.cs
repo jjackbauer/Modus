@@ -46,13 +46,14 @@ public sealed class PluginAssemblyDescriptorFactory
             Version: version,
             Capabilities: [new CapabilityName($"Cap.{pluginId}")],
             DependsOn: [],
+            DeclaredOperations: dispatchMetadata.DeclaredOperations,
             AssemblyPath: fullPath,
             AssemblyFileSizeBytes: fileSize,
             RuntimePluginTypeFullName: dispatchMetadata.PluginTypeFullName,
             DeclaredServiceLifetime: dispatchMetadata.ServiceLifetime);
     }
 
-    private static (string? PluginTypeFullName, PluginServiceLifetime? ServiceLifetime) TryResolveDispatchMetadata(string assemblyPath)
+    private static (string? PluginTypeFullName, PluginServiceLifetime? ServiceLifetime, IReadOnlyList<OperationName> DeclaredOperations) TryResolveDispatchMetadata(string assemblyPath)
     {
         try
         {
@@ -62,20 +63,76 @@ public sealed class PluginAssemblyDescriptorFactory
                 .Where(static type =>
                     type is { IsAbstract: false, IsInterface: false }
                     && typeof(IPluginContract).IsAssignableFrom(type)
-                    && typeof(ISyncResponder).IsAssignableFrom(type))
+                    && ImplementsSyncResponderContract(type))
                 .OrderBy(static type => type.FullName, StringComparer.Ordinal)
                 .FirstOrDefault();
 
             if (pluginType is null)
             {
-                return (null, null);
+                return (null, null, []);
             }
 
-            return (pluginType.FullName, TryResolveDeclaredServiceLifetime(pluginType));
+            return (
+                pluginType.FullName,
+                TryResolveDeclaredServiceLifetime(pluginType),
+                TryResolveDeclaredOperations(pluginType));
         }
         catch
         {
-            return (null, null);
+            return (null, null, []);
+        }
+    }
+
+    private static bool ImplementsSyncResponderContract(Type pluginType)
+    {
+        if (typeof(ISyncResponder).IsAssignableFrom(pluginType))
+        {
+            return true;
+        }
+
+        return pluginType
+            .GetInterfaces()
+            .Any(static candidate =>
+                candidate.IsGenericType
+                && candidate.GetGenericTypeDefinition() == typeof(ISyncResponder<,>)
+                && candidate.GenericTypeArguments[0] == typeof(SyncRequest)
+                && candidate.GenericTypeArguments[1].IsGenericType
+                && candidate.GenericTypeArguments[1].GetGenericTypeDefinition() == typeof(SyncResponse<>));
+    }
+
+    private static IReadOnlyList<OperationName> TryResolveDeclaredOperations(Type pluginType)
+    {
+        object? pluginInstance = null;
+
+        try
+        {
+            pluginInstance = Activator.CreateInstance(pluginType);
+            if (pluginInstance is not IPluginOperationCatalog catalog)
+            {
+                return [];
+            }
+
+            return catalog.SupportedOperations
+                .Where(static operation => !string.IsNullOrWhiteSpace(operation.Value))
+                .DistinctBy(static operation => operation.Value, StringComparer.Ordinal)
+                .OrderBy(static operation => operation.Value, StringComparer.Ordinal)
+                .ToArray();
+        }
+        catch
+        {
+            return [];
+        }
+        finally
+        {
+            switch (pluginInstance)
+            {
+                case IAsyncDisposable asyncDisposable:
+                    asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    break;
+                case IDisposable disposable:
+                    disposable.Dispose();
+                    break;
+            }
         }
     }
 
