@@ -6,6 +6,7 @@ using Modus.Core.Plugins;
 using Modus.Host.Domain.Hosting;
 using Modus.Host.Domain.WebApi;
 using Modus.Host.Plugins.Compliance;
+using System.Text.RegularExpressions;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
@@ -15,6 +16,33 @@ namespace Modus.Host.IntegrationTests;
 public sealed class PluginLoadingTutorialBehaviorProofComplianceTests
 {
     private const string ChecklistItem = "Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]";
+    private const string RequirementsDocRelativePath = ".github/requirements/all the projects.md";
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
+    public void ValidatePlannedIntegrationTests_GivenAllProjectsRequirements_ExpectedAtLeastOneRuntimeProofPathPerItem()
+    {
+        var document = ReadRepositoryFile(RequirementsDocRelativePath);
+        var testPlanSection = GetTestPlanSection(document);
+        var plannedTestCount = 0;
+
+        for (var index = 0; index < testPlanSection.Length; index++)
+        {
+            var line = testPlanSection[index];
+            if (!Regex.IsMatch(line, @"^\d+\.\s+`.+`", RegexOptions.CultureInvariant))
+            {
+                continue;
+            }
+
+            plannedTestCount++;
+            var assumptionLine = FindAssumptionLine(testPlanSection, index + 1);
+
+            Assert.False(string.IsNullOrWhiteSpace(assumptionLine));
+            Assert.True(HasBehaviorProofSignal(assumptionLine!), $"Assumption missing behavior-proof signal: {assumptionLine}");
+        }
+
+        Assert.True(plannedTestCount > 0);
+    }
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
@@ -171,5 +199,92 @@ public sealed class PluginLoadingTutorialBehaviorProofComplianceTests
                 Payload: payload,
                 CorrelationId: request.CorrelationId);
         }
+    }
+
+    private static string[] GetTestPlanSection(string document)
+    {
+        var lines = document.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var testPlanStart = Array.FindIndex(lines, static line => string.Equals(line.Trim(), "## Test Plan", StringComparison.Ordinal));
+        Assert.True(testPlanStart >= 0);
+
+        var nextSection = Array.FindIndex(lines, testPlanStart + 1, static line => line.StartsWith("---", StringComparison.Ordinal));
+        if (nextSection < 0)
+        {
+            nextSection = lines.Length;
+        }
+
+        var length = nextSection - (testPlanStart + 1);
+        return lines.Skip(testPlanStart + 1).Take(length).ToArray();
+    }
+
+    private static string? FindAssumptionLine(string[] lines, int startIndex)
+    {
+        for (var index = startIndex; index < lines.Length; index++)
+        {
+            var current = lines[index].Trim();
+            if (current.StartsWith("### ", StringComparison.Ordinal)
+                || Regex.IsMatch(current, @"^\d+\.\s+`.+`", RegexOptions.CultureInvariant))
+            {
+                return null;
+            }
+
+            if (current.StartsWith("*Assumption*:", StringComparison.Ordinal))
+            {
+                return current;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool HasBehaviorProofSignal(string assumptionLine)
+    {
+        if (assumptionLine.Contains("metadata-only", StringComparison.OrdinalIgnoreCase)
+            && (assumptionLine.Contains("reject", StringComparison.OrdinalIgnoreCase)
+                || assumptionLine.Contains("cannot", StringComparison.OrdinalIgnoreCase)
+                || assumptionLine.Contains("noncompliant", StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+
+        var tokens = new[]
+        {
+            "runtime",
+            "live",
+            "execution",
+            "lifecycle",
+            "api",
+            "integration",
+            "dispatch",
+            "endpoint",
+            "scope",
+            "schedule",
+            "deterministic",
+            "rejection",
+            "correlation",
+            "behavior",
+            "proof",
+            "gate"
+        };
+
+        return tokens.Any(token => assumptionLine.Contains(token, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string ReadRepositoryFile(string relativePath)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var solutionPath = Path.Combine(directory.FullName, "Modus.slnx");
+            var filePath = Path.Combine(directory.FullName, relativePath);
+            if (File.Exists(solutionPath) && File.Exists(filePath))
+            {
+                return File.ReadAllText(filePath);
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException($"Could not locate repository root containing Modus.slnx and {relativePath}.");
     }
 }

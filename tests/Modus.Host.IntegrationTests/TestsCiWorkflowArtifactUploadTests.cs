@@ -48,7 +48,10 @@ public sealed class TestsCiWorkflowArtifactUploadTests
 
         var simulation = SimulateArtifactUploadEligibility(
             steps,
-            static step => !(step.Run?.Contains("Modus.Host.IntegrationTests", StringComparison.Ordinal) ?? false));
+            static step => !string.Equals(
+                step.Run,
+                "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Host.IntegrationTests.trx\"",
+                StringComparison.Ordinal));
 
         Assert.True(simulation.UploadAttempted);
         Assert.False(simulation.JobSucceeded);

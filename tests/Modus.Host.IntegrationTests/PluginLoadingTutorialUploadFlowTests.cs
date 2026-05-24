@@ -110,6 +110,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
 
     [Fact]
     [Trait("ChecklistItem", "Document activation verification flow using management status and capabilities endpoints, including owner uniqueness and activated-operation visibility checks [depends on upload flow]")]
+    [Trait("ChecklistItem", "Add endpoint integration proofs for owner uniqueness, business payload semantics, correlation continuity, and deterministic isolation after failed load/remove [depends on DI lifetime integration proofs]")]
     public async Task ActivationVerification_GivenSuccessfulUpload_ExpectedStatusEndpointShowsActivatedPlugin()
     {
         var packageBytes = CreateArchiveWithPluginAssembly();
@@ -247,6 +248,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
 
     [Fact]
     [Trait("ChecklistItem", "Document runtime operation invocation through POST /api/{pluginId}/{operation} with payload and correlation continuity checks [depends on activation verification]")]
+    [Trait("ChecklistItem", "Add endpoint integration proofs for owner uniqueness, business payload semantics, correlation continuity, and deterministic isolation after failed load/remove [depends on DI lifetime integration proofs]")]
     public async Task OperationInvocation_GivenActivePluginOperation_ExpectedDispatchReturnsBusinessSemanticSuccessPayload()
     {
         var plugin = new InvocationTutorialResponder("Plugin.Invocation.Tutorial", "Invocation.Echo");
@@ -282,6 +284,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
 
     [Fact]
     [Trait("ChecklistItem", "Document runtime operation invocation through POST /api/{pluginId}/{operation} with payload and correlation continuity checks [depends on activation verification]")]
+    [Trait("ChecklistItem", "Add endpoint integration proofs for owner uniqueness, business payload semantics, correlation continuity, and deterministic isolation after failed load/remove [depends on DI lifetime integration proofs]")]
     public async Task OperationInvocation_GivenRequestCorrelationId_ExpectedResponseCorrelationMatchesRequestOnSuccessAndRejection()
     {
         var plugin = new InvocationTutorialResponder("Plugin.Invocation.Tutorial", "Invocation.Echo");
@@ -329,6 +332,7 @@ public sealed class PluginLoadingTutorialUploadFlowTests
 
     [Fact]
     [Trait("ChecklistItem", "Document deterministic failure tutorial for invalid package, owner mismatch, and unresolved responder scenarios with isolation guarantees and no side-effect execution [depends on upload flow and runtime invocation]")]
+    [Trait("ChecklistItem", "Add endpoint integration proofs for owner uniqueness, business payload semantics, correlation continuity, and deterministic isolation after failed load/remove [depends on DI lifetime integration proofs]")]
     public async Task FailureTutorial_GivenInvalidPackageUpload_ExpectedDeterministicFailureIsolationAndNoSideEffectExecution()
     {
         var packageBytes = CreateArchiveWithoutAssemblies();

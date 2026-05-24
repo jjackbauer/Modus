@@ -12,9 +12,10 @@ using Xunit;
 
 namespace Modus.Host.IntegrationTests;
 
+[Trait("MigrationRegression", "true")]
 public sealed class PluginLoadingTutorialDiLifetimeVerificationTests
 {
-    private const string ChecklistItem = "Document DI lifetime verification walkthrough for singleton, scoped, and transient plugin responders under repeated live API requests [depends on runtime operation invocation]";
+    private const string ChecklistItem = "Add integration proofs for DI lifetime behavior (singleton/shared, scoped/per-scope, transient/per-resolution) under live host execution paths [depends on schedule migration and base-class migration]";
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]

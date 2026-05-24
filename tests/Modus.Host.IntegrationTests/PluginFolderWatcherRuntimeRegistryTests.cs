@@ -13,6 +13,7 @@ using Xunit;
 
 namespace Modus.Host.IntegrationTests;
 
+[Trait("MigrationRegression", "true")]
 public sealed class PluginFolderWatcherRuntimeRegistryTests
 {
     [Fact]
@@ -128,6 +129,7 @@ public sealed class PluginFolderWatcherRuntimeRegistryTests
 
     [Fact]
     [Trait("ChecklistItem", "Verify folder offboarding integration flow: delete onboarded project, process watcher event, assert runtime snapshot eviction and deterministic unload diagnostics [depends on plugin unload path]")]
+    [Trait("ChecklistItem", "Add endpoint integration proofs for owner uniqueness, business payload semantics, correlation continuity, and deterministic isolation after failed load/remove [depends on DI lifetime integration proofs]")]
     [Trait("AuditArtifact", "iterative-implementation-folder-offboarding-assurance-2026-05-22")]
     public async Task PluginFolderWatcher_GivenOnboardedProjectDeleted_ExpectedSnapshotEvictionDiagnosticsAndDispatchMiss()
     {

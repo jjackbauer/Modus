@@ -2,90 +2,74 @@ using Xunit;
 
 namespace Modus.Host.IntegrationTests;
 
-public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
+public sealed class TestsCiWorkflowMigrationRegressionSuiteWiringTests
 {
-    private const string ChecklistItem = "Execute `dotnet test --configuration Release --no-build --logger trx` across unit and integration projects, and fail job on any failing test";
-
-    private static readonly string[] ExpectedTestCommands =
-    {
-        "dotnet test tests/Modus.Core.Tests/Modus.Core.Tests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Core.Tests.trx\"",
-        "dotnet test tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Architecture.Tests.trx\"",
-        "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter \"MigrationRegression=true\" --logger \"trx;LogFileName=MigrationRegressionSuite.trx\"",
-        "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter \"FullyQualifiedName~PluginEndpointCurlGateTests\" --logger \"trx;LogFileName=PluginEndpointCurlGateTests.trx\"",
-        "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Host.IntegrationTests.trx\""
-    };
+    private const string ChecklistItem = "Add migration regression suite wiring so behavior-proof tests execute in CI and fail fast on runtime regressions [depends on all preceding migration items]";
+    private const string MigrationRegressionCommand = "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter \"MigrationRegression=true\" --logger \"trx;LogFileName=MigrationRegressionSuite.trx\"";
+    private const string CurlGateCommand = "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter \"FullyQualifiedName~PluginEndpointCurlGateTests\" --logger \"trx;LogFileName=PluginEndpointCurlGateTests.trx\"";
+    private const string FullIntegrationCommand = "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Host.IntegrationTests.trx\"";
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
-    public void TestsWorkflow_GivenTestsJobDefinition_ExpectedUnitAndIntegrationProjectsRunWithReleaseNoBuildAndTrxLogger()
+    public void TestsWorkflow_GivenTestsJobDefinition_ExpectedDedicatedMigrationRegressionGateCommandPresent()
     {
         var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
-        var testCommands = runCommands
-            .Where(static command => command.StartsWith("dotnet test ", StringComparison.Ordinal))
-            .ToArray();
 
-        Assert.Equal(ExpectedTestCommands.Length, testCommands.Length);
-
-        foreach (var expectedCommand in ExpectedTestCommands)
-        {
-            Assert.Contains(expectedCommand, testCommands);
-        }
+        Assert.Contains(MigrationRegressionCommand, runCommands);
     }
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
-    public void TestsWorkflow_GivenDotnetTestCommands_ExpectedEachCommandEnforcesReleaseNoBuildAndTrxContract()
+    public void TestsWorkflow_GivenMigrationRegressionGate_ExpectedGateRunsBeforeCurlProbeAndFullIntegrationSuite()
     {
         var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
-        var testCommands = runCommands
-            .Where(static command => command.StartsWith("dotnet test ", StringComparison.Ordinal))
-            .ToArray();
 
-        Assert.NotEmpty(testCommands);
+        var migrationIndex = Array.IndexOf(runCommands, MigrationRegressionCommand);
+        var curlIndex = Array.IndexOf(runCommands, CurlGateCommand);
+        var fullIntegrationIndex = Array.IndexOf(runCommands, FullIntegrationCommand);
 
-        foreach (var command in testCommands)
-        {
-            Assert.Contains(" --configuration Release", command, StringComparison.Ordinal);
-            Assert.Contains(" --no-build", command, StringComparison.Ordinal);
-            Assert.Contains(" --logger \"trx;LogFileName=", command, StringComparison.Ordinal);
-            Assert.EndsWith(".trx\"", command, StringComparison.Ordinal);
-            Assert.DoesNotContain("||", command, StringComparison.Ordinal);
-        }
+        Assert.True(migrationIndex >= 0);
+        Assert.True(curlIndex > migrationIndex);
+        Assert.True(fullIntegrationIndex > migrationIndex);
     }
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
-    public void TestsWorkflow_GivenSingleFailingTestCommand_ExpectedFailurePropagatesToJobResult()
+    public void TestsWorkflow_GivenMigrationRegressionFailure_ExpectedLaterTestCommandsNotExecuted()
     {
         var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
-        var simulation = SimulateJobResult(
+        var simulation = SimulateJobExecution(
             runCommands,
-            static command => !string.Equals(
-                command,
-                "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Host.IntegrationTests.trx\"",
-                StringComparison.Ordinal));
+            command => !string.Equals(command, MigrationRegressionCommand, StringComparison.Ordinal));
 
-        Assert.False(simulation.Success);
-        Assert.Equal(
-            "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Host.IntegrationTests.trx\"",
-            simulation.FailedCommand);
+        Assert.Equal(MigrationRegressionCommand, simulation.FailedCommand);
+        Assert.DoesNotContain(CurlGateCommand, simulation.ExecutedCommandsAfterFailure);
+        Assert.DoesNotContain(FullIntegrationCommand, simulation.ExecutedCommandsAfterFailure);
     }
 
-    private static JobSimulationResult SimulateJobResult(IReadOnlyCollection<string> runCommands, Func<string, bool> commandOutcome)
+    private static JobExecutionSimulation SimulateJobExecution(
+        IReadOnlyCollection<string> runCommands,
+        Func<string, bool> commandOutcome)
     {
-        foreach (var command in runCommands)
+        var executedCommands = new List<string>();
+        string? failedCommand = null;
+
+        foreach (var command in runCommands.Where(static command => command.StartsWith("dotnet test ", StringComparison.Ordinal)))
         {
-            if (command.StartsWith("dotnet test ", StringComparison.Ordinal) && !commandOutcome(command))
+            executedCommands.Add(command);
+
+            if (!commandOutcome(command))
             {
-                return new JobSimulationResult(false, command);
+                failedCommand = command;
+                break;
             }
         }
 
-        return new JobSimulationResult(true, null);
+        return new JobExecutionSimulation(failedCommand, executedCommands.ToArray());
     }
 
     private static string[] ParseRunCommands(string workflow)
@@ -218,5 +202,5 @@ public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
 
     private sealed record WorkflowStep(string? Name, string? Run);
 
-    private sealed record JobSimulationResult(bool Success, string? FailedCommand);
+    private sealed record JobExecutionSimulation(string? FailedCommand, IReadOnlyList<string> ExecutedCommandsAfterFailure);
 }

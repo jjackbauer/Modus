@@ -34,6 +34,10 @@ jobs:
         run: dotnet test tests/Modus.Core.Tests/Modus.Core.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Core.Tests.trx"
       - name: Test Modus.Architecture.Tests (Release, no build, TRX)
         run: dotnet test tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Architecture.Tests.trx"
+      - name: Gate migration regression suite (Release, no build, TRX)
+        run: dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter "MigrationRegression=true" --logger "trx;LogFileName=MigrationRegressionSuite.trx"
+      - name: Gate plugin endpoint curl probe (Release, no build, TRX)
+        run: dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter "FullyQualifiedName~PluginEndpointCurlGateTests" --logger "trx;LogFileName=PluginEndpointCurlGateTests.trx"
       - name: Test Modus.Host.IntegrationTests (Release, no build, TRX)
         run: dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Host.IntegrationTests.trx"
       - name: Upload test results and logs
