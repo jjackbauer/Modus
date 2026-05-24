@@ -3,6 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>Plugin.Orders.Fulfillment</AssemblyName>
     <ModusVersion>1.4.3</ModusVersion>
     <ModusCapabilities>Cap.Orders;Cap.Fulfillment</ModusCapabilities>
@@ -10,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Modus.Core\Modus.Core.csproj" />
+    <Compile Include="..\src\SamplePlugins\Plugin.Orders.Fulfillment\OrdersFulfillmentPlugin.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
   </ItemGroup>
 </Project>

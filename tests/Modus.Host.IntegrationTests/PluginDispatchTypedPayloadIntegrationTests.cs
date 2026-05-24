@@ -12,20 +12,25 @@ using Xunit;
 
 namespace Modus.Host.IntegrationTests;
 
+[Trait("MigrationRegression", "true")]
 public sealed class PluginDispatchTypedPayloadIntegrationTests
 {
-    private const string ChecklistItem = "Enforce runtime owner resolution, DI lifetime path, and isolation guarantees with typed payload assertions in integration dispatch tests [depends on mapper and migration behavior]";
+    private const string ChecklistItem = "Migrate plugin operation handlers to typed sync response contracts that prove business behavior, preserve correlation IDs, and return deterministic unsupported-operation rejection payloads [depends on plugin base-class migration]";
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
     public async Task Dispatch_GivenUniqueOwnerAndTypedResponder_ExpectedOwnerResolvedAndTypedPayloadReturned()
     {
-        var ownerCatalog = new CatalogOnlyPlugin("Plugin.Dispatch.Owner", ["Orders.Dispatch"]);
-        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([ownerCatalog], [ownerCatalog]));
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Dispatch.Owner",
+            operationName: "Orders.Dispatch",
+            pluginTypeFullName: typeof(OwnerProofResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Scoped);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
 
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.UseTestServer();
-        builder.Services.AddScoped<ISyncResponder>(_ => new OwnerProofResponder());
+        builder.Services.AddScoped<OwnerProofResponder>();
 
         await using var app = builder.Build();
         mapper.Map(app);
@@ -44,9 +49,49 @@ public sealed class PluginDispatchTypedPayloadIntegrationTests
         Assert.Equal("dispatch-owner-typed", response.CorrelationId);
 
         var payload = PluginOperationPayload.AsJsonElement(response.Payload);
-        Assert.Equal("Plugin.Dispatch.Owner", payload.GetProperty("ownerPluginId").GetString());
+        Assert.Equal("Plugin.Dispatch.Owner", payload.GetProperty("owner").GetString());
         Assert.Equal("Orders.Dispatch", payload.GetProperty("operation").GetString());
         Assert.Equal("accepted", payload.GetProperty("result").GetString());
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
+    public async Task Dispatch_GivenResponderRejectsUnsupportedOperation_ExpectedDeterministicTypedRejectionPayloadAndCorrelationContinuity()
+    {
+        var projection = new RuntimeDispatchProjection(
+            pluginId: "Plugin.Dispatch.Unsupported",
+            operationName: "Orders.Dispatch.Unsupported.Route",
+            pluginTypeFullName: typeof(UnsupportedOperationResponder).FullName!,
+            serviceLifetime: PluginServiceLifetime.Scoped);
+        var mapper = new PluginEndpointMapper(new RuntimePluginRegistry([projection], [projection]));
+
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseTestServer();
+        builder.Services.AddScoped<UnsupportedOperationResponder>();
+
+        await using var app = builder.Build();
+        mapper.Map(app);
+        await app.StartAsync();
+
+        var client = app.GetTestClient();
+        var httpResponse = await client.PostAsJsonAsync(
+            "/api/Plugin.Dispatch.Unsupported/Orders.Dispatch.Unsupported.Route",
+            new PluginOperationHttpRequest
+            {
+                CorrelationId = "unsupported-op-corr",
+                Payload = "payload"
+            });
+        var response = await httpResponse.Content.ReadFromJsonAsync<PluginOperationHttpResponse>();
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, httpResponse.StatusCode);
+        Assert.NotNull(response);
+        Assert.False(response!.Success);
+        Assert.Equal(SyncResponseStatus.Rejected, response.Status);
+        Assert.Equal("unsupported-op-corr", response.CorrelationId);
+
+        var payload = PluginOperationPayload.AsJsonElement(response.Payload);
+        Assert.Equal("unsupported-operation", payload.GetProperty("code").GetString());
+        Assert.Contains("Orders.Dispatch.Unsupported.Route", payload.GetProperty("message").GetString(), StringComparison.Ordinal);
     }
 
     [Theory]
@@ -207,7 +252,7 @@ public sealed class PluginDispatchTypedPayloadIntegrationTests
         public PluginServiceLifetime? ServiceLifetime { get; }
     }
 
-    private sealed class OwnerProofResponder : IPluginContract, ISyncResponder
+    private sealed class OwnerProofResponder : IPluginContract, ISyncResponder<SyncRequest, SyncResponse<OwnerProofPayload>>
     {
         public PluginId PluginId => new("Plugin.Dispatch.Owner");
 
@@ -215,21 +260,19 @@ public sealed class PluginDispatchTypedPayloadIntegrationTests
 
         public Version ContractVersion => new(1, 0, 0);
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<OwnerProofPayload> Handle(SyncRequest request)
         {
-            return new SyncResponse(
+            return new SyncResponse<OwnerProofPayload>(
                 Success: true,
-                Payload: new
-                {
-                    ownerPluginId = PluginId.Value,
-                    operation = request.Operation.Value,
-                    result = "accepted"
-                },
+                Payload: new OwnerProofPayload(
+                    Owner: PluginId.Value,
+                    Operation: request.Operation.Value,
+                    Result: "accepted"),
                 CorrelationId: request.CorrelationId);
         }
     }
 
-    private sealed class RuntimeLifetimeTypedResponder : IPluginContract, ISyncResponder
+    private sealed class RuntimeLifetimeTypedResponder : IPluginContract, ISyncResponder<SyncRequest, SyncResponse<LifetimeProofPayload>>
     {
         private readonly string _instanceId = Guid.NewGuid().ToString("N");
 
@@ -239,16 +282,45 @@ public sealed class PluginDispatchTypedPayloadIntegrationTests
 
         public Version ContractVersion => new(1, 0, 0);
 
-        public SyncResponse Handle(SyncRequest request)
+        public SyncResponse<LifetimeProofPayload> Handle(SyncRequest request)
         {
-            return new SyncResponse(
+            return new SyncResponse<LifetimeProofPayload>(
                 Success: true,
-                Payload: new
-                {
-                    lifetimePath = "typed-runtime",
-                    instanceId = _instanceId,
-                    operation = request.Operation.Value
-                },
+                Payload: new LifetimeProofPayload(
+                    LifetimePath: "typed-runtime",
+                    InstanceId: _instanceId,
+                    Operation: request.Operation.Value),
+                CorrelationId: request.CorrelationId);
+        }
+    }
+
+    private sealed class UnsupportedOperationResponder : IPluginContract, ISyncResponder<SyncRequest, SyncResponse<UnsupportedOperationPayload>>
+    {
+        private const string ExpectedOperation = "Orders.Dispatch.Unsupported.Expected";
+
+        public PluginId PluginId => new("Plugin.Dispatch.Unsupported");
+
+        public ContractName ContractName => new("Test.UnsupportedOperationResponder");
+
+        public Version ContractVersion => new(1, 0, 0);
+
+        public SyncResponse<UnsupportedOperationPayload> Handle(SyncRequest request)
+        {
+            if (!string.Equals(request.Operation.Value, ExpectedOperation, StringComparison.Ordinal))
+            {
+                return new SyncResponse<UnsupportedOperationPayload>(
+                    Success: false,
+                    Payload: new UnsupportedOperationPayload(
+                        Code: "unsupported-operation",
+                        Message: $"Operation '{request.Operation.Value}' is not supported by '{ExpectedOperation}'."),
+                    Status: SyncResponseStatus.Rejected,
+                    CorrelationId: request.CorrelationId);
+            }
+
+            return new SyncResponse<UnsupportedOperationPayload>(
+                Success: true,
+                Payload: new UnsupportedOperationPayload(Code: "ok", Message: "unexpected-success"),
+                Status: SyncResponseStatus.Success,
                 CorrelationId: request.CorrelationId);
         }
     }
@@ -277,4 +349,10 @@ public sealed class PluginDispatchTypedPayloadIntegrationTests
                 CorrelationId: request.CorrelationId);
         }
     }
+
+    private sealed record OwnerProofPayload(string Owner, string Operation, string Result);
+
+    private sealed record LifetimeProofPayload(string LifetimePath, string InstanceId, string Operation);
+
+    private sealed record UnsupportedOperationPayload(string Code, string Message);
 }

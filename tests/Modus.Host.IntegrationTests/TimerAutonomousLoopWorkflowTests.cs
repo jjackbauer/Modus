@@ -138,10 +138,8 @@ public sealed class TimerAutonomousLoopWorkflowTests
             HandleCalls++;
             return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: new TimerTestPayload(_operation),
+                Payload: new TimerWriteCurrentTimeResult(_operation),
                 CorrelationId: request.CorrelationId);
         }
     }
-
-    private sealed record TimerTestPayload(string Value) : ISyncPayload;
 }

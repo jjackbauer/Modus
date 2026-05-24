@@ -3,6 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>Plugin.Payments.Gateway</AssemblyName>
     <ModusVersion>2.1.0</ModusVersion>
     <ModusCapabilities>Cap.Payments;Cap.Billing</ModusCapabilities>
@@ -10,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Modus.Core\Modus.Core.csproj" />
+    <Compile Include="..\src\SamplePlugins\Plugin.Payments.Gateway\PaymentsGatewayPlugin.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
   </ItemGroup>
 </Project>

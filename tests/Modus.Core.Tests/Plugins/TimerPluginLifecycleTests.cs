@@ -223,11 +223,11 @@ public sealed class TimerPluginLifecycleTests
 
         Assert.True(defaultResponse.Success);
         Assert.True(explicitResponse.Success);
-        var defaultPayload = Assert.IsType<TimerWriteCurrentTimeResult>(defaultResponse.Payload.Payload);
-        var explicitPayload = Assert.IsType<TimerWriteCurrentTimeResult>(explicitResponse.Payload.Payload);
-        Assert.Equal(defaultPayload.TimestampUtcIso8601, explicitPayload.TimestampUtcIso8601);
-        Assert.Equal([defaultPayload.TimestampUtcIso8601], defaultWrites);
-        Assert.Equal([explicitPayload.TimestampUtcIso8601], explicitWrites);
+        Assert.NotNull(defaultResponse.Payload.TimestampUtcIso8601);
+        Assert.NotNull(explicitResponse.Payload.TimestampUtcIso8601);
+        Assert.Equal(defaultResponse.Payload.TimestampUtcIso8601, explicitResponse.Payload.TimestampUtcIso8601);
+        Assert.Equal([defaultResponse.Payload.TimestampUtcIso8601!], defaultWrites);
+        Assert.Equal([explicitResponse.Payload.TimestampUtcIso8601!], explicitWrites);
     }
 
     [Fact]
@@ -246,8 +246,7 @@ public sealed class TimerPluginLifecycleTests
 
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
-        var payload = Assert.IsType<TimerTestPayload>(response.Payload.Payload);
-        Assert.Equal("handled:Timer.Custom.Composite", payload.Value);
+        Assert.Equal("handled:Timer.Custom.Composite", response.Payload.TimestampUtcIso8601);
         Assert.Equal(new CorrelationId("corr-custom"), response.CorrelationId);
         Assert.Equal(1, extension.HandleCallCount);
     }
@@ -389,9 +388,8 @@ public sealed class TimerPluginLifecycleTests
         Assert.True(response.Success);
         Assert.Equal(SyncResponseStatus.Success, response.Status);
         Assert.Equal(new CorrelationId("corr-1"), response.CorrelationId);
-        var payload = Assert.IsType<TimerWriteCurrentTimeResult>(response.Payload.Payload);
-        Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), payload.TimestampUtcIso8601);
-        Assert.Equal([payload.TimestampUtcIso8601], writes);
+        Assert.Equal(fixedTimestamp.ToString("O", CultureInfo.InvariantCulture), response.Payload.TimestampUtcIso8601);
+        Assert.Equal([response.Payload.TimestampUtcIso8601!], writes);
     }
 
     [Fact]
@@ -406,12 +404,14 @@ public sealed class TimerPluginLifecycleTests
         var firstResponse = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
         var secondResponse = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.WriteCurrentTime")));
 
-        var firstPayload = Assert.IsType<TimerWriteCurrentTimeResult>(firstResponse.Payload.Payload);
-        var secondPayload = Assert.IsType<TimerWriteCurrentTimeResult>(secondResponse.Payload.Payload);
-        Assert.NotEqual(firstPayload.TimestampUtcIso8601, secondPayload.TimestampUtcIso8601);
+        var firstPayload = firstResponse.Payload.TimestampUtcIso8601;
+        var secondPayload = secondResponse.Payload.TimestampUtcIso8601;
+        Assert.NotNull(firstPayload);
+        Assert.NotNull(secondPayload);
+        Assert.NotEqual(firstPayload, secondPayload);
         Assert.Equal(2, writes.Count);
-        Assert.Equal(firstPayload.TimestampUtcIso8601, writes[0]);
-        Assert.Equal(secondPayload.TimestampUtcIso8601, writes[1]);
+        Assert.Equal(firstPayload, writes[0]);
+        Assert.Equal(secondPayload, writes[1]);
     }
 
     [Fact]
@@ -424,8 +424,7 @@ public sealed class TimerPluginLifecycleTests
         var response = plugin.Handle(SyncRequest.ForStandardPath(new OperationName("Timer.Custom.Beta"), new CorrelationId("corr-route")));
 
         Assert.True(response.Success);
-        var payload = Assert.IsType<TimerTestPayload>(response.Payload.Payload);
-        Assert.Equal("handled:Timer.Custom.Beta", payload.Value);
+        Assert.Equal("handled:Timer.Custom.Beta", response.Payload.TimestampUtcIso8601);
         Assert.Equal(0, alpha.HandleCallCount);
         Assert.Equal(1, beta.HandleCallCount);
     }
@@ -489,7 +488,7 @@ public sealed class TimerPluginLifecycleTests
             ArgumentNullException.ThrowIfNull(request);
             return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: new TimerTestPayload(_operation),
+                Payload: new TimerWriteCurrentTimeResult(_operation),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -533,7 +532,7 @@ public sealed class TimerPluginLifecycleTests
             HandleCallCount++;
             return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: new TimerTestPayload($"handled:{_operation}"),
+                Payload: new TimerWriteCurrentTimeResult($"handled:{_operation}"),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -561,7 +560,7 @@ public sealed class TimerPluginLifecycleTests
             ArgumentNullException.ThrowIfNull(request);
             return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: new TimerTestPayload(request.Operation.Value),
+                Payload: new TimerWriteCurrentTimeResult(request.Operation.Value),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
@@ -610,12 +609,10 @@ public sealed class TimerPluginLifecycleTests
 
             return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: new TimerTestPayload(request.Operation.Value),
+                Payload: new TimerWriteCurrentTimeResult(request.Operation.Value),
                 Status: SyncResponseStatus.Success,
                 ServedFromFallback: false,
                 CorrelationId: request.CorrelationId);
         }
     }
-
-    private sealed record TimerTestPayload(string Value) : ISyncPayload;
 }

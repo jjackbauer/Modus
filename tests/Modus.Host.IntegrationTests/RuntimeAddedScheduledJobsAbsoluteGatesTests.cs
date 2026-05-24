@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Modus.Host.IntegrationTests;
 
+[Trait("MigrationRegression", "true")]
 public sealed class RuntimeAddedScheduledJobsAbsoluteGatesTests
 {
     [Fact]
@@ -83,6 +84,41 @@ public sealed class RuntimeAddedScheduledJobsAbsoluteGatesTests
             diagnostic => diagnostic.Contains("job=Absolute.OneTime.Once", StringComparison.Ordinal)
                 && diagnostic.Contains("operation=Absolute.OneTime.Execute", StringComparison.Ordinal)
                 && diagnostic.Contains("outcome=registered", StringComparison.Ordinal));
+
+        var cadenceDiagnostics = diagnostics
+            .Where(diagnostic => diagnostic.StartsWith("stage=scheduling-cadence plugin=Plugin.Runtime.Added.Scheduled.AbsoluteGates", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Contains(
+            cadenceDiagnostics,
+            diagnostic => diagnostic.Contains("job=Absolute.Recurring.Every300Ms", StringComparison.Ordinal)
+                && diagnostic.Contains("schedule=recurring", StringComparison.Ordinal)
+                && diagnostic.Contains("intervalMs=300", StringComparison.Ordinal)
+                && diagnostic.Contains($"toleranceMs={tolerance.TotalMilliseconds:F0}", StringComparison.Ordinal)
+                && diagnostic.Contains("operation=Absolute.Recurring.Execute", StringComparison.Ordinal)
+                && diagnostic.Contains("outcome=registered", StringComparison.Ordinal));
+        Assert.Contains(
+            cadenceDiagnostics,
+            diagnostic => diagnostic.Contains("job=Absolute.OneTime.Once", StringComparison.Ordinal)
+                && diagnostic.Contains("schedule=one-time", StringComparison.Ordinal)
+                && diagnostic.Contains("toleranceMs=1000", StringComparison.Ordinal)
+                && diagnostic.Contains("operation=Absolute.OneTime.Execute", StringComparison.Ordinal)
+                && diagnostic.Contains("outcome=registered", StringComparison.Ordinal));
+
+        var ownershipDiagnostics = diagnostics
+            .Where(diagnostic => diagnostic.StartsWith("stage=scheduling-ownership plugin=Plugin.Runtime.Added.Scheduled.AbsoluteGates", StringComparison.Ordinal))
+            .ToArray();
+        Assert.Contains(
+            ownershipDiagnostics,
+            diagnostic => diagnostic.Contains("operation=Absolute.Recurring.Execute", StringComparison.Ordinal)
+                && diagnostic.Contains("ownerPlugin=Plugin.Runtime.Added.Scheduled.AbsoluteGates", StringComparison.Ordinal)
+                && diagnostic.Contains("job=Absolute.Recurring.Every300Ms", StringComparison.Ordinal)
+                && diagnostic.Contains("outcome=mapped", StringComparison.Ordinal));
+        Assert.Contains(
+            ownershipDiagnostics,
+            diagnostic => diagnostic.Contains("operation=Absolute.OneTime.Execute", StringComparison.Ordinal)
+                && diagnostic.Contains("ownerPlugin=Plugin.Runtime.Added.Scheduled.AbsoluteGates", StringComparison.Ordinal)
+                && diagnostic.Contains("job=Absolute.OneTime.Once", StringComparison.Ordinal)
+                && diagnostic.Contains("outcome=mapped", StringComparison.Ordinal));
 
         var recurringSuccessDiagnostics = diagnostics
             .Where(diagnostic =>

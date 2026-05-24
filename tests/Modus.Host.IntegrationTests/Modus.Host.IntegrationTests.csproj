@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modus.Host\Modus.Host.csproj" />
+    <ProjectReference Include="..\..\src\SamplePlugins\Plugin.Orders.Fulfillment\Plugin.Orders.Fulfillment.csproj" />
+    <ProjectReference Include="..\..\src\SamplePlugins\Plugin.Payments.Gateway\Plugin.Payments.Gateway.csproj" />
     <ProjectReference Include="..\..\plugins\Plugin.Host.Telemetry.csproj" />
     <ProjectReference Include="..\..\plugins\Plugin.Lifetime.Scoped.csproj" />
     <ProjectReference Include="..\..\plugins\Plugin.Lifetime.Singleton.csproj" />

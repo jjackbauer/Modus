@@ -28,8 +28,7 @@ public sealed class TimerExtensionWorkflowTests
         Assert.Equal(
             new[] { new OperationName("Timer.Cleanup.Expired"), new OperationName("Timer.Print.Utc") },
             plugin.SupportedOperations);
-        var payload = Assert.IsType<TimerTestPayload>(response.Payload.Payload);
-        Assert.Equal("cleanup", payload.Value);
+        Assert.Equal("cleanup", response.Payload.TimestampUtcIso8601);
         Assert.Equal(0, existingExtension.HandleCalls);
         Assert.Equal(1, newExtension.HandleCalls);
         Assert.Equal(2, scheduler.RecurringSchedules.Count);
@@ -65,8 +64,7 @@ public sealed class TimerExtensionWorkflowTests
 
         Assert.True(known.Success);
         Assert.Equal(SyncResponseStatus.Success, known.Status);
-        var knownPayload = Assert.IsType<TimerTestPayload>(known.Payload.Payload);
-        Assert.Equal("owner-B", knownPayload.Value);
+        Assert.Equal("owner-B", known.Payload.TimestampUtcIso8601);
         Assert.Equal(new CorrelationId("corr-known"), known.CorrelationId);
         Assert.Equal(0, extensionA.HandleCalls);
         Assert.Equal(1, extensionB.HandleCalls);
@@ -125,10 +123,8 @@ public sealed class TimerExtensionWorkflowTests
             HandleCalls++;
             return new SyncResponse<ISyncPayload>(
                 Success: true,
-                Payload: new TimerTestPayload(_payload),
+                Payload: new TimerWriteCurrentTimeResult(_payload),
                 CorrelationId: request.CorrelationId);
         }
     }
-
-    private sealed record TimerTestPayload(string Value) : ISyncPayload;
 }

@@ -9,6 +9,10 @@ namespace Modus.Host.Plugins.Host;
 
 internal sealed class AssemblyLifecycleHost
 {
+    private static readonly TimeSpan MinimumRecurringCadenceTolerance = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan OneTimeScheduleWindowTolerance = TimeSpan.FromMilliseconds(1000);
+    private const double RecurringCadenceToleranceFactor = 0.20d;
+
     private readonly CancellationTokenSource _lifecycleCts = new();
     private readonly IServiceProvider? _serviceProvider;
     private readonly IServiceScopeFactory? _scopeFactory;
@@ -127,8 +131,13 @@ internal sealed class AssemblyLifecycleHost
             .ThenBy(x => x.Operation, StringComparer.Ordinal)
             .ThenBy(x => x.Interval))
         {
+            var recurringTolerance = ResolveRecurringCadenceTolerance(recurring.Interval);
             diagnostics.Add(
                 $"stage=scheduling plugin={pluginId} job={recurring.JobName} intervalMs={recurring.Interval.TotalMilliseconds:F0} operation={recurring.Operation} outcome=registered");
+            diagnostics.Add(
+                $"stage=scheduling-cadence plugin={pluginId} job={recurring.JobName} schedule=recurring intervalMs={recurring.Interval.TotalMilliseconds:F0} toleranceMs={recurringTolerance.TotalMilliseconds:F0} operation={recurring.Operation} outcome=registered");
+            diagnostics.Add(
+                $"stage=scheduling-ownership plugin={pluginId} operation={recurring.Operation} ownerPlugin={pluginId} job={recurring.JobName} outcome=mapped");
             diagnostics.AddRange(ExecuteScheduledOperation(lifecycleType, pluginId, recurring.JobName, recurring.Operation));
 
             var token = _lifecycleCts.Token;
@@ -152,6 +161,10 @@ internal sealed class AssemblyLifecycleHost
         {
             diagnostics.Add(
                 $"stage=scheduling plugin={pluginId} job={oneTime.JobName} runAt={oneTime.RunAt:O} operation={oneTime.Operation} outcome=registered");
+            diagnostics.Add(
+                $"stage=scheduling-cadence plugin={pluginId} job={oneTime.JobName} schedule=one-time runAt={oneTime.RunAt:O} toleranceMs={OneTimeScheduleWindowTolerance.TotalMilliseconds:F0} operation={oneTime.Operation} outcome=registered");
+            diagnostics.Add(
+                $"stage=scheduling-ownership plugin={pluginId} operation={oneTime.Operation} ownerPlugin={pluginId} job={oneTime.JobName} outcome=mapped");
             diagnostics.AddRange(ExecuteScheduledOperation(lifecycleType, pluginId, oneTime.JobName, oneTime.Operation));
         }
 
@@ -208,6 +221,14 @@ internal sealed class AssemblyLifecycleHost
         {
             return [$"stage=operation plugin={pluginId} operation={operation} source=scheduled job={jobName} outcome=failure reason={ex.Message}"];
         }
+    }
+
+    private static TimeSpan ResolveRecurringCadenceTolerance(TimeSpan interval)
+    {
+        var proportionalTolerance = TimeSpan.FromMilliseconds(interval.TotalMilliseconds * RecurringCadenceToleranceFactor);
+        return proportionalTolerance > MinimumRecurringCadenceTolerance
+            ? proportionalTolerance
+            : MinimumRecurringCadenceTolerance;
     }
 
     private IPluginLifecycle? ResolveActivationLifecyclePluginInstance(Type lifecycleType, IServiceProvider? provider)

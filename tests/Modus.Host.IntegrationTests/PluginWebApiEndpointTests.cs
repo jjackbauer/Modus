@@ -1301,7 +1301,7 @@ public sealed class PluginWebApiEndpointTests
         Assert.Equal("legacy-reject-correlation", response.Body.CorrelationId);
 
         var payload = PluginOperationPayload.AsJsonElement(response.Body.Payload);
-        Assert.Equal("legacy-responder-unadaptable", payload.GetProperty("code").GetString());
+        Assert.Equal("unsupported-operation", payload.GetProperty("code").GetString());
         Assert.True(payload.GetProperty("message").GetString()!.Contains("LegacyUnsupportedResponseResponder", StringComparison.Ordinal));
     }
 

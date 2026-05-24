@@ -145,8 +145,11 @@ public sealed class TimerPlugin : PluginBase
         var payload = delegated.Payload switch
         {
             TimerOperationPayload timerPayload => timerPayload,
-            SyncErrorPayload syncError => new TimerOperationPayload(Payload: null, Error: syncError),
-            _ => TimerOperationPayload.FromResult(delegated.Payload)
+            TimerWriteCurrentTimeResult timerResult => TimerOperationPayload.FromResult(timerResult),
+            SyncErrorPayload syncError => new TimerOperationPayload(TimestampUtcIso8601: null, Error: syncError),
+            _ => TimerOperationPayload.FromError(
+                code: "unsupported-payload-type",
+                message: $"Operation '{request.Operation.Value}' returned unsupported payload type '{delegated.Payload.GetType().FullName}'.")
         };
 
         return new SyncResponse<TimerOperationPayload>(

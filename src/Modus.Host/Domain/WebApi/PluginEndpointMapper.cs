@@ -389,7 +389,26 @@ public class PluginEndpointMapper
             }
             catch
             {
-                continue;
+                // Fall back to parameterless activation for plugin types that cannot be fully
+                // constructed through the current request scope but still expose a valid responder.
+                if (pluginType.GetConstructor(Type.EmptyTypes) is null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var activated = Activator.CreateInstance(pluginType);
+                    if (activated is IPluginContract activatedPlugin
+                        && TryResolveTypedOrLegacyResponder(activatedPlugin, pluginTypeFullName, out var activatedResponder))
+                    {
+                        return activatedResponder;
+                    }
+                }
+                catch
+                {
+                    continue;
+                }
             }
         }
 
@@ -595,7 +614,7 @@ public class PluginEndpointMapper
             return new SyncResponse(
                 Success: false,
                 Payload: new SyncErrorPayload(
-                    Code: "legacy-responder-unadaptable",
+                    Code: "unsupported-operation",
                     Message: $"Plugin '{pluginTypeFullName}' cannot be adapted from legacy response type '{responseType.FullName}'. {reason}"),
                 Status: SyncResponseStatus.Rejected,
                 CorrelationId: request.CorrelationId);
