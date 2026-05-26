@@ -9,10 +9,22 @@
   <Folder Name="/src/">
     <Project Path="src/Modus.Core/Modus.Core.csproj" />
     <Project Path="src/Modus.Host/Modus.Host.csproj" />
+    <Project Path="src/Samples.TodoApp.WipAgents/Samples.TodoApp.WipAgents.csproj" />
     <Folder Name="SamplePlugins/">
       <Project Path="src/SamplePlugins/Plugin.Orders.Fulfillment/Plugin.Orders.Fulfillment.csproj" />
       <Project Path="src/SamplePlugins/Plugin.Payments.Gateway/Plugin.Payments.Gateway.csproj" />
     </Folder>
+    <Project Path="src/Wip.Abstractions/Wip.Abstractions.csproj" />
+    <Project Path="src/Wip.Artifacts.Local/Wip.Artifacts.Local.csproj" />
+    <Project Path="src/Wip.Builder/Wip.Builder.csproj" />
+    <Project Path="src/Wip.Modus/Wip.Modus.csproj" />
+    <Project Path="src/Wip.Policy.LocalSafe/Wip.Policy.LocalSafe.csproj" />
+    <Project Path="src/Wip.Runtime/Wip.Runtime.csproj" />
+    <Project Path="src/Wip.Shell/Wip.Shell.csproj" />
+    <Project Path="src/Wip.ShellHost/Wip.ShellHost.csproj" />
+    <Project Path="src/Wip.Tools.Shell/Wip.Tools.Shell.csproj" />
+    <Project Path="src/Wip.Validation.DotNet/Wip.Validation.DotNet.csproj" />
+    <Project Path="src/Wip.Workspaces.Git/Wip.Workspaces.Git.csproj" />
   </Folder>
   <Folder Name="/src/SamplePlugins/">
     <Project Path="src/SamplePlugins/Plugin.Orders.Fulfillment/Plugin.Orders.Fulfillment.csproj" />
@@ -21,5 +33,17 @@
     <Project Path="tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj" />
     <Project Path="tests/Modus.Core.Tests/Modus.Core.Tests.csproj" />
     <Project Path="tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj" />
+    <Project Path="tests/Wip.Abstractions.Tests/Wip.Abstractions.Tests.csproj" />
+    <Project Path="tests/Wip.Artifacts.Local.Tests/Wip.Artifacts.Local.Tests.csproj" />
+    <Project Path="tests/Wip.Builder.Tests/Wip.Builder.Tests.csproj" />
+    <Project Path="tests/Wip.Modus.Tests/Wip.Modus.Tests.csproj" />
+    <Project Path="tests/Wip.Policy.LocalSafe.Tests/Wip.Policy.LocalSafe.Tests.csproj" />
+    <Project Path="tests/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj" />
+    <Project Path="tests/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj" />
+    <Project Path="tests/Wip.Shell.Tests/Wip.Shell.Tests.csproj" />
+    <Project Path="tests/Wip.ShellHost.Tests/Wip.ShellHost.Tests.csproj" />
+    <Project Path="tests/Wip.Tools.Shell.Tests/Wip.Tools.Shell.Tests.csproj" />
+    <Project Path="tests/Wip.Validation.DotNet.Tests/Wip.Validation.DotNet.Tests.csproj" />
+    <Project Path="tests/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj" />
   </Folder>
 </Solution>

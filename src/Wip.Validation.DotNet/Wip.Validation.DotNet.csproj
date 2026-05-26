@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Dotnet build/test validator with persisted ValidationReport artifacts for WiP sessions.</Description>
+    <PackageId>Wip.Validation.DotNet</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Workspaces.Git\Wip.Workspaces.Git.csproj" />
+  </ItemGroup>
+</Project>
