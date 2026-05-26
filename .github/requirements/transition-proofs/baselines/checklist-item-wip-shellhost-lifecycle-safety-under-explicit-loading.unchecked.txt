@@ -1,0 +1,1 @@
+- [ ] Preserve lifecycle safety under explicit loading: single-active-run guard, one-time load gate per host container, and deterministic `StopPluginsAsync` on exit/cancellation remain enforced [depends on explicit lifecycle command path]

@@ -1,0 +1,1 @@
+- [ ] Document Abstractions interfaces and typed identifiers with request/result behavior contracts and invalid-input expectations [depends on root architecture README]

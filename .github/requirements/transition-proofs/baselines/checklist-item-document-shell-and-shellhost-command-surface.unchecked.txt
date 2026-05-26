@@ -1,0 +1,1 @@
+- [ ] Document Shell and ShellHost command surface including usage, failure messages, config precedence, and diagnostics bridge behavior [depends on Runtime lifecycle documentation]

@@ -1,0 +1,1 @@
+- [ ] Enforce WIP-owned plugin contract boundary: shell-host discovery accepts only `IWipHostPluginContract` implementations (which may extend Modus contracts) and rejects pure `IPluginContract` implementations [mandatory - ownership boundary]

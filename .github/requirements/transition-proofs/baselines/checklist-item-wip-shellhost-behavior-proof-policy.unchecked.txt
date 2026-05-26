@@ -1,0 +1,1 @@
+- [ ] Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]

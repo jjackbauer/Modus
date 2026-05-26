@@ -1,0 +1,1 @@
+- [ ] Document Builder registration APIs including duplicate capability replacement behavior and workflow/policy registration constraints [depends on Abstractions contract documentation]

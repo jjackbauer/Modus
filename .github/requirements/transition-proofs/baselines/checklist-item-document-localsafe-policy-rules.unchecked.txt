@@ -1,0 +1,1 @@
+- [ ] Document LocalSafe policy rules with explicit allow/deny examples for dangerous commands, worktree escape, validation gate, and approval gate [depends on Shell command documentation]

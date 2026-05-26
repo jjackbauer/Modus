@@ -1,0 +1,1 @@
+- [ ] Introduce explicit plugin lifecycle command path (for example `plugins load` and `plugins unload`) that controls when plugin assemblies activate and when scheduled jobs begin [depends on startup gate]

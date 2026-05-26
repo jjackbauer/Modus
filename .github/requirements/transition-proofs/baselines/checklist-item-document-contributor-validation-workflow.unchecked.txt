@@ -1,0 +1,1 @@
+- [ ] Document contributor validation workflow with required proof artifacts from build/test/runtime command outputs and deterministic negative-path checks [depends on LocalSafe policy documentation]

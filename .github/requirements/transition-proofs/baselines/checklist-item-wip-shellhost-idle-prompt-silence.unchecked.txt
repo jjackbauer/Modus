@@ -1,0 +1,1 @@
+- [ ] Guarantee idle prompt silence: while no plugin-load command has been executed, recurring scheduled operations must not emit runtime output to host console [depends on explicit lifecycle command path] [mandatory - no unsolicited runtime output]
