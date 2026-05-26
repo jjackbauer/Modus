@@ -18,13 +18,15 @@ Wip.Abstractions defines typed contracts shared by builder, runtime, shell, poli
 | Interface | Request/Result behavior contract | Invalid-input expectations |
 |---|---|---|
 | IWorkflow<TRequest, TResult> | WorkflowId identifies the workflow contract. ExecuteAsync receives typed request and WorkflowContext and returns typed TResult. | TRequest and TResult are constrained to notnull. WorkflowId constructor rejects null, empty, or whitespace values. |
-| IWorkflowDescriptor | Exposes metadata for workflow discovery and typed request/result reflection. | WorkflowDescriptor<TRequest, TResult> must use non-nullable generic arguments through notnull constraints. |
+| IWorkflowDescriptor | Exposes metadata for workflow discovery and typed request/result reflection. | WorkflowDescriptor<TRequest, TResult> rejects whitespace display names and rejects object request/result generic arguments. |
 
 ### Policy contracts
 
 | Interface/Type | Request/Result behavior contract | Invalid-input expectations |
 |---|---|---|
-| IPolicy<TRequest> | EvaluateAsync receives typed request and PolicyContext and returns PolicyDecision asynchronously. | TRequest is constrained to notnull. PolicyId constructor rejects null, empty, or whitespace values. |
+| IPolicy<TRequest, TResult> | EvaluateAsync receives typed request and PolicyContext and returns typed TResult asynchronously. | TRequest and TResult are constrained to notnull. Policy descriptors reject object request/result generic arguments. |
+| IPolicy<TRequest> | Compatibility alias for policies that return PolicyDecision. | Inherits the same typed request constraints and behavior contract through IPolicy<TRequest, PolicyDecision>. |
+| IPolicyDescriptor | Exposes policy metadata for discovery and typed request/result reflection. | PolicyDescriptor<TRequest, TResult> requires policy type to implement IPolicy<TRequest, TResult>. |
 | PolicyDecision | Allow returns allowed decision with empty reason. Deny returns denied decision with explicit reason. | Deny throws ArgumentException when reason is null, empty, or whitespace. |
 
 ### Session contracts

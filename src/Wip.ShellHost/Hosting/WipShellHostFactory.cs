@@ -15,7 +15,14 @@ public static class WipShellHostFactory
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
 
-        Wip.Modus.Hosting.IModusWipBridge bridge = new Wip.Modus.Hosting.ModusWipBridge(options.PluginsPath);
+        var userPluginsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".wip",
+            "plugins");
+
+        Wip.Modus.Hosting.IModusWipBridge bridge = new Wip.Modus.Hosting.ModusWipBridge(
+            options.PluginsPath,
+            userPluginsPath);
         var pluginLifetimeGate = new WipShellPluginLifetimeGate();
         var orchestrator = new WipRuntimeOrchestrator(new InMemorySessionStore(), new NoOpSessionEventPublisher());
         var commandLoop = new WipShellCommandLoop(

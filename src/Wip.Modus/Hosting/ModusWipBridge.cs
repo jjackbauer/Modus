@@ -61,7 +61,7 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     private const string ActivationStage = "activation";
     private const string LifecycleStartStage = "lifecycle-start";
 
-    private readonly string _pluginsPath;
+    private readonly IReadOnlyList<string> _pluginDiscoveryPaths;
     private readonly IReadOnlyList<WorkflowRegistration> _workflowRegistrations;
     private readonly List<PluginRuntime> _loadedPlugins = [];
     private readonly List<string> _loadDiagnostics = [];
@@ -72,11 +72,22 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     private int _loaded;
 
     public ModusWipBridge(string pluginsPath, IReadOnlyList<WorkflowRegistration>? workflowRegistrations = null)
+        : this([pluginsPath], workflowRegistrations)
     {
-        if (string.IsNullOrWhiteSpace(pluginsPath))
-            throw new ArgumentException("Value cannot be null or whitespace.", nameof(pluginsPath));
+    }
 
-        _pluginsPath = pluginsPath;
+    public ModusWipBridge(
+        string repositoryPluginsPath,
+        string userPluginsPath,
+        IReadOnlyList<WorkflowRegistration>? workflowRegistrations = null)
+        : this([repositoryPluginsPath, userPluginsPath], workflowRegistrations)
+    {
+    }
+
+    private ModusWipBridge(IReadOnlyList<string> pluginDiscoveryPaths, IReadOnlyList<WorkflowRegistration>? workflowRegistrations)
+    {
+        ArgumentNullException.ThrowIfNull(pluginDiscoveryPaths);
+        _pluginDiscoveryPaths = NormalizePluginDiscoveryPaths(pluginDiscoveryPaths);
         _workflowRegistrations = workflowRegistrations ?? Array.Empty<WorkflowRegistration>();
         _runManifest = CreateUnloadedRunManifest();
     }
@@ -88,50 +99,63 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
             return ValueTask.FromResult(_loadedPlugins.Count);
         }
 
-        if (!Directory.Exists(_pluginsPath))
-        {
-            AddLoadDiagnostic(DiscoveryStage, $"Plugin path '{_pluginsPath}' does not exist.");
-            _runManifest = CreateUnloadedRunManifest();
-            return ValueTask.FromResult(0);
-        }
-
-        foreach (var assemblyPath in Directory
-                     .EnumerateFiles(_pluginsPath, "*.dll", SearchOption.AllDirectories)
-                     .OrderBy(static path => path, StringComparer.Ordinal))
+        var discoveredAnyPath = false;
+        foreach (var pluginDiscoveryPath in _pluginDiscoveryPaths)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (!TryLoadAssembly(assemblyPath, out var assembly, out var loadError))
+            if (!Directory.Exists(pluginDiscoveryPath))
             {
-                AddLoadDiagnostic(AssemblyLoadStage, $"Failed to load assembly '{assemblyPath}': {loadError}");
+                AddLoadDiagnostic(DiscoveryStage, $"Plugin path '{pluginDiscoveryPath}' does not exist.");
                 continue;
             }
 
-            foreach (var pluginType in ResolvePluginTypes(assembly))
+            discoveredAnyPath = true;
+
+            foreach (var assemblyPath in Directory
+                         .EnumerateFiles(pluginDiscoveryPath, "*.dll", SearchOption.AllDirectories)
+                         .OrderBy(static path => path, StringComparer.Ordinal))
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (!TryActivatePlugin(pluginType, out var plugin, out var activationError))
+                if (!TryLoadAssembly(assemblyPath, out var assembly, out var loadError))
                 {
-                    AddLoadDiagnostic(ActivationStage, $"Failed to activate plugin type '{pluginType.FullName}': {activationError}");
+                    AddLoadDiagnostic(AssemblyLoadStage, $"Failed to load assembly '{assemblyPath}': {loadError}");
                     continue;
                 }
 
-                var lifecycle = plugin as IPluginLifecycle;
-
-                try
+                foreach (var pluginType in ResolvePluginTypes(assembly))
                 {
-                    lifecycle?.Load(new PluginLoadContext(plugin.PluginId, cancellationToken));
-                    lifecycle?.Start(new PluginStartContext(plugin.PluginId, cancellationToken));
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    var metadata = BuildPluginMetadata(plugin, pluginType.Assembly);
-                    _loadedPlugins.Add(new PluginRuntime(plugin, lifecycle, metadata));
-                }
-                catch (Exception ex)
-                {
-                    AddLoadDiagnostic(LifecycleStartStage, $"Plugin '{plugin.PluginId.Value}' failed during lifecycle start: {ex.Message}");
+                    if (!TryActivatePlugin(pluginType, out var plugin, out var activationError))
+                    {
+                        AddLoadDiagnostic(ActivationStage, $"Failed to activate plugin type '{pluginType.FullName}': {activationError}");
+                        continue;
+                    }
+
+                    var lifecycle = plugin as IPluginLifecycle;
+
+                    try
+                    {
+                        lifecycle?.Load(new PluginLoadContext(plugin.PluginId, cancellationToken));
+                        lifecycle?.Start(new PluginStartContext(plugin.PluginId, cancellationToken));
+
+                        var metadata = BuildPluginMetadata(plugin, pluginType.Assembly);
+                        _loadedPlugins.Add(new PluginRuntime(plugin, lifecycle, metadata));
+                    }
+                    catch (Exception ex)
+                    {
+                        AddLoadDiagnostic(LifecycleStartStage, $"Plugin '{plugin.PluginId.Value}' failed during lifecycle start: {ex.Message}");
+                    }
                 }
             }
+        }
+
+        if (!discoveredAnyPath)
+        {
+            _runManifest = CreateUnloadedRunManifest();
+            return ValueTask.FromResult(0);
         }
 
         var pluginEntries = _loadedPlugins
@@ -262,8 +286,12 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
         }
         catch (Exception ex)
         {
+            var effective = ex is TargetInvocationException tie && tie.InnerException is Exception inner
+                ? inner
+                : ex;
+
             plugin = null!;
-            error = ex.Message;
+            error = effective.Message;
             return false;
         }
     }
@@ -319,4 +347,19 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     }
 
     private sealed record PluginRuntime(IWipHostPluginContract Plugin, IPluginLifecycle? Lifecycle, PluginManifestEntry Metadata);
+
+    private static IReadOnlyList<string> NormalizePluginDiscoveryPaths(IReadOnlyList<string> pluginDiscoveryPaths)
+    {
+        var normalized = pluginDiscoveryPaths
+            .Where(static path => !string.IsNullOrWhiteSpace(path))
+            .Select(static path => Path.GetFullPath(path.Trim()))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(static path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        if (normalized.Length == 0)
+            throw new ArgumentException("At least one plugin discovery path must be provided.", nameof(pluginDiscoveryPaths));
+
+        return normalized;
+    }
 }

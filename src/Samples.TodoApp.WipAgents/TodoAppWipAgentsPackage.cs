@@ -3,6 +3,7 @@ using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Workflows;
 using Wip.Builder;
+using Wip.Modus.Hosting;
 
 namespace Samples.TodoApp.WipAgents;
 
@@ -20,7 +21,7 @@ public static class TodoAppWipBuilderExtensions
     }
 }
 
-public sealed class TodoAppWipPlugin : IPluginContract, IPluginLifecycle, IPluginOperationCatalog, IPluginRegistrationPolicy
+public sealed class TodoAppWipPlugin : IWipHostPluginContract, IPluginLifecycle, IPluginOperationCatalog, IPluginRegistrationPolicy
 {
     public PluginId PluginId => new("samples.todoapp.wipagents");
 

@@ -54,6 +54,7 @@ public sealed class ModusWipBridgeTests
             var workflow = Assert.Single(manifest.Workflows, static entry => entry.WorkflowId == "todoapp.workflow.delivery");
 
             Assert.Equal(1, count);
+            Assert.Equal("TodoAppWipPlugin", plugin.PluginName);
             Assert.Equal(new[] { "todoapp.agent.plan", "todoapp.validator.result" }, plugin.Capabilities);
             Assert.Equal(new[] { "RegisterOperation", "SubscribeEvents" }, plugin.RequiredPermissions);
             Assert.Equal(typeof(TodoWorkflowRequest).FullName, workflow.RequestType);
@@ -134,6 +135,55 @@ public sealed class ModusWipBridgeTests
         }
     }
 
+    [Fact]
+    public async Task PluginLoader_GivenRepositoryPathMissingAndUserPathContainsPlugin_LoadsPluginFromUserPathAndReportsRepositoryDiagnostic()
+    {
+        var missingRepositoryPluginsPath = Path.Combine(Path.GetTempPath(), $"modus-wip-repo-missing-{Guid.NewGuid():N}");
+        var userPluginsPath = CreatePluginsFolderWithAssembly(typeof(ModusWipBridgeTests).Assembly.Location);
+
+        try
+        {
+            var bridge = new ModusWipBridge(missingRepositoryPluginsPath, userPluginsPath, Array.Empty<WorkflowRegistration>());
+
+            var loadedCount = await bridge.LoadPluginsAsync(CancellationToken.None);
+            var manifest = bridge.GetRunManifest();
+            var diagnostics = bridge.GetLoadDiagnostics();
+
+            Assert.Equal(1, loadedCount);
+            Assert.Single(manifest.Plugins, static entry => entry.PluginId == "bridge-test.plugin");
+            Assert.Contains(diagnostics, diagnostic =>
+                diagnostic.Contains("[discovery]", StringComparison.Ordinal)
+                && diagnostic.Contains(missingRepositoryPluginsPath, StringComparison.Ordinal));
+        }
+        finally
+        {
+            if (Directory.Exists(userPluginsPath))
+                Directory.Delete(userPluginsPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task PluginLoader_GivenRepositoryAndUserPathsMissing_ReportsBothMissingPathDiagnosticsAndCapturesEmptyManifest()
+    {
+        var missingRepositoryPluginsPath = Path.Combine(Path.GetTempPath(), $"modus-wip-repo-missing-{Guid.NewGuid():N}");
+        var missingUserPluginsPath = Path.Combine(Path.GetTempPath(), $"modus-wip-user-missing-{Guid.NewGuid():N}");
+        var bridge = new ModusWipBridge(missingRepositoryPluginsPath, missingUserPluginsPath, Array.Empty<WorkflowRegistration>());
+
+        var loadedCount = await bridge.LoadPluginsAsync(CancellationToken.None);
+        var manifest = bridge.GetRunManifest();
+        var diagnostics = bridge.GetLoadDiagnostics();
+
+        Assert.Equal(0, loadedCount);
+        Assert.Empty(manifest.Plugins);
+        Assert.Empty(manifest.Workflows);
+        Assert.Contains(diagnostics, diagnostic =>
+            diagnostic.Contains("[discovery]", StringComparison.Ordinal)
+            && diagnostic.Contains(missingRepositoryPluginsPath, StringComparison.Ordinal));
+        Assert.Contains(diagnostics, diagnostic =>
+            diagnostic.Contains("[discovery]", StringComparison.Ordinal)
+            && diagnostic.Contains(missingUserPluginsPath, StringComparison.Ordinal));
+    }
+
     private static string CreatePluginsFolderWithAssembly(string assemblyPath)
     {
         var root = Path.Combine(Path.GetTempPath(), $"modus-wip-modus-tests-{Guid.NewGuid():N}");
@@ -146,7 +196,7 @@ public sealed class ModusWipBridgeTests
         return pluginsPath;
     }
 
-    public sealed class BridgeTestPlugin : IPluginContract, IPluginLifecycle, IPluginOperationCatalog, IPluginRegistrationPolicy
+    public sealed class BridgeTestPlugin : IWipHostPluginContract, IPluginLifecycle, IPluginOperationCatalog, IPluginRegistrationPolicy
     {
         public PluginId PluginId => new("bridge-test.plugin");
 

@@ -13,6 +13,7 @@ public sealed record DotNetValidationRequest(
     string RepositoryPath,
     string? TargetBranch = null,
     string? SessionBranch = null,
+    TimeSpan? CommandTimeout = null,
     string DotNetExecutablePath = "dotnet");
 
 public sealed record ValidationCommandResult(
@@ -20,10 +21,11 @@ public sealed record ValidationCommandResult(
     int ExitCode,
     string StandardOutput,
     string StandardError,
+    bool TimedOut,
     DateTimeOffset StartedAtUtc,
     DateTimeOffset CompletedAtUtc)
 {
-    public bool Succeeded => ExitCode == 0;
+    public bool Succeeded => ExitCode == 0 && !TimedOut;
 }
 
 public sealed record ValidationReport(
@@ -45,6 +47,7 @@ public sealed class DotNetValidationValidator : IValidator<DotNetValidationReque
 {
     private const string ProducerType = "Wip.Validation.DotNet";
     private const string ProducerVersion = "1.0.0";
+    private static readonly TimeSpan DefaultCommandTimeout = TimeSpan.FromMinutes(5);
 
     private readonly IArtifactStore _artifactStore;
     private readonly WipWorkspaceProviderGit _workspaceProvider;
@@ -66,17 +69,22 @@ public sealed class DotNetValidationValidator : IValidator<DotNetValidationReque
         ValidateRequired(request.TestProjectPath, nameof(request.TestProjectPath));
         ValidateRequired(request.RepositoryPath, nameof(request.RepositoryPath));
         ValidateRequired(request.DotNetExecutablePath, nameof(request.DotNetExecutablePath));
+        var commandTimeout = request.CommandTimeout ?? DefaultCommandTimeout;
+        if (commandTimeout <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(request.CommandTimeout), "Command timeout must be greater than zero.");
 
         var buildResult = await RunDotNetAsync(
             request.DotNetExecutablePath,
             context.WorktreePath,
             ["build", request.BuildProjectPath, "--nologo", "-v", "minimal"],
+            commandTimeout,
             cancellationToken);
 
         var testResult = await RunDotNetAsync(
             request.DotNetExecutablePath,
             context.WorktreePath,
             ["test", request.TestProjectPath, "--no-build", "--nologo", "-v", "minimal"],
+            commandTimeout,
             cancellationToken);
 
         string? diffHash = null;
@@ -118,6 +126,7 @@ public sealed class DotNetValidationValidator : IValidator<DotNetValidationReque
         string executable,
         string worktreePath,
         IReadOnlyList<string> arguments,
+        TimeSpan timeout,
         CancellationToken cancellationToken)
     {
         var startedAtUtc = DateTimeOffset.UtcNow;
@@ -134,18 +143,49 @@ public sealed class DotNetValidationValidator : IValidator<DotNetValidationReque
         using var process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start process '{executable}'.");
 
-        var stdOutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var stdErrTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
+        var stdOutTask = process.StandardOutput.ReadToEndAsync();
+        var stdErrTask = process.StandardError.ReadToEndAsync();
+
+        var timedOut = false;
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(timeout);
+
+        try
+        {
+            await process.WaitForExitAsync(timeoutCts.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            timedOut = true;
+            try
+            {
+                if (!process.HasExited)
+                    process.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best effort kill; command timeout still reported even if process exits between checks.
+            }
+
+            await process.WaitForExitAsync(cancellationToken);
+        }
 
         var stdOut = await stdOutTask;
         var stdErr = await stdErrTask;
+        if (timedOut)
+        {
+            var timeoutMessage = $"Command timed out after {timeout.TotalMilliseconds:0} ms.";
+            stdErr = string.IsNullOrWhiteSpace(stdErr)
+                ? timeoutMessage
+                : $"{stdErr}{Environment.NewLine}{timeoutMessage}";
+        }
 
         return new ValidationCommandResult(
             Command: string.Join(" ", [executable, ..arguments]),
-            ExitCode: process.ExitCode,
+            ExitCode: timedOut ? -1 : process.ExitCode,
             StandardOutput: stdOut,
             StandardError: stdErr,
+            TimedOut: timedOut,
             StartedAtUtc: startedAtUtc,
             CompletedAtUtc: DateTimeOffset.UtcNow);
     }

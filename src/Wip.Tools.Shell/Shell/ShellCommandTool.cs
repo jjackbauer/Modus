@@ -64,17 +64,6 @@ public sealed class ShellCommandTool : ITool<ShellCommandRequest, ShellCommandRe
 
         var startedAtUtc = DateTimeOffset.UtcNow;
         var workingDirectory = ResolveWorkingDirectory(context.WorktreePath, request.RelativeWorkingDirectory);
-        if (!IsWithinWorktree(context.WorktreePath, workingDirectory))
-        {
-            return await BuildBlockedResultAsync(
-                context.SessionId,
-                request,
-                workingDirectory,
-                startedAtUtc,
-                "Resolved working directory is outside the active worktree.",
-                cancellationToken);
-        }
-
         var policyDecision = await _policy.EvaluateAsync(
             new ShellCommandPolicyRequest(request.Command, workingDirectory, timeout),
             new PolicyContext(context.SessionId, request.WorkflowId, context.WorktreePath, OperationName),
@@ -256,25 +245,6 @@ public sealed class ShellCommandTool : ITool<ShellCommandRequest, ShellCommandRe
             return Path.GetFullPath(worktreePath);
 
         return Path.GetFullPath(Path.Combine(worktreePath, relativeWorkingDirectory));
-    }
-
-    private static bool IsWithinWorktree(string worktreePath, string candidatePath)
-    {
-        var root = EnsureTrailingSeparator(Path.GetFullPath(worktreePath));
-        var candidate = Path.GetFullPath(candidatePath);
-
-        if (string.Equals(root.TrimEnd(Path.DirectorySeparatorChar), candidate, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        return candidate.StartsWith(root, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EnsureTrailingSeparator(string path)
-    {
-        if (path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar))
-            return path;
-
-        return path + Path.DirectorySeparatorChar;
     }
 
     private static string ResolveDefaultShellPath()

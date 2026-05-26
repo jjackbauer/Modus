@@ -2,6 +2,8 @@ using System.Reflection;
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Descriptors;
 using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Policies;
+using Wip.Abstractions.Workflows;
 using Xunit;
 
 namespace Wip.Abstractions.Tests.Contracts;
@@ -31,7 +33,7 @@ public sealed class TypedCapabilityContractsTests
             .GetExportedTypes()
             .Where(static type => type.IsInterface)
             .SelectMany(static type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-            .Where(static method => method.Name == "ExecuteAsync")
+            .Where(static method => method.Name is "ExecuteAsync" or "EvaluateAsync")
             .Where(static method => MethodUsesObjectPayload(method))
             .ToArray();
 
@@ -73,6 +75,52 @@ public sealed class TypedCapabilityContractsTests
                 capabilityType: typeof(string)));
 
         Assert.Equal("capabilityType", exception.ParamName);
+    }
+
+    [Fact]
+    public void PolicyDescriptor_GivenTypedPolicyRegistration_StoresConcreteRequestAndResultTypes()
+    {
+        var descriptor = PolicyDescriptor.For<TestPolicy, CreateTaskRequest, PolicyDecision>(
+            policyId: new PolicyId("policy.local-safe"));
+
+        Assert.Equal(new PolicyId("policy.local-safe"), descriptor.PolicyId);
+        Assert.Equal(typeof(CreateTaskRequest), descriptor.RequestType);
+        Assert.Equal(typeof(PolicyDecision), descriptor.ResultType);
+        Assert.Equal(typeof(TestPolicy), descriptor.PolicyType);
+    }
+
+    [Fact]
+    public void PolicyDescriptor_GivenObjectResultType_ThrowsArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            PolicyDescriptor.For<ObjectResultPolicy, CreateTaskRequest, object>(
+                policyId: new PolicyId("policy.object-result")));
+
+        Assert.Equal("TResult", exception.ParamName);
+    }
+
+    [Fact]
+    public void WorkflowDescriptor_GivenTypedRequestAndResult_StoresConcreteContractTypes()
+    {
+        var descriptor = new WorkflowDescriptor<CreateTaskRequest, CreateTaskResult>(
+            workflowId: new WorkflowId("workflow.plan"),
+            displayName: "Plan workflow");
+
+        Assert.Equal(new WorkflowId("workflow.plan"), descriptor.WorkflowId);
+        Assert.Equal("Plan workflow", descriptor.DisplayName);
+        Assert.Equal(typeof(CreateTaskRequest), descriptor.RequestType);
+        Assert.Equal(typeof(CreateTaskResult), descriptor.ResultType);
+    }
+
+    [Fact]
+    public void WorkflowDescriptor_GivenObjectRequestType_ThrowsArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            new WorkflowDescriptor<object, CreateTaskResult>(
+                workflowId: new WorkflowId("workflow.object-request"),
+                displayName: "Object workflow"));
+
+        Assert.Equal("TRequest", exception.ParamName);
     }
 
     private static bool MethodUsesObjectPayload(MethodInfo method)
@@ -121,5 +169,27 @@ public sealed class TypedCapabilityContractsTests
             CapabilityContext context,
             CancellationToken cancellationToken)
             => ValueTask.FromResult<object>(new CreateTaskResult($"Plan: {request.Goal}"));
+    }
+
+    private sealed class TestPolicy : IPolicy<CreateTaskRequest, PolicyDecision>
+    {
+        public PolicyId PolicyId => new("policy.local-safe");
+
+        public ValueTask<PolicyDecision> EvaluateAsync(
+            CreateTaskRequest request,
+            PolicyContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult(PolicyDecision.Allow());
+    }
+
+    private sealed class ObjectResultPolicy : IPolicy<CreateTaskRequest, object>
+    {
+        public PolicyId PolicyId => new("policy.object-result");
+
+        public ValueTask<object> EvaluateAsync(
+            CreateTaskRequest request,
+            PolicyContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult<object>(new object());
     }
 }

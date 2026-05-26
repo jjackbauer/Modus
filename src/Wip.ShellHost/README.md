@@ -17,6 +17,56 @@ Factory wiring in `WipShellHostFactory` then composes:
 3. `WipShellCommandLoop` with a host custom-command handler.
 4. `WipShellEngine` + `WipShellHostContainer` for lifecycle management.
 
+## Usage
+
+### Quick Start
+
+Run the shell host from repository root:
+
+```powershell
+dotnet run --project src/Wip.ShellHost/Wip.ShellHost.csproj
+```
+
+Run with an explicit plugins path (first non-option argument):
+
+```powershell
+dotnet run --project src/Wip.ShellHost/Wip.ShellHost.csproj -- .\plugins
+```
+
+Run with startup mode override:
+
+```powershell
+dotnet run --project src/Wip.ShellHost/Wip.ShellHost.csproj -- --startup-mode=autoload
+```
+
+Supported startup mode values:
+
+- `explicit`, `explicit-command`, `explicit-command-only`, `manual`
+- `autoload`, `auto-load`, `auto`
+
+Startup behavior:
+
+1. Host resolves effective configuration from defaults, optional `.wip/config.json`, and CLI overrides.
+2. In `autoload` mode, plugin loading is attempted before interactive loop starts.
+3. In explicit mode, plugin loading occurs only via shell command path.
+4. `Ctrl+C` requests graceful shutdown and returns exit code `0`.
+
+### Typical Interactive Flow
+
+After startup, use a contributor-friendly flow:
+
+1. `help`
+2. `config`
+3. `plugins`
+4. `workflows`
+5. `start <workflow-id> <repository-path> <worktree-path>`
+6. `status`
+7. `transition <Created|Editing|Validating|AwaitingApproval|Approved|Merged>`
+8. `detach`
+9. `exit`
+
+For command syntax and deterministic shell-level error contracts, see `src/Wip.Shell/README.md`.
+
 ## Host Command Extensions
 
 The host injects two aliases handled by `TryHandleHostCommandAsync`:

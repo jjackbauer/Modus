@@ -77,6 +77,38 @@ public sealed class DotNetValidationValidatorTests
         Assert.Equal(result.ReportArtifact.ArtifactId, descriptor.ArtifactId);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_GivenBuildCommandTimeout_ReturnsFailedResultAndPersistsTimeoutEvidence()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync(buildDelayMilliseconds: 1500);
+        var artifactStore = new WipArtifactStoreLocal(fixture.RepositoryPath);
+        var workspaceProvider = new WipWorkspaceProviderGit();
+        var validator = new DotNetValidationValidator(artifactStore, workspaceProvider);
+
+        var context = new CapabilityContext(new SessionId("session-validate-timeout"), fixture.RepositoryPath);
+        var request = new DotNetValidationRequest(
+            BuildProjectPath: "src/Example/Example.csproj",
+            TestProjectPath: "tests/Example.Tests/Example.Tests.csproj",
+            RepositoryPath: fixture.RepositoryPath,
+            TargetBranch: "main",
+            SessionBranch: "main",
+            CommandTimeout: TimeSpan.FromMilliseconds(200),
+            DotNetExecutablePath: fixture.DotNetStubPath);
+
+        var result = await validator.ExecuteAsync(request, context, CancellationToken.None);
+
+        Assert.False(result.Succeeded);
+        Assert.True(result.Report.Build.TimedOut);
+        Assert.Equal(-1, result.Report.Build.ExitCode);
+        Assert.Contains("timed out", result.Report.Build.StandardError, StringComparison.OrdinalIgnoreCase);
+        Assert.False(result.Report.Test.TimedOut);
+
+        var reportPath = Path.Combine(fixture.RepositoryPath, result.ReportArtifact.RelativePath.Replace('/', Path.DirectorySeparatorChar));
+        using var persisted = JsonDocument.Parse(await File.ReadAllTextAsync(reportPath, CancellationToken.None));
+        var root = persisted.RootElement;
+        Assert.True(root.GetProperty("Build").GetProperty("TimedOut").GetBoolean());
+    }
+
     private sealed class TempGitRepository : IAsyncDisposable
     {
         private TempGitRepository(string repositoryPath, string dotNetStubPath)
@@ -89,7 +121,12 @@ public sealed class DotNetValidationValidatorTests
 
         public string DotNetStubPath { get; }
 
-        public static async ValueTask<TempGitRepository> CreateAsync(int buildExitCode = 0, int testExitCode = 0, string testStdErr = "")
+        public static async ValueTask<TempGitRepository> CreateAsync(
+            int buildExitCode = 0,
+            int testExitCode = 0,
+            string testStdErr = "",
+            int buildDelayMilliseconds = 0,
+            int testDelayMilliseconds = 0)
         {
             var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-validate-{Guid.NewGuid():N}");
             Directory.CreateDirectory(repositoryPath);
@@ -98,7 +135,12 @@ public sealed class DotNetValidationValidatorTests
                 repositoryPath,
                 dotNetStubPath: Path.Combine(repositoryPath, "dotnet.cmd"));
 
-            await fixture.WriteDotNetStubAsync(buildExitCode, testExitCode, testStdErr);
+            await fixture.WriteDotNetStubAsync(
+                buildExitCode,
+                testExitCode,
+                testStdErr,
+                buildDelayMilliseconds,
+                testDelayMilliseconds);
             await fixture.InitializeGitRepositoryAsync();
 
             return fixture;
@@ -119,15 +161,22 @@ public sealed class DotNetValidationValidatorTests
             await RunGitAsync("commit", "-m", "initial");
         }
 
-        private async ValueTask WriteDotNetStubAsync(int buildExitCode, int testExitCode, string testStdErr)
+        private async ValueTask WriteDotNetStubAsync(
+            int buildExitCode,
+            int testExitCode,
+            string testStdErr,
+            int buildDelayMilliseconds,
+            int testDelayMilliseconds)
         {
             var content =
                 "@echo off\r\n" +
                 "set cmd=%1\r\n" +
                 "if /I \"%cmd%\"==\"build\" (\r\n" +
+                BuildDelayLine(buildDelayMilliseconds) +
                 $"  echo Build succeeded for %2\r\n  exit /b {buildExitCode}\r\n" +
                 ")\r\n" +
                 "if /I \"%cmd%\"==\"test\" (\r\n" +
+                BuildDelayLine(testDelayMilliseconds) +
                 "  echo Test command invoked for %2\r\n" +
                 (string.IsNullOrWhiteSpace(testStdErr)
                     ? string.Empty
@@ -138,6 +187,14 @@ public sealed class DotNetValidationValidatorTests
                 "exit /b 99\r\n";
 
             await File.WriteAllTextAsync(DotNetStubPath, content, CancellationToken.None);
+        }
+
+        private static string BuildDelayLine(int delayMilliseconds)
+        {
+            if (delayMilliseconds <= 0)
+                return string.Empty;
+
+            return $"  powershell -NoProfile -Command \"Start-Sleep -Milliseconds {delayMilliseconds}\"\r\n";
         }
 
         private static string EscapeBatchLiteral(string value)

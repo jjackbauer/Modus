@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Modus.Core.Plugins;
+using System.Collections.Concurrent;
 using Xunit;
 
 namespace Modus.Core.Tests.Plugins;
@@ -137,7 +138,7 @@ public sealed class PluginInterfaceMappingTests
         plugin.Register(services);
 
         var provider = services.BuildServiceProvider();
-        var instances = new List<ICustomPluginContract>();
+        var instances = new ConcurrentBag<ICustomPluginContract>();
 
         Parallel.For(0, 10, _ =>
         {

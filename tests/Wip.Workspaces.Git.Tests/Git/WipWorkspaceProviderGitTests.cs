@@ -20,8 +20,10 @@ public sealed class WipWorkspaceProviderGitTests
             CancellationToken.None);
 
         var branchList = await fixture.RunGitAsync("branch", "--list", workspace.SessionBranch);
+        var expectedWorktree = Path.Combine(fixture.RepositoryPath, ".wip", "worktrees", "session-create");
 
         Assert.Equal("main", workspace.TargetBranch);
+        Assert.Equal(Path.GetFullPath(expectedWorktree), Path.GetFullPath(workspace.WorktreePath));
         Assert.True(Directory.Exists(workspace.WorktreePath));
         Assert.Contains(workspace.SessionBranch, branchList.StdOut, StringComparison.Ordinal);
 
@@ -102,6 +104,35 @@ public sealed class WipWorkspaceProviderGitTests
     }
 
     [Fact]
+    public async Task WriteGuard_GivenPathEscapeAttempt_ExpectedOperationBlockedAndNoExternalMutation()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+
+        var workspace = await provider.CreateAsync(
+            new CreateWorkspaceRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                SessionId: new SessionId("session-guard"),
+                TargetBranch: "main"),
+            CancellationToken.None);
+
+        var outsideFile = Path.Combine(fixture.RepositoryPath, "outside-guard.txt");
+        await File.WriteAllTextAsync(outsideFile, "outside-initial", CancellationToken.None);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await provider.WriteTextAsync(
+                workspace,
+                Path.Combine("..", "..", "outside-guard.txt"),
+                "malicious-overwrite",
+                CancellationToken.None));
+
+        var outsideContent = await File.ReadAllTextAsync(outsideFile, CancellationToken.None);
+
+        Assert.Contains("escapes worktree boundary", exception.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("outside-initial", outsideContent);
+    }
+
+    [Fact]
     public async Task MergeAsync_GivenApprovedTokenAndTargetBranchDrift_RejectsMergeWithDeterministicReason()
     {
         await using var fixture = await TempGitRepository.CreateAsync();
@@ -131,7 +162,11 @@ public sealed class WipWorkspaceProviderGitTests
                     TargetBranch: workspace.TargetBranch,
                     SessionBranch: workspace.SessionBranch,
                     ExpectedTargetCommit: workspace.TargetCommitAtCreation,
-                    ApprovedDiffHash: approvedDiffHash),
+                    ApprovedDiffHash: approvedDiffHash,
+                    HasPassingValidationEvidence: true,
+                    HasReviewEvidence: true,
+                    IsSessionAborted: false,
+                    IsApprovalConfirmed: true),
                 CancellationToken.None));
 
         Assert.Contains("drift", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -169,7 +204,11 @@ public sealed class WipWorkspaceProviderGitTests
                     TargetBranch: workspace.TargetBranch,
                     SessionBranch: workspace.SessionBranch,
                     ExpectedTargetCommit: workspace.TargetCommitAtCreation,
-                    ApprovedDiffHash: approvedHash),
+                    ApprovedDiffHash: approvedHash,
+                    HasPassingValidationEvidence: true,
+                    HasReviewEvidence: true,
+                    IsSessionAborted: false,
+                    IsApprovalConfirmed: true),
                 CancellationToken.None));
 
         Assert.Contains("stale", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -199,10 +238,208 @@ public sealed class WipWorkspaceProviderGitTests
                     TargetBranch: workspace.TargetBranch,
                     SessionBranch: workspace.SessionBranch,
                     ExpectedTargetCommit: workspace.TargetCommitAtCreation,
-                    ApprovedDiffHash: string.Empty),
+                    ApprovedDiffHash: string.Empty,
+                    HasPassingValidationEvidence: true,
+                    HasReviewEvidence: true,
+                    IsSessionAborted: false,
+                    IsApprovalConfirmed: true),
                 CancellationToken.None));
 
         Assert.Contains("missing approval evidence", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MergeAsync_GivenMissingValidationEvidence_RejectsMergeWithDeterministicReason()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+
+        var workspace = await provider.CreateAsync(
+            new CreateWorkspaceRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                SessionId: new SessionId("session-missing-validation"),
+                TargetBranch: "main"),
+            CancellationToken.None);
+
+        await File.AppendAllTextAsync(Path.Combine(workspace.WorktreePath, "readme.txt"), "feature-v1\n", CancellationToken.None);
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "add", ".");
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "commit", "-m", "feature v1");
+
+        var approvedDiffHash = await provider.ComputeNormalizedDiffHashAsync(
+            new DiffHashRequest(fixture.RepositoryPath, workspace.TargetBranch, workspace.SessionBranch),
+            CancellationToken.None);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await provider.MergeAsync(
+                new MergeRequest(
+                    RepositoryPath: fixture.RepositoryPath,
+                    TargetBranch: workspace.TargetBranch,
+                    SessionBranch: workspace.SessionBranch,
+                    ExpectedTargetCommit: workspace.TargetCommitAtCreation,
+                    ApprovedDiffHash: approvedDiffHash,
+                    HasPassingValidationEvidence: false,
+                    HasReviewEvidence: true,
+                    IsSessionAborted: false,
+                    IsApprovalConfirmed: true),
+                CancellationToken.None));
+
+        Assert.Contains("missing passing validation evidence", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MergeAsync_GivenMissingReviewEvidence_RejectsMergeWithDeterministicReason()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+
+        var workspace = await provider.CreateAsync(
+            new CreateWorkspaceRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                SessionId: new SessionId("session-missing-review"),
+                TargetBranch: "main"),
+            CancellationToken.None);
+
+        await File.AppendAllTextAsync(Path.Combine(workspace.WorktreePath, "readme.txt"), "feature-v1\n", CancellationToken.None);
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "add", ".");
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "commit", "-m", "feature v1");
+
+        var approvedDiffHash = await provider.ComputeNormalizedDiffHashAsync(
+            new DiffHashRequest(fixture.RepositoryPath, workspace.TargetBranch, workspace.SessionBranch),
+            CancellationToken.None);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await provider.MergeAsync(
+                new MergeRequest(
+                    RepositoryPath: fixture.RepositoryPath,
+                    TargetBranch: workspace.TargetBranch,
+                    SessionBranch: workspace.SessionBranch,
+                    ExpectedTargetCommit: workspace.TargetCommitAtCreation,
+                    ApprovedDiffHash: approvedDiffHash,
+                    HasPassingValidationEvidence: true,
+                    HasReviewEvidence: false,
+                    IsSessionAborted: false,
+                    IsApprovalConfirmed: true),
+                CancellationToken.None));
+
+        Assert.Contains("missing review evidence", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MergeAsync_GivenAbortedSession_RejectsMergeWithDeterministicReason()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+
+        var workspace = await provider.CreateAsync(
+            new CreateWorkspaceRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                SessionId: new SessionId("session-aborted"),
+                TargetBranch: "main"),
+            CancellationToken.None);
+
+        await File.AppendAllTextAsync(Path.Combine(workspace.WorktreePath, "readme.txt"), "feature-v1\n", CancellationToken.None);
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "add", ".");
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "commit", "-m", "feature v1");
+
+        var approvedDiffHash = await provider.ComputeNormalizedDiffHashAsync(
+            new DiffHashRequest(fixture.RepositoryPath, workspace.TargetBranch, workspace.SessionBranch),
+            CancellationToken.None);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await provider.MergeAsync(
+                new MergeRequest(
+                    RepositoryPath: fixture.RepositoryPath,
+                    TargetBranch: workspace.TargetBranch,
+                    SessionBranch: workspace.SessionBranch,
+                    ExpectedTargetCommit: workspace.TargetCommitAtCreation,
+                    ApprovedDiffHash: approvedDiffHash,
+                    HasPassingValidationEvidence: true,
+                    HasReviewEvidence: true,
+                    IsSessionAborted: true,
+                    IsApprovalConfirmed: true),
+                CancellationToken.None));
+
+        Assert.Contains("session is aborted", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MergeAsync_GivenApprovalNotConfirmed_RejectsMergeWithDeterministicReason()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+
+        var workspace = await provider.CreateAsync(
+            new CreateWorkspaceRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                SessionId: new SessionId("session-non-confirmed"),
+                TargetBranch: "main"),
+            CancellationToken.None);
+
+        await File.AppendAllTextAsync(Path.Combine(workspace.WorktreePath, "readme.txt"), "feature-v1\n", CancellationToken.None);
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "add", ".");
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "commit", "-m", "feature v1");
+
+        var approvedDiffHash = await provider.ComputeNormalizedDiffHashAsync(
+            new DiffHashRequest(fixture.RepositoryPath, workspace.TargetBranch, workspace.SessionBranch),
+            CancellationToken.None);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await provider.MergeAsync(
+                new MergeRequest(
+                    RepositoryPath: fixture.RepositoryPath,
+                    TargetBranch: workspace.TargetBranch,
+                    SessionBranch: workspace.SessionBranch,
+                    ExpectedTargetCommit: workspace.TargetCommitAtCreation,
+                    ApprovedDiffHash: approvedDiffHash,
+                    HasPassingValidationEvidence: true,
+                    HasReviewEvidence: true,
+                    IsSessionAborted: false,
+                    IsApprovalConfirmed: false),
+                CancellationToken.None));
+
+        Assert.Contains("approval confirmation was not completed", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task MergeAsync_GivenValidatedReviewedConfirmedAndCurrentApproval_MergesFastForwardWithoutDrift()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+
+        var workspace = await provider.CreateAsync(
+            new CreateWorkspaceRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                SessionId: new SessionId("session-merge-success"),
+                TargetBranch: "main"),
+            CancellationToken.None);
+
+        await File.AppendAllTextAsync(Path.Combine(workspace.WorktreePath, "readme.txt"), "feature-v1\n", CancellationToken.None);
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "add", ".");
+        await fixture.RunGitAsync("-C", workspace.WorktreePath, "commit", "-m", "feature v1");
+
+        var approvedDiffHash = await provider.ComputeNormalizedDiffHashAsync(
+            new DiffHashRequest(fixture.RepositoryPath, workspace.TargetBranch, workspace.SessionBranch),
+            CancellationToken.None);
+
+        var result = await provider.MergeAsync(
+            new MergeRequest(
+                RepositoryPath: fixture.RepositoryPath,
+                TargetBranch: workspace.TargetBranch,
+                SessionBranch: workspace.SessionBranch,
+                ExpectedTargetCommit: workspace.TargetCommitAtCreation,
+                ApprovedDiffHash: approvedDiffHash,
+                HasPassingValidationEvidence: true,
+                HasReviewEvidence: true,
+                IsSessionAborted: false,
+                IsApprovalConfirmed: true),
+            CancellationToken.None);
+
+        var currentMainCommit = (await fixture.RunGitAsync("rev-parse", "--verify", workspace.TargetBranch)).StdOut;
+
+        Assert.Equal(workspace.TargetBranch, result.TargetBranch);
+        Assert.Equal(workspace.SessionBranch, result.SessionBranch);
+        Assert.Equal(workspace.TargetCommitAtCreation, result.PreviousTargetCommit);
+        Assert.Equal(currentMainCommit, result.NewTargetCommit);
     }
 
     private sealed class TempGitRepository : IAsyncDisposable

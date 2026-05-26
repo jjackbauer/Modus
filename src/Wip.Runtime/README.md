@@ -41,6 +41,23 @@ Snapshot payload fields:
 
 Persistence occurs when a session starts and after every successful transition.
 
+## Event Journal Records
+
+Runtime writes append-only event records for each session lifecycle operation at:
+
+`.wip/sessions/{sessionId}/event-journal.ndjson`
+
+Each line is a JSON object containing:
+
+- `Kind`
+- `SessionId`
+- `CurrentState`
+- `PreviousState`
+- `OccurredAtUtc`
+- `Message`
+
+The journal records `SessionStarted`, `SessionTransitioned`, `SessionAttached`, and `SessionDetached` in call order.
+
 ## Attach and Detach Flow
 
 1. `AttachSessionAsync(repositoryPath, sessionId)` resolves from in-memory store first.

@@ -196,8 +196,18 @@ public sealed class WipBuilder
             return (matches[0][0], matches[0][1]);
         }
 
-        var reason = matches.Length == 0 ? "none" : "multiple";
+        if (matches.Length == 0)
+        {
+            throw new InvalidOperationException(
+                $"Capability type '{capabilityType.Name}' must implement exactly one {capabilityInterfaceType.Name} signature, but found none.");
+        }
+
+        var signatures = matches
+            .Select(types => $"{types[0].Name},{types[1].Name}")
+            .OrderBy(signature => signature, StringComparer.Ordinal)
+            .ToArray();
+
         throw new InvalidOperationException(
-            $"Capability type '{capabilityType.Name}' must implement exactly one {capabilityInterfaceType.Name} signature, but found {reason}.");
+            $"Capability type '{capabilityType.Name}' must implement exactly one {capabilityInterfaceType.Name} signature, but found multiple: {string.Join(" | ", signatures)}.");
     }
 }

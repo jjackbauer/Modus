@@ -17,6 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Wip.Abstractions\Wip.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\..\src\Wip.Policy.LocalSafe\Wip.Policy.LocalSafe.csproj" />
     <ProjectReference Include="..\..\src\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Wip.Tools.Shell\Wip.Tools.Shell.csproj" />
   </ItemGroup>
 </Project>

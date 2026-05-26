@@ -10,11 +10,14 @@ namespace Wip.Shell.Tests.Interactive;
 
 public sealed class WipShellCommandLoopTests
 {
+    private const string ChecklistItem = "Implement interactive Wip.Shell command model and context-aware prompt transitions for global and session commands defined in MVP scope [depends on runtime orchestration commands]";
+
     [Fact]
-    public async Task ShellProcess_GivenStartup_RemainsInteractiveUntilExitCommand()
+    [Trait("ChecklistItem", ChecklistItem)]
+    public async Task PromptRendering_GivenNoActiveSession_ExpectedGlobalPrompt()
     {
         var orchestrator = BuildOrchestrator();
-        using var reader = new StringReader("help\nexit\n");
+        using var reader = new StringReader("exit\n");
         using var writer = new StringWriter();
         var loop = new WipShellCommandLoop(orchestrator, reader, writer);
 
@@ -22,13 +25,14 @@ public sealed class WipShellCommandLoopTests
 
         var output = writer.ToString();
         Assert.Equal(0, exitCode);
-        Assert.Contains("wip> ", output, StringComparison.Ordinal);
-        Assert.Contains("Available commands:", output, StringComparison.Ordinal);
-        Assert.True(CountOccurrences(output, "wip> ") >= 2);
+        Assert.StartsWith("wip> ", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("wip[", output, StringComparison.Ordinal);
+        Assert.Equal(1, CountOccurrences(output, "wip> "));
     }
 
     [Fact]
-    public async Task PromptRenderer_GivenAttachedSession_ShowsSessionScopedPrompt()
+    [Trait("ChecklistItem", ChecklistItem)]
+    public async Task PromptRendering_GivenActiveSession_ExpectedSessionPromptIncludesSessionId()
     {
         var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(repositoryPath);
@@ -56,7 +60,8 @@ public sealed class WipShellCommandLoopTests
     }
 
     [Fact]
-    public async Task CommandDispatcher_GivenSessionOnlyCommandWithoutActiveSession_ReturnsGuidanceForSessionStartOrAttach()
+    [Trait("ChecklistItem", ChecklistItem)]
+    public async Task SessionCommand_GivenNoActiveSession_ExpectedActionableErrorSuggestingStartOrAttach()
     {
         var orchestrator = BuildOrchestrator();
         using var reader = new StringReader("status\nexit\n");

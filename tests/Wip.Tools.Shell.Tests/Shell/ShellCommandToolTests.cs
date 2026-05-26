@@ -38,7 +38,7 @@ public sealed class ShellCommandToolTests : IAsyncLifetime
     public async Task ExecuteAsync_GivenOutsideWorktreePath_BlocksExecutionAndWritesArtifactLog()
     {
         var artifactStore = new InMemoryArtifactStore();
-        var tool = new ShellCommandTool(new AllowAllPolicy(), artifactStore);
+        var tool = new ShellCommandTool(new DenyOutsideWorktreePolicy(), artifactStore);
         var context = new CapabilityContext(new SessionId("session-outside"), _worktreePath);
 
         var result = await tool.ExecuteAsync(
@@ -50,7 +50,7 @@ public sealed class ShellCommandToolTests : IAsyncLifetime
             CancellationToken.None);
 
         Assert.True(result.IsBlocked);
-        Assert.Contains("outside the active worktree", result.BlockReason, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("outside the active worktree boundary", result.BlockReason, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(-1, result.ExitCode);
         Assert.Single(artifactStore.Descriptors);
         Assert.Contains("\"IsBlocked\":true", artifactStore.Payloads.Single(), StringComparison.Ordinal);
@@ -166,6 +166,39 @@ public sealed class ShellCommandToolTests : IAsyncLifetime
                 request.Command.Contains("rm -rf", StringComparison.OrdinalIgnoreCase)
                     ? PolicyDecision.Deny("Dangerous command denied by policy.")
                     : PolicyDecision.Allow());
+    }
+
+    private sealed class DenyOutsideWorktreePolicy : IPolicy<ShellCommandPolicyRequest>
+    {
+        public PolicyId PolicyId => new("local-safe");
+
+        public ValueTask<PolicyDecision> EvaluateAsync(
+            ShellCommandPolicyRequest request,
+            PolicyContext context,
+            CancellationToken cancellationToken)
+        {
+            var normalizedWorktree = EnsureTrailingSeparator(Path.GetFullPath(context.WorktreePath));
+            var normalizedCandidate = Path.GetFullPath(request.WorkingDirectory);
+
+            var isInside = string.Equals(
+                               normalizedWorktree.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                               normalizedCandidate,
+                               StringComparison.OrdinalIgnoreCase)
+                           || normalizedCandidate.StartsWith(normalizedWorktree, StringComparison.OrdinalIgnoreCase);
+
+            return ValueTask.FromResult(
+                isInside
+                    ? PolicyDecision.Allow()
+                    : PolicyDecision.Deny("Blocked by local-safe policy: command working directory resolves outside the active worktree boundary."));
+        }
+
+        private static string EnsureTrailingSeparator(string path)
+        {
+            if (path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar))
+                return path;
+
+            return path + Path.DirectorySeparatorChar;
+        }
     }
 
     private sealed class InMemoryArtifactStore : IArtifactStore

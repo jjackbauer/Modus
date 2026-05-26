@@ -58,6 +58,36 @@ public sealed class WipRuntimeApprovalTokenFactoryTests
     }
 
     [Fact]
+    public void Create_GivenReviewDiffHashMismatch_ThrowsDeterministicError()
+    {
+        var factory = new WipRuntimeApprovalTokenFactory();
+        var request = BuildRequest(review: new ApprovalReviewReport(
+            ReportArtifactId: new ArtifactId("review-report-001"),
+            ReviewedDiffHash: "different-diff",
+            IsStale: false));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.Create(request));
+
+        Assert.Contains("reviewed diff hash", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Create_GivenReviewAlreadyMarkedStale_ThrowsDeterministicError()
+    {
+        var factory = new WipRuntimeApprovalTokenFactory();
+        var request = BuildRequest(review: new ApprovalReviewReport(
+            ReportArtifactId: new ArtifactId("review-report-001"),
+            ReviewedDiffHash: "diff-123",
+            IsStale: true,
+            StaleReason: "Validation report is stale."));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.Create(request));
+
+        Assert.Contains("review report is stale", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Validation report is stale", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ComputeBindingHash_GivenDifferentBoundCommit_ReturnsDifferentHash()
     {
         var factory = new WipRuntimeApprovalTokenFactory();
@@ -70,6 +100,7 @@ public sealed class WipRuntimeApprovalTokenFactoryTests
     }
 
     private static ApprovalTokenRequest BuildRequest(
+        ApprovalReviewReport? review = null,
         ApprovalValidationReport? validation = null,
         string targetCommit = "abc123def456",
         DateTimeOffset? producedAtUtc = null)
@@ -79,6 +110,10 @@ public sealed class WipRuntimeApprovalTokenFactoryTests
             DiffHash: "diff-123",
             TargetBranch: "main",
             TargetCommit: targetCommit,
+            ReviewReport: review ?? new ApprovalReviewReport(
+                ReportArtifactId: new ArtifactId("review-report-001"),
+                ReviewedDiffHash: "diff-123",
+                IsStale: false),
             ValidationReport: validation ?? new ApprovalValidationReport(
                 ReportArtifactId: new ArtifactId("validation-report-001"),
                 BuildSucceeded: true,

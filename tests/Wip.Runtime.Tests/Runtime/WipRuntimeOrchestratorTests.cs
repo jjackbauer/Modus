@@ -42,37 +42,60 @@ public sealed class WipRuntimeOrchestratorTests
     [Fact]
     public async Task TransitionAsync_GivenCommandSequence_RecordsExplicitStateChangesAndSessionEvents()
     {
-        var store = new InMemorySessionStore();
-        var publisher = new CollectingSessionEventPublisher();
-        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-runtime-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
 
-        var snapshot = await orchestrator.StartSessionAsync(
-            workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/def456",
-            cancellationToken: CancellationToken.None);
+        try
+        {
+            var store = new InMemorySessionStore();
+            var publisher = new CollectingSessionEventPublisher();
+            var orchestrator = new WipRuntimeOrchestrator(store, publisher);
 
-        await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
-        await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Validating, CancellationToken.None);
-        await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.AwaitingApproval, CancellationToken.None);
-        await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Approved, CancellationToken.None);
-        var merged = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Merged, CancellationToken.None);
+            var snapshot = await orchestrator.StartSessionAsync(
+                workflowId: new WorkflowId("workflow.linear"),
+                repositoryPath: repositoryPath,
+                worktreePath: Path.Combine(repositoryPath, ".wip", "worktrees", "def456"),
+                cancellationToken: CancellationToken.None);
 
-        Assert.Equal(SessionState.Merged, merged.State);
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Validating, CancellationToken.None);
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.AwaitingApproval, CancellationToken.None);
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Approved, CancellationToken.None);
+            var merged = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Merged, CancellationToken.None);
 
-        Assert.Collection(
-            publisher.Events,
-            e =>
-            {
-                Assert.Equal(SessionEventKind.SessionStarted, e.Kind);
-                Assert.Null(e.PreviousState);
-                Assert.Equal(SessionState.Created, e.CurrentState);
-            },
-            e => AssertTransition(e, SessionState.Created, SessionState.Editing),
-            e => AssertTransition(e, SessionState.Editing, SessionState.Validating),
-            e => AssertTransition(e, SessionState.Validating, SessionState.AwaitingApproval),
-            e => AssertTransition(e, SessionState.AwaitingApproval, SessionState.Approved),
-            e => AssertTransition(e, SessionState.Approved, SessionState.Merged));
+            Assert.Equal(SessionState.Merged, merged.State);
+
+            Assert.Collection(
+                publisher.Events,
+                e =>
+                {
+                    Assert.Equal(SessionEventKind.SessionStarted, e.Kind);
+                    Assert.Null(e.PreviousState);
+                    Assert.Equal(SessionState.Created, e.CurrentState);
+                },
+                e => AssertTransition(e, SessionState.Created, SessionState.Editing),
+                e => AssertTransition(e, SessionState.Editing, SessionState.Validating),
+                e => AssertTransition(e, SessionState.Validating, SessionState.AwaitingApproval),
+                e => AssertTransition(e, SessionState.AwaitingApproval, SessionState.Approved),
+                e => AssertTransition(e, SessionState.Approved, SessionState.Merged));
+
+            var persistedKinds = await ReadJournalKindsAsync(repositoryPath, snapshot.SessionId);
+            Assert.Equal(
+                [
+                    SessionEventKind.SessionStarted,
+                    SessionEventKind.SessionTransitioned,
+                    SessionEventKind.SessionTransitioned,
+                    SessionEventKind.SessionTransitioned,
+                    SessionEventKind.SessionTransitioned,
+                    SessionEventKind.SessionTransitioned
+                ],
+                persistedKinds);
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
     }
 
     [Fact]
@@ -147,8 +170,15 @@ public sealed class WipRuntimeOrchestratorTests
                 "sessions",
                 snapshot.SessionId.Value,
                 "session-state.json");
+            var journalPath = Path.Combine(
+                repositoryPath,
+                ".wip",
+                "sessions",
+                snapshot.SessionId.Value,
+                "event-journal.ndjson");
 
             Assert.True(File.Exists(statePath));
+            Assert.True(File.Exists(journalPath));
 
             var payload = await File.ReadAllTextAsync(statePath, CancellationToken.None);
             var document = JsonDocument.Parse(payload);
@@ -157,6 +187,9 @@ public sealed class WipRuntimeOrchestratorTests
             Assert.Equal(snapshot.SessionId.Value, root.GetProperty("SessionId").GetString());
             Assert.Equal("Created", root.GetProperty("State").GetString());
             Assert.Equal(repositoryPath, root.GetProperty("RepositoryPath").GetString());
+
+            var persistedKinds = await ReadJournalKindsAsync(repositoryPath, snapshot.SessionId);
+            Assert.Equal([SessionEventKind.SessionStarted], persistedKinds);
         }
         finally
         {
@@ -203,6 +236,16 @@ public sealed class WipRuntimeOrchestratorTests
             Assert.False(detachedAgain);
             Assert.Contains(restoredPublisher.Events, e => e.Kind == SessionEventKind.SessionAttached);
             Assert.Contains(restoredPublisher.Events, e => e.Kind == SessionEventKind.SessionDetached);
+
+            var persistedKinds = await ReadJournalKindsAsync(repositoryPath, created.SessionId);
+            Assert.Equal(
+                [
+                    SessionEventKind.SessionStarted,
+                    SessionEventKind.SessionTransitioned,
+                    SessionEventKind.SessionAttached,
+                    SessionEventKind.SessionDetached
+                ],
+                persistedKinds);
         }
         finally
         {
@@ -251,6 +294,143 @@ public sealed class WipRuntimeOrchestratorTests
     }
 
     [Fact]
+    public void AddWorkflow_GivenMapThenThenValidateStages_ExpectedCompiledDescriptorsRetainStageContractNames()
+    {
+        var builder = CreateBuilderWithWorkflows();
+        var workflow = Assert.Single(
+            builder.WorkflowRegistrations,
+            static registration => registration.WorkflowId.Value == "workflow.linear");
+
+        var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflow);
+
+        Assert.Collection(
+            compilation.StageDescriptors,
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Plan, stage.Stage);
+                Assert.Equal(typeof(PlanStageRequest), stage.RequestType);
+                Assert.Equal(typeof(PlanStageResult), stage.ResultType);
+                Assert.Equal(typeof(PlanStageRequest).FullName, stage.RequestContractName);
+                Assert.Equal(typeof(PlanStageResult).FullName, stage.ResultContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Run, stage.Stage);
+                Assert.Equal(typeof(WorkflowRequest), stage.RequestType);
+                Assert.Equal(typeof(WorkflowResult), stage.ResultType);
+                Assert.Equal(typeof(WorkflowRequest).FullName, stage.RequestContractName);
+                Assert.Equal(typeof(WorkflowResult).FullName, stage.ResultContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Validate, stage.Stage);
+                Assert.Equal(typeof(ValidateStageRequest), stage.RequestType);
+                Assert.Equal(typeof(ValidateStageResult), stage.ResultType);
+                Assert.Equal(typeof(ValidateStageRequest).FullName, stage.RequestContractName);
+                Assert.Equal(typeof(ValidateStageResult).FullName, stage.ResultContractName);
+            },
+            stage => Assert.Equal(WorkflowStageKind.Review, stage.Stage),
+            stage => Assert.Equal(WorkflowStageKind.RequireApproval, stage.Stage),
+            stage => Assert.Equal(WorkflowStageKind.Merge, stage.Stage));
+
+        Assert.Collection(
+            compilation.MapAdapters,
+            map =>
+            {
+                Assert.Equal(WorkflowStageKind.Plan, map.FromStage);
+                Assert.Equal(WorkflowStageKind.Run, map.ToStage);
+                Assert.Equal(typeof(PlanStageResult), map.SourceType);
+                Assert.Equal(typeof(WorkflowRequest), map.TargetType);
+                Assert.Equal(typeof(PlanStageResult).FullName, map.SourceContractName);
+                Assert.Equal(typeof(WorkflowRequest).FullName, map.TargetContractName);
+            },
+            map =>
+            {
+                Assert.Equal(WorkflowStageKind.Run, map.FromStage);
+                Assert.Equal(WorkflowStageKind.Validate, map.ToStage);
+                Assert.Equal(typeof(WorkflowResult), map.SourceType);
+                Assert.Equal(typeof(ValidateStageRequest), map.TargetType);
+                Assert.Equal(typeof(WorkflowResult).FullName, map.SourceContractName);
+                Assert.Equal(typeof(ValidateStageRequest).FullName, map.TargetContractName);
+            },
+            map =>
+            {
+                Assert.Equal(WorkflowStageKind.Validate, map.FromStage);
+                Assert.Equal(WorkflowStageKind.Review, map.ToStage);
+                Assert.Equal(typeof(ValidateStageResult), map.SourceType);
+                Assert.Equal(typeof(ReviewStageRequest), map.TargetType);
+            },
+            map =>
+            {
+                Assert.Equal(WorkflowStageKind.Review, map.FromStage);
+                Assert.Equal(WorkflowStageKind.RequireApproval, map.ToStage);
+                Assert.Equal(typeof(ReviewStageResult), map.SourceType);
+                Assert.Equal(typeof(RequireApprovalStageRequest), map.TargetType);
+            },
+            map =>
+            {
+                Assert.Equal(WorkflowStageKind.RequireApproval, map.FromStage);
+                Assert.Equal(WorkflowStageKind.Merge, map.ToStage);
+                Assert.Equal(typeof(RequireApprovalStageResult), map.SourceType);
+                Assert.Equal(typeof(MergeStageRequest), map.TargetType);
+            });
+    }
+
+    [Fact]
+    public async Task RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/mapped-chain",
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        Assert.Collection(
+            result.Stages,
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Plan, stage.Descriptor.Stage);
+                Assert.Null(stage.MappedInputContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Run, stage.Descriptor.Stage);
+                Assert.Equal(typeof(WorkflowRequest).FullName, stage.MappedInputContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Validate, stage.Descriptor.Stage);
+                Assert.Equal(typeof(ValidateStageRequest).FullName, stage.MappedInputContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Review, stage.Descriptor.Stage);
+                Assert.Equal(typeof(ReviewStageRequest).FullName, stage.MappedInputContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.RequireApproval, stage.Descriptor.Stage);
+                Assert.Equal(typeof(RequireApprovalStageRequest).FullName, stage.MappedInputContractName);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Merge, stage.Descriptor.Stage);
+                Assert.Equal(typeof(MergeStageRequest).FullName, stage.MappedInputContractName);
+            });
+    }
+
+    [Fact]
     public async Task RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection()
     {
         var store = new InMemorySessionStore();
@@ -279,6 +459,25 @@ public sealed class WipRuntimeOrchestratorTests
         Assert.Equal(SessionEventKind.SessionTransitioned, sessionEvent.Kind);
         Assert.Equal(previous, sessionEvent.PreviousState);
         Assert.Equal(current, sessionEvent.CurrentState);
+    }
+
+    private static async Task<IReadOnlyList<SessionEventKind>> ReadJournalKindsAsync(string repositoryPath, SessionId sessionId)
+    {
+        var journalPath = Path.Combine(repositoryPath, ".wip", "sessions", sessionId.Value, "event-journal.ndjson");
+        var lines = await File.ReadAllLinesAsync(journalPath, CancellationToken.None);
+        var kinds = new List<SessionEventKind>(lines.Length);
+
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            using var document = JsonDocument.Parse(line);
+            var kind = document.RootElement.GetProperty("Kind").GetString();
+            kinds.Add(Enum.Parse<SessionEventKind>(kind!, ignoreCase: false));
+        }
+
+        return kinds;
     }
 
     private sealed class InMemorySessionStore : ISessionStore

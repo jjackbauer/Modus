@@ -13,12 +13,19 @@ public sealed record ApprovalValidationReport(
     public bool Succeeded => BuildSucceeded && TestSucceeded;
 }
 
+public sealed record ApprovalReviewReport(
+    ArtifactId ReportArtifactId,
+    string ReviewedDiffHash,
+    bool IsStale,
+    string? StaleReason = null);
+
 public sealed record ApprovalTokenRequest(
     SessionId SessionId,
     WorkflowId WorkflowId,
     string DiffHash,
     string TargetBranch,
     string TargetCommit,
+    ApprovalReviewReport ReviewReport,
     ApprovalValidationReport ValidationReport,
     DateTimeOffset? ProducedAtUtc = null);
 
@@ -42,12 +49,29 @@ public sealed class WipRuntimeApprovalTokenFactory
     public ApprovalToken Create(ApprovalTokenRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(request.ReviewReport);
         ArgumentNullException.ThrowIfNull(request.ValidationReport);
 
         ValidateRequired(request.DiffHash, nameof(request.DiffHash));
         ValidateRequired(request.TargetBranch, nameof(request.TargetBranch));
         ValidateRequired(request.TargetCommit, nameof(request.TargetCommit));
+        ValidateRequired(request.ReviewReport.ReviewedDiffHash, nameof(request.ReviewReport.ReviewedDiffHash));
         ValidateRequired(request.ValidationReport.DiffHash, nameof(request.ValidationReport.DiffHash));
+
+        if (request.ReviewReport.IsStale)
+        {
+            var staleReason = string.IsNullOrWhiteSpace(request.ReviewReport.StaleReason)
+                ? "Approval token creation rejected: review report is stale."
+                : $"Approval token creation rejected: review report is stale. {request.ReviewReport.StaleReason}";
+
+            throw new InvalidOperationException(staleReason);
+        }
+
+        if (!string.Equals(request.DiffHash, request.ReviewReport.ReviewedDiffHash, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "Approval token creation rejected: reviewed diff hash does not match the current approval candidate diff hash.");
+        }
 
         if (!request.ValidationReport.Succeeded)
         {

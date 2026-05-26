@@ -1,0 +1,47 @@
+# Baseline Snapshot - Item 17 Behavior-Proof Policy (Pre-Repair)
+
+## Snapshot Scope
+
+- Requirements document: `.github/requirements/Wip.Shell-Builder-MVP-Next-Steps.md`
+- Checklist item: `Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]`
+- Snapshot date: `2026-05-26`
+
+## Baseline Checklist Line (Pre-Repair)
+
+- [x] Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
+
+Baseline note: line had no `transition-proof` link and no `baseline-witness` link.
+
+## Baseline Verifier Gap Evidence
+
+- Independent transition evidence gap: missing item-17 baseline + transition-proof artifacts and missing line-92 link attachment.
+- Exact-name coverage gap: planned integration tests had `Missing:26` unmatched planned names.
+
+Missing planned names captured in baseline:
+
+1. `CapabilityDescriptor_GivenTypedAgentRegistration_ExpectedConcreteRequestAndResultTypesPersisted`
+2. `WorkflowContract_GivenTypedRequestResultExecution_ExpectedRuntimeDispatchUsesDeclaredGenericTypes`
+3. `AddAgent_GivenExplicitGenericRegistration_ExpectedDescriptorAndServiceRegistrationCreated`
+4. `AddAgent_GivenAmbiguousInferenceSignature_ExpectedDeterministicRegistrationFailure`
+5. `AddValidator_GivenInferenceNoMatchingInterface_ExpectedDeterministicRegistrationFailure`
+6. `RunAsync_GivenShellStartup_ExpectedHostBuildsContainerOnceAndRemainsInteractiveUntilExit`
+7. `RunAsync_GivenExitCommand_ExpectedPluginStopLifecycleExecutedBeforeProcessTermination`
+8. `LoadPluginsAsync_GivenPluginPathsConfigured_ExpectedPluginsDiscoveredAndManifestIncludesMetadata`
+9. `PluginsCommand_GivenLoadedPlugins_ExpectedDiagnosticsOutputListsCapabilitiesAndPermissions`
+10. `StartSessionAsync_GivenValidRepository_ExpectedSessionStatePersistedWithCreatedOrEditingState`
+11. `TransitionAsync_GivenInvalidStateJump_ExpectedDeterministicRejectionAndNoStateMutation`
+12. `AttachSessionAsync_GivenPersistedSessionOnly_ExpectedRuntimeRestoresSessionAndActivatesContext`
+13. `CreateAsync_GivenSessionStart_ExpectedGitWorktreeAndSessionBranchCreatedAtConfiguredRoot`
+14. `ComputeDiffHashAsync_GivenEquivalentNormalizedDiffs_ExpectedStableIdenticalHash`
+15. `PreviewMergeAsync_GivenTargetBranchMoved_ExpectedDriftDetectedBeforeMerge`
+16. `ValidateAsync_GivenPassingProject_ExpectedBuildAndTestCommandsSucceedAndReportPass`
+17. `ValidateAsync_GivenCommandTimeout_ExpectedValidationFailsWithTimeoutEvidenceCaptured`
+18. `ReviewAsync_GivenValidatedDiff_ExpectedReviewReportIncludesDiffSummaryValidationAndApprovalStatus`
+19. `ApproveAsync_GivenDiffChangedAfterReview_ExpectedApprovalRejectedAsReviewStale`
+20. `ApproveAsync_GivenConfirmationDeclined_ExpectedNoApprovalTokenCreated`
+21. `MergeAsync_GivenNoApprovalToken_ExpectedMergeRejectedWithApprovalRequiredMessage`
+22. `MergeAsync_GivenApprovalTokenWithStaleDiffHash_ExpectedMergeRejectedWithoutSideEffects`
+23. `MergeAsync_GivenTargetBranchDriftAfterApproval_ExpectedMergeRejectedAndRevalidationRequired`
+24. `MergeAsync_GivenApprovedValidatedCurrentDiff_ExpectedMergeAppliedAndSessionTransitionedToMerged`
+25. `PluginDiscovery_GivenExternalBuilderPlugin_ExpectedTypedAgentValidatorWorkflowRegisteredWithoutShellHostCodeChanges`
+26. `PluginsAndWorkflowsCommands_GivenExternalPluginLoaded_ExpectedCapabilityAndWorkflowIdsVisibleAtRuntime`

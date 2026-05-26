@@ -43,7 +43,11 @@ public sealed record MergeRequest(
     string TargetBranch,
     string SessionBranch,
     string ExpectedTargetCommit,
-    string ApprovedDiffHash);
+    string ApprovedDiffHash,
+    bool HasPassingValidationEvidence,
+    bool HasReviewEvidence,
+    bool IsSessionAborted,
+    bool IsApprovalConfirmed);
 
 public sealed record MergeResult(
     string TargetBranch,
@@ -92,6 +96,43 @@ public sealed class WipWorkspaceProviderGit
             sessionBranch,
             request.TargetBranch,
             targetCommitAtCreation);
+    }
+
+    public string ResolveWritePath(WorkspaceSession session, string relativePath)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ValidateRequiredPath(session.WorktreePath, nameof(session.WorktreePath));
+        ValidateRequired(relativePath, nameof(relativePath));
+
+        var normalizedRoot = EnsureTrailingDirectorySeparator(Path.GetFullPath(session.WorktreePath));
+        var candidatePath = Path.IsPathRooted(relativePath)
+            ? Path.GetFullPath(relativePath)
+            : Path.GetFullPath(Path.Combine(session.WorktreePath, relativePath));
+
+        if (!candidatePath.StartsWith(normalizedRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"Write rejected: resolved path '{candidatePath}' escapes worktree boundary '{session.WorktreePath}'.");
+        }
+
+        return candidatePath;
+    }
+
+    public async ValueTask<string> WriteTextAsync(
+        WorkspaceSession session,
+        string relativePath,
+        string content,
+        CancellationToken cancellationToken)
+    {
+        var targetPath = ResolveWritePath(session, relativePath);
+        var parentDirectory = Path.GetDirectoryName(targetPath);
+        if (!string.IsNullOrEmpty(parentDirectory))
+        {
+            Directory.CreateDirectory(parentDirectory);
+        }
+
+        await File.WriteAllTextAsync(targetPath, content, cancellationToken);
+        return targetPath;
     }
 
     public async ValueTask<string> ComputeNormalizedDiffHashAsync(DiffHashRequest request, CancellationToken cancellationToken)
@@ -171,6 +212,30 @@ public sealed class WipWorkspaceProviderGit
         ValidateRequired(request.TargetBranch, nameof(request.TargetBranch));
         ValidateRequired(request.SessionBranch, nameof(request.SessionBranch));
         ValidateRequired(request.ExpectedTargetCommit, nameof(request.ExpectedTargetCommit));
+
+        if (request.IsSessionAborted)
+        {
+            throw new InvalidOperationException(
+                "Merge rejected: session is aborted and cannot be merged.");
+        }
+
+        if (!request.HasPassingValidationEvidence)
+        {
+            throw new InvalidOperationException(
+                "Merge rejected: missing passing validation evidence for merge candidate.");
+        }
+
+        if (!request.HasReviewEvidence)
+        {
+            throw new InvalidOperationException(
+                "Merge rejected: missing review evidence for merge candidate.");
+        }
+
+        if (!request.IsApprovalConfirmed)
+        {
+            throw new InvalidOperationException(
+                "Merge rejected: approval confirmation was not completed.");
+        }
 
         if (string.IsNullOrWhiteSpace(request.ApprovedDiffHash))
         {
@@ -276,6 +341,14 @@ public sealed class WipWorkspaceProviderGit
         }
 
         return string.Join("\n", lines).Trim();
+    }
+
+    private static string EnsureTrailingDirectorySeparator(string path)
+    {
+        if (path.EndsWith(Path.DirectorySeparatorChar) || path.EndsWith(Path.AltDirectorySeparatorChar))
+            return path;
+
+        return path + Path.DirectorySeparatorChar;
     }
 
     private static async ValueTask<GitCommandResult> RunGitOrThrowAsync(

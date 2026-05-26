@@ -65,6 +65,23 @@ public sealed class AbstractionsReadmeContractsTests
         Assert.Equal(value, policyId.ToString());
     }
 
+    [Fact]
+    public async Task AbstractionsReadme_GivenGenericPolicyResultContract_EvaluateAsyncReturnsDeclaredTypedResult()
+    {
+        var policy = new EchoPolicy();
+        var request = new PlanRequest("guard command");
+        var context = new PolicyContext(
+            SessionId: new SessionId("session-456"),
+            WorkflowId: new WorkflowId("workflow.planning"),
+            WorktreePath: "C:/repo/modus",
+            OperationName: "tool.invoke");
+
+        EchoPolicyResult result = await policy.EvaluateAsync(request, context, CancellationToken.None);
+
+        Assert.Equal("allow:guard command:tool.invoke", result.Summary);
+        Assert.Equal(typeof(EchoPolicyResult), result.GetType());
+    }
+
     private static void AssertIdentifierFactoryThrows(string? value, Func<string?, object> factory)
     {
         var exception = Assert.Throws<ArgumentException>(() => factory(value));
@@ -87,5 +104,15 @@ public sealed class AbstractionsReadmeContractsTests
     {
         public ValueTask<PlanResult> ExecuteAsync(PlanRequest request, CapabilityContext context, CancellationToken cancellationToken)
             => ValueTask.FromResult(new PlanResult($"agent:{request.Goal}:{context.SessionId.Value}"));
+    }
+
+    private sealed record EchoPolicyResult(string Summary);
+
+    private sealed class EchoPolicy : IPolicy<PlanRequest, EchoPolicyResult>
+    {
+        public PolicyId PolicyId => new("policy.echo");
+
+        public ValueTask<EchoPolicyResult> EvaluateAsync(PlanRequest request, PolicyContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new EchoPolicyResult($"allow:{request.Goal}:{context.OperationName}"));
     }
 }

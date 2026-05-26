@@ -127,6 +127,30 @@ public sealed class WipShellHostTests
     }
 
     [Fact]
+    public async Task RunAsync_GivenExplicitLoadThenUnloadThenExit_ExpectedShutdownStopDoesNotDuplicateUnloadStop()
+    {
+        var bridge = new ManifestTrackingBridge();
+        var orchestrator = CreateOrchestrator();
+        var pluginLifetimeGate = new WipShellPluginLifetimeGate();
+        using var input = new StringReader("plugins load\nplugins unload\nexit\n");
+        using var output = new StringWriter();
+        var engine = new WipShellEngine(
+            new WipShellCommandLoop(orchestrator, input, output, bridge, pluginLifetimeGate: pluginLifetimeGate));
+        var host = new WipShellHost(
+            new WipShellHostContainer(orchestrator, engine, bridge, pluginLifetimeGate));
+
+        var exitCode = await host.RunAsync(CancellationToken.None);
+        var rendered = output.ToString();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(1, bridge.LoadCount);
+        Assert.Equal(2, bridge.StopCount);
+        Assert.Equal(1, bridge.EffectiveStopHookCount);
+        Assert.Contains("Plugins loaded: 1.", rendered, StringComparison.Ordinal);
+        Assert.Contains("Plugins unloaded.", rendered, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task RunAsync_GivenConcurrentInvocations_ExpectedSingleActiveRunPerHostContainerLifetime()
     {
         var bridge = new TrackingBridge();
@@ -174,6 +198,56 @@ public sealed class WipShellHostTests
 
         public RunManifest GetRunManifest()
             => new(DateTimeOffset.UtcNow, Array.Empty<PluginManifestEntry>(), Array.Empty<WorkflowManifestEntry>());
+
+        public IReadOnlyList<string> GetLoadDiagnostics()
+            => Array.Empty<string>();
+    }
+
+    private sealed class ManifestTrackingBridge : IModusWipBridge
+    {
+        private static readonly PluginManifestEntry[] LoadedPlugins =
+        [
+            new PluginManifestEntry(
+                PluginId: "tests.lifecycle.host",
+                PluginName: "LifecycleHostPlugin",
+                PluginVersion: "1.0.0",
+                AssemblyName: "Tests.Lifecycle.Host",
+                AssemblyVersion: "1.0.0.0",
+                Capabilities: ["cap.lifecycle.host"],
+                RequiredPermissions: ["RegisterSchedules"]),
+        ];
+
+        private int _loaded;
+
+        public int LoadCount { get; private set; }
+
+        public int StopCount { get; private set; }
+
+        public int EffectiveStopHookCount { get; private set; }
+
+        public ValueTask<int> LoadPluginsAsync(CancellationToken cancellationToken)
+        {
+            LoadCount++;
+            Interlocked.Exchange(ref _loaded, 1);
+            return ValueTask.FromResult(LoadedPlugins.Length);
+        }
+
+        public ValueTask StopPluginsAsync(CancellationToken cancellationToken)
+        {
+            StopCount++;
+            if (Interlocked.Exchange(ref _loaded, 0) == 1)
+            {
+                EffectiveStopHookCount++;
+            }
+
+            return ValueTask.CompletedTask;
+        }
+
+        public RunManifest GetRunManifest()
+            => new(
+                CapturedAtUtc: DateTimeOffset.UtcNow,
+                Plugins: Volatile.Read(ref _loaded) == 1 ? LoadedPlugins : Array.Empty<PluginManifestEntry>(),
+                Workflows: Array.Empty<WorkflowManifestEntry>());
 
         public IReadOnlyList<string> GetLoadDiagnostics()
             => Array.Empty<string>();

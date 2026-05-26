@@ -154,6 +154,10 @@ public sealed class WipBuilderExplicitRegistrationTests
 
         Assert.Contains("AmbiguousPlanAgent", exception.Message, StringComparison.Ordinal);
         Assert.Contains("IAgent`2", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("PlanRequest,PlanResult", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("ToolRequest,ToolResult", exception.Message, StringComparison.Ordinal);
+        Assert.Empty(builder.CapabilityDescriptors);
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(AmbiguousPlanAgent));
     }
 
     [Fact]
@@ -184,6 +188,24 @@ public sealed class WipBuilderExplicitRegistrationTests
 
         Assert.Contains("AmbiguousApprovalValidator", exception.Message, StringComparison.Ordinal);
         Assert.Contains("IValidator`2", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AddValidatorTValidator_GivenNoMatchingImplementedInterface_ThrowsDeterministicConfigurationException()
+    {
+        var services = new ServiceCollection();
+        var builder = new WipBuilder(services);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            builder.AddValidator<NonValidatorCapability>(
+                capabilityId: new CapabilityId("validator.none"),
+                displayName: "Non validator capability"));
+
+        Assert.Contains("NonValidatorCapability", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("IValidator`2", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("found none", exception.Message, StringComparison.Ordinal);
+        Assert.Empty(builder.CapabilityDescriptors);
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(NonValidatorCapability));
     }
 
     [Fact]
@@ -370,5 +392,9 @@ public sealed class WipBuilderExplicitRegistrationTests
 
         public ValueTask<WorkflowResult> ExecuteAsync(WorkflowRequest request, WorkflowContext context, CancellationToken cancellationToken)
             => ValueTask.FromResult(new WorkflowResult(request.Goal));
+    }
+
+    private sealed class NonValidatorCapability
+    {
     }
 }

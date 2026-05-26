@@ -53,6 +53,28 @@ public sealed class WipRuntimeReviewGeneratorTests
         Assert.Contains("Stale: Yes", result.Markdown, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task ReviewAsync_GivenValidationDiffHashMissing_MarksReviewAsStaleDueToUnavailableValidationEvidence()
+    {
+        var artifactStore = new InMemoryArtifactStore();
+        var generator = new WipRuntimeReviewGenerator(artifactStore);
+        var request = new ReviewRequest(
+            SessionId: new SessionId("session-stale-missing-hash"),
+            CurrentDiffHash: "diff-live",
+            ChangedFiles: ["src/Feature.cs"],
+            Validation: new ReviewValidationStatus(
+                BuildSucceeded: true,
+                TestSucceeded: true,
+                DiffHash: null));
+
+        var result = await generator.ReviewAsync(request, CancellationToken.None);
+
+        Assert.True(result.Staleness.IsStale);
+        Assert.Contains("no diff hash", result.Staleness.Reason, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Validation diff hash: (missing)", result.Markdown, StringComparison.Ordinal);
+        Assert.Contains("Stale: Yes", result.Markdown, StringComparison.Ordinal);
+    }
+
     private sealed class InMemoryArtifactStore : IArtifactStore
     {
         private readonly List<ArtifactDescriptor> _descriptors = [];

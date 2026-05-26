@@ -8,6 +8,19 @@ namespace Wip.Shell.Interactive;
 
 public sealed class WipShellCommandLoop
 {
+    private static readonly IReadOnlyDictionary<string, CommandScope> CommandScopes = new Dictionary<string, CommandScope>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["help"] = CommandScope.Global,
+        ["start"] = CommandScope.Global,
+        ["attach"] = CommandScope.Global,
+        ["status"] = CommandScope.Session,
+        ["transition"] = CommandScope.Session,
+        ["detach"] = CommandScope.Session,
+        ["plugins"] = CommandScope.Global,
+        ["workflows"] = CommandScope.Global,
+        ["debug-logs"] = CommandScope.Global,
+    };
+
     private readonly Func<string[], CancellationToken, Task<bool>>? _customCommandHandler;
     private readonly WipRuntimeOrchestrator _orchestrator;
     private readonly TextReader _input;
@@ -61,6 +74,21 @@ public sealed class WipShellCommandLoop
         if (command is "exit" or "quit")
             return true;
 
+        if (!HasCommandContext(command))
+        {
+            if (_customCommandHandler is not null && await _customCommandHandler(parts, cancellationToken))
+                return false;
+
+            await WriteLineAsync($"Unknown command '{parts[0]}'. Use 'help' to list commands.");
+            return false;
+        }
+
+        if (RequiresActiveSession(command) && _activeSession is null)
+        {
+            await WriteSessionCommandGuidanceAsync();
+            return false;
+        }
+
         switch (command)
         {
             case "help":
@@ -100,9 +128,6 @@ public sealed class WipShellCommandLoop
                 return false;
 
             default:
-                if (_customCommandHandler is not null && await _customCommandHandler(parts, cancellationToken))
-                    return false;
-
                 await WriteLineAsync($"Unknown command '{parts[0]}'. Use 'help' to list commands.");
                 return false;
         }
@@ -165,18 +190,24 @@ public sealed class WipShellCommandLoop
 
     private async Task HandleStatusAsync()
     {
-        var activeSession = await EnsureActiveSessionAsync();
+        var activeSession = _activeSession;
         if (activeSession is null)
+        {
+            await WriteSessionCommandGuidanceAsync();
             return;
+        }
 
         await WriteLineAsync($"Session {activeSession.SessionId} is {activeSession.State} for workflow {activeSession.WorkflowId}.");
     }
 
     private async Task HandleTransitionAsync(string[] parts, CancellationToken cancellationToken)
     {
-        var activeSession = await EnsureActiveSessionAsync();
+        var activeSession = _activeSession;
         if (activeSession is null)
+        {
+            await WriteSessionCommandGuidanceAsync();
             return;
+        }
 
         if (parts.Length != 2 || !Enum.TryParse<SessionState>(parts[1], ignoreCase: true, out var targetState))
         {
@@ -195,16 +226,15 @@ public sealed class WipShellCommandLoop
         }
     }
 
-    private async Task<SessionSnapshot?> EnsureActiveSessionAsync()
-    {
-        if (_activeSession is not null)
-        {
-            return _activeSession;
-        }
+    private static bool HasCommandContext(string command)
+        => CommandScopes.ContainsKey(command);
 
-        await WriteLineAsync("This command requires an active session. Use 'start <workflow-id> <repository-path> <worktree-path>' or 'attach <repository-path> <session-id>'.");
-        return null;
-    }
+    private static bool RequiresActiveSession(string command)
+        => CommandScopes.TryGetValue(command, out var scope)
+            && scope == CommandScope.Session;
+
+    private Task WriteSessionCommandGuidanceAsync()
+        => WriteLineAsync("This command requires an active session. Use 'start <workflow-id> <repository-path> <worktree-path>' or 'attach <repository-path> <session-id>'.");
 
     private async Task HandlePluginsAsync(string[] parts, CancellationToken cancellationToken)
     {
@@ -410,5 +440,11 @@ public sealed class WipShellCommandLoop
         {
             _diagnosticsOutputGate.Release();
         }
+    }
+
+    private enum CommandScope
+    {
+        Global,
+        Session,
     }
 }

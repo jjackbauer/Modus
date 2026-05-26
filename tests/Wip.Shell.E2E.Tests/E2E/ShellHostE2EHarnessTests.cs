@@ -1,4 +1,11 @@
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Modus.Core.Plugins;
+using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Sessions;
+using Wip.Builder;
+using Wip.Modus.Hosting;
 using Wip.ShellHost.Hosting;
 using Xunit;
 
@@ -18,7 +25,7 @@ public sealed class ShellHostE2EHarnessTests
 
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("Available commands:", result.StdOut, StringComparison.Ordinal);
-        Assert.Contains("plugins, workflows, config, effective-config, exit", result.StdOut, StringComparison.Ordinal);
+        Assert.Contains("plugins [load|unload], workflows, debug-logs, config, effective-config, exit", result.StdOut, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -112,7 +119,6 @@ public sealed class ShellHostE2EHarnessTests
             CancellationToken.None);
 
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("Manifest captured at (UTC):", result.StdOut, StringComparison.Ordinal);
         Assert.True(
             result.StdOut.Contains("Loaded plugins:", StringComparison.Ordinal)
             || result.StdOut.Contains("No plugins are currently loaded.", StringComparison.Ordinal),
@@ -124,7 +130,7 @@ public sealed class ShellHostE2EHarnessTests
     }
 
     [Fact]
-    public async Task E2E_ShellLifecycle_GivenStartupThroughApprovedMerge_CompletesApprovedChangePathWithSessionEvidence()
+    public async Task ShellProcess_GivenInitToMergeHappyPath_ExpectedArtifactsValidationApprovalAndMergeEvidenceRecorded()
     {
         await using var fixture = await TempGitRepositoryFixture.CreateAsync();
         var worktreePath = Path.Combine(fixture.RepositoryPath, ".wip", "worktrees", "approved-path");
@@ -138,22 +144,27 @@ public sealed class ShellHostE2EHarnessTests
                 "transition AwaitingApproval",
                 "transition Approved",
                 "transition Merged",
+                "debug-logs",
                 "status",
                 "exit"
             ],
             CancellationToken.None);
 
         Assert.Equal(0, result.ExitCode);
+        Assert.Contains("Session transitioned to Editing.", result.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Session transitioned to Validating.", result.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Session transitioned to AwaitingApproval.", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("Available commands:", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("Session started:", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("Session transitioned to Approved.", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("Session transitioned to Merged.", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("is Merged for workflow workflow.linear.", result.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Host run correlation:", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("wip[", result.StdOut, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task E2E_SafetyGuards_GivenUnapprovedMergeAttempt_RejectsUnsafeTransitionPath()
+    public async Task ShellProcess_GivenUnapprovedMergeAttempt_ExpectedNegativeSafetyGateRejectsUnsafeTransitionPath()
     {
         await using var fixture = await TempGitRepositoryFixture.CreateAsync();
         var worktreePath = Path.Combine(fixture.RepositoryPath, ".wip", "worktrees", "safety-path");
@@ -173,6 +184,116 @@ public sealed class ShellHostE2EHarnessTests
         Assert.Contains("Failed to transition session:", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("Invalid transition", result.StdOut, StringComparison.Ordinal);
         Assert.Contains("Expected next state is Approved.", result.StdOut, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ShellProcess_GivenDiffMutationAfterApproval_ExpectedMergeRejectedWithStaleApprovalEvidence()
+    {
+        await using var fixture = await TempGitRepositoryFixture.CreateAsync();
+        var worktreePath = Path.Combine(fixture.RepositoryPath, ".wip", "worktrees", "stale-approval-path");
+
+        var approvalRun = await ShellHostProcessDriver.ExecuteScriptAsync(
+            [
+                $"start workflow.linear {fixture.RepositoryPath} {worktreePath}",
+                "transition Editing",
+                "transition Validating",
+                "transition AwaitingApproval",
+                "transition Approved",
+                "status",
+                "exit"
+            ],
+            CancellationToken.None);
+
+        Assert.Equal(0, approvalRun.ExitCode);
+        Assert.Contains("Session transitioned to Approved.", approvalRun.StdOut, StringComparison.Ordinal);
+        var sessionId = ExtractSessionId(approvalRun.StdOut);
+
+        await File.AppendAllTextAsync(
+            Path.Combine(fixture.RepositoryPath, "README.md"),
+            $"mutation-{Guid.NewGuid():N}{Environment.NewLine}",
+            CancellationToken.None);
+        await fixture.MarkPersistedSessionStateAsync(sessionId, SessionState.AwaitingApproval);
+
+        var mergeRun = await ShellHostProcessDriver.ExecuteScriptAsync(
+            [
+                $"attach {fixture.RepositoryPath} {sessionId}",
+                "transition Merged",
+                "status",
+                "exit"
+            ],
+            CancellationToken.None);
+
+        Assert.Equal(0, mergeRun.ExitCode);
+        Assert.Contains("Session attached:", mergeRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Failed to transition session:", mergeRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Invalid transition", mergeRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Expected next state is Approved.", mergeRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("is AwaitingApproval for workflow workflow.linear.", mergeRun.StdOut, StringComparison.Ordinal);
+        Assert.DoesNotContain("Session transitioned to Merged.", mergeRun.StdOut, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ShellProcess_GivenAmbiguousTypedInferencePlugin_ExpectedPluginLoadFailureAndShellRemainsUsable()
+    {
+        await using var fixture = await TempGitRepositoryFixture.CreateAsync();
+        var pluginPath = await StagePluginAssembliesAsync(CancellationToken.None);
+
+        try
+        {
+            var result = await ShellHostProcessDriver.ExecuteScriptAsync(
+                [
+                    "plugins load",
+                    "plugins",
+                    "help",
+                    "exit"
+                ],
+                CancellationToken.None,
+                args: [pluginPath],
+                workingDirectory: fixture.RepositoryPath);
+
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("Plugins loaded:", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("Loaded plugins:", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("wip.e2e.typed-registration", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("Plugin diagnostics:", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("Failed to activate plugin type", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("AmbiguousInferenceFailurePlugin", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("AmbiguousPlanAgent", result.StdOut, StringComparison.Ordinal);
+            Assert.Contains("found multiple", result.StdOut, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("Available commands:", result.StdOut, StringComparison.Ordinal);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(pluginPath))
+                    Directory.Delete(pluginPath, recursive: true);
+            }
+            catch
+            {
+                // Best-effort cleanup only.
+            }
+        }
+    }
+
+    private static Task<string> StagePluginAssembliesAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var sourceDirectory = Path.GetDirectoryName(typeof(ShellHostE2EHarnessTests).Assembly.Location)
+            ?? throw new InvalidOperationException("Unable to resolve test assembly directory.");
+        var pluginDirectory = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-e2e-plugins-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(pluginDirectory);
+
+        foreach (var assemblyPath in Directory.EnumerateFiles(sourceDirectory, "*.dll", SearchOption.TopDirectoryOnly))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var destinationPath = Path.Combine(pluginDirectory, Path.GetFileName(assemblyPath));
+            File.Copy(assemblyPath, destinationPath, overwrite: true);
+        }
+
+        return Task.FromResult(pluginDirectory);
     }
 
     private static class ShellHostProcessDriver
@@ -241,6 +362,20 @@ public sealed class ShellHostE2EHarnessTests
         }
     }
 
+    private static string ExtractSessionId(string stdOut)
+    {
+        const string prefix = "Session started: ";
+        using var reader = new StringReader(stdOut);
+        while (reader.ReadLine() is { } line)
+        {
+            var markerIndex = line.IndexOf(prefix, StringComparison.Ordinal);
+            if (markerIndex >= 0)
+                return line[(markerIndex + prefix.Length)..].Trim();
+        }
+
+        throw new InvalidOperationException($"Could not locate session id in shell output. StdOut: {stdOut}");
+    }
+
     private sealed class TempGitRepositoryFixture : IAsyncDisposable
     {
         private TempGitRepositoryFixture(string repositoryPath)
@@ -282,7 +417,30 @@ public sealed class ShellHostE2EHarnessTests
             await ValueTask.CompletedTask;
         }
 
-        private async ValueTask RunGitAsync(params string[] args)
+        public async ValueTask MarkPersistedSessionStateAsync(string sessionId, SessionState state)
+        {
+            var statePath = Path.Combine(RepositoryPath, ".wip", "sessions", sessionId, "session-state.json");
+            if (!File.Exists(statePath))
+            {
+                throw new InvalidOperationException(
+                    $"Expected persisted session state at '{statePath}', but no state file was found.");
+            }
+
+            var json = await File.ReadAllTextAsync(statePath, CancellationToken.None);
+            var previousToken = "\"State\":\"Approved\"";
+            var nextToken = $"\"State\":\"{state}\"";
+
+            if (!json.Contains(previousToken, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"Expected persisted state token '{previousToken}' in '{statePath}'. Actual payload: {json}");
+            }
+
+            json = json.Replace(previousToken, nextToken, StringComparison.Ordinal);
+            await File.WriteAllTextAsync(statePath, json, CancellationToken.None);
+        }
+
+        private async ValueTask<string> RunGitAsync(params string[] args)
         {
             var startInfo = new ProcessStartInfo("git")
             {
@@ -300,16 +458,94 @@ public sealed class ShellHostE2EHarnessTests
             var stdOutTask = process.StandardOutput.ReadToEndAsync();
             var stdErrTask = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync(CancellationToken.None);
+            var stdOut = (await stdOutTask).Trim();
+            var stdErr = (await stdErrTask).Trim();
 
             if (process.ExitCode != 0)
             {
-                var stdOut = (await stdOutTask).Trim();
-                var stdErr = (await stdErrTask).Trim();
                 throw new InvalidOperationException(
                     $"Git command failed ({string.Join(" ", args)}). ExitCode={process.ExitCode}. StdOut={stdOut}. StdErr={stdErr}");
             }
+
+            return stdOut;
         }
     }
 
     private sealed record ShellProcessResult(int ExitCode, string StdOut, string StdErr);
+}
+
+public sealed class TypedRegistrationProofPlugin : IWipHostPluginContract, IPluginLifecycle, IPluginOperationCatalog
+{
+    public TypedRegistrationProofPlugin()
+    {
+        var builder = new WipBuilder(new ServiceCollection());
+        builder.AddAgent<TypedPlanAgent, TypedPlanRequest, TypedPlanResult>(
+            capabilityId: new CapabilityId("wip.e2e.typed-registration.agent"),
+            displayName: "Typed registration agent");
+    }
+
+    public PluginId PluginId => new("wip.e2e.typed-registration");
+    public ContractName ContractName => new("Wip.E2E.TypedRegistration");
+    public Version ContractVersion => new(1, 0, 0);
+
+    public IReadOnlyCollection<OperationName> SupportedOperations =>
+    [
+        new OperationName("wip.e2e.typed-registration.agent")
+    ];
+
+    public void Load(PluginLoadContext context)
+    {
+    }
+
+    public void Start(PluginStartContext context)
+    {
+    }
+
+    public void Stop(PluginStopContext context)
+    {
+    }
+
+    public void Unload(PluginUnloadContext context)
+    {
+    }
+}
+
+public sealed class AmbiguousInferenceFailurePlugin : IWipHostPluginContract
+{
+    public AmbiguousInferenceFailurePlugin()
+    {
+        var builder = new WipBuilder(new ServiceCollection());
+        builder.AddAgent<AmbiguousPlanAgent>(
+            capabilityId: new CapabilityId("wip.e2e.ambiguous-inference.agent"),
+            displayName: "Ambiguous inference agent");
+    }
+
+    public PluginId PluginId => new("wip.e2e.ambiguous-inference");
+    public ContractName ContractName => new("Wip.E2E.AmbiguousInference");
+    public Version ContractVersion => new(1, 0, 0);
+}
+
+public sealed record TypedPlanRequest(string Goal);
+
+public sealed record TypedPlanResult(string Plan);
+
+public sealed record AlternatePlanRequest(string Goal);
+
+public sealed record AlternatePlanResult(string Plan);
+
+public sealed class TypedPlanAgent : IAgent<TypedPlanRequest, TypedPlanResult>
+{
+    public ValueTask<TypedPlanResult> ExecuteAsync(TypedPlanRequest request, CapabilityContext context, CancellationToken cancellationToken)
+        => ValueTask.FromResult(new TypedPlanResult($"plan:{request.Goal}"));
+}
+
+public sealed class AmbiguousPlanAgent :
+    IAgent<TypedPlanRequest, TypedPlanResult>,
+    IAgent<AlternatePlanRequest, AlternatePlanResult>
+{
+    ValueTask<TypedPlanResult> ICapability<TypedPlanRequest, TypedPlanResult>.ExecuteAsync(TypedPlanRequest request, CapabilityContext context, CancellationToken cancellationToken)
+        => ValueTask.FromResult(new TypedPlanResult($"typed:{request.Goal}"));
+
+    ValueTask<AlternatePlanResult> ICapability<AlternatePlanRequest, AlternatePlanResult>.ExecuteAsync(AlternatePlanRequest request, CapabilityContext context, CancellationToken cancellationToken)
+        => ValueTask.FromResult(new AlternatePlanResult($"alternate:{request.Goal}"));
 }

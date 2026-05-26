@@ -12,6 +12,7 @@ namespace Wip.Runtime.Runtime;
 public sealed class WipRuntimeOrchestrator
 {
     private const string SessionStateFileName = "session-state.json";
+    private const string SessionEventJournalFileName = "event-journal.ndjson";
     private static readonly JsonSerializerOptions SessionStateJsonOptions = new()
     {
         Converters = { new JsonStringEnumConverter() }
@@ -64,7 +65,7 @@ public sealed class WipRuntimeOrchestrator
         {
             await _sessionStore.SaveAsync(snapshot, cancellationToken);
             await PersistSessionStateAsync(snapshot, cancellationToken);
-            await _eventPublisher.PublishAsync(
+            await PublishAndJournalSessionEventAsync(
                 new SessionEvent(
                     Kind: SessionEventKind.SessionStarted,
                     SessionId: snapshot.SessionId,
@@ -72,6 +73,7 @@ public sealed class WipRuntimeOrchestrator
                     PreviousState: null,
                     OccurredAtUtc: now,
                     Message: "Session started."),
+                snapshot.RepositoryPath,
                 cancellationToken);
         }
         finally
@@ -115,10 +117,10 @@ public sealed class WipRuntimeOrchestrator
                 ?? throw new InvalidOperationException($"Session '{sessionId}' was not found.");
 
             var workflow = ResolveWorkflowSelection(current.WorkflowId, selectedWorkflowId, builder.WorkflowRegistrations);
-            var stageDescriptors = WorkflowStageDescriptorMapper.CreateLinear(workflow.RequestType, workflow.ResultType);
-            var stageExecutions = new List<WorkflowStageExecution>(stageDescriptors.Count);
+            var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflow);
+            var stageExecutions = new List<WorkflowStageExecution>(compilation.StageDescriptors.Count);
 
-            foreach (var stageDescriptor in stageDescriptors)
+            foreach (var stageDescriptor in compilation.StageDescriptors)
             {
                 var targetState = WorkflowStageStateMapper.ToSessionState(stageDescriptor.Stage);
                 var appliedTransition = false;
@@ -129,7 +131,10 @@ public sealed class WipRuntimeOrchestrator
                     appliedTransition = true;
                 }
 
-                stageExecutions.Add(new WorkflowStageExecution(stageDescriptor, current.State, appliedTransition));
+                stageExecutions.Add(new WorkflowStageExecution(stageDescriptor, current.State, appliedTransition)
+                {
+                    MappedInputContractName = compilation.ResolveMappedInputContractName(stageDescriptor.Stage)
+                });
             }
 
             return new WorkflowExecutionResult(workflow.WorkflowId, stageExecutions);
@@ -159,7 +164,7 @@ public sealed class WipRuntimeOrchestrator
             await _sessionStore.SaveAsync(restored, cancellationToken);
 
             _attachedSessionId = sessionId;
-            await _eventPublisher.PublishAsync(
+            await PublishAndJournalSessionEventAsync(
                 new SessionEvent(
                     Kind: SessionEventKind.SessionAttached,
                     SessionId: sessionId,
@@ -167,6 +172,7 @@ public sealed class WipRuntimeOrchestrator
                     PreviousState: null,
                     OccurredAtUtc: DateTimeOffset.UtcNow,
                     Message: "Session attached."),
+                restored.RepositoryPath,
                 cancellationToken);
 
             return restored;
@@ -190,7 +196,7 @@ public sealed class WipRuntimeOrchestrator
                 ?? throw new InvalidOperationException($"Attached session '{sessionId}' was not found.");
 
             _attachedSessionId = null;
-            await _eventPublisher.PublishAsync(
+            await PublishAndJournalSessionEventAsync(
                 new SessionEvent(
                     Kind: SessionEventKind.SessionDetached,
                     SessionId: sessionId,
@@ -198,6 +204,7 @@ public sealed class WipRuntimeOrchestrator
                     PreviousState: null,
                     OccurredAtUtc: DateTimeOffset.UtcNow,
                     Message: "Session detached."),
+                current.RepositoryPath,
                 cancellationToken);
 
             return true;
@@ -312,6 +319,9 @@ public sealed class WipRuntimeOrchestrator
     private static string BuildSessionStatePath(string repositoryPath, SessionId sessionId)
         => Path.Combine(repositoryPath, ".wip", "sessions", sessionId.Value, SessionStateFileName);
 
+    private static string BuildSessionEventJournalPath(string repositoryPath, SessionId sessionId)
+        => Path.Combine(repositoryPath, ".wip", "sessions", sessionId.Value, SessionEventJournalFileName);
+
     private static SessionState ResolveExpectedNext(SessionState state)
     {
         if (!NextStates.TryGetValue(state, out var expectedNext))
@@ -340,7 +350,7 @@ public sealed class WipRuntimeOrchestrator
 
         await _sessionStore.SaveAsync(updated, cancellationToken);
         await PersistSessionStateAsync(updated, cancellationToken);
-        await _eventPublisher.PublishAsync(
+        await PublishAndJournalSessionEventAsync(
             new SessionEvent(
                 Kind: SessionEventKind.SessionTransitioned,
                 SessionId: current.SessionId,
@@ -348,9 +358,42 @@ public sealed class WipRuntimeOrchestrator
                 PreviousState: current.State,
                 OccurredAtUtc: updated.UpdatedAtUtc,
                 Message: $"Session transitioned from {current.State} to {updated.State}."),
+            updated.RepositoryPath,
             cancellationToken);
 
         return updated;
+    }
+
+    private async ValueTask PublishAndJournalSessionEventAsync(
+        SessionEvent sessionEvent,
+        string repositoryPath,
+        CancellationToken cancellationToken)
+    {
+        await PersistSessionEventAsync(sessionEvent, repositoryPath, cancellationToken);
+        await _eventPublisher.PublishAsync(sessionEvent, cancellationToken);
+    }
+
+    private static async ValueTask PersistSessionEventAsync(
+        SessionEvent sessionEvent,
+        string repositoryPath,
+        CancellationToken cancellationToken)
+    {
+        var journalPath = BuildSessionEventJournalPath(repositoryPath, sessionEvent.SessionId);
+        var journalDirectory = Path.GetDirectoryName(journalPath)
+            ?? throw new InvalidOperationException($"Failed to resolve session event journal directory for '{journalPath}'.");
+
+        Directory.CreateDirectory(journalDirectory);
+
+        var payload = new PersistedSessionEvent(
+            Kind: sessionEvent.Kind,
+            SessionId: sessionEvent.SessionId.Value,
+            CurrentState: sessionEvent.CurrentState,
+            PreviousState: sessionEvent.PreviousState,
+            OccurredAtUtc: sessionEvent.OccurredAtUtc,
+            Message: sessionEvent.Message);
+
+        var serialized = JsonSerializer.Serialize(payload, SessionStateJsonOptions);
+        await File.AppendAllTextAsync(journalPath, serialized + Environment.NewLine, cancellationToken);
     }
 
     private static WorkflowRegistration ResolveWorkflowSelection(
@@ -392,4 +435,12 @@ public sealed class WipRuntimeOrchestrator
         string RepositoryPath,
         string WorktreePath,
         DateTimeOffset UpdatedAtUtc);
+
+    private sealed record PersistedSessionEvent(
+        SessionEventKind Kind,
+        string SessionId,
+        SessionState CurrentState,
+        SessionState? PreviousState,
+        DateTimeOffset OccurredAtUtc,
+        string Message);
 }
