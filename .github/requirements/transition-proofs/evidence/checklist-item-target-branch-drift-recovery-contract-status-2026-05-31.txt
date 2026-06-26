@@ -1,0 +1,5 @@
+﻿timestamp=2026-05-31T07:52:51-03:00
+line=79:- [x] Add explicit target-branch-drift recovery contract defining required rebase/revalidate/refresh steps and observable session state transitions before retrying merge [depends on AP-005 target drift recovery guidance] [transition-proof: .github/requirements/transition-proofs/checklist-item-target-branch-drift-recovery-contract-transition-proof-2026-05-31.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-target-branch-drift-recovery-contract.unchecked.snapshot-2026-05-31.md]
+unchecked=1
+checked=23
+checked_line_sha256=34bb6bef38020903905e74ac65179430fd2cd01e75cc195c6991f1631fca3ca7

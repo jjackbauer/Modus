@@ -1,0 +1,12 @@
+EVIDENCE: git provenance context for checklist requirements doc
+DATE_UTC: 
+2026-06-02 13:14:31Z
+REQUIREMENTS_DOC: 
+.github/requirements/DotNet-App-Development-Flows.md
+
+COMMAND: git ls-files -- .github/requirements/DotNet-App-Development-Flows.md
+
+COMMAND: git log --oneline -- .github/requirements/DotNet-App-Development-Flows.md
+
+COMMAND: git status --short -- .github/requirements/DotNet-App-Development-Flows.md
+?? .github/requirements/DotNet-App-Development-Flows.md

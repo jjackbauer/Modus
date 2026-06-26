@@ -1,0 +1,10 @@
+timestamp=2026-05-31T21:52:09.1457246-03:00
+item_id=checklist-item-model-provider-registration-path
+requirements_doc=.github/requirements/Wip.Next-Steps.md
+baseline_unchecked_line=- [ ] Introduce a first-class model-provider capability registration path in Wip.Builder that uses CapabilityKind.ModelProvider and deterministic duplicate-replacement policy behavior [depends on typed provider contracts]
+baseline_unchecked_line_sha256=3b05d5dc371fab7ae194d320cc2bb4561cda50e929c1a6e7f5777e386cabb137
+current_checked_line=- [x] Introduce a first-class model-provider capability registration path in Wip.Builder that uses CapabilityKind.ModelProvider and deterministic duplicate-replacement policy behavior [depends on typed provider contracts]
+current_checked_line_sha256=70a9ec2d7e2c7dd7937a271b91a632a7b339aa19970cb37e93f6b25a35b979e4
+proof_command=powershell -Command "Select-String -Path '.github/requirements/Wip.Next-Steps.md' -Pattern '^- \[x\] Introduce a first-class model-provider capability registration path in Wip.Builder that uses CapabilityKind.ModelProvider and deterministic duplicate-replacement policy behavior \[depends on typed provider contracts\]$' | ForEach-Object { \"line=$($_.LineNumber):$($_.Line)\" }"
+proof_command_output=line=61:- [x] Introduce a first-class model-provider capability registration path in Wip.Builder that uses CapabilityKind.ModelProvider and deterministic duplicate-replacement policy behavior [depends on typed provider contracts]
+deterministic_transition_statement=For checklist item id checklist-item-model-provider-registration-path, the baseline witness text is the unchecked variant of the exact same normalized body text as the current checked line in .github/requirements/Wip.Next-Steps.md; the only state delta is the checkbox token transition from [ ] to [x], confirmed at line 61 by proof_command_output.

@@ -1,0 +1,35 @@
+Checklist Item Transition Proof
+Date: 2026-06-01
+Requirements Document: .github/requirements/Wip.Dynamic-System-Prompt.md
+Checklist Item Anchor: Replace static system message in plan provider invocation with dynamic composed context payload so provider requests include plugin-owned constraints and environment exposure in a stable order
+
+Baseline Unchecked Source Text Evidence
+- [ ] Replace static system message in plan provider invocation with dynamic composed context payload so provider requests include plugin-owned constraints and environment exposure in a stable order [depends on prompt-context composer]
+Source note: requirements file is not in HEAD yet (fatal: path '.github/requirements/Wip.Dynamic-System-Prompt.md' exists on disk, but not in 'HEAD'), so baseline is recorded as deterministic unchecked canonical text for this checklist anchor.
+
+Checked Completion Evidence
+LineNumber: 94
+- [x] Replace static system message in plan provider invocation with dynamic composed context payload so provider requests include plugin-owned constraints and environment exposure in a stable order [depends on prompt-context composer]
+
+Command Output Proving State
+COMMAND: git status --short -- .github/requirements/Wip.Dynamic-System-Prompt.md
+OUTPUT:
+?? .github/requirements/Wip.Dynamic-System-Prompt.md
+
+COMMAND: Select-String -Path .github/requirements/Wip.Dynamic-System-Prompt.md -Pattern "Replace static system message in plan provider invocation with dynamic composed context payload so provider requests include plugin-owned constraints and environment exposure in a stable order"
+OUTPUT:
+lineNumber=94
+currentLine=- [x] Replace static system message in plan provider invocation with dynamic composed context payload so provider requests include plugin-owned constraints and environment exposure in a stable order [depends on prompt-context composer]
+
+COMMAND: Select-String -Path .github/requirements/Wip.Dynamic-System-Prompt.md -Pattern '^- \[ \]'
+OUTPUT:
+uncheckedCount=6
+
+COMMAND: dotnet build .\src\Wip.Shell\Wip.Shell.csproj -c Debug --nologo
+OUTPUT (summary):
+Build succeeded in 1.1s
+
+COMMAND: dotnet test .\tests\Wip.Shell.E2E.Tests\Wip.Shell.E2E.Tests.csproj -c Debug --no-build --nologo
+OUTPUT (summary):
+Test summary: total: 72, failed: 0, succeeded: 72, skipped: 0, duration: 99.4s
+Build succeeded in 99.8s

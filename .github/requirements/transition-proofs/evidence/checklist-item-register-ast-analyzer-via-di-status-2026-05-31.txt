@@ -1,0 +1,5 @@
+﻿captured_at=2026-05-31T20:42:33.9392791-03:00
+requirements_path=.\.github\requirements\Wip.Validation.DotNet.md
+line_number=87
+unchecked=2
+checked=7

@@ -1,0 +1,18 @@
+﻿GIT PROVENANCE CONTEXT
+date=2026-06-02
+requirements=.github/requirements/DotNet-App-Development-Flows.md
+item=Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
+
+Baseline Unchecked Source Text Evidence
+The requirements file is currently untracked, so committed [ ] -> [x] transition provenance cannot be proven from git history for this path.
+
+git status --short -- <requirements>
+?? .github/requirements/DotNet-App-Development-Flows.md
+
+git ls-files --error-unmatch -- <requirements>
+exit=1
+error: pathspec '.github/requirements/DotNet-App-Development-Flows.md' did not match any file(s) known to git
+
+git show HEAD:<requirements>
+exit=1
+fatal: path '.github/requirements/DotNet-App-Development-Flows.md' exists on disk, but not in 'HEAD'

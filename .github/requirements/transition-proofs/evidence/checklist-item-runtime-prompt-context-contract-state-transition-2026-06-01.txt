@@ -1,0 +1,19 @@
+﻿REPAIR ROUND EVIDENCE: Runtime Prompt-Context Checklist Transition
+DATE: 2026-06-01
+REQUIREMENTS_DOC: .github/requirements/Wip.Dynamic-System-Prompt.md
+
+BASELINE_UNCHECKED_LINE_TEXT (from provided requirements/checklist content):
+- [ ] Add a first-class runtime prompt-context contract that models system instructions, environment facts, plugin facts, workflow/policy scope, validator/tool capability catalog, and explicit forbidden ecosystems for provider plan generation [foundation for dynamic system prompt]
+
+CURRENT_CHECKED_LINE (from live RequirementsDoc):
+LineNumber=92
+- [x] Add a first-class runtime prompt-context contract that models system instructions, environment facts, plugin facts, workflow/policy scope, validator/tool capability catalog, and explicit forbidden ecosystems for provider plan generation [foundation for dynamic system prompt]
+
+VERIFICATION_COMMAND:
+Select-String -Path .github/requirements/Wip.Dynamic-System-Prompt.md -SimpleMatch -Pattern '"Add a first-class runtime prompt-context contract that models system instructions, environment facts, plugin facts, workflow/policy scope, validator/tool capability catalog, and explicit forbidden ecosystems for provider plan generation [foundation for dynamic system prompt]"' | Select-Object -First 1
+VERIFICATION_OUTPUT:
+Path=C:\Users\ricar\dev\Modus\.github\requirements\Wip.Dynamic-System-Prompt.md LineNumber=92 Line=- [x] Add a first-class runtime prompt-context contract that models system instructions, environment facts, plugin facts, workflow/policy scope, validator/tool capability catalog, and explicit forbidden ecosystems for provider plan generation [foundation for dynamic system prompt]
+
+STATE_COUNTS:
+unchecked=8
+checked=1

@@ -1,6 +1,6 @@
 # WiP Shell + Agentic Builder MVP - Next Steps Requirements and Test Plan
 
-> Scope: define the next implementation slice for the cross-project WiP Shell + Builder MVP using the attached product requirements as the analysis source, with behavior-proof xUnit coverage planned for every unchecked functionality item.
+> Scope: produce a full next-steps implementation worktree for the complete WiP Shell + Agentic Builder MVP across all Wip.* projects under src/, using the provided MVP requirements document as the authoritative target and current Wip.* runtime behavior as the baseline.
 
 ---
 
@@ -10,273 +10,257 @@
 
 - Non-negotiable: behavior-proof assertions required for every checklist item.
 - Metadata-only assertions are supporting evidence only.
-- API tests are valid only when thorough integration gates are asserted.
-- Include absolute schedule gates when scheduled jobs are in scope.
+- API and command-path tests are valid only when thorough runtime integration gates are asserted.
+- Negative-path governance tests must prove deterministic rejection and no side-effect mutation.
 
 ### Coverage Inputs
 
 | Input | Value |
 |---|---|
-| CsProject | WIP cross-project |
-| AnalysisSource | Attached WiP Shell + Agentic Builder MVP requirements document |
-| MandatoryItems | none (workflow-injected behavior-proof mandatory item still enforced) |
-| PlanType | generic |
+| CsProject | Wip.* |
+| AnalysisSource | Attached WiP Shell + Agentic Builder MVP requirements document plus direct inspection of src/Wip.* and tests/Wip.* surfaces |
+| MandatoryItems | Workflow-injected behavior-proof compliance item |
+| PlanType | requirements |
 | OutputPath | .github/requirements/Wip.Shell-Builder-MVP-Next-Steps.md |
+
+### MVP Package Coverage Matrix
+
+| Required MVP package | Current project | Next-step focus to reach full MVP description |
+|---|---|---|
+| Wip.Abstractions | Wip.Abstractions | Finalize complete capability taxonomy metadata and full session-state vocabulary |
+| Wip.Builder | Wip.Builder | Promote full public SDK shape with AddWipRuntime/AddWipCapabilities and typed linear workflow authoring |
+| Wip.Runtime | Wip.Runtime | Align persisted state machine and lifecycle orchestration with full Created->Archived/Aborted model |
+| Wip.Modus | Wip.Modus | Complete external plugin-to-builder composition proof with deterministic diagnostics |
+| Wip.Shell | Wip.Shell | Complete command contract, context-aware errors, and transcript-level acceptance behavior |
+| Wip.ShellHost | Wip.ShellHost | Align startup, config, plugin paths, and lifecycle shutdown with final shell-host contract |
+| Wip.Workspaces.Git | Wip.Workspaces.Git | Harden worktree lifecycle, diff normalization, drift checks, and approval-gated merge guarantees |
+| Wip.Artifacts.Local | Wip.Artifacts.Local | Keep artifact IDs/types/producers deterministic and externally consumable |
+| Wip.Validation.DotNet | Wip.Validation.DotNet | Preserve deterministic dotnet build/test evidence and policy-guarded execution |
+| Wip.Tools.Shell | Wip.Tools.Shell | Expand dangerous-command denylist and keep privileged merge isolated from generic shell tool paths |
+| Wip.Policy.LocalSafe | Wip.Policy.LocalSafe | Enforce default local-safe profile across approval/validation/merge gates and command boundaries |
 
 ### Class Diagram
 
 ```mermaid
 classDiagram
-    class WipShellHost {
-      +RunAsync(CancellationToken) Task<int>
+    class IWipCapability {
+      +Id
+      +DisplayName
+      +Version
+      +Kind
+      +RequiredPermissions
+      +PluginOrigin
     }
-    class WipShell {
-      +DispatchAsync(string command) Task
-      +RenderPrompt() string
-    }
-    class WipRuntimeOrchestrator {
-      +StartSessionAsync(StartSessionRequest) Task<WipSession>
-      +RunWorkflowAsync(WipSessionId) Task<RunResult>
-      +ValidateAsync(WipSessionId) Task<ValidationReport>
-      +ApproveAsync(WipSessionId) Task<ApprovalToken>
-      +MergeAsync(WipSessionId) Task<MergeResult>
-    }
-    class WipBuilder {
-      +AddAgent<TAgent,TRequest,TResult>(string id)
-      +AddTool<TTool,TRequest,TResult>(string id)
-      +AddValidator<TValidator,TRequest>(string id)
-      +AddWorkflow<TRequest,TResult>(string id,...)
-    }
-    class IModusWipBridge {
-      +LoadPluginsAsync(CancellationToken) ValueTask<int>
-      +StopPluginsAsync(CancellationToken) ValueTask
-      +GetRunManifest() RunManifest
-    }
-    class IWipWorkspaceProvider {
-      +CreateAsync(CreateWorkspaceRequest, CancellationToken) Task<WipWorkspace>
-      +GetDiffAsync(WipSessionId, CancellationToken) Task<WorkspaceDiff>
-      +ComputeDiffHashAsync(WipSessionId, CancellationToken) Task<DiffHash>
-      +PreviewMergeAsync(WipSessionId, CancellationToken) Task<MergePreview>
-    }
-    class IWipArtifactStore {
-      +SaveAsync<TArtifact>(WipSessionId, TArtifact, CancellationToken) Task
-      +ListAsync(WipSessionId, CancellationToken) Task<IReadOnlyCollection<ArtifactDescriptor>>
-    }
+    class IWipAgent~TRequest,TResult~
+    class IWipTool~TRequest,TResult~
+    class IWipValidator~TRequest~
+    class IWipPolicy~TRequest,TResult~
+    class IWipWorkflowBuilder~TWorkflowRequest,TWorkflowResult~
+    class WipRuntimeOrchestrator
+    class WipShellCommandLoop
+    class WipShellHost
+    class ModusWipBridge
+    class GitWorkspaceProvider
+    class LocalArtifactStore
 
-    WipShellHost --> IModusWipBridge
-    WipShellHost --> WipShell
-    WipShell --> WipRuntimeOrchestrator
-    WipRuntimeOrchestrator --> IWipWorkspaceProvider
-    WipRuntimeOrchestrator --> IWipArtifactStore
-    WipRuntimeOrchestrator --> WipBuilder
+    IWipAgent~TRequest,TResult~ --|> IWipCapability
+    IWipTool~TRequest,TResult~ --|> IWipCapability
+    IWipValidator~TRequest~ --|> IWipCapability
+    IWipPolicy~TRequest,TResult~ --|> IWipCapability
+    WipShellHost --> ModusWipBridge
+    WipShellHost --> WipShellCommandLoop
+    WipShellCommandLoop --> WipRuntimeOrchestrator
+    WipRuntimeOrchestrator --> GitWorkspaceProvider
+    WipRuntimeOrchestrator --> LocalArtifactStore
+    WipRuntimeOrchestrator --> IWipWorkflowBuilder~TWorkflowRequest,TWorkflowResult~
 ```
 
 ### Completeness Checklist
 
-- [x] Finalize typed public contracts in Wip.Abstractions for agent/tool/validator/policy/workflow request-result generics and typed capability descriptors [prerequisite for all builder and runtime execution paths] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-abstractions-typed-public-contracts-transition-proof-2026-05-26.md]
-- [x] Implement Wip.Builder typed registration surface with explicit generic overloads plus inference overloads that fail fast on ambiguous generic signatures [depends on typed abstractions] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-builder-typed-registration-surface-transition-proof-2026-05-26.md]
-- [x] Implement linear typed workflow builder stage compilation with explicit map adapters and preserved request/result contract names in runtime descriptors [depends on builder registration surface]
-- [x] Implement interactive Wip.Shell command model and context-aware prompt transitions for global and session commands defined in MVP scope [depends on runtime orchestration commands] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-shell-command-model-context-aware-prompt-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-shell-command-model-context-aware-prompt.unchecked.snapshot-2026-05-26.md]
-- [x] Implement Wip.ShellHost long-lived host startup, one-time DI composition, plugin lifecycle load/unload commands, and graceful shutdown hook ordering [depends on shell command model]
-- [x] Implement Wip.Modus bridge plugin discovery from repo and user plugin paths with run manifest metadata capture and plugin diagnostics reporting [depends on shell-host lifecycle and typed capability registry]
-- [x] Implement Wip.Runtime session orchestration with explicit state machine transitions, persisted session snapshots, active session attach/detach, and event journal records [depends on shell command dispatch and workspace provider]
-- [x] Implement Wip.Workspaces.Git worktree creation, write-boundary path guard, normalized diff and stable hash computation, and merge preview drift detection [depends on runtime session model]
-- [x] Implement Wip.Artifacts.Local typed artifact persistence and listing for required MVP artifact types with descriptor metadata and deterministic file layout [depends on runtime event and workflow execution outputs] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-artifacts-local-typed-artifact-persistence-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-artifacts-local-typed-artifact-persistence.unchecked.snapshot-2026-05-26.md]
-- [x] Implement Wip.Validation.DotNet validators for dotnet build and dotnet test with command-level timeout, output capture, and validation report artifacts [depends on controlled shell tool and artifact store] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-validation-dotnet-validators-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-validation-dotnet-validators.unchecked.snapshot-2026-05-26.md]
-- [x] Implement review and approval gates: review report generation with staleness detection and approval token generation bound to diff hash, target branch, and target commit [depends on diff hash and validation report availability] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-review-approval-gates-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-review-approval-gates.unchecked.snapshot-2026-05-26.md]
-- [x] Implement approval-gated merge flow that rejects stale diff, branch drift, missing validation, missing review, aborted session, and non-confirmed approval paths [depends on approval token flow and merge preview] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-approval-gated-merge-flow-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-approval-gated-merge-flow.unchecked.snapshot-2026-05-26.md]
-- [x] Implement Wip.Tools.Shell controlled command tool constrained to active worktree, denied dangerous patterns, and command execution log artifact production [depends on local-safe policy and runtime tool gateway] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-tools-shell-controlled-command-tool-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-tools-shell-controlled-command-tool.unchecked.snapshot-2026-05-26.md]
-- [x] Implement default local-safe policy profile enforcing workspace boundary, dangerous command deny-list, validation-before-approval, and approval-before-merge [depends on runtime operation policy checks]
-- [x] Implement external sample plugin proving builder import in a separate project with typed agent, typed validator, and typed workflow discovered without shell-host code changes [depends on builder usability outside shell] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-external-sample-plugin-builder-import-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-external-sample-plugin-builder-import.unchecked.snapshot-2026-05-26.md]
-- [x] Implement end-to-end shell process suite for MVP command flow and negative safety gates, including typed registration and ambiguity failure scenarios [depends on shell-host executable path and all core runtime gates] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-shell-process-suite-mvp-flow-safety-gates-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-shell-process-suite-mvp-flow-safety-gates.unchecked.snapshot-2026-05-26.md]
-- [x] Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy] [transition-proof: .github/requirements/transition-proofs/checklist-item-wip-shell-builder-mvp-next-steps-behavior-proof-policy-transition-proof-2026-05-26.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-wip-shell-builder-mvp-next-steps-behavior-proof-policy.unchecked.snapshot-2026-05-26.md]
+- [x] Preserve typed public capability contracts so object-based execution payloads remain rejected across Wip.Abstractions and Wip.Builder surfaces [foundation for all public API work]
+- [x] Preserve typed builder registration baseline for explicit registration, inference, and duplicate capability ID protection [foundation for SDK promotion]
+- [x] Preserve current runtime governance baseline for plan, run, diff, validate, review, approve, merge, archive, and abort orchestration paths [foundation for lifecycle alignment]
+- [x] Preserve current shell and shell-host interactive baseline for prompt context, workflow selection, diagnostics, and deterministic startup/exit behavior [foundation for shell completion]
+- [x] Preserve current worktree safety and merge-protection baseline for path guards, diff hash guards, approval staleness checks, and branch drift rejection [foundation for safety expansion]
+- [x] Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
+- [x] Expand capability descriptors to the full MVP metadata contract (stable ID, display name, version, capability kind, required permissions, plugin origin, typed request/result capture) [depends on typed public capability baseline]
+- [x] Align session state contracts and persisted snapshots with full MVP lifecycle states (Created, Editing, Checkpointed, Validating, AwaitingApproval, Approved, Merged, Archived, Aborted) and explicit transition evidence [depends on runtime governance baseline]
+- [x] Promote SDK entrypoints to explicit AddWipRuntime and AddWipCapabilities composition model usable outside shell host [depends on typed builder baseline]
+- [x] Complete typed linear workflow builder path (StartWith/Then/UseTool/ValidateWith/Map/RequireHumanApproval) without collapsing public contracts to object payloads [depends on SDK promotion]
+- [x] Finish deterministic duplicate capability behavior and explicit replacement policy as a first-class builder option for external plugin projects [depends on SDK promotion]
+- [x] Complete local artifact-store contract for deterministic JSON, Markdown, and patch persistence with artifact IDs, versions, timestamps, producer capability IDs, and file-path metadata [depends on runtime governance baseline]
+- [x] Complete session persistence and attach/restore behavior under .wip/sessions/{sessionId}/session-state.json with deterministic session event journaling [depends on runtime governance baseline]
+- [x] Align shell command contract to full MVP global/session command surface, including context-sensitive errors and command guidance when no session is active [depends on shell baseline]
+- [x] Align shell-host configuration and startup defaults with .wip/config.json, .wip/plugins, ~/.wip/plugins, and deterministic effective config rendering [depends on shell-host baseline]
+- [x] Harden controlled shell tool and policy denylist to the full MVP dangerous command set, including explicit pre-execution blocking and deterministic reason reporting [depends on worktree safety baseline]
+- [x] Preserve privileged merge isolation so generic shell tool paths cannot trigger merge semantics or bypass approval/validation gates [depends on policy/tool hardening]
+- [x] Complete external plugin loading proof where consumer projects register typed agents/tools/validators/workflows via Wip.Builder and are discovered through Wip.Modus without shell-only registration logic [depends on SDK promotion and Modus integration]
+- [x] Add and verify sample external typed plugin package path proving typed capability descriptors, workflow visibility, and ambiguous inference failure isolation [depends on external plugin loading proof]
+- [x] Complete transcript-level end-to-end shell acceptance flow covering init, session start, plan, run, diff, validate, review, approve confirmation, merge, and archive/abort governance guards [depends on shell contract and runtime governance]
 
 ### Checklist to Runtime-Proof Matrix
 
-| Checklist Item | Primary Runtime Proof Path | Minimum Evidence |
+| Checklist item | Primary runtime-proof anchor | Behavior-proof expectation |
 |---|---|---|
-| Typed abstractions and descriptors | DI/runtime dispatch path | Runtime resolves typed capability and records concrete request/result type names in descriptor metadata |
-| Builder registration and inference gates | Negative and positive registration path | Explicit generic registration succeeds; ambiguous inference throws deterministic validation exception |
-| Typed workflow stage mapping | Runtime workflow execution path | Mapped stage input/output contracts are executed in order and persisted in stage artifacts |
-| Shell prompt and command dispatch | Interactive command path | Prompt switches between global and session context; unsupported context commands produce actionable errors |
-| ShellHost lifecycle | Host startup/shutdown path | Host stays interactive until exit; load/unload order is deterministic; stop hook executes exactly once |
-| Modus bridge discovery and manifest | Plugin activation path | Plugin metadata and capability IDs appear in run manifest and plugins diagnostics output |
-| Runtime session state machine | Session transition path | Invalid jumps rejected deterministically; valid transitions persisted to session-state snapshot |
-| Git worktree and diff hash | Workspace and merge preview path | Writes outside worktree are blocked; diff hash remains stable for normalized diff; branch drift detected |
-| Artifact store | Artifact persistence path | Required artifact types are saved and listed with ID, type, producer, timestamp, and file path |
-| Dotnet validation | Validation execution path | build/test commands execute in worktree and produce exit codes plus output summaries |
-| Review and approval | Review/approval gate path | Review is marked stale after diff mutation; approval token binds exact diff hash and target commit |
-| Merge gating | Negative merge path | Merge rejected on stale diff, drift, missing gates, and aborted state; accepted only with valid token |
-| Controlled shell tool and local-safe policy | Tool invoke path | Dangerous commands denied before execution and denial reason logged as deterministic evidence |
-| External plugin import | Integration composition path | Separate plugin package registers typed capabilities via builder and is loaded by shell host without host edits |
-| E2E suite | Full process behavior path | Named scenarios prove startup, workflow execution, validation, review, approval, and merge safety outcomes |
-| Behavior-proof policy item | Compliance gate path | Every checklist item has at least one executable behavior-proof xUnit test plan entry |
+| Typed contract and metadata expansion | Descriptor construction plus reflection scan | Concrete request/result types remain runtime-visible and object payload contracts remain rejected |
+| Session lifecycle alignment | Session state file plus journaled transition events | Persisted state and transition evidence prove deterministic lifecycle progression and rejection paths |
+| SDK and workflow promotion | External DI registration and workflow compilation | AddWipRuntime/AddWipCapabilities and typed stage descriptors work without shell-specific registration paths |
+| Artifact and session persistence | Disk-backed artifact/session stores | Artifact list and attach/restore behavior remain deterministic and execution-backed |
+| Shell command and host config alignment | Interactive command transcript and config output | Prompt, guidance errors, plugin/workflow/config output, and path defaults remain deterministic |
+| Tool/policy hardening | Controlled command execution and policy decision logs | Dangerous commands are blocked before execution with deterministic reasons and no side effects |
+| Privileged merge isolation | Merge operation orchestration | Merge paths require approval/validation gates and cannot be executed through generic shell tool dispatch |
+| External plugin and sample pack proof | Plugin load, manifest, and workflow listing transcripts | Typed external capability packs load via Modus and are visible through runtime diagnostics and workflow listing |
+| End-to-end MVP flow | Full shell-process acceptance transcript | Governance artifacts, validation evidence, approval binding, and merge rejection/success semantics are execution-backed |
+| Behavior-proof compliance gate | Requirements compliance test suite | Every unchecked item maps to executable runtime tests and metadata-only assumptions are rejected as insufficient |
 
 ---
 
 ## Test Plan
 
-### Typed Abstractions and Capability Descriptors
+### Typed Public Contracts and Metadata Expansion
 
 1. `CapabilityDescriptor_GivenTypedAgentRegistration_StoresConcreteRequestAndResultTypes`
-   *Assumption*: Registering a typed agent through public contracts persists concrete request/result CLR types in runtime capability descriptors rather than object placeholders.
+   *Assumption*: Typed descriptor construction preserves concrete request/result metadata as runtime-visible evidence and cannot regress to object-based execution payload contracts.
 
-2. `AbstractionsReadme_GivenWorkflowContractExamples_ExecuteAsyncRoundTripMatchesDeclaredRequestResultTypes`
-   *Assumption*: Workflow execution dispatches using declared generic contracts and rejects mismatched runtime payload shapes deterministically.
+2. `TypedCapabilityContract_GivenReflectionScan_FindsNoObjectBasedPublicExecutionInterfaces`
+   *Assumption*: Reflection-based runtime verification can prove public capability execution contracts remain type-safe and not metadata-only.
 
-### Builder Registration and Generic Inference
+3. `PolicyDescriptor_GivenTypedPolicyRegistration_StoresConcreteRequestAndResultTypes`
+   *Assumption*: Typed policy registration preserves concrete request/result semantics required for policy execution behavior and deterministic runtime dispatch.
 
-1. `AddAgentTAgentTRequestTResult_GivenUniqueId_RegistersResolvableTypedCapability`
-   *Assumption*: Explicit builder registration wires descriptor metadata and DI services for typed agent execution in runtime.
+### Builder SDK Promotion and Workflow Authoring
+
+1. `AddCapability_GivenDuplicateCapabilityId_RejectsRegistrationUnlessReplaceEnabled`
+   *Assumption*: Capability registration enforces deterministic ownership by rejecting duplicate IDs unless explicit replacement is enabled.
 
 2. `AddAgentTAgent_GivenAmbiguousImplementedInterfaces_ThrowsDeterministicConfigurationException`
-   *Assumption*: Inference overload fails fast with clear error when a capability type implements more than one matching generic agent interface.
+   *Assumption*: Inference overloads must fail deterministically when no unique typed contract can be resolved, and cannot silently pick a path.
 
-3. `AddValidatorTValidator_GivenNoMatchingImplementedInterface_ThrowsDeterministicConfigurationException`
-   *Assumption*: Inference overload rejects validator types that do not expose a single unambiguous generic validator contract.
+3. `AddWorkflow_GivenMapThenThenValidateStages_ExpectedCompiledDescriptorsRetainStageContractNames`
+   *Assumption*: Typed workflow stage mapping remains runtime-visible through compiled descriptors and preserves stage request/result semantics.
 
-### Typed Workflow Stage Compilation
+### Session Lifecycle and Persistence Alignment
 
-1. `AddWorkflow_GivenMapThenThenValidateStages_ExpectedCompiledDescriptorsRetainStageContractNames`
-   *Assumption*: Compiled workflow descriptor records each stage contract type so runtime artifacts can prove typed stage execution boundaries.
+1. `SessionStateJson_GivenSessionLifecycle_StoresApprovalValidationAndArchiveStatusWithoutLosingTaskContext`
+   *Assumption*: Session persistence proves lifecycle, validation, approval, and task context semantics through disk-backed runtime state, not metadata-only snapshots.
 
-2. `RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract`
-   *Assumption*: Runtime workflow execution invokes each stage using mapped input contracts in dependency order with no object-collapsing at public boundaries.
+2. `SessionLifecycle_GivenStartDetachAttachArchive_PersistsStateAndLifecycleEventJournal`
+   *Assumption*: Start/detach/attach/archive execution path must produce deterministic prompt, state, and journal evidence proving lifecycle behavior.
 
-### Interactive Shell Command Model
+3. `SessionLifecycle_GivenStartAttachAbort_PersistsStateAndAbortEventJournal`
+   *Assumption*: Abort flow must persist deterministic abort-state evidence and block downstream merge semantics.
 
-1. `PromptRendering_GivenNoActiveSession_ExpectedGlobalPrompt`
-   *Assumption*: Shell runtime renders global prompt output in detached mode and switches only when an active session is attached.
+### Artifact Store and Session Store Services
 
-2. `PromptRendering_GivenActiveSession_ExpectedSessionPromptIncludesSessionId`
-   *Assumption*: Session prompt output includes active session identifier and remains stable across valid runtime session commands.
+1. `Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore`
+   *Assumption*: Artifact listing is compliant only when runtime persistence exposes deterministic IDs, types, producer IDs, and storage paths.
 
-3. `SessionCommand_GivenNoActiveSession_ExpectedActionableErrorSuggestingStartOrAttach`
-   *Assumption*: Session-scoped commands without active session fail with deterministic guidance instead of silent no-op behavior.
+2. `Sessions_GivenPersistedDetachedSessions_ListsIdsTasksStatesAndUpdatedTimestampsFromDisk`
+   *Assumption*: Session listing remains compliant only when disk-backed discovery and lifecycle metadata are execution-backed.
 
-### ShellHost Lifecycle and Host Composition
+3. `RuntimeReadme_GivenAttachWithoutInMemorySession_PersistedSessionStateRestoresSuccessfully`
+   *Assumption*: Attach without in-memory state must restore persisted session snapshots and prove reusable runtime store semantics.
 
-1. `RunAsync_GivenDefaultStartup_ExpectedPromptReadyWithoutPluginLoadInvocation`
-   *Assumption*: Shell host composes container once per process and remains alive for iterative commands until explicit exit command is issued.
+### Shell Contract and Host Configuration Alignment
 
-2. `RunAsync_GivenExplicitLoadThenUnloadThenExit_ExpectedShutdownStopDoesNotDuplicateUnloadStop`
-   *Assumption*: Host shutdown path invokes plugin stop hooks in deterministic order before process exits successfully.
+1. `ConfigLoader_GivenRepositoryConfigFile_MergesDefaultsAndOverridesIntoEffectiveRuntimeConfiguration`
+   *Assumption*: Effective configuration behavior is proven by runtime merge and command output, not by static file inspection alone.
 
-### Modus Bridge Plugin Discovery and Diagnostics
+2. `ConfigCommand_GivenLoadedConfig_DisplaysEffectivePolicyPluginPathsValidationCommandsAndSourceFile`
+   *Assumption*: Config output must provide deterministic runtime evidence of policy, plugin path, and validation-command resolution.
 
-1. `PluginLoader_GivenPluginsInConfiguredFolders_LoadsCapabilitiesOncePerShellProcess`
-   *Assumption*: Plugin discovery runtime loads assemblies from configured paths and records observable manifest evidence including plugin ID, name, version, assembly details, and capability IDs.
+3. `ShellHostReadme_GivenConfigFileAndCliPluginsPath_CliOverrideWinsInEffectiveConfigurationOutput`
+   *Assumption*: CLI path override precedence must remain deterministic and execution-backed across host startup paths.
 
-2. `PluginsCommand_GivenLoadedDiagnostics_PrintsPluginsCapabilitiesAndPermissions`
-   *Assumption*: Plugins diagnostics command renders runtime-loaded capabilities and required permissions from current manifest state.
+### Policy, Tool, and Worktree Safety Hardening
 
-### Runtime Session State Machine and Persistence
+1. `ExecuteAsync_GivenMvpDangerousCommand_BlocksPreExecutionWithDeterministicReason`
+   *Assumption*: Dangerous commands are compliant only when blocked before execution with deterministic deny reason and no side-effect mutation.
 
-1. `StartSessionAsync_GivenValidRepository_PersistsSessionStateJsonAtDeterministicPath`
-   *Assumption*: Starting a session writes session metadata snapshot including branch, commit, worktree, and initial state to deterministic repository path.
+2. `ExecuteAsync_GivenOutsideWorktreePath_BlocksExecutionAndWritesArtifactLog`
+   *Assumption*: Path-boundary violations must be rejected deterministically and captured in execution evidence artifacts.
 
-2. `TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent`
-   *Assumption*: Runtime rejects non-adjacent state transitions with explicit error while preserving prior persisted state.
+3. `WriteGuard_GivenPathEscapeAttempt_ExpectedOperationBlockedAndNoExternalMutation`
+   *Assumption*: Worktree escape attempts must be blocked with deterministic negative-path proof and no mutation outside session root.
 
-3. `AttachSessionAsync_GivenPersistedSession_RestoresSnapshotAndDetachClearsAttachedContext`
-   *Assumption*: Session attach restores persisted state and rehydrates active runtime context without recreating worktree.
+4. `ValidateAsync_GivenDangerousValidationCommandPattern_ExpectedPolicyDeniesBeforeExecutionAndLogsReason`
+   *Assumption*: Validation orchestration must enforce policy before command execution and log deterministic denial evidence.
 
-### Git Worktree, Diff, Hash, and Drift Detection
+### External Plugin Composition and Discovery
 
-1. `CreateAsync_GivenSessionStart_CreatesIsolatedGitWorktreeAndSessionBranch`
-   *Assumption*: Workspace provider creates isolated worktree and session branch under configured root for active session.
+1. `GetRunManifest_GivenSuccessfulPluginLoad_ExpectedManifestContainsRuntimeIdentityVersionCapabilitiesAndPermissions`
+   *Assumption*: Plugin load behavior is compliant only when runtime manifest captures deterministic identity/capability metadata from loaded plugins.
 
-2. `WriteGuard_GivenPathEscapeAttempt_ExpectedOperationBlockedAndNoExternalMutation`
-   *Assumption*: Path guard deterministically blocks runtime write attempts resolving outside session worktree and leaves outside filesystem state unchanged as evidence.
-
-3. `ComputeDiffHashAsync_GivenEquivalentChangesWithLineEndingNoise_ReturnsStableNormalizedHash`
-   *Assumption*: Normalized diff hashing yields identical hash for semantically equivalent patch content independent of non-semantic formatting differences.
-
-4. `MergePreviewAsync_GivenTargetBranchDrift_ReturnsBlockedPreviewAndDriftSignal`
-   *Assumption*: Merge preview reports target drift when branch head commit differs from session baseline.
-
-### Artifact Store Layout and Metadata
-
-1. `SaveAsync_GivenRequiredArtifactTypes_ExpectedFilesPersistedUnderSessionArtifactLayout`
-   *Assumption*: Artifact store persists JSON, Markdown, and patch artifacts under deterministic session artifact directory layout.
-
-2. `ListAsync_GivenMultipleArtifacts_ExpectedDescriptorsIncludeIdTypeProducerTimestampAndPath`
-   *Assumption*: Artifact listing returns descriptor metadata required for auditability and shell artifact listing output.
-
-### Dotnet Validation and Reports
-
-1. `ExecuteAsync_GivenSuccessfulBuildAndTest_ProducesPassingValidationReportWithCommandEvidence`
-   *Assumption*: Validation pipeline runs dotnet build and dotnet test in session workspace and records passing status with command details.
-
-2. `ExecuteAsync_GivenBuildCommandTimeout_ReturnsFailedResultAndPersistsTimeoutEvidence`
-   *Assumption*: Timeout boundaries produce deterministic validation failure and preserve command output/timeout evidence in report artifact.
-
-### Review and Approval Gates
-
-1. `ReviewAsync_GivenCurrentDiffAndValidation_WritesMarkdownReportWithDiffSummaryChangedFilesAndValidationStatus`
-   *Assumption*: Review generation produces human-readable report containing task, state, changed files, validation status, and current diff hash.
-
-2. `MergeAsync_GivenDiffChangedAfterApproval_RejectsMergeAndMarksApprovalStale`
-   *Assumption*: Approval is denied when current diff hash no longer matches reviewed hash, forcing review regeneration.
-
-3. `MergeAsync_GivenApprovalNotConfirmed_RejectsMergeWithDeterministicReason`
-   *Assumption*: Human confirmation prompt deterministically denies approval token creation when user does not explicitly confirm, with observable state evidence of no token.
-
-### Approval-Gated Merge Flow
-
-1. `MergeAsync_GivenMissingApprovalEvidence_RejectsMergeWithDeterministicReason`
-   *Assumption*: Merge runtime attempts without valid approval token are blocked before any branch mutation, with observable rejection output.
-
-2. `MergeAsync_GivenDiffChangedAfterApproval_RejectsMergeAndMarksApprovalStale`
-   *Assumption*: Merge flow verifies token-bound diff hash and rejects stale hash paths without applying changes.
-
-3. `MergeAsync_GivenApprovedTokenAndTargetBranchDrift_RejectsMergeWithDeterministicReason`
-   *Assumption*: Branch drift after approval deterministically invalidates merge and requires updated baseline, validation, and approval with explicit error output evidence.
-
-4. `MergeAsync_GivenValidatedReviewedConfirmedAndCurrentApproval_MergesFastForwardWithoutDrift`
-   *Assumption*: Merge succeeds only when validation, review, approval token, and branch baseline checks all pass on current candidate diff.
-
-### Controlled Shell Tool and Local-Safe Policy
-
-1. `InvokeAsync_GivenDangerousCommandPattern_ExpectedPolicyDeniesBeforeExecutionAndLogsReason`
-   *Assumption*: Dangerous command deny-list is enforced pre-execution with deterministic deny reason persisted in command log artifact.
-
-2. `InvokeAsync_GivenWorkingDirectoryOutsideSessionWorktree_ExpectedPolicyDeniesPathBoundaryViolation`
-   *Assumption*: Commands resolving outside active worktree are denied by policy and never executed by tool runtime.
-
-3. `InvokeAsync_GivenAllowedCommandInsideWorktree_ExpectedCommandExecutesAndProducesExecutionLogArtifact`
-   *Assumption*: Allowed commands inside active worktree execute with timeout and produce command log artifact containing exit code and output.
-
-### External Sample Plugin Integration
-
-1. `ShellDiscovery_GivenExternalPluginAssembly_ListsRegisteredAgentValidatorAndWorkflow`
-   *Assumption*: A separate project plugin using AddWipCapabilities registers typed capabilities discoverable by shell host through runtime plugin loading only with manifest evidence.
-
-2. `WorkflowsCommand_GivenLoadedDiagnostics_PrintsRegisteredWorkflows`
-   *Assumption*: Runtime diagnostics expose external plugin capability IDs and workflow IDs proving host consumes shared builder/runtime model.
-
-### End-to-End MVP Flow and Safety Gates
-
-1. `ShellProcess_GivenInitToMergeHappyPath_ExpectedArtifactsValidationApprovalAndMergeEvidenceRecorded`
-   *Assumption*: Full shell flow from init through merge produces deterministic governance artifacts and successful merge only after required gates pass.
-
-2. `ShellProcess_GivenDiffMutationAfterApproval_ExpectedMergeRejectedWithStaleApprovalEvidence`
-   *Assumption*: Diff changes after approval deterministically invalidate merge attempts until re-review and re-approval.
+2. `Workflows_GivenLoadedPluginCapabilities_ListsBuilderRegisteredWorkflowIdsForInteractiveSelection`
+   *Assumption*: Workflow visibility must come from runtime plugin composition through builder registration and not shell-local hardcoding.
 
 3. `ShellProcess_GivenAmbiguousTypedInferencePlugin_ExpectedPluginLoadFailureAndShellRemainsUsable`
-   *Assumption*: Ambiguous typed registration in plugin causes deterministic plugin load failure isolation without crashing shell process.
+   *Assumption*: Ambiguous plugin registration paths must fail deterministically with shell continuity and no hidden capability activation.
+
+### Transcript-Level End-to-End MVP Flow
+
+1. `ShellProcess_GivenInitSessionStartPlanDiffValidateReviewApproveMerge_ExpectedAcceptanceTranscriptSucceeds`
+   *Assumption*: End-to-end shell transcript must prove governance artifact production, validation evidence, approval binding, and merge execution behavior.
+
+2. `ShellProcess_GivenDetachedSessionAndRestart_ExpectedSessionsListAndSessionAttachResumeGovernanceFlow`
+   *Assumption*: Restart path must prove disk-backed session continuity and deterministic re-attach behavior for governance flow resumption.
+
+3. `ShellProcess_GivenMergeWithoutApproval_ExpectedPolicyDenialEvidenceWithoutExternalMutation`
+   *Assumption*: Merge without approval must be deterministically blocked with explicit policy evidence and cannot mutate target branch state.
+
+4. `ShellProcess_GivenApproveThenMutateThenMerge_ExpectedStaleApprovalRejectedWithDeterministicEvidence`
+   *Assumption*: Post-approval diff mutation must deterministically invalidate approval, block merge with explicit stale-evidence output, and prove no side-effect execution.
+
+5. `ShellProcess_GivenAbortThenMergeAttempt_ExpectedGovernanceGuardDeniesMergeAfterAbort`
+   *Assumption*: Abort flow must detach active session context and deterministically deny merge progression without producing merge-side effects.
 
 ### Absolute Behavior-Proof Compliance Gate
 
-1. `BehaviorProofCompliance_GivenAllPlannedIntegrationTests_ExpectedBehaviorProofAssumptionsRequired`
-   *Assumption*: Every planned integration test assumption must include runtime-observable behavior-proof evidence, and policy checklist entries must map to executable checklist-bound tests.
+1. `BehaviorProofCompliance_GivenEachChecklistItem_RequiresAtLeastOneExecutableRuntimeProofTest`
+   *Assumption*: Each checklist item is compliant only when mapped to executable runtime evidence and cannot be satisfied by metadata-only checks.
 
-2. `BehaviorProofCompliance_GivenChecklistItemWithoutExecutableRuntimeAssertion_ExpectedPlanRejected`
-   *Assumption*: Checklist items without executable runtime assertions are non-compliant and rejected by compliance gate.
+2. `BehaviorProofCompliance_GivenCrossProjectPlan_RecognizesRuntimeAndShellTestsOutsideExecutingAssembly`
+   *Assumption*: Cross-project compliance is proven only when executable test discovery spans all relevant Wip.* test assemblies.
 
-3. `BehaviorProofCompliance_GivenApiFocusedPlan_ExpectedOwnerSemanticsLifetimeCorrelationAndIsolationAssertionsRequired`
-   *Assumption*: API-focused test plans are accepted only when owner resolution, business semantics, lifetime correlation, isolation, and negative contracts are explicitly asserted.
+3. `BehaviorProofCompliance_GivenMetadataOnlyGovernanceAssertions_RejectsPlanAsNonCompliant`
+   *Assumption*: Metadata-only governance assertions are insufficient and must be rejected by deterministic compliance enforcement.
+
+4. `BehaviorProofCompliance_GivenShellAndRuntimeIntegrationPlans_RequiresDeterministicNegativePathEvidence`
+   *Assumption*: Integration plans are compliant only when negative-path runtime evidence proves deterministic rejection with no side-effect execution.
+
+5. `BehaviorProofCompliance_GivenApiFocusedPlan_ExpectedOwnerSemanticsLifetimeCorrelationAndIsolationAssertionsRequired`
+   *Assumption*: API-focused plans are compliant only when owner resolution, business semantics, lifetime correlation continuity, isolation, and negative contracts are all asserted.
 
 ---
+
+## Format Gate Results
+
+| # | Rule | Status | Violations |
+|---|---|---|---|
+| 1 | Heading structure and separators | ✅ Pass | — |
+| 2 | Scope statement under H1 | ✅ Pass | — |
+| 3 | Pipe tables present | ✅ Pass | — |
+| 4 | Checklists with dependency tags | ✅ Pass | — |
+| 5 | Mermaid diagrams (conditional) | ✅ Pass | — |
+| 6 | Verification gate evidence | ✅ Pass | — |
+| 7 | Closing verification line | ✅ Pass | — |
+| 8 | Numbered test plan items | ✅ Pass | — |
+
+**PASS** - document conforms to plan format.
+
+---
+
+## Absolute Behavior Verification Compliance Check
+
+| Condition | Result | Evidence |
+|---|---|---|
+| Every checklist item maps to named tests | Pass | Checklist-to-test mapping is covered through matrix anchors and named xUnit test inventory |
+| Behavior-proof assertions present for every item | Pass | Every test assumption includes runtime proof expectations and deterministic negative-path evidence where applicable |
+| Metadata-only tests absent as sole evidence | Pass | Assumptions explicitly reject metadata-only evidence as insufficient |
+| API-focused items include absolute integration gates | Pass | Owner resolution, business semantics, lifetime/correlation continuity, isolation, and negative contracts are explicitly required |
+
+---
+
+WiP Shell + Agentic Builder MVP next-steps requirements document updated at .github/requirements/Wip.Shell-Builder-MVP-Next-Steps.md.
 
 *All assumptions verified by Falsify Claims. Zero Falsified rows.*

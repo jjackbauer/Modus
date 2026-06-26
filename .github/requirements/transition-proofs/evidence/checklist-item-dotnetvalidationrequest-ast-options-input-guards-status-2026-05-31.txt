@@ -1,0 +1,5 @@
+﻿timestamp=2026-05-31T18:16:01.8060045-03:00
+line=83
+text=- [x] Extend `DotNetValidationRequest` with AST options (`EnableAstValidation`, `AstProjectPath`, `AstTimeout`) and validate input guards [depends on AST contracts] [transition-proof: .github/requirements/transition-proofs/checklist-item-dotnetvalidationrequest-ast-options-input-guards-transition-proof-2026-05-31.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-dotnetvalidationrequest-ast-options-input-guards.unchecked.snapshot-2026-05-31.md]
+unchecked=6
+checked=3

@@ -1,0 +1,12 @@
+﻿CHECKLIST ITEM STATE EVIDENCE
+date=2026-06-02
+requirements=.github/requirements/DotNet-App-Development-Flows.md
+item=Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
+
+Checked Completion Evidence
+lineNumber=86
+lineText=- [x] Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
+
+Checklist Status Snapshot
+checked=10
+unchecked=0

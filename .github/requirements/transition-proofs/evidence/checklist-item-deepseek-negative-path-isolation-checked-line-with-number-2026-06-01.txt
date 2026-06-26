@@ -1,0 +1,5 @@
+﻿COMMAND: Select-String -Path .github/requirements/Wip.Next-Steps.md -Pattern 'Add deterministic negative-path isolation tests for missing/invalid credentials, unsupported model selection, and provider endpoint failure contracts without side-effect artifact mutation' | Select-Object -First 1 | ForEach-Object { "line=$($_.LineNumber) text=$($_.Line)" }
+OUTPUT: line=
+67
+ text=
+- [x] Add deterministic negative-path isolation tests for missing/invalid credentials, unsupported model selection, and provider endpoint failure contracts without side-effect artifact mutation [depends on DeepSeek implementation and runtime wiring] [transition-proof: .github/requirements/transition-proofs/checklist-item-deepseek-negative-path-isolation-transition-proof-2026-05-31.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-deepseek-negative-path-isolation.unchecked.snapshot-2026-05-31.md]

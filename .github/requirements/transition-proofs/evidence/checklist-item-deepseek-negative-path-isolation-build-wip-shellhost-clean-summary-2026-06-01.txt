@@ -1,0 +1,2 @@
+﻿COMMAND: dotnet build src/Wip.ShellHost/Wip.ShellHost.csproj --nologo
+OUTPUT: Build succeeded. 0 Warning(s). 0 Error(s).

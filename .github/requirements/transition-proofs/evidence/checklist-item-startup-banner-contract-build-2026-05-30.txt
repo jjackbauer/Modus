@@ -1,0 +1,44 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Modus.Core -> C:\Users\ricar\dev\Modus\src\Modus.Core\bin\Debug\net10.0\Modus.Core.dll
+  Wip.Abstractions -> C:\Users\ricar\dev\Modus\src\Wip.Abstractions\bin\Debug\net10.0\Wip.Abstractions.dll
+  Plugin.Lifetime.Transient -> C:\Users\ricar\dev\Modus\plugins\bin\Debug\net10.0\Plugin.Lifetime.Transient.dll
+  Plugin.Lifetime.Scoped -> C:\Users\ricar\dev\Modus\plugins\bin\Debug\net10.0\Plugin.Lifetime.Scoped.dll
+  Wip.Tools.Shell -> C:\Users\ricar\dev\Modus\src\Wip.Tools.Shell\bin\Debug\net10.0\Wip.Tools.Shell.dll
+  Plugin.Orders.Fulfillment -> C:\Users\ricar\dev\Modus\src\SamplePlugins\Plugin.Orders.Fulfillment\bin\Debug\net10.0\Plugin.Orders.Fulfillment.dll
+  Wip.Workspaces.Git -> C:\Users\ricar\dev\Modus\src\Wip.Workspaces.Git\bin\Debug\net10.0\Wip.Workspaces.Git.dll
+  Wip.Builder -> C:\Users\ricar\dev\Modus\src\Wip.Builder\bin\Debug\net10.0\Wip.Builder.dll
+  Plugin.Lifetime.Singleton -> C:\Users\ricar\dev\Modus\plugins\bin\Debug\net10.0\Plugin.Lifetime.Singleton.dll
+  Modus.Architecture.Tests -> C:\Users\ricar\dev\Modus\tests\Modus.Architecture.Tests\bin\Debug\net10.0\Modus.Architecture.Tests.dll
+  Wip.Abstractions.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Abstractions.Tests\bin\Debug\net10.0\Wip.Abstractions.Tests.dll
+  Wip.Artifacts.Local -> C:\Users\ricar\dev\Modus\src\Wip.Artifacts.Local\bin\Debug\net10.0\Wip.Artifacts.Local.dll
+  Modus.Core.Tests -> C:\Users\ricar\dev\Modus\tests\Modus.Core.Tests\bin\Debug\net10.0\Modus.Core.Tests.dll
+  Plugin.Machine.Telemetry -> C:\Users\ricar\dev\Modus\plugins\bin\Debug\net10.0\Plugin.Machine.Telemetry.dll
+  Wip.Policy.LocalSafe -> C:\Users\ricar\dev\Modus\src\Wip.Policy.LocalSafe\bin\Debug\net10.0\Wip.Policy.LocalSafe.dll
+  Wip.Runtime -> C:\Users\ricar\dev\Modus\src\Wip.Runtime\bin\Debug\net10.0\Wip.Runtime.dll
+  Wip.Builder.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Builder.Tests\bin\Debug\net10.0\Wip.Builder.Tests.dll
+  Wip.Validation.DotNet -> C:\Users\ricar\dev\Modus\src\Wip.Validation.DotNet\bin\Debug\net10.0\Wip.Validation.DotNet.dll
+  Wip.Modus -> C:\Users\ricar\dev\Modus\src\Wip.Modus\bin\Debug\net10.0\Wip.Modus.dll
+  Plugin.Host.Telemetry -> C:\Users\ricar\dev\Modus\plugins\bin\Debug\net10.0\Plugin.Host.Telemetry.dll
+  Wip.Policy.LocalSafe.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Policy.LocalSafe.Tests\bin\Debug\net10.0\Wip.Policy.LocalSafe.Tests.dll
+  Wip.Workspaces.Git.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Workspaces.Git.Tests\bin\Debug\net10.0\Wip.Workspaces.Git.Tests.dll
+  Samples.TodoApp.WipAgents -> C:\Users\ricar\dev\Modus\src\Samples.TodoApp.WipAgents\bin\Debug\net10.0\Samples.TodoApp.WipAgents.dll
+  Wip.Tools.Shell.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Tools.Shell.Tests\bin\Debug\net10.0\Wip.Tools.Shell.Tests.dll
+  Wip.Artifacts.Local.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Artifacts.Local.Tests\bin\Debug\net10.0\Wip.Artifacts.Local.Tests.dll
+  Wip.Modus.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Modus.Tests\bin\Debug\net10.0\Wip.Modus.Tests.dll
+  Modus.Host -> C:\Users\ricar\dev\Modus\src\Modus.Host\bin\Debug\net10.0\Modus.Host.dll
+  Wip.Shell -> C:\Users\ricar\dev\Modus\src\Wip.Shell\bin\Debug\net10.0\Wip.Shell.dll
+  Wip.Validation.DotNet.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Validation.DotNet.Tests\bin\Debug\net10.0\Wip.Validation.DotNet.Tests.dll
+  Plugin.Payments.Gateway -> C:\Users\ricar\dev\Modus\src\SamplePlugins\Plugin.Payments.Gateway\bin\Debug\net10.0\Plugin.Payments.Gateway.dll
+  Wip.ShellHost -> C:\Users\ricar\dev\Modus\src\Wip.ShellHost\bin\Debug\net10.0\Wip.ShellHost.dll
+  Wip.Runtime.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Runtime.Tests\bin\Debug\net10.0\Wip.Runtime.Tests.dll
+  Wip.Shell.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Shell.Tests\bin\Debug\net10.0\Wip.Shell.Tests.dll
+  Wip.ShellHost.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.ShellHost.Tests\bin\Debug\net10.0\Wip.ShellHost.Tests.dll
+  Wip.Shell.E2E.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Shell.E2E.Tests\bin\Debug\net10.0\Wip.Shell.E2E.Tests.dll
+  Modus.Host.IntegrationTests -> C:\Users\ricar\dev\Modus\tests\Modus.Host.IntegrationTests\bin\Debug\net10.0\Modus.Host.IntegrationTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.61

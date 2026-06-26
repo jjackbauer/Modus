@@ -1,0 +1,16 @@
+# Checklist Item Transition Proof - DeepSeek Provider Options Contract
+
+## Baseline Unchecked Source Text Evidence
+Exact baseline unchecked line text (verbatim):
+- [ ] Implement DeepSeek provider options contract (base URL, model identifier, timeout, key source) with deterministic validation and startup diagnostics [depends on typed provider contracts]
+
+## Checked Completion Evidence
+Exact checked current line text:
+- [x] Implement DeepSeek provider options contract (base URL, model identifier, timeout, key source) with deterministic validation and startup diagnostics [depends on typed provider contracts]
+
+Command and output proving checked line exists and line number:
+COMMAND: Select-String -Path .\.github\requirements\Wip.Next-Steps.md -Pattern 'Implement DeepSeek provider options contract'
+62:- [x] Implement DeepSeek provider options contract (base URL, model identifier, timeout, key source) with deterministic validation and startup diagnostics [depends on typed provider contracts]
+
+## Deterministic Transition Statement
+Given the baseline canonical unchecked text above and the current repository line evidence at line 62 showing the identical checklist item now marked [x], the transition for this exact checklist item is deterministically proven as [ ] -> [x] in .github/requirements/Wip.Next-Steps.md.

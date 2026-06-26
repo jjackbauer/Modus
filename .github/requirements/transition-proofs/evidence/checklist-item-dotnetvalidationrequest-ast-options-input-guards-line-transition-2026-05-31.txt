@@ -1,0 +1,5 @@
+﻿timestamp=2026-05-31T18:16:01.8060045-03:00
+unchecked_line=- [ ] Extend `DotNetValidationRequest` with AST options (`EnableAstValidation`, `AstProjectPath`, `AstTimeout`) and validate input guards [depends on AST contracts]
+unchecked_line_sha256=ded1c7787b05c1dc271b1b8a21225f1c5ce667cef63c47cb7e2f59fdae59759e
+checked_line=- [x] Extend `DotNetValidationRequest` with AST options (`EnableAstValidation`, `AstProjectPath`, `AstTimeout`) and validate input guards [depends on AST contracts] [transition-proof: .github/requirements/transition-proofs/checklist-item-dotnetvalidationrequest-ast-options-input-guards-transition-proof-2026-05-31.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-dotnetvalidationrequest-ast-options-input-guards.unchecked.snapshot-2026-05-31.md]
+checked_line_sha256=1a481423b702a6519cd81c32fb4ac171b71c6da5c1cf26a681c6bf74292c6b0e

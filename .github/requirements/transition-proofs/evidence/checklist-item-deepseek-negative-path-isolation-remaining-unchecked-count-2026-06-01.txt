@@ -1,0 +1,3 @@
+﻿COMMAND: Select-String -Path .github/requirements/Wip.Next-Steps.md -Pattern '^- \[ \]' | Measure-Object
+OUTPUT: unchecked=
+0

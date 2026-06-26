@@ -1,0 +1,21 @@
+EVIDENCE: checklist item completion proof
+DATE_UTC: 
+2026-06-02 13:14:19Z
+REQUIREMENTS_DOC: 
+.github/requirements/DotNet-App-Development-Flows.md
+REQUIREMENTS_DOC_SHA256: 
+ED80A509377E63654527F43DCA49E36E4EDFCBC0CBF2CC5254888BF247BD76B5
+TARGET_ITEM: 
+Add operational diagnostics output showing effective configuration, command catalog, and active runtime policies
+TARGET_ITEM_FOUND_COUNT: 
+1
+TARGET_ITEM_CHECKED_COUNT: 
+1
+CHECKLIST_UNCHECKED_TOTAL: 
+2
+CHECKLIST_CHECKED_TOTAL: 
+8
+TARGET_LINE(S):
+  LINE 84: - [x] Add operational diagnostics output showing effective configuration, command catalog, and active runtime policies [depends on command orchestration and policy gates]
+TARGET_CHECKED_LINE(S):
+  LINE 84: - [x] Add operational diagnostics output showing effective configuration, command catalog, and active runtime policies [depends on command orchestration and policy gates]

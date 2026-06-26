@@ -1,0 +1,8 @@
+﻿timestamp=2026-05-31T20:28:26.5031107-03:00
+itemCore=Persist AST evidence inside `ValidationReport` artifact (counts, diagnostics, success state, elapsed window) and keep serialization deterministic [depends on validator AST execution]
+lineNumber=85
+lineText=- [x] Persist AST evidence inside `ValidationReport` artifact (counts, diagnostics, success state, elapsed window) and keep serialization deterministic [depends on validator AST execution] [transition-proof: .github/requirements/transition-proofs/checklist-item-validationreport-ast-evidence-persistence-transition-proof-2026-05-31.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-validationreport-ast-evidence-persistence.unchecked.snapshot-2026-05-31.md]
+unchecked_line=- [ ] Persist AST evidence inside `ValidationReport` artifact (counts, diagnostics, success state, elapsed window) and keep serialization deterministic [depends on validator AST execution]
+unchecked_line_sha256=f52c82e8b95b345005af56ee779e2e478e50910ce85ae9d3a42f8c2d16922f78
+checked_line=- [x] Persist AST evidence inside `ValidationReport` artifact (counts, diagnostics, success state, elapsed window) and keep serialization deterministic [depends on validator AST execution] [transition-proof: .github/requirements/transition-proofs/checklist-item-validationreport-ast-evidence-persistence-transition-proof-2026-05-31.md] [baseline-witness: .github/requirements/transition-proofs/baselines/checklist-item-validationreport-ast-evidence-persistence.unchecked.snapshot-2026-05-31.md]
+checked_line_sha256=7213aa6785158f1003fd36f821ca380d8cde0a9d01e7ab1d938a377a390e9504

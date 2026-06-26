@@ -1,0 +1,4 @@
+﻿Test run for C:\Users\ricar\dev\Modus\tests\Wip.Shell.E2E.Tests\bin\Debug\net10.0\Wip.Shell.E2E.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     6, Skipped:     0, Total:     6, Duration: 50 s - Wip.Shell.E2E.Tests.dll (net10.0)

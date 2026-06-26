@@ -1,0 +1,12 @@
+﻿{
+    "checklistItemId":  8,
+    "slug":  "checklist-item-deepseek-negative-path-isolation",
+    "requirementsDocument":  ".github/requirements/Wip.Next-Steps.md",
+    "baselineState":  "[ ]",
+    "currentState":  "[x]",
+    "baselineFile":  ".github\\requirements\\transition-proofs\\evidence\\checklist-item-deepseek-negative-path-isolation-baseline-unchecked-verbatim-2026-06-01.txt",
+    "checkedLineFile":  ".github\\requirements\\transition-proofs\\evidence\\checklist-item-deepseek-negative-path-isolation-current-checked-line-2026-06-01.txt",
+    "lineProofFile":  ".github\\requirements\\transition-proofs\\evidence\\checklist-item-deepseek-negative-path-isolation-checked-line-command-proof-2026-06-01.txt",
+    "transitionStatementFile":  ".github\\requirements\\transition-proofs\\evidence\\checklist-item-deepseek-negative-path-isolation-deterministic-transition-statement-2026-06-01.md",
+    "generatedAtUtc":  "2026-06-01T10:45:57.0219255Z"
+}

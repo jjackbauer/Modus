@@ -1,0 +1,14 @@
+Checklist Item Transition Proof
+Date: 2026-06-01
+RequirementsDoc: .github/requirements/Wip.Dynamic-System-Prompt.md
+
+Baseline Unchecked Source Text Evidence
+Line: 93
+- [ ] Implement prompt-context composer in Wip.Shell that derives context deterministically from active session snapshot, builder descriptors, selected workflow/policy, repository root, validation commands, and loaded plugin manifest diagnostics [depends on runtime prompt-context contract]
+
+Checked Completion Evidence
+Line: 93
+- [x] Implement prompt-context composer in Wip.Shell that derives context deterministically from active session snapshot, builder descriptors, selected workflow/policy, repository root, validation commands, and loaded plugin manifest diagnostics [depends on runtime prompt-context contract]
+
+Deterministic Transition Statement
+For this exact checklist text at line 93, the completion marker transitioned from [ ] baseline form to [x] current form.

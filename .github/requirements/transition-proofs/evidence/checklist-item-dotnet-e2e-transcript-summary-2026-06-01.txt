@@ -1,0 +1,9 @@
+﻿COMMAND: dotnet build wip/Wip.ShellHost/Wip.ShellHost.csproj -c Debug --nologo
+RESULT: Build succeeded. 0 errors.
+
+COMMAND: dotnet test wip/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj -c Debug --no-build --nologo --filter "FullyQualifiedName~SessionLifecycle_GivenStartDetachAttachArchive_PersistsStateAndLifecycleEventJournal|FullyQualifiedName~RunArtifacts_GivenPlannedTypedWorkflow_ProducesAgentPlanAndAgentRunResultArtifacts"
+RESULT: Passed=2, Failed=0, Skipped=0, Total=2, Duration=5s.
+
+COMMAND: dotnet test wip/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj -c Debug --no-build --nologo
+RESULT: Failed run. total=91, failed=6, succeeded=85, skipped=0, duration=129.7s.
+NOTE: Failures are outside this checklist-item scope and were not modified in this implementation step.

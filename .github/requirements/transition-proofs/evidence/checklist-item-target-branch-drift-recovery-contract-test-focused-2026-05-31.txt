@@ -1,0 +1,20 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Wip.Abstractions -> C:\Users\ricar\dev\Modus\src\Wip.Abstractions\bin\Debug\net10.0\Wip.Abstractions.dll
+  Modus.Core -> C:\Users\ricar\dev\Modus\src\Modus.Core\bin\Debug\net10.0\Modus.Core.dll
+  Wip.Workspaces.Git -> C:\Users\ricar\dev\Modus\src\Wip.Workspaces.Git\bin\Debug\net10.0\Wip.Workspaces.Git.dll
+  Wip.Policy.LocalSafe -> C:\Users\ricar\dev\Modus\src\Wip.Policy.LocalSafe\bin\Debug\net10.0\Wip.Policy.LocalSafe.dll
+  Samples.TodoApp -> C:\Users\ricar\dev\Modus\src\Samples.TodoApp\bin\Debug\net10.0\Samples.TodoApp.dll
+  Wip.Builder -> C:\Users\ricar\dev\Modus\src\Wip.Builder\bin\Debug\net10.0\Wip.Builder.dll
+  Wip.Agent.Basic -> C:\Users\ricar\dev\Modus\src\Wip.Agent.Basic\bin\Debug\net10.0\Wip.Agent.Basic.dll
+  Wip.Runtime -> C:\Users\ricar\dev\Modus\src\Wip.Runtime\bin\Debug\net10.0\Wip.Runtime.dll
+  Wip.Modus -> C:\Users\ricar\dev\Modus\src\Wip.Modus\bin\Debug\net10.0\Wip.Modus.dll
+  Samples.TodoApp.WipAgents -> C:\Users\ricar\dev\Modus\src\Samples.TodoApp.WipAgents\bin\Debug\net10.0\Samples.TodoApp.WipAgents.dll
+  Wip.Shell -> C:\Users\ricar\dev\Modus\src\Wip.Shell\bin\Debug\net10.0\Wip.Shell.dll
+  Wip.ShellHost -> C:\Users\ricar\dev\Modus\src\Wip.ShellHost\bin\Debug\net10.0\Wip.ShellHost.dll
+  Wip.Shell.E2E.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Shell.E2E.Tests\bin\Debug\net10.0\Wip.Shell.E2E.Tests.dll
+Test run for C:\Users\ricar\dev\Modus\tests\Wip.Shell.E2E.Tests\bin\Debug\net10.0\Wip.Shell.E2E.Tests.dll (.NETCoreApp,Version=v10.0)
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2, Duration: 3 s - Wip.Shell.E2E.Tests.dll (net10.0)
+

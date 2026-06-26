@@ -1,0 +1,11 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Wip.Abstractions -> C:\Users\ricar\dev\Modus\src\Wip.Abstractions\bin\Debug\net10.0\Wip.Abstractions.dll
+  Wip.Workspaces.Git -> C:\Users\ricar\dev\Modus\src\Wip.Workspaces.Git\bin\Debug\net10.0\Wip.Workspaces.Git.dll
+  Wip.Validation.DotNet -> C:\Users\ricar\dev\Modus\src\Wip.Validation.DotNet\bin\Debug\net10.0\Wip.Validation.DotNet.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.92

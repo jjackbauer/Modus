@@ -1,0 +1,12 @@
+{
+  "itemId": "deepseek-provider-options-contract",
+  "checklistFile": ".github/requirements/Wip.Next-Steps.md",
+  "timestampUtc": "2026-05-31T00:00:00Z",
+  "transition": "unchecked-to-checked",
+  "evidence": {
+    "lineTransitionFile": ".github/requirements/transition-proofs/evidence/checklist-item-deepseek-provider-options-contract-line-transition-2026-05-31.txt",
+    "statusFile": ".github/requirements/transition-proofs/evidence/checklist-item-deepseek-provider-options-contract-status-2026-05-31.txt",
+    "buildFile": ".github/requirements/transition-proofs/evidence/checklist-item-deepseek-provider-options-contract-build-2026-05-31.txt",
+    "testFile": ".github/requirements/transition-proofs/evidence/checklist-item-deepseek-provider-options-contract-test-no-build-2026-05-31.txt"
+  }
+}

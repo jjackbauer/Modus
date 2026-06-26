@@ -1,0 +1,7 @@
+﻿captured_at=2026-05-31T20:42:33.9362786-03:00
+requirements_path=.\.github\requirements\Wip.Validation.DotNet.md
+line_number=87
+baseline_line=- [ ] Register AST analyzer via DI with explicit ownership/lifetime expectations and verify runtime resolver behavior [depends on analyzer implementation]
+baseline_line_sha256=d6be50e2dc041e3fbfa29870fe80a7a0e950314891c3920916b1d021a067ecb6
+checked_line=- [x] Register AST analyzer via DI with explicit ownership/lifetime expectations and verify runtime resolver behavior [depends on analyzer implementation]
+checked_line_sha256=b292882f6fe91a54aa0bbfd940f11ae945f9714641acb0c4ef7be48f7819e034
