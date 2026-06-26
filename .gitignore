@@ -32,6 +32,9 @@ packages/
 # Logs
 *.log
 
+# Local WIP shell runtime state
+.wip/
+
 # Rider
 .idea/
 
