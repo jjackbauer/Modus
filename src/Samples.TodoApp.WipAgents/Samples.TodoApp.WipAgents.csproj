@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
     <ProjectReference Include="..\Modus.Core\Modus.Core.csproj" />
-    <ProjectReference Include="..\Wip.Modus\Wip.Modus.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Modus\Wip.Modus.csproj" />
   </ItemGroup>
 </Project>

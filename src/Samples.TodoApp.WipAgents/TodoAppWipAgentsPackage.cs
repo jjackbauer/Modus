@@ -14,6 +14,7 @@ public static class TodoAppWipBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.AddAgent<TodoPlanAgent, TodoPlanRequest, TodoPlanResult>(new CapabilityId("todoapp.agent.plan"), "Todo Plan Agent");
+        builder.AddTool<TodoDraftTool, TodoDraftRequest, TodoDraftResult>(new CapabilityId("todoapp.tool.draft"), "Todo Draft Tool");
         builder.AddValidator<TodoResultValidator, TodoValidationRequest, TodoValidationResult>(new CapabilityId("todoapp.validator.result"), "Todo Result Validator");
         builder.AddWorkflow<TodoAppWorkflow, TodoWorkflowRequest, TodoWorkflowResult>(new WorkflowId("todoapp.workflow.delivery"), "Todo Delivery Workflow");
 
@@ -32,6 +33,7 @@ public sealed class TodoAppWipPlugin : IWipHostPluginContract, IPluginLifecycle,
     public IReadOnlyCollection<OperationName> SupportedOperations =>
     [
         new("todoapp.agent.plan"),
+        new("todoapp.tool.draft"),
         new("todoapp.validator.result")
     ];
 
@@ -56,8 +58,9 @@ public sealed class TodoAppWipPlugin : IWipHostPluginContract, IPluginLifecycle,
         return
         [
             new PluginRegistrationStep(1, PluginRegistrationStepKind.RegisterOperation, "operation:todoapp.agent.plan"),
-            new PluginRegistrationStep(2, PluginRegistrationStepKind.RegisterOperation, "operation:todoapp.validator.result"),
-            new PluginRegistrationStep(3, PluginRegistrationStepKind.SubscribeEvents, "events:todoapp.workflow.delivery")
+            new PluginRegistrationStep(2, PluginRegistrationStepKind.RegisterOperation, "operation:todoapp.tool.draft"),
+            new PluginRegistrationStep(3, PluginRegistrationStepKind.RegisterOperation, "operation:todoapp.validator.result"),
+            new PluginRegistrationStep(4, PluginRegistrationStepKind.SubscribeEvents, "events:todoapp.workflow.delivery")
         ];
     }
 }
@@ -71,6 +74,18 @@ public sealed class TodoPlanAgent : IAgent<TodoPlanRequest, TodoPlanResult>
     public ValueTask<TodoPlanResult> ExecuteAsync(TodoPlanRequest request, CapabilityContext context, CancellationToken cancellationToken)
     {
         return ValueTask.FromResult(new TodoPlanResult($"Plan:{request.Goal}:{context.SessionId.Value}"));
+    }
+}
+
+public sealed record TodoDraftRequest(string Title);
+
+public sealed record TodoDraftResult(string Draft);
+
+public sealed class TodoDraftTool : ITool<TodoDraftRequest, TodoDraftResult>
+{
+    public ValueTask<TodoDraftResult> ExecuteAsync(TodoDraftRequest request, CapabilityContext context, CancellationToken cancellationToken)
+    {
+        return ValueTask.FromResult(new TodoDraftResult($"Draft:{request.Title}:{context.SessionId.Value}"));
     }
 }
 

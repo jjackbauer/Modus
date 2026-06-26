@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Minimal sample TodoApp repository fixture package for shell and runtime behavior-proof tests.</Description>
+    <PackageId>Samples.TodoApp</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WIP\Wip.Abstractions\Wip.Abstractions.csproj" />
+  </ItemGroup>
+</Project>
