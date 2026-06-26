@@ -8,6 +8,7 @@ public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
 
     private static readonly string[] ExpectedTestCommands =
     {
+        "dotnet test tests/Wip.ShellHost.Tests/Wip.ShellHost.Tests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Wip.ShellHost.Tests.trx\"",
         "dotnet test tests/Modus.Core.Tests/Modus.Core.Tests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Core.Tests.trx\"",
         "dotnet test tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj --configuration Release --no-build --logger \"trx;LogFileName=Modus.Architecture.Tests.trx\"",
         "dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter \"MigrationRegression=true\" --logger \"trx;LogFileName=MigrationRegressionSuite.trx\"",
@@ -31,6 +32,13 @@ public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
         {
             Assert.Contains(expectedCommand, testCommands);
         }
+
+        var hostShellTestsIndex = Array.IndexOf(runCommands, ExpectedTestCommands[0]);
+        var firstIntegrationIndex = Array.IndexOf(runCommands, ExpectedTestCommands[3]);
+
+        Assert.True(hostShellTestsIndex >= 0);
+        Assert.True(firstIntegrationIndex >= 0);
+        Assert.True(hostShellTestsIndex < firstIntegrationIndex);
     }
 
     [Fact]
