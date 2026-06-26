@@ -1,0 +1,7 @@
+---
+description: Enforce typed semantic identifiers instead of raw strings in C# plugin contracts and DTOs.
+globs: "**/*.cs"
+alwaysApply: false
+---
+
+Follow @harness/rules/no-primitive-obsession.md when editing C# files.

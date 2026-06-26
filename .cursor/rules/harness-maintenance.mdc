@@ -1,0 +1,6 @@
+---
+description: Harness sync model and how to add or modify agent capabilities.
+alwaysApply: true
+---
+
+Follow @harness/rules/harness-maintenance.md for harness maintenance and sync commands.
