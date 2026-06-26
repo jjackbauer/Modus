@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\WIP\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Policy.LocalSafe\Wip.Policy.LocalSafe.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Shell\Wip.Shell.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Tools.Shell\Wip.Tools.Shell.csproj" />
+  </ItemGroup>
+</Project>

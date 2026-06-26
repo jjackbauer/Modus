@@ -22,11 +22,11 @@ This document is the contributor map for the WIP stack. It identifies who owns e
 
 Use this path when validating how a contributor command travels through runtime components:
 
-1. Shell receives `transition planning` in src/Wip.Shell/Interactive/WipShellCommandLoop.cs.
-2. Shell delegates transition execution to src/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs.
-3. Policy checks for operation safety run through src/Wip.Policy.LocalSafe/LocalSafePolicy.cs before sensitive operations.
-4. Runtime can surface plugin/workflow manifest diagnostics through src/Wip.Modus/Hosting/ModusWipBridge.cs.
-5. State and workflow definitions consumed by runtime are registered through src/Wip.Builder/WipBuilder.cs and typed contracts in src/Wip.Abstractions.
+1. Shell receives `transition planning` in WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs.
+2. Shell delegates transition execution to WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs.
+3. Policy checks for operation safety run through WIP/Wip.Policy.LocalSafe/LocalSafePolicy.cs before sensitive operations.
+4. Runtime can surface plugin/workflow manifest diagnostics through WIP/Wip.Modus/Hosting/ModusWipBridge.cs.
+5. State and workflow definitions consumed by runtime are registered through WIP/Wip.Builder/WipBuilder.cs and typed contracts in Wip.Abstractions.
 
 ## Contributor Extension Rules
 
@@ -77,7 +77,7 @@ Contributors must attach deterministic command evidence for build, test, and run
 1. Build proof command
 
 ```powershell
-dotnet build src/Wip.Modus/Wip.Modus.csproj -v minimal
+dotnet build WIP/Wip.Modus/Wip.Modus.csproj -v minimal
 ```
 
 Expected success signal: `Build succeeded.`
@@ -85,7 +85,7 @@ Expected success signal: `Build succeeded.`
 2. Test proof command
 
 ```powershell
-dotnet test tests/Wip.Modus.Tests/Wip.Modus.Tests.csproj -v minimal
+dotnet test WIP/Wip.Modus.Tests/Wip.Modus.Tests.csproj -v minimal
 ```
 
 Expected success signal: `Passed!`
@@ -93,7 +93,7 @@ Expected success signal: `Passed!`
 3. Runtime negative-path proof command
 
 ```powershell
-dotnet test tests/Wip.Modus.Tests/Wip.Modus.Tests.csproj --filter "FullyQualifiedName~ContributorWorkflowReadme_GivenIntentionalRuntimeFailure_NegativePathEvidenceCapturedAndLinkedInChecklist" -v minimal
+dotnet test WIP/Wip.Modus.Tests/Wip.Modus.Tests.csproj --filter "FullyQualifiedName~ContributorWorkflowReadme_GivenIntentionalRuntimeFailure_NegativePathEvidenceCapturedAndLinkedInChecklist" -v minimal
 ```
 
 Expected success signal: the targeted test passes after asserting deterministic runtime failure semantics (`[discovery]` load diagnostic for a missing plugin path).

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Runtime orchestration primitives for WiP session lifecycle and event emission.</Description>
+    <PackageId>Wip.Runtime</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <ProjectReference Include="..\Wip.Agent.Basic\Wip.Agent.Basic.csproj" />
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\Wip.Validation.DotNet\Wip.Validation.DotNet.csproj" />
+    <ProjectReference Include="..\Wip.Workspaces.Git\Wip.Workspaces.Git.csproj" />
+  </ItemGroup>
+</Project>

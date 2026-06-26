@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Dotnet build/test validator with persisted ValidationReport artifacts for WiP sessions.</Description>
+    <PackageId>Wip.Validation.DotNet</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Workspaces.Git\Wip.Workspaces.Git.csproj" />
+  </ItemGroup>
+</Project>
