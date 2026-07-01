@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Read-only ASP.NET Core match viewer API for the WIP Bones workflow.</Description>
+    <PackageId>Wip.Bones.Web</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Wip.Bones.Web.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
+    <ProjectReference Include="..\Wip.Bones.Agents\Wip.Bones.Agents.csproj" />
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bones Match Viewer</title>
+  <link rel="stylesheet" href="/viewer/viewer.css" />
+</head>
+<body>
+  <main id="bones-viewer" class="viewer">
+    <header class="viewer-header">
+      <h1>Bones Match Viewer</h1>
+      <p class="match-id">Loading match…</p>
+    </header>
+    <div class="viewer-shell">
+      <aside class="viewer-sidebar" aria-label="Match sidebar">
+        <section id="learning-loop-status" class="learning-loop-status hidden" aria-label="Learning loop status"
+          data-is-running=""
+          data-cap-reached=""
+          data-iteration-count=""
+          data-current-stage=""
+          data-failure-stage=""
+          data-games-simulated=""
+          data-max-games-per-run=""
+          data-learning-player-status=""
+          data-turn-index=""
+          data-frame-count=""
+          data-is-complete=""
+          data-winner-seat=""
+          data-last-promotion-outcome="">
+          <p id="loop-running-status" class="loop-running-status" data-is-running="" data-cap-reached="">
+            <span class="status-label">Loop</span>
+            <span class="status-value" id="loop-running-value">—</span>
+          </p>
+          <p id="loop-iteration" class="loop-iteration" data-iteration-count="">
+            <span class="status-label">Iteration</span>
+            <span class="status-value" id="loop-iteration-value">—</span>
+          </p>
+          <p id="loop-stage" class="loop-stage" data-current-stage="" data-failure-stage="">
+            <span class="status-label">Stage</span>
+            <span class="status-value" id="loop-stage-value">—</span>
+          </p>
+          <p id="loop-game-budget" class="loop-game-budget" data-games-simulated="" data-max-games-per-run="">
+            <span class="status-label">Game budget</span>
+            <span class="status-value" id="loop-game-budget-value">—</span>
+          </p>
+          <p id="loop-match-turns" class="loop-match-turns" data-turn-index="" data-frame-count="">
+            <span class="status-label">Match turns</span>
+            <span class="status-value" id="loop-match-turns-value">—</span>
+          </p>
+          <p id="loop-match-complete" class="loop-match-complete hidden" data-is-complete="" data-winner-seat="">
+            <span class="status-label">Match complete</span>
+            <span class="status-value" id="loop-match-complete-value">—</span>
+          </p>
+          <div id="loop-learning-player" class="loop-learning-player hidden"
+            data-seat=""
+            data-active-strategy-id=""
+            data-candidate-strategy-id=""
+            data-wins=""
+            data-losses=""
+            data-score-differential="">
+            <span class="status-label">Learning player</span>
+            <span class="status-value" id="loop-learning-player-value">—</span>
+          </div>
+          <p id="loop-ponder-pending" class="loop-ponder-pending hidden" data-learning-player-status="">
+            <span class="status-label">Ponder</span>
+            <span class="status-value" id="loop-ponder-pending-value">Strategy pending</span>
+          </p>
+          <p id="loop-learning-player-error" class="loop-learning-player-error status-error hidden" data-learning-player-error="">
+            <span class="status-label">Learning player error</span>
+            <span class="status-value" id="loop-learning-player-error-value">—</span>
+          </p>
+          <p id="loop-last-iteration-error" class="loop-last-iteration-error status-error hidden" data-failure-stage="">
+            <span class="status-label">Last iteration error</span>
+            <span class="status-value" id="loop-last-iteration-error-value">—</span>
+          </p>
+          <p id="loop-last-promotion" class="loop-last-promotion hidden" data-last-promotion-outcome="">
+            <span class="status-label">Last promotion</span>
+            <span class="status-value" id="loop-last-promotion-value">—</span>
+          </p>
+          <p id="loop-library-best" class="loop-library-best hidden" data-library-strategy-id="" data-library-effectiveness="">
+            <span class="status-label">Library best</span>
+            <span class="status-value" id="loop-library-best-value">—</span>
+          </p>
+          <p id="loop-model-provider" class="loop-model-provider" data-provider="" data-model="">
+            <span class="status-label">Model provider</span>
+            <span class="status-value" id="loop-model-provider-value">—</span>
+          </p>
+        </section>
+        <section class="hands" aria-label="Player hands"></section>
+        <p id="active-seat" class="active-seat" data-seat="">Active seat: —</p>
+        <p id="last-move" class="last-move" data-kind="" data-low-pip="" data-high-pip="" data-board-side="">—</p>
+        <p id="winner" class="winner hidden" data-seat=""></p>
+        <p id="round-score" class="round-score hidden" data-pip-score=""></p>
+        <label class="scrubber-label" for="replay-scrubber">Replay turn</label>
+        <input id="replay-scrubber" type="range" min="0" max="0" value="0" data-turn-index="0" />
+        <output id="turn-index" for="replay-scrubber" data-turn-index="0">Turn 0</output>
+      </aside>
+      <section class="viewer-main" aria-label="Board canvas">
+        <section id="bones-board" class="board" aria-label="Domino board">
+          <span id="left-end-pip" class="board-end" data-pip="">—</span>
+          <div id="board-chain" class="board-chain"></div>
+          <span id="right-end-pip" class="board-end" data-pip="">—</span>
+        </section>
+      </section>
+    </div>
+  </main>
+  <script src="/viewer/viewer.js"></script>
+</body>
+</html>

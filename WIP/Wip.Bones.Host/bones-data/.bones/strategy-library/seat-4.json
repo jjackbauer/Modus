@@ -1,0 +1,11 @@
+{
+  "strategyId": "initial-seat-4-v1",
+  "playerSeat": 4,
+  "kind": "Markdown",
+  "source": "# Bones Strategy\n\n## Rules\n- Prefer first legal move from GetLegalMoves.",
+  "matchesPlayed": 1,
+  "wins": 1,
+  "losses": 0,
+  "cumulativeScoreDifferential": 0,
+  "lastUpdatedUtc": "2026-06-30T20:26:47.4528108+00:00"
+}

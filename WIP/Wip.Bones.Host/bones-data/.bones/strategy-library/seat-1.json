@@ -1,0 +1,11 @@
+{
+  "strategyId": "initial-seat-1-v1",
+  "playerSeat": 1,
+  "kind": "Script",
+  "source": "using System;\nusing System.Linq;\nusing Wip.Bones.Domain;\nusing Wip.Bones.Engine;\n\npublic sealed class SeatStrategy : IBonesPlayerSlot\n{\n    public BonesMove ChooseMove(BonesRoundState state, IReadOnlyList\u003CBonesMove\u003E legalMoves)\n    {\n        // Try to find a move that plays a tile to match a board end\n        foreach (var move in legalMoves)\n        {\n            if (move.IsPass)\n                continue;\n\n            var tile = move.Tile.Value;\n            \n            // Check if tile can be placed on either end\n            int leftPip = state.Board.LeftEnd?.Pip.Value ?? -1;\n            int rightPip = state.Board.RightEnd?.Pip.Value ?? -1;\n            \n            // Prefer playing doubles when possible\n            if (tile.IsDouble \u0026\u0026 (tile.LowPip.Value == leftPip || tile.LowPip.Value == rightPip))\n                return move;\n                \n            // Play highest pip matching tile\n            if (tile.LowPip.Value == leftPip || tile.HighPip.Value == leftPip ||\n                tile.LowPip.Value == rightPip || tile.HighPip.Value == rightPip)\n                return move;\n        }\n\n        // If no matching tile, play highest total pip tile\n        var bestTile = legalMoves\n            .Where(m =\u003E !m.IsPass)\n            .OrderByDescending(m =\u003E m.Tile.Value.TotalPips)\n            .FirstOrDefault();\n\n        if (bestTile != null)\n            return bestTile;\n\n        // If no plays available, pass\n        var passMove = legalMoves.FirstOrDefault(m =\u003E m.IsPass);\n        if (passMove != null)\n            return passMove;\n\n        // Should never reach here if legal moves are valid\n        throw new InvalidOperationException(\u0022No legal move available\u0022);\n    }\n}",
+  "matchesPlayed": 1,
+  "wins": 1,
+  "losses": 0,
+  "cumulativeScoreDifferential": 0,
+  "lastUpdatedUtc": "2026-06-30T23:58:28.9478627+00:00"
+}

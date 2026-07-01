@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Agent capabilities and per-player knowledge stores for the WIP Bones workflow.</Description>
+    <PackageId>Wip.Bones.Agents</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wip.Bones.Tests" />
+    <InternalsVisibleTo Include="Wip.Bones.ModelProviders.DeepSeek.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Artifacts.Local\Wip.Artifacts.Local.csproj" />
+    <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
+    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+  </ItemGroup>
+</Project>

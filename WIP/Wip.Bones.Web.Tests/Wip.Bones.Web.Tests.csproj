@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wip.Bones.Host.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngleSharp" Version="1.2.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.50.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Artifacts.Local\Wip.Artifacts.Local.csproj" />
+    <ProjectReference Include="..\Wip.Bones.Agents\Wip.Bones.Agents.csproj" />
+    <ProjectReference Include="..\Wip.Bones.Web\Wip.Bones.Web.csproj" />
+    <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
+    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\Wip.Shell.E2E\Wip.Shell.E2E.csproj" />
+  </ItemGroup>
+</Project>
