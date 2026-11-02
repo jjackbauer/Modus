@@ -71,3 +71,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Baseline failures:** 18 runtime `C:/repo` path failures (F-ENV), 2 shell merge-output failures, 1 Modus README gap, 11 compliance-gate failures, 6 Bones.Host status/timeouts, 6 Bones.E2E harness, 4 Bones.Web functional, 2 Shell.E2E registry/meta-test. All tracked with owners/expiry in `docs/plan/baseline-test-status.md`.
 - **WP-0.1:** **done** (baseline frozen, tagged, inventory red but recorded). G0 remains **not ready**.
 - **Next:** WP-0.2 (governance guard), prioritizing the Shell merge failures.
+
+## 2026-11-02T12:36:49-03:00 - WP-0.2 (governance guard verified; done)
+
+- **Runtime guard:** 3/3 focused tests passed after replacing hardcoded `C:/repo` with `TestRepositoryPaths` (workspace temp). Full runtime suite now 71/72; remaining failure is a cancellation flake that passes 3/3 in isolation.
+- **Shell guard:** 2/2 focused Shell E2E tests passed; `run` after plan stays at `Editing` and cannot reach `Merged`; persisted statuses remain `NotRequested`/`NotStarted`.
+- **CI:** added runtime and shell governance-guard steps to `.github/workflows/tests-ci.yml`.
+- **Evidence:** `docs/execution/evidence/WP-0.2/runtime-guard.txt`, `shell-guard.txt`, `notes.md`; baseline total now 1,322 passed / 32 failed.
+- **Next:** WP-0.3 (full `Wip.slnx` topology + coverage check).

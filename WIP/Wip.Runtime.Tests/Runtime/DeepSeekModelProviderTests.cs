@@ -43,7 +43,7 @@ public sealed class DeepSeekModelProviderTests
                     ]),
                 modelId: "deepseek-flash",
                 correlationId: "corr-map-1"),
-            new CapabilityContext(new SessionId("session-deepseek-map"), "C:/repo/.wip/worktrees/s1"),
+            new CapabilityContext(new SessionId("session-deepseek-map"), TestRepositoryPaths.Worktree("s1")),
             CancellationToken.None);
 
         Assert.NotNull(capturedRequest);
@@ -106,7 +106,7 @@ public sealed class DeepSeekModelProviderTests
                         Thinking: thinking),
                     modelId: "deepseek-flash",
                     correlationId: $"corr-thinking-{thinking}"),
-                new CapabilityContext(new SessionId("session-deepseek-thinking"), "C:/repo/.wip/worktrees/s1"),
+                new CapabilityContext(new SessionId("session-deepseek-thinking"), TestRepositoryPaths.Worktree("s1")),
                 CancellationToken.None);
         }
 
@@ -132,7 +132,7 @@ public sealed class DeepSeekModelProviderTests
                     Messages: [new DeepSeekChatMessage("user", "Build a plan")]),
                 modelId: "deepseek-v4-pro",
                 correlationId: "corr-success-1"),
-            new CapabilityContext(new SessionId("session-deepseek-success"), "C:/repo/.wip/worktrees/s2"),
+            new CapabilityContext(new SessionId("session-deepseek-success"), TestRepositoryPaths.Worktree("s2")),
             CancellationToken.None);
 
         Assert.Equal("deepseek", response.ProviderId);
@@ -169,7 +169,7 @@ public sealed class DeepSeekModelProviderTests
                         Messages: [new DeepSeekChatMessage("user", "retry me")]),
                     modelId: "deepseek-flash",
                     correlationId: "corr-retry-1"),
-                new CapabilityContext(new SessionId("session-deepseek-retry"), "C:/repo/.wip/worktrees/s3"),
+                new CapabilityContext(new SessionId("session-deepseek-retry"), TestRepositoryPaths.Worktree("s3")),
                 CancellationToken.None)
             .AsTask());
 
@@ -209,7 +209,7 @@ public sealed class DeepSeekModelProviderTests
                         Messages: [new DeepSeekChatMessage("user", "cancel")]),
                     modelId: "deepseek-flash",
                     correlationId: "corr-cancel-1"),
-                new CapabilityContext(new SessionId("session-deepseek-cancel"), "C:/repo/.wip/worktrees/s4"),
+                new CapabilityContext(new SessionId("session-deepseek-cancel"), TestRepositoryPaths.Worktree("s4")),
                 cts.Token)
             .AsTask());
 

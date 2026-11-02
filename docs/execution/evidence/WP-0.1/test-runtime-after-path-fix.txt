@@ -1,0 +1,28 @@
+command=dotnet test WIP/Wip.Runtime.Tests -c Release --no-build
+build_exit=0
+test_exit=1
+--- output ---
+Test run for C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+dotnet.exe : [xUnit.net 00:00:00.65]     Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCan
+cellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation [FAIL]
+At line:9 char:6
++ $out=& dotnet test 'WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj' - ...
++      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...inuation [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Failed Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation [349 ms]
+  Error Message:
+   Assert.Equal() Failure: Values differ
+Expected: 1
+Actual:   0
+  Stack Trace:
+     at Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\DeepSeekModelProviderTests.cs:line 216
+--- End of stack trace from previous location ---
+Results File: C:\Users\ricar\dev\Modus\docs\execution\evidence\WP-0.1\test-results\Wip.Runtime.Tests.after-path-fix.trx
+
+Failed!  - Failed:     1, Passed:    71, Skipped:     0, Total:    72, Duration: 3 s - Wip.Runtime.Tests.dll (net10.0)

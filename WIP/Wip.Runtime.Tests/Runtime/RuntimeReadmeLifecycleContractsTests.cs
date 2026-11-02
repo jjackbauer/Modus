@@ -109,8 +109,8 @@ public sealed class RuntimeReadmeLifecycleContractsTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/runtime-readme",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("runtime-readme"),
             cancellationToken: CancellationToken.None);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -134,8 +134,8 @@ public sealed class RuntimeReadmeLifecycleContractsTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/pipeline",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("pipeline"),
             cancellationToken: CancellationToken.None);
 
         var artifactStore = new ReadmeInMemoryArtifactStore();

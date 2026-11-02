@@ -5,15 +5,16 @@
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
   "phase": 0,
-  "work_package": "WP-0.1",
+  "work_package": "WP-0.2",
   "status": "done",
   "gate": "G0",
-  "gate_status": "wp01_done_g0_not_ready",
+  "gate_status": "wp02_done_g0_not_ready",
   "attempts": {
-    "WP-0.1": 1
+    "WP-0.1": 2,
+    "WP-0.2": 1
   },
-  "last_verified_at": "2026-11-02T12:30:55-03:00",
-  "next_action": "Start WP-0.2 (governance guard) with the Shell merge failures as a priority signal; G0 remains not ready until WP-0.2–WP-0.6 complete.",
+  "last_verified_at": "2026-11-02T12:36:49-03:00",
+  "next_action": "Start WP-0.3 (full Wip.slnx topology and coverage check); G0 remains not ready until WP-0.3–WP-0.6 complete.",
   "open_blockers": [],
   "deviations": ["DEV-001"],
   "dirty_tree": {
@@ -44,8 +45,8 @@
   },
   "test_inventory": {
     "executed": 1354,
-    "passed": 1305,
-    "failed": 49,
+    "passed": 1322,
+    "failed": 32,
     "aborted_suites": 3,
     "green_projects": 8,
     "total_projects": 17,
@@ -53,7 +54,7 @@
   },
   "work_packages": {
     "WP-0.1": "done",
-    "WP-0.2": "not_started",
+    "WP-0.2": "done",
     "WP-0.3": "not_started",
     "WP-0.4": "not_started",
     "WP-0.5": "not_started",

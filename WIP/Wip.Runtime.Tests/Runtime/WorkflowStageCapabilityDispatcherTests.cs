@@ -73,8 +73,8 @@ public sealed class WorkflowStageCapabilityDispatcherTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.missing-capability"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/missing-capability",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("missing-capability"),
             cancellationToken: CancellationToken.None);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
@@ -98,8 +98,8 @@ public sealed class WorkflowStageCapabilityDispatcherTests
             SessionId: new SessionId("session-dispatch"),
             WorkflowId: new WorkflowId("workflow.dispatch"),
             State: SessionState.Created,
-            RepositoryPath: "C:/repo",
-            WorktreePath: "C:/repo/.wip/worktrees/dispatch",
+            RepositoryPath: TestRepositoryPaths.RepositoryRoot,
+            WorktreePath: TestRepositoryPaths.Worktree("dispatch"),
             UpdatedAtUtc: DateTimeOffset.UtcNow,
             TaskDescription: "dispatch probe");
 

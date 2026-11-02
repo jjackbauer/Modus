@@ -1,0 +1,5 @@
+# DeepSeek cancellation flake reproduction
+captured=2026-11-02T12:35:17.9152349-03:00
+run=1 exit=0 Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 35 ms - Wip.Runtime.Tests.dll (net10.0)
+run=2 exit=0 Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 39 ms - Wip.Runtime.Tests.dll (net10.0)
+run=3 exit=0 Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: 46 ms - Wip.Runtime.Tests.dll (net10.0)

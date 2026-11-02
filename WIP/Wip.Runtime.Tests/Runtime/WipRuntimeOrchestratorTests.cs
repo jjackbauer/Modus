@@ -35,16 +35,16 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/abc123",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("abc123"),
             cancellationToken: CancellationToken.None);
 
         var persisted = await store.LoadAsync(snapshot.SessionId, CancellationToken.None);
 
         Assert.NotNull(persisted);
         Assert.Equal(SessionState.Created, persisted!.State);
-        Assert.Equal("C:/repo", persisted.RepositoryPath);
-        Assert.Equal("C:/repo/.wip/worktrees/abc123", persisted.WorktreePath);
+        Assert.Equal(TestRepositoryPaths.RepositoryRoot, persisted.RepositoryPath);
+        Assert.Equal(TestRepositoryPaths.Worktree("abc123"), persisted.WorktreePath);
 
         var sessionEvent = Assert.Single(publisher.Events);
         Assert.Equal(SessionEventKind.SessionStarted, sessionEvent.Kind);
@@ -397,8 +397,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/ghi789",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("ghi789"),
             cancellationToken: CancellationToken.None);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -420,14 +420,14 @@ public sealed class WipRuntimeOrchestratorTests
 
         var first = orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/jkl111",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("jkl111"),
             cancellationToken: CancellationToken.None);
 
         var second = orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/jkl222",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("jkl222"),
             cancellationToken: CancellationToken.None);
 
         await Task.WhenAll(first.AsTask(), second.AsTask());
@@ -806,8 +806,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/governance-cap",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("governance-cap"),
             cancellationToken: CancellationToken.None);
 
         var result = await orchestrator.RunWorkflowAsync(
@@ -847,8 +847,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/checkpointed-run",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("checkpointed-run"),
             cancellationToken: CancellationToken.None);
 
         await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
@@ -881,8 +881,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/approval-guard",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("approval-guard"),
             cancellationToken: CancellationToken.None);
 
         await orchestrator.RunWorkflowAsync(
@@ -908,8 +908,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/governance-transition",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("governance-transition"),
             cancellationToken: CancellationToken.None);
 
         Assert.Equal(SessionApprovalStatus.NotRequested, snapshot.ApprovalStatus);
@@ -1102,8 +1102,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/stage-artifact",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("stage-artifact"),
             cancellationToken: CancellationToken.None);
 
         var result = await orchestrator.RunWorkflowAsync(
@@ -1146,8 +1146,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/plan-before-run",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("plan-before-run"),
             cancellationToken: CancellationToken.None);
 
         var result = await orchestrator.RunWorkflowAsync(
@@ -1180,8 +1180,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/pipeline",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("pipeline"),
             cancellationToken: CancellationToken.None);
 
         var result = await orchestrator.RunWorkflowAsync(
@@ -1305,8 +1305,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/mapped-chain",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("mapped-chain"),
             cancellationToken: CancellationToken.None);
 
         var result = await orchestrator.RunWorkflowAsync(
@@ -1366,8 +1366,8 @@ public sealed class WipRuntimeOrchestratorTests
             new SessionStartRequest(
                 WorkflowId: new WorkflowId("workflow.linear"),
                 TaskDescription: "map-adapter-proof",
-                RepositoryPath: "C:/repo",
-                WorktreePath: "C:/repo/.wip/worktrees/map-adapters"),
+                RepositoryPath: TestRepositoryPaths.RepositoryRoot,
+                WorktreePath: TestRepositoryPaths.Worktree("map-adapters")),
             cancellationToken: CancellationToken.None);
 
         var result = await orchestrator.RunWorkflowAsync(
@@ -1418,8 +1418,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.linear"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/map-mismatch",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("map-mismatch"),
             cancellationToken: CancellationToken.None);
 
         using (WorkflowStageDispatchScope.Exclude(WorkflowStageKind.Run))
@@ -1451,8 +1451,8 @@ public sealed class WipRuntimeOrchestratorTests
 
         var snapshot = await orchestrator.StartSessionAsync(
             workflowId: new WorkflowId("workflow.unknown"),
-            repositoryPath: "C:/repo",
-            worktreePath: "C:/repo/.wip/worktrees/select",
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("select"),
             cancellationToken: CancellationToken.None);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
