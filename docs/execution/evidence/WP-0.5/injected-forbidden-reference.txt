@@ -1,0 +1,29 @@
+mutation=added Wip.Runtime -> Wip.Shell ProjectReference; architecture test expected failure
+exit=1
+--- output ---
+Test run for C:\Users\ricar\dev\Modus\tests\Wip.Architecture.Tests\bin\Release\net10.0\Wip.Architecture.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+dotnet.exe : [xUnit.net 00:00:00.60]     
+Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectReferences_GivenForbiddenEdges_ExpectedNoUnwaivedViolations 
+[FAIL]
+At line:18 char:6
++ $out=& dotnet test 'tests/Wip.Architecture.Tests/Wip.Architecture.Tes ...
++      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...olations [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Failed Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectReferences_GivenForbiddenEdges_ExpectedNoUnwaivedViolations [498 ms]
+  Error Message:
+   Unwaived forbidden references: runtime-no-ui-or-bones: Wip.Runtime -> Wip.Shell; bones-host-no-shell: Wip.Bones.Host -> Wip.Shell
+  Stack Trace:
+     at Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectReferences_GivenForbiddenEdges_ExpectedNoUnwaivedViolations() in C:\Users\ricar\dev\Modus\tests\Wip.Architecture.Tests\ArchitectureReferenceTests.cs:line 34
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Failed!  - Failed:     1, Passed:     2, Skipped:     0, Total:     3, Duration: 966 ms - Wip.Architecture.Tests.dll (net10.0)
+
+--- restored ---
+diff=0

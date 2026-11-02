@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj" />
+  </Folder>
   <Folder Name="/WIP/">
     <Project Path="WIP/Wip.Agent.Basic/Wip.Agent.Basic.csproj" />
     <Project Path="WIP/Wip.Abstractions/Wip.Abstractions.csproj" />

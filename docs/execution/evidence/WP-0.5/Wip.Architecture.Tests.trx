@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="e8d7dc14-d0cd-4e63-ab1f-6d96a89feed5" name="ricar@RICARDO-PC 2026-11-02 12:47:05" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:47:05.1329761-03:00" queuing="2026-11-02T12:47:05.1329763-03:00" start="2026-11-02T12:47:03.1471560-03:00" finish="2026-11-02T12:47:05.1854490-03:00" />
+  <TestSettings name="default" id="d28bc55d-7fb4-48b6-a93c-81cc2e342ce5">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_47_05" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="93229204-df71-4250-b010-c7c0887a951c" testId="aa21e8f0-464c-6b12-518d-0e306f423ecb" testName="Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectReferences_GivenForbiddenEdges_ExpectedNoUnwaivedViolations" computerName="RICARDO-PC" duration="00:00:00.5282654" startTime="2026-11-02T12:47:04.6333131-03:00" endTime="2026-11-02T12:47:04.6333134-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="93229204-df71-4250-b010-c7c0887a951c" />
+    <UnitTestResult executionId="cf12ed76-69e7-45ef-9ca2-97cde1936cc7" testId="2f436c10-56bb-7a15-7cf0-0e9bcfef07a6" testName="Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectGraph_GivenWipSolution_ExpectedAllWipProjects" computerName="RICARDO-PC" duration="00:00:00.5117502" startTime="2026-11-02T12:47:05.1451128-03:00" endTime="2026-11-02T12:47:05.1451131-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cf12ed76-69e7-45ef-9ca2-97cde1936cc7" />
+    <UnitTestResult executionId="31eabb1b-949e-4f27-9fb2-c5d87f1e4809" testId="f62d0457-7787-9d4c-0b2f-ca492fc696e3" testName="Wip.Architecture.Tests.ArchitectureReferenceTests.Rules_GivenSyntheticForbiddenEdge_ExpectedViolation" computerName="RICARDO-PC" duration="00:00:00.0750267" startTime="2026-11-02T12:47:04.1053125-03:00" endTime="2026-11-02T12:47:04.1053360-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="31eabb1b-949e-4f27-9fb2-c5d87f1e4809" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectReferences_GivenForbiddenEdges_ExpectedNoUnwaivedViolations" storage="c:\users\ricar\dev\modus\tests\wip.architecture.tests\bin\release\net10.0\wip.architecture.tests.dll" id="aa21e8f0-464c-6b12-518d-0e306f423ecb">
+      <Execution id="93229204-df71-4250-b010-c7c0887a951c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Architecture.Tests\bin\Release\net10.0\Wip.Architecture.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Architecture.Tests.ArchitectureReferenceTests" name="ProjectReferences_GivenForbiddenEdges_ExpectedNoUnwaivedViolations" />
+    </UnitTest>
+    <UnitTest name="Wip.Architecture.Tests.ArchitectureReferenceTests.Rules_GivenSyntheticForbiddenEdge_ExpectedViolation" storage="c:\users\ricar\dev\modus\tests\wip.architecture.tests\bin\release\net10.0\wip.architecture.tests.dll" id="f62d0457-7787-9d4c-0b2f-ca492fc696e3">
+      <Execution id="31eabb1b-949e-4f27-9fb2-c5d87f1e4809" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Architecture.Tests\bin\Release\net10.0\Wip.Architecture.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Architecture.Tests.ArchitectureReferenceTests" name="Rules_GivenSyntheticForbiddenEdge_ExpectedViolation" />
+    </UnitTest>
+    <UnitTest name="Wip.Architecture.Tests.ArchitectureReferenceTests.ProjectGraph_GivenWipSolution_ExpectedAllWipProjects" storage="c:\users\ricar\dev\modus\tests\wip.architecture.tests\bin\release\net10.0\wip.architecture.tests.dll" id="2f436c10-56bb-7a15-7cf0-0e9bcfef07a6">
+      <Execution id="cf12ed76-69e7-45ef-9ca2-97cde1936cc7" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Architecture.Tests\bin\Release\net10.0\Wip.Architecture.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Architecture.Tests.ArchitectureReferenceTests" name="ProjectGraph_GivenWipSolution_ExpectedAllWipProjects" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="aa21e8f0-464c-6b12-518d-0e306f423ecb" executionId="93229204-df71-4250-b010-c7c0887a951c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2f436c10-56bb-7a15-7cf0-0e9bcfef07a6" executionId="cf12ed76-69e7-45ef-9ca2-97cde1936cc7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f62d0457-7787-9d4c-0b2f-ca492fc696e3" executionId="31eabb1b-949e-4f27-9fb2-c5d87f1e4809" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.30]   Discovering: Wip.Architecture.Tests&#xD;
+[xUnit.net 00:00:00.32]   Discovered:  Wip.Architecture.Tests&#xD;
+[xUnit.net 00:00:00.32]   Starting:    Wip.Architecture.Tests&#xD;
+[xUnit.net 00:00:01.47]   Finished:    Wip.Architecture.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

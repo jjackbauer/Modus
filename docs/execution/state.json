@@ -5,19 +5,20 @@
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
   "phase": 0,
-  "work_package": "WP-0.6",
-  "status": "in_progress",
+  "work_package": "WP-0.5",
+  "status": "done",
   "gate": "G0",
-  "gate_status": "wp06_adrs_drafted_g0_acceptance_pending",
+  "gate_status": "g0_packet_ready_decisions_pending",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
     "WP-0.3": 1,
     "WP-0.4": 1,
+    "WP-0.5": 1,
     "WP-0.6": 1
   },
-  "last_verified_at": "2026-11-02T12:45:24-03:00",
-  "next_action": "Draft WP-0.5 architecture tests, then the G0 packet; WP-0.4 remains blocked on an authorized remote CI run.",
+  "last_verified_at": "2026-11-02T12:48:45-03:00",
+  "next_action": "Await the G0 decisions: authorize the short-lived-branch push/CI run and accept or amend ADR-IMPL-01..07. Do not start Phase 1 before G0.",
   "open_blockers": ["BLK-CI-REMOTE"],
   "deviations": ["DEV-001", "DEV-002"],
   "dirty_tree": {
@@ -44,6 +45,7 @@
     "WP-0.2": "docs/execution/evidence/WP-0.2/",
     "WP-0.3": "docs/execution/evidence/WP-0.3/",
     "WP-0.4": "docs/execution/evidence/WP-0.4/",
+    "WP-0.5": "docs/execution/evidence/WP-0.5/",
     "WP-0.6": "docs/execution/decisions/",
     "G0": "docs/execution/evidence/G0/"
   },
@@ -68,7 +70,7 @@
     "WP-0.2": "done",
     "WP-0.3": "done",
     "WP-0.4": "blocked",
-    "WP-0.5": "not_started",
+    "WP-0.5": "done",
     "WP-0.6": "in_progress"
   }
 }

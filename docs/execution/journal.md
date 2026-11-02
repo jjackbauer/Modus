@@ -103,3 +103,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Index:** `docs/execution/decisions/README.md` maps each ADR to its gate.
 - **Status:** WP-0.6 is in progress until G0 review; acceptance remains a human decision.
 - **Next:** WP-0.5 architecture tests, then the G0 packet; WP-0.4 remains blocked on an authorized remote CI run.
+
+## 2026-11-02T12:48:45-03:00 - WP-0.5 (architecture fitness tests; G0 packet ready)
+
+- **Architecture project:** `tests/Wip.Architecture.Tests` added to `Wip.slnx` (38 solution projects; 37 WIP); six project-reference rules plus stale-waiver detection.
+- **Waiver:** `Wip.ShellHost -> Wip.Bones.Agents` and its transitive `Wip.Bones` edge under ADR-IMPL-07, expiry 2026-11-30; WP-2.6 removes it. No other violation.
+- **Evidence:** 3/3 tests pass; injected `Wip.Runtime -> Wip.Shell` makes the test fail (exit 1) and the source restores with 0 diff; `dotnet build Wip.slnx` exit 0, 0 errors.
+- **G0 packet:** rewritten with Phase 0 status, two decisions (CI push authorization; ADR acceptance), deviations and red-baseline risks.
+- **Gate:** G0 **NOT READY** — WP-0.4 awaits the first remote CI run and WP-0.6 ADRs await acceptance. Stop for explicit decisions; do not start Phase 1.

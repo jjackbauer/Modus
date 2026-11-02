@@ -1,0 +1,10 @@
+after restoring Wip.Runtime.csproj
+exit=0
+--- output ---
+Test run for C:\Users\ricar\dev\Modus\tests\Wip.Architecture.Tests\bin\Release\net10.0\Wip.Architecture.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:     3, Skipped:     0, Total:     3, Duration: 975 ms - Wip.Architecture.Tests.dll (net10.0)

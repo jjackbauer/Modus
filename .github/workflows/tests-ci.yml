@@ -70,6 +70,8 @@ jobs:
           dotnet build Wip.slnx --configuration Release --no-restore
       - name: Test Modus architecture
         run: dotnet test tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Architecture.Tests.trx"
+      - name: Test WIP architecture
+        run: dotnet test tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Wip.Architecture.Tests.trx"
 
   wip-offline-tests:
     name: wip-offline-tests
