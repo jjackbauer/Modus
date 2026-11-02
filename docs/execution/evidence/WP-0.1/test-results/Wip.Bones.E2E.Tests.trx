@@ -1,0 +1,258 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="337adb1a-b18a-4901-8fd4-76ddab2a557f" name="ricar@RICARDO-PC 2026-11-02 12:22:03" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:22:03.3886094-03:00" queuing="2026-11-02T12:22:03.3886095-03:00" start="2026-11-02T12:22:01.2551214-03:00" finish="2026-11-02T12:22:08.9666344-03:00" />
+  <TestSettings name="default" id="7c1803e5-01f4-415f-bd6d-6f7697f06905">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_22_03" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="c107d70f-fff3-459c-bf8f-f50b47a2e597" testId="e9fdf780-0d04-e748-2c61-8ec7cefb54d2" testName="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk" computerName="RICARDO-PC" duration="00:00:01.0015513" startTime="2026-11-02T12:22:07.8916284-03:00" endTime="2026-11-02T12:22:07.8916286-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c107d70f-fff3-459c-bf8f-f50b47a2e597">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.DoesNotContain() Failure: Sub-string found&#xD;
+                                  ↓ (pos 2661)&#xD;
+String: ···"51e6228c6da54/view\r\nRun failed: Model res"···&#xD;
+Found:  "Run failed:"</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run) in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 167&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 60&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 75&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="38506085-c331-402b-8caf-f715dab88b34" testId="8ea07a73-d263-666b-cdea-9bdff1396651" testName="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed" computerName="RICARDO-PC" duration="00:00:01.0040638" startTime="2026-11-02T12:22:04.8873683-03:00" endTime="2026-11-02T12:22:04.8873685-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="38506085-c331-402b-8caf-f715dab88b34">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.DoesNotContain() Failure: Sub-string found&#xD;
+                                  ↓ (pos 2661)&#xD;
+String: ···"7a75ea898dfb0/view\r\nRun failed: Model res"···&#xD;
+Found:  "Run failed:"</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run) in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 167&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 152&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 158&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9f379d04-77a2-48ec-8d98-70b202c428d8" testId="405397e0-8836-8f53-42d1-b5f254c3bc05" testName="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript" computerName="RICARDO-PC" duration="00:00:00.9968922" startTime="2026-11-02T12:22:06.8896360-03:00" endTime="2026-11-02T12:22:06.8896363-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9f379d04-77a2-48ec-8d98-70b202c428d8">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.DoesNotContain() Failure: Sub-string found&#xD;
+                                  ↓ (pos 2661)&#xD;
+String: ···"f4ee8ffbcdbf9/view\r\nRun failed: Model res"···&#xD;
+Found:  "Run failed:"</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run) in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 167&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 84&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 102&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6511caa3-784f-4034-83f2-7255fe92868a" testId="e73718a8-11dd-3144-7a6c-6f4cdfbac490" testName="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence" computerName="RICARDO-PC" duration="00:00:01.4122451" startTime="2026-11-02T12:22:03.8831621-03:00" endTime="2026-11-02T12:22:03.8831623-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6511caa3-784f-4034-83f2-7255fe92868a">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.DoesNotContain() Failure: Sub-string found&#xD;
+                                  ↓ (pos 2661)&#xD;
+String: ···"f9ec640063b2a/view\r\nRun failed: Model res"···&#xD;
+Found:  "Run failed:"</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run) in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 167&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 111&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 121&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="17e31400-ad93-4881-b5e1-2261c895cc46" testId="30fab289-d7a8-823a-6c2e-2b39884b044a" testName="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenMetadataOnlyAssertions_RejectsPlanAsNonCompliant" computerName="RICARDO-PC" duration="00:00:00.0014566" startTime="2026-11-02T12:22:02.8224793-03:00" endTime="2026-11-02T12:22:02.8224795-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="17e31400-ad93-4881-b5e1-2261c895cc46" />
+    <UnitTestResult executionId="f8c6488e-988f-4c52-932b-03c30ba5e856" testId="f8f9f9fe-2e7d-8680-fe86-f195ccf3f1e9" testName="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement" computerName="RICARDO-PC" duration="00:00:01.0205130" startTime="2026-11-02T12:22:08.9126639-03:00" endTime="2026-11-02T12:22:08.9126641-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f8c6488e-988f-4c52-932b-03c30ba5e856">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.DoesNotContain() Failure: Sub-string found&#xD;
+                                  ↓ (pos 2661)&#xD;
+String: ···"caad8d38431b8/view\r\nRun failed: Model res"···&#xD;
+Found:  "Run failed:"</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run) in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 167&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 134&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 143&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="871eaa19-b742-41d0-9ad5-55963e4650b8" testId="bdb39834-d2d4-24cb-356e-4517d562470b" testName="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout" computerName="RICARDO-PC" duration="00:00:01.0044071" startTime="2026-11-02T12:22:05.8922530-03:00" endTime="2026-11-02T12:22:05.8922532-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="871eaa19-b742-41d0-9ad5-55963e4650b8">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.DoesNotContain() Failure: Sub-string found&#xD;
+                                  ↓ (pos 2661)&#xD;
+String: ···"00dd5acb83ab6/view\r\nRun failed: Model res"···&#xD;
+Found:  "Run failed:"</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run) in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 167&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 40&#xD;
+   at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs:line 51&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f3c1f56f-e3c7-4bcb-be9d-d697f389c8d8" testId="a1e573e3-f7b9-403d-1fcb-7ab232be9dd0" testName="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceRegistryTests.BehaviorProofComplianceRegistry_GivenWipBonesRequirements_ExpectedDocRegisteredWithOwningAssembly" computerName="RICARDO-PC" duration="00:00:00.3066223" startTime="2026-11-02T12:22:02.7778683-03:00" endTime="2026-11-02T12:22:02.7778908-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f3c1f56f-e3c7-4bcb-be9d-d697f389c8d8" />
+    <UnitTestResult executionId="4a176f48-fe2c-4cbe-b0a0-2378788de814" testId="3b973a4e-15d6-130b-2c79-8993eb2ef1c2" testName="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem" computerName="RICARDO-PC" duration="00:00:00.2963859" startTime="2026-11-02T12:22:02.7913624-03:00" endTime="2026-11-02T12:22:02.7913625-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4a176f48-fe2c-4cbe-b0a0-2378788de814">
+      <Output>
+        <ErrorInfo>
+          <Message>Planned integration tests must include behavior-proof assumptions with runtime-observable outcomes. Non-compliant entries: A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenScriptEntryWithMatchesPlayed_ReturnsTrue; A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenMarkdownEntryWithMatchesPlayed_ReturnsFalse; A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenEmptyLibrary_ReturnsFalse; A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenNullLibrary_ReturnsFalse; A2 — `BuildCoLearningPlayerSlotsAsync` prefers fresh Script over library Markdown: BuildCoLearningPlayerSlotsAsync_GivenLibraryScriptOnly_UsesLibraryScript; A4 — `RanksHigher` prefers Script over Markdown on tie: RanksHigher_GivenMarkdownVsScriptWithBetterMetrics_PrefersBetterMetrics; B2 — Compute live promotion/rejection counters: BonesCoLearningMetrics_GivenPromotionOutcomes_IncrementsPromotedCounter; B2 — Compute live promotion/rejection counters: BonesCoLearningMetrics_GivenRejectionOutcomes_IncrementsRejectedCounter; C2 — Fix TOCTOU race in `TryReserve`: TryReserve_GivenConcurrentRecordGames_DoesNotExceedMaxGamesPerRun; D1 — Bootstrapper must seed seat 1: BootstrapAsync_GivenResumeFromBestAndNoLibraryEntryForSeat1_SeedsDefaultStrategy; D1 — Bootstrapper must seed seat 1: BootstrapAsync_GivenResumeFromBestAndLibraryEntryForSeat1_BootstrapsFromLibrary; E2 — Log warning on discarded effectiveness: GetEffectiveness_GivenCorruptEffectivenessFile_LogsWarningAndReturnsEmpty; F1 — Fix promotion evaluator game budget undercount: EvaluateAsync_GivenEvaluationMatchCount_RecordsTwiceTheGames; G1 — Prevent NextVersion name collisions: NextVersion_GivenNonStandardName_DoesNotCollideWithExistingInitialSeatV1; G1 — Prevent NextVersion name collisions: NextVersion_GivenInitialSeatV1_ProducesInitialSeatV2</Message>
+          <StackTrace>   at Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem() in C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BehaviorProofComplianceGateTests.cs:line 42&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6da38756-21a8-42f2-9d84-831d7182ba45" testId="045b1afb-0ca1-02ef-3ee5-05a7d8e7deb6" testName="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenPlannedNonPolicyIntegrationTests_SelectsExecutableMappingsWithoutNameDrift" computerName="RICARDO-PC" duration="00:00:00.0395356" startTime="2026-11-02T12:22:02.8208276-03:00" endTime="2026-11-02T12:22:02.8208279-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6da38756-21a8-42f2-9d84-831d7182ba45" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceRegistryTests.BehaviorProofComplianceRegistry_GivenWipBonesRequirements_ExpectedDocRegisteredWithOwningAssembly" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="a1e573e3-f7b9-403d-1fcb-7ab232be9dd0">
+      <Execution id="f3c1f56f-e3c7-4bcb-be9d-d697f389c8d8" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceRegistryTests" name="BehaviorProofComplianceRegistry_GivenWipBonesRequirements_ExpectedDocRegisteredWithOwningAssembly" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="bdb39834-d2d4-24cb-356e-4517d562470b">
+      <Execution id="871eaa19-b742-41d0-9ad5-55963e4650b8" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests" name="BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="8ea07a73-d263-666b-cdea-9bdff1396651">
+      <Execution id="38506085-c331-402b-8caf-f715dab88b34" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests" name="BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="405397e0-8836-8f53-42d1-b5f254c3bc05">
+      <Execution id="9f379d04-77a2-48ec-8d98-70b202c428d8" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests" name="BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="e9fdf780-0d04-e748-2c61-8ec7cefb54d2">
+      <Execution id="c107d70f-fff3-459c-bf8f-f50b47a2e597" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests" name="BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="f8f9f9fe-2e7d-8680-fe86-f195ccf3f1e9">
+      <Execution id="f8c6488e-988f-4c52-932b-03c30ba5e856" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests" name="BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenPlannedNonPolicyIntegrationTests_SelectsExecutableMappingsWithoutNameDrift" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="045b1afb-0ca1-02ef-3ee5-05a7d8e7deb6">
+      <Execution id="6da38756-21a8-42f2-9d84-831d7182ba45" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests" name="BehaviorProofCompliance_GivenPlannedNonPolicyIntegrationTests_SelectsExecutableMappingsWithoutNameDrift" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="3b973a4e-15d6-130b-2c79-8993eb2ef1c2">
+      <Execution id="4a176f48-fe2c-4cbe-b0a0-2378788de814" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests" name="BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenMetadataOnlyAssertions_RejectsPlanAsNonCompliant" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="30fab289-d7a8-823a-6c2e-2b39884b044a">
+      <Execution id="17e31400-ad93-4881-b5e1-2261c895cc46" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests" name="BehaviorProofCompliance_GivenMetadataOnlyAssertions_RejectsPlanAsNonCompliant" />
+    </UnitTest>
+    <UnitTest name="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence" storage="c:\users\ricar\dev\modus\wip\wip.bones.e2e.tests\bin\release\net10.0\wip.bones.e2e.tests.dll" id="e73718a8-11dd-3144-7a6c-6f4cdfbac490">
+      <Execution id="6511caa3-784f-4034-83f2-7255fe92868a" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\bin\Release\net10.0\Wip.Bones.E2E.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests" name="BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e9fdf780-0d04-e748-2c61-8ec7cefb54d2" executionId="c107d70f-fff3-459c-bf8f-f50b47a2e597" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8ea07a73-d263-666b-cdea-9bdff1396651" executionId="38506085-c331-402b-8caf-f715dab88b34" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="405397e0-8836-8f53-42d1-b5f254c3bc05" executionId="9f379d04-77a2-48ec-8d98-70b202c428d8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e73718a8-11dd-3144-7a6c-6f4cdfbac490" executionId="6511caa3-784f-4034-83f2-7255fe92868a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="30fab289-d7a8-823a-6c2e-2b39884b044a" executionId="17e31400-ad93-4881-b5e1-2261c895cc46" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f8f9f9fe-2e7d-8680-fe86-f195ccf3f1e9" executionId="f8c6488e-988f-4c52-932b-03c30ba5e856" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bdb39834-d2d4-24cb-356e-4517d562470b" executionId="871eaa19-b742-41d0-9ad5-55963e4650b8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1e573e3-f7b9-403d-1fcb-7ab232be9dd0" executionId="f3c1f56f-e3c7-4bcb-be9d-d697f389c8d8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3b973a4e-15d6-130b-2c79-8993eb2ef1c2" executionId="4a176f48-fe2c-4cbe-b0a0-2378788de814" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="045b1afb-0ca1-02ef-3ee5-05a7d8e7deb6" executionId="6da38756-21a8-42f2-9d84-831d7182ba45" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="10" executed="10" passed="3" failed="7" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.47]   Discovering: Wip.Bones.E2E.Tests&#xD;
+[xUnit.net 00:00:00.50]   Discovered:  Wip.Bones.E2E.Tests&#xD;
+[xUnit.net 00:00:00.50]   Starting:    Wip.Bones.E2E.Tests&#xD;
+[xUnit.net 00:00:00.85]       Planned integration tests must include behavior-proof assumptions with runtime-observable outcomes. Non-compliant entries: A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenScriptEntryWithMatchesPlayed_ReturnsTrue; A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenMarkdownEntryWithMatchesPlayed_ReturnsFalse; A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenEmptyLibrary_ReturnsFalse; A1 — `IsLibraryEntryViable` must reject Markdown: IsLibraryEntryViable_GivenNullLibrary_ReturnsFalse; A2 — `BuildCoLearningPlayerSlotsAsync` prefers fresh Script over library Markdown: BuildCoLearningPlayerSlotsAsync_GivenLibraryScriptOnly_UsesLibraryScript; A4 — `RanksHigher` prefers Script over Markdown on tie: RanksHigher_GivenMarkdownVsScriptWithBetterMetrics_PrefersBetterMetrics; B2 — Compute live promotion/rejection counters: BonesCoLearningMetrics_GivenPromotionOutcomes_IncrementsPromotedCounter; B2 — Compute live promotion/rejection counters: BonesCoLearningMetrics_GivenRejectionOutcomes_IncrementsRejectedCounter; C2 — Fix TOCTOU race in `TryReserve`: TryReserve_GivenConcurrentRecordGames_DoesNotExceedMaxGamesPerRun; D1 — Bootstrapper must seed seat 1: BootstrapAsync_GivenResumeFromBestAndNoLibraryEntryForSeat1_SeedsDefaultStrategy; D1 — Bootstrapper must seed seat 1: BootstrapAsync_GivenResumeFromBestAndLibraryEntryForSeat1_BootstrapsFromLibrary; E2 — Log warning on discarded effectiveness: GetEffectiveness_GivenCorruptEffectivenessFile_LogsWarningAndReturnsEmpty; F1 — Fix promotion evaluator game budget undercount: EvaluateAsync_GivenEvaluationMatchCount_RecordsTwiceTheGames; G1 — Prevent NextVersion name collisions: NextVersion_GivenNonStandardName_DoesNotCollideWithExistingInitialSeatV1; G1 — Prevent NextVersion name collisions: NextVersion_GivenInitialSeatV1_ProducesInitialSeatV2&#xD;
+[xUnit.net 00:00:00.85]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.85]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BehaviorProofComplianceGateTests.cs(42,0): at Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem()&#xD;
+[xUnit.net 00:00:00.85]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.94]       Assert.DoesNotContain() Failure: Sub-string found&#xD;
+[xUnit.net 00:00:01.94]                                         ↓ (pos 2661)&#xD;
+[xUnit.net 00:00:01.94]       String: ···"f9ec640063b2a/view\r\nRun failed: Model res"···&#xD;
+[xUnit.net 00:00:01.94]       Found:  "Run failed:"&#xD;
+[xUnit.net 00:00:01.94]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.94]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(167,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run)&#xD;
+[xUnit.net 00:00:01.94]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(111,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence()&#xD;
+[xUnit.net 00:00:01.94]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(121,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence()&#xD;
+[xUnit.net 00:00:01.94]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.95]       Assert.DoesNotContain() Failure: Sub-string found&#xD;
+[xUnit.net 00:00:02.95]                                         ↓ (pos 2661)&#xD;
+[xUnit.net 00:00:02.95]       String: ···"7a75ea898dfb0/view\r\nRun failed: Model res"···&#xD;
+[xUnit.net 00:00:02.95]       Found:  "Run failed:"&#xD;
+[xUnit.net 00:00:02.95]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(167,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run)&#xD;
+[xUnit.net 00:00:02.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(152,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed()&#xD;
+[xUnit.net 00:00:02.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(158,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed()&#xD;
+[xUnit.net 00:00:02.95]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.95]       Assert.DoesNotContain() Failure: Sub-string found&#xD;
+[xUnit.net 00:00:03.95]                                         ↓ (pos 2661)&#xD;
+[xUnit.net 00:00:03.95]       String: ···"00dd5acb83ab6/view\r\nRun failed: Model res"···&#xD;
+[xUnit.net 00:00:03.95]       Found:  "Run failed:"&#xD;
+[xUnit.net 00:00:03.95]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(167,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run)&#xD;
+[xUnit.net 00:00:03.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(40,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout()&#xD;
+[xUnit.net 00:00:03.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(51,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout()&#xD;
+[xUnit.net 00:00:03.95]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:04.95]       Assert.DoesNotContain() Failure: Sub-string found&#xD;
+[xUnit.net 00:00:04.95]                                         ↓ (pos 2661)&#xD;
+[xUnit.net 00:00:04.95]       String: ···"f4ee8ffbcdbf9/view\r\nRun failed: Model res"···&#xD;
+[xUnit.net 00:00:04.95]       Found:  "Run failed:"&#xD;
+[xUnit.net 00:00:04.95]       Stack Trace:&#xD;
+[xUnit.net 00:00:04.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(167,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run)&#xD;
+[xUnit.net 00:00:04.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(84,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript()&#xD;
+[xUnit.net 00:00:04.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(102,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript()&#xD;
+[xUnit.net 00:00:04.95]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:05.95]       Assert.DoesNotContain() Failure: Sub-string found&#xD;
+[xUnit.net 00:00:05.95]                                         ↓ (pos 2661)&#xD;
+[xUnit.net 00:00:05.95]       String: ···"51e6228c6da54/view\r\nRun failed: Model res"···&#xD;
+[xUnit.net 00:00:05.95]       Found:  "Run failed:"&#xD;
+[xUnit.net 00:00:05.95]       Stack Trace:&#xD;
+[xUnit.net 00:00:05.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(167,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run)&#xD;
+[xUnit.net 00:00:05.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(60,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk()&#xD;
+[xUnit.net 00:00:05.95]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(75,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk()&#xD;
+[xUnit.net 00:00:05.95]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:06.97]       Assert.DoesNotContain() Failure: Sub-string found&#xD;
+[xUnit.net 00:00:06.97]                                         ↓ (pos 2661)&#xD;
+[xUnit.net 00:00:06.97]       String: ···"caad8d38431b8/view\r\nRun failed: Model res"···&#xD;
+[xUnit.net 00:00:06.97]       Found:  "Run failed:"&#xD;
+[xUnit.net 00:00:06.97]       Stack Trace:&#xD;
+[xUnit.net 00:00:06.97]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(167,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.AssertSuccessfulRun(LearningWorkflowTranscriptRun run)&#xD;
+[xUnit.net 00:00:06.97]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(134,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement()&#xD;
+[xUnit.net 00:00:06.97]         C:\Users\ricar\dev\Modus\WIP\Wip.Bones.E2E.Tests\E2E\BonesLearningShellE2EHarnessTests.cs(143,0): at Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement()&#xD;
+[xUnit.net 00:00:06.97]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:06.97]   Finished:    Wip.Bones.E2E.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:02.7902721-03:00">
+        <Text>[xUnit.net 00:00:00.85]     Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:03.8828932-03:00">
+        <Text>[xUnit.net 00:00:01.94]     Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:04.8873183-03:00">
+        <Text>[xUnit.net 00:00:02.95]     Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:05.8922152-03:00">
+        <Text>[xUnit.net 00:00:03.95]     Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:06.8895768-03:00">
+        <Text>[xUnit.net 00:00:04.95]     Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:07.8916076-03:00">
+        <Text>[xUnit.net 00:00:05.95]     Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:22:08.9125869-03:00">
+        <Text>[xUnit.net 00:00:06.97]     Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Warning" timestamp="2026-11-02T12:22:08.9408624-03:00">
+        <Text>Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

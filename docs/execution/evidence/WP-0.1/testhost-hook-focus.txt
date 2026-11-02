@@ -1,0 +1,42 @@
+startup_hook=C:\Users\ricar\AppData\Local\Temp\wip-testhost-startup-hook\bin\Release\net10.0\WipTestHostStartupHook.dll hook_build_exit=0 test_exit=1 --- output --- Test run for C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\bin\Release\net10.0\HarnessSync.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 10.0.3)
+[xUnit.net 00:00:00.22]   Discovering: HarnessSync.Tests
+[xUnit.net 00:00:00.24]   Discovered:  HarnessSync.Tests
+[xUnit.net 00:00:00.26]   Starting:    HarnessSync.Tests
+dotnet.exe : [xUnit.net 00:00:00.41]     
+HarnessSync.Tests.TextFileEncodingValidatorTests.FindUtf16TextFiles_GivenUtf16InsideTmpScratch_ExpectedNotReported 
+[FAIL]
+At line:34 char:12
++ $testOut = & dotnet test 'tools/HarnessSync.Tests/HarnessSync.Tests.c ...
++            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...Reported [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:00.41]       System.UnauthorizedAccessException : Access to the path 'C:\Users\ricar\AppData\Local\Temp\harness-sync-29152f36b94244359a9ee0da724cd12a' is denied.
+[xUnit.net 00:00:00.41]       Stack Trace:
+[xUnit.net 00:00:00.41]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)
+[xUnit.net 00:00:00.41]            at System.IO.Directory.CreateDirectory(String path)
+[xUnit.net 00:00:00.41]         C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\HarnessSyncTests.cs(12,0): at HarnessSync.Tests.HarnessSyncFixture..ctor()
+[xUnit.net 00:00:00.41]         C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\TextFileEncodingValidatorTests.cs(39,0): at HarnessSync.Tests.TextFileEncodingValidatorTests.FindUtf16TextFiles_GivenUtf16InsideTmpScratch_ExpectedNotReported()
+[xUnit.net 00:00:00.41]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+[xUnit.net 00:00:00.41]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.42]   Finished:    HarnessSync.Tests
+  Failed HarnessSync.Tests.TextFileEncodingValidatorTests.FindUtf16TextFiles_GivenUtf16InsideTmpScratch_ExpectedNotReported [131 ms]
+  Error Message:
+   System.UnauthorizedAccessException : Access to the path 'C:\Users\ricar\AppData\Local\Temp\harness-sync-29152f36b94244359a9ee0da724cd12a' is denied.
+  Stack Trace:
+     at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)
+   at System.IO.Directory.CreateDirectory(String path)
+   at HarnessSync.Tests.HarnessSyncFixture..ctor() in C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\HarnessSyncTests.cs:line 12
+   at HarnessSync.Tests.TextFileEncodingValidatorTests.FindUtf16TextFiles_GivenUtf16InsideTmpScratch_ExpectedNotReported() in C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\TextFileEncodingValidatorTests.cs:line 39
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Test Run Failed.
+Total tests: 1
+     Failed: 1
+ Total time: 0.9858 Seconds

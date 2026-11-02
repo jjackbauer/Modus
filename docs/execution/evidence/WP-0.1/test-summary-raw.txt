@@ -1,0 +1,19 @@
+# WIP test inventory - 2026-11-02T12:01:21.7402581-03:00 
+Wip.Abstractions.Tests EXIT 0 00:00:01 | Passed!  - Failed:     0, Passed:    44, Skipped:     0, Total:    44, Duration: 57 ms - Wip.Abstractions.Tests.dll (net10.0)
+Wip.Artifacts.Local.Tests EXIT 0 00:00:01 | Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 220 ms - Wip.Artifacts.Local.Tests.dll (net10.0)
+Wip.Builder.Tests EXIT 0 00:00:02 | Passed!  - Failed:     0, Passed:    32, Skipped:     0, Total:    32, Duration: 461 ms - Wip.Builder.Tests.dll (net10.0)
+Wip.Modus.Tests EXIT 1 00:05:02 | Test Run Aborted.
+Wip.Policy.LocalSafe.Tests EXIT 0 00:00:01 | Passed!  - Failed:     0, Passed:    40, Skipped:     0, Total:    40, Duration: 190 ms - Wip.Policy.LocalSafe.Tests.dll (net10.0)
+Wip.Runtime.Tests EXIT 1 00:00:05 | Failed!  - Failed:    18, Passed:    54, Skipped:     0, Total:    72, Duration: 3 s - Wip.Runtime.Tests.dll (net10.0)
+Wip.Shell.Tests EXIT 1 00:00:09 | Failed!  - Failed:     2, Passed:    30, Skipped:     0, Total:    32, Duration: 7 s - Wip.Shell.Tests.dll (net10.0)
+Wip.Tools.Shell.Tests EXIT 0 00:00:02 | Passed!  - Failed:     0, Passed:    25, Skipped:     0, Total:    25, Duration: 364 ms - Wip.Tools.Shell.Tests.dll (net10.0)
+Wip.Validation.DotNet.Tests EXIT 0 00:00:13 | Passed!  - Failed:     0, Passed:    54, Skipped:     0, Total:    54, Duration: 11 s - Wip.Validation.DotNet.Tests.dll (net10.0)
+Wip.Workspaces.Git.Tests EXIT 0 00:00:09 | Passed!  - Failed:     0, Passed:    12, Skipped:     0, Total:    12, Duration: 7 s - Wip.Workspaces.Git.Tests.dll (net10.0)
+Wip.Bones.Tests EXIT 1 00:05:24 | Failed!  - Failed:     2, Passed:   381, Skipped:     0, Total:   383, Duration: 5 m 21 s - Wip.Bones.Tests.dll (net10.0)
+Wip.Bones.ModelProviders.DeepSeek.Tests EXIT 1 00:00:02 | Failed!  - Failed:     1, Passed:    47, Skipped:     0, Total:    48, Duration: 971 ms - Wip.Bones.ModelProviders.DeepSeek.Tests.dll (net10.0)
+Wip.Bones.Host.Tests EXIT 1 00:09:17 | Test Run Aborted.
+Wip.ShellHost.Tests EXIT 0 00:00:04 | Passed!  - Failed:     0, Passed:    47, Skipped:     0, Total:    47, Duration: 2 s - Wip.ShellHost.Tests.dll (net10.0)
+Wip.Bones.E2E.Tests EXIT 1 00:00:08 | Failed!  - Failed:     7, Passed:     3, Skipped:     0, Total:    10, Duration: 6 s - Wip.Bones.E2E.Tests.dll (net10.0)
+Wip.Shell.E2E.Tests EXIT 1 00:05:18 | Test Run Aborted.
+Wip.Bones.Web.Tests EXIT 1 00:00:52 | Failed!  - Failed:     9, Passed:   267, Skipped:     0, Total:   276, Duration: 49 s - Wip.Bones.Web.Tests.dll (net10.0)
+DONE=2026-11-02T12:28:20.0564972-03:00

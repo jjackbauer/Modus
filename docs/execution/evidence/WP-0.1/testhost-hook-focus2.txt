@@ -1,0 +1,16 @@
+startup_hook=C:\Users\ricar\AppData\Local\Temp\wip-testhost-startup-hook\bin\Release\net10.0\WipTestHostStartupHook.dll temp=C:\Users\ricar\dev\Modus\.tmp\testhost-temp exit=0 --- output --- Test run for C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\bin\Release\net10.0\HarnessSync.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.0+00ab0a9ec4 (64-bit .NET 10.0.3)
+[xUnit.net 00:00:00.05]   Discovering: HarnessSync.Tests
+[xUnit.net 00:00:00.08]   Discovered:  HarnessSync.Tests
+[xUnit.net 00:00:00.09]   Starting:    HarnessSync.Tests
+[xUnit.net 00:00:00.14]   Finished:    HarnessSync.Tests
+  Passed HarnessSync.Tests.TextFileEncodingValidatorTests.FindUtf16TextFiles_GivenUtf16InsideTmpScratch_ExpectedNotReported [13 ms]
+
+Test Run Successful.
+Total tests: 1
+     Passed: 1
+ Total time: 0.5092 Seconds

@@ -25,6 +25,13 @@ artifacts/
 # Test results and coverage
 TestResults/
 *.trx
+
+# Execution evidence TRX files are contractual artifacts
+!docs/execution/evidence/**/*.trx
+
+# Test console logs and hang attachments stay on disk; TRX is the committed evidence
+docs/execution/evidence/**/test-results/*.out.txt
+docs/execution/evidence/**/test-results/*/*.xml
 *.coverage
 *.coveragexml
 coverage/

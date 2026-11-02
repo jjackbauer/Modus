@@ -6,15 +6,15 @@
   "branch": "WIP",
   "phase": 0,
   "work_package": "WP-0.1",
-  "status": "in_progress",
+  "status": "done",
   "gate": "G0",
-  "gate_status": "baseline_committed_build_green_tests_blocked",
+  "gate_status": "wp01_done_g0_not_ready",
   "attempts": {
     "WP-0.1": 1
   },
-  "last_verified_at": "2026-11-02T11:48:04-03:00",
-  "next_action": "Run the WP-0.1 test inventory on an unconfined host/CI (testhost is blocked here), then continue with WP-0.2; G0 remains not ready.",
-  "open_blockers": ["BLK-TESTHOST-ENV"],
+  "last_verified_at": "2026-11-02T12:30:55-03:00",
+  "next_action": "Start WP-0.2 (governance guard) with the Shell merge failures as a priority signal; G0 remains not ready until WP-0.2–WP-0.6 complete.",
+  "open_blockers": [],
   "deviations": ["DEV-001"],
   "dirty_tree": {
     "porcelain_entries": 308,
@@ -42,8 +42,17 @@
     "WP-0.1": "docs/execution/evidence/WP-0.1/",
     "G0": "docs/execution/evidence/G0/"
   },
+  "test_inventory": {
+    "executed": 1354,
+    "passed": 1305,
+    "failed": 49,
+    "aborted_suites": 3,
+    "green_projects": 8,
+    "total_projects": 17,
+    "evidence": "docs/plan/baseline-test-status.md"
+  },
   "work_packages": {
-    "WP-0.1": "in_progress",
+    "WP-0.1": "done",
     "WP-0.2": "not_started",
     "WP-0.3": "not_started",
     "WP-0.4": "not_started",

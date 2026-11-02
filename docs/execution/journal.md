@@ -63,3 +63,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Public consume:** `Modus.Core 0.0.2` + `Wip.Modus 0.0.2` installed from nuget.org with a fresh HTTP cache and built (exit 0, 0 warnings/errors).
 - **Residual:** tests still unexecuted (`BLK-TESTHOST-ENV`); publication is not G5/WIP 1.0. Key must be revoked and the encrypted file deleted.
 - **Next:** run the 17 WIP suites on an unconfined host/CI, record TRX, then WP-0.2.
+
+## 2026-11-02T12:30:55-03:00 - WP-0.1 (test inventory complete; red baseline recorded)
+
+- **Unblock:** Test SDK 17.13.0 testhost lacks the parent-query switch; upgraded all 17 WIP test projects to **17.14.1**, added a local (uncommitted) startup hook to disable `MSTest.EnableParentProcessQuery`, and redirected TEMP/TMP/TMPDIR into `.tmp/testhost-temp`. Focused test and `Wip.Abstractions.Tests` passed.
+- **Inventory:** 17 projects, **1,354 tests, 1,305 passed, 49 failed, 0 skipped**, 8 projects fully green. Three suites aborted after test-specific hangs/crashes: `Wip.Modus.Tests`, `Wip.Bones.Host.Tests`, `Wip.Shell.E2E.Tests`; counters were still captured.
+- **Baseline failures:** 18 runtime `C:/repo` path failures (F-ENV), 2 shell merge-output failures, 1 Modus README gap, 11 compliance-gate failures, 6 Bones.Host status/timeouts, 6 Bones.E2E harness, 4 Bones.Web functional, 2 Shell.E2E registry/meta-test. All tracked with owners/expiry in `docs/plan/baseline-test-status.md`.
+- **WP-0.1:** **done** (baseline frozen, tagged, inventory red but recorded). G0 remains **not ready**.
+- **Next:** WP-0.2 (governance guard), prioritizing the Shell merge failures.

@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="93c75bbf-0e26-4efd-8dad-fab3decca3c4" name="ricar@RICARDO-PC 2026-11-02 12:01:29" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:01:29.1869044-03:00" queuing="2026-11-02T12:01:29.1869045-03:00" start="2026-11-02T12:01:27.8052021-03:00" finish="2026-11-02T12:06:29.5527341-03:00" />
+  <TestSettings name="default" id="46b637c6-0eaf-4b03-a9b5-418235db5638">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_01_29" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="14799a6d-47c2-4944-bd07-2b8d3e9da5ca" testId="8fcda80b-8a6d-f43e-5dc2-21a39773c429" testName="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.PluginLoader_GivenRepositoryAndUserPathsMissing_ReportsBothMissingPathDiagnosticsAndCapturesEmptyManifest" computerName="RICARDO-PC" duration="00:00:00.0008403" startTime="2026-11-02T12:01:29.2411987-03:00" endTime="2026-11-02T12:01:29.2411989-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="14799a6d-47c2-4944-bd07-2b8d3e9da5ca" />
+    <UnitTestResult executionId="971ada94-bfb3-4035-a642-59befd1f25ca" testId="617cc959-8998-609f-55ef-dee33559e609" testName="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.ExternalPluginBuild_GivenConsumerProjectUsesWipBuilderApis_RegistersTypedAgentToolValidatorAndWorkflowWithoutShellHostLogic" computerName="RICARDO-PC" duration="00:00:00.0009852" startTime="2026-11-02T12:01:29.4954335-03:00" endTime="2026-11-02T12:01:29.4954336-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="971ada94-bfb3-4035-a642-59befd1f25ca" />
+    <UnitTestResult executionId="c2990cb7-7c7f-4b8c-8b90-ef9aee8779d8" testId="1759d28a-317f-d54b-3f4e-cfaca6458dd8" testName="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenOutdatedMap_RuntimeVerificationTestFailsUntilReadmeUpdated" computerName="RICARDO-PC" duration="00:00:00.0008398" startTime="2026-11-02T12:01:29.2432261-03:00" endTime="2026-11-02T12:01:29.2432262-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c2990cb7-7c7f-4b8c-8b90-ef9aee8779d8" />
+    <UnitTestResult executionId="4fc15a91-62da-471a-9b20-bb1b6724a3d9" testId="31edefc9-32c3-3b8a-74e7-ed952351f56e" testName="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.PluginLoader_GivenRepositoryPathMissingAndUserPathContainsPlugin_LoadsPluginFromUserPathAndReportsRepositoryDiagnostic" computerName="RICARDO-PC" duration="00:00:00.1968380" startTime="2026-11-02T12:01:29.2359179-03:00" endTime="2026-11-02T12:01:29.2359182-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4fc15a91-62da-471a-9b20-bb1b6724a3d9" />
+    <UnitTestResult executionId="886e12ac-f735-4d86-b746-532729d05d1f" testId="6e59bc5f-8aae-8430-f984-03fb24aa6c16" testName="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests.BehaviorProofCompliance_GivenAnyChecklistItem_MetadataOnlyTestsAreRejectedAsInsufficient" computerName="RICARDO-PC" duration="00:00:00.0005614" startTime="2026-11-02T12:01:29.1419816-03:00" endTime="2026-11-02T12:01:29.1419817-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="886e12ac-f735-4d86-b746-532729d05d1f" />
+    <UnitTestResult executionId="ea882211-9d14-4b56-969d-f49c44293da3" testId="e4702fd4-8128-729c-4200-cef98af07262" testName="Wip.Modus.Tests.Documentation.ContributorReadmeRequirementsTests.ContributorReadmeRequirements_GivenPendingOnboardingRow_ExpectedChecklistItemRemainsUncheckedUntilQuickstartProofExists" computerName="RICARDO-PC" duration="00:00:00.0235829" startTime="2026-11-02T12:01:29.1396287-03:00" endTime="2026-11-02T12:01:29.1396294-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ea882211-9d14-4b56-969d-f49c44293da3" />
+    <UnitTestResult executionId="e3faeef2-d175-431b-af07-f5556f60afa0" testId="3fe91bed-e7ce-ce6f-ef3f-886b2f16d7a0" testName="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenArchitectureMap_ContributorsCanTraceSessionCommandToRuntimeComponents" computerName="RICARDO-PC" duration="00:00:00.1033504" startTime="2026-11-02T12:01:29.1573678-03:00" endTime="2026-11-02T12:01:29.1573680-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e3faeef2-d175-431b-af07-f5556f60afa0" />
+    <UnitTestResult executionId="672a153a-b612-4584-ac2f-c3598248ed57" testId="61b605da-bbaa-0277-b81c-91a2d2db89be" testName="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.RunManifestBuilder_GivenLoadedPlugins_CapturesPluginAssemblyVersionCapabilitiesAndPermissions" computerName="RICARDO-PC" duration="00:00:00.0949439" startTime="2026-11-02T12:01:29.4015424-03:00" endTime="2026-11-02T12:01:29.4015427-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="672a153a-b612-4584-ac2f-c3598248ed57" />
+    <UnitTestResult executionId="d3f7e540-d930-42ed-adfb-fd7b9e47a065" testId="43ffed6e-9811-9ea9-78e1-bc4532ae9e05" testName="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests.ContributorWorkflowReadme_GivenMissingProofArtifact_CompletionGateFailsUntilArtifactIsProduced" computerName="RICARDO-PC" duration="00:00:00.0012579" startTime="2026-11-02T12:01:29.1599966-03:00" endTime="2026-11-02T12:01:29.1599967-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d3f7e540-d930-42ed-adfb-fd7b9e47a065" />
+    <UnitTestResult executionId="8391967e-e386-4ae2-93c1-15e121d7acbe" testId="a2ffd881-727c-7323-aa1c-3f10262dd6b8" testName="Wip.Modus.Tests.Documentation.RepositoryLayoutTests.RepositoryLayout_GivenWipProjects_ExpectedAllResolveUnderWipFolderWithoutSrcWipAssumptions" computerName="RICARDO-PC" duration="00:00:00.0758124" startTime="2026-11-02T12:01:29.1163413-03:00" endTime="2026-11-02T12:01:29.1163746-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8391967e-e386-4ae2-93c1-15e121d7acbe" />
+    <UnitTestResult executionId="41de5222-995f-4423-a510-1c7aca4ea7c5" testId="34a2c0ea-82eb-267b-8217-73aefbfd7968" testName="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole" computerName="RICARDO-PC" duration="00:00:00.0033074" startTime="2026-11-02T12:01:29.2398975-03:00" endTime="2026-11-02T12:01:29.2398979-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="41de5222-995f-4423-a510-1c7aca4ea7c5">
+      <Output>
+        <ErrorInfo>
+          <Message>README project map is missing 'Wip.Bones'.</Message>
+          <StackTrace>   at Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole() in C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\Documentation\WipContributorArchitectureReadmeTests.cs:line 34&#xD;
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="efe835fd-b4ed-4a35-bfe6-13d043e34c5b" testId="63ea9d16-809b-6bad-3630-5cc069ae9f97" testName="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.ModusDiscovery_GivenExternalPluginAssemblyAndBuilderWorkflowRegistrations_ListsTypedCapabilitiesAndWorkflowWithoutShellRegistrationPath" computerName="RICARDO-PC" duration="00:00:00.0696544" startTime="2026-11-02T12:01:29.3065340-03:00" endTime="2026-11-02T12:01:29.3065344-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="efe835fd-b4ed-4a35-bfe6-13d043e34c5b" />
+    <UnitTestResult executionId="9592ec09-b987-4568-9229-973a756a51f9" testId="2339e887-cf09-3e36-0a97-c7a89c6b2b16" testName="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.PluginLoader_GivenPluginsInConfiguredFolders_LoadsCapabilitiesOncePerShellProcess" computerName="RICARDO-PC" duration="00:00:00.0924525" startTime="2026-11-02T12:01:29.4940710-03:00" endTime="2026-11-02T12:01:29.4940712-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9592ec09-b987-4568-9229-973a756a51f9" />
+    <UnitTestResult executionId="c5801252-bb9d-43bf-bb3f-89869dc2e0a8" testId="30bb1ec9-ca5d-d636-95fc-7e065b75d39b" testName="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests.BehaviorProofCompliance_GivenPlanDocument_EachUncheckedItemHasAtLeastOneNamedBehaviorProofTest" computerName="RICARDO-PC" duration="00:00:00.0049071" startTime="2026-11-02T12:01:29.1586763-03:00" endTime="2026-11-02T12:01:29.1586764-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c5801252-bb9d-43bf-bb3f-89869dc2e0a8" />
+    <UnitTestResult executionId="ba0d1d8c-65ee-48f9-9aac-306edc38e60f" testId="8125ce89-1e78-92df-e81a-9b0819bd8fda" testName="Wip.Modus.Tests.Documentation.ContributorReadmeRequirementsTests.ContributorReadmeRequirements_GivenCoverageMatrix_ExpectedNoPendingRowWithCheckedChecklistItem" computerName="RICARDO-PC" duration="00:00:00.0745865" startTime="2026-11-02T12:01:29.1243342-03:00" endTime="2026-11-02T12:01:29.1243342-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ba0d1d8c-65ee-48f9-9aac-306edc38e60f" />
+    <UnitTestResult executionId="654e73c8-afec-4ee8-a4ad-9c49c0be4c97" testId="2d7e909b-50f6-9b9d-40b5-1ab901d51136" testName="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests.ContributorWorkflowReadme_GivenDocumentedValidationCommands_CommandsExecuteInRepositoryAndProduceExpectedSuccessSignals" computerName="RICARDO-PC" duration="00:00:00.0233200" startTime="2026-11-02T12:01:29.1707433-03:00" endTime="2026-11-02T12:01:29.1707437-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="654e73c8-afec-4ee8-a4ad-9c49c0be4c97" />
+    <UnitTestResult executionId="849b9441-2312-4aa7-a04c-107091050ecf" testId="1c7d839a-bc55-b689-e1b3-50e77915bbe7" testName="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests.ContributorWorkflowReadme_GivenIntentionalRuntimeFailure_NegativePathEvidenceCapturedAndLinkedInChecklist" computerName="RICARDO-PC" duration="00:00:00.1069494" startTime="2026-11-02T12:01:29.1591376-03:00" endTime="2026-11-02T12:01:29.1591376-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="849b9441-2312-4aa7-a04c-107091050ecf" />
+    <UnitTestResult executionId="38e1ca73-30cd-42c4-b790-57e63e18e16c" testId="48cd4a28-e605-389b-0a2d-662413f85361" testName="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests.BehaviorProofCompliance_GivenApiOrCommandPath_AllApplicableRuntimeGatesMustPassForCompletion" computerName="RICARDO-PC" duration="00:00:00.1005999" startTime="2026-11-02T12:01:29.1407359-03:00" endTime="2026-11-02T12:01:29.1407359-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="38e1ca73-30cd-42c4-b790-57e63e18e16c" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests.BehaviorProofCompliance_GivenAnyChecklistItem_MetadataOnlyTestsAreRejectedAsInsufficient" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="6e59bc5f-8aae-8430-f984-03fb24aa6c16">
+      <Execution id="886e12ac-f735-4d86-b746-532729d05d1f" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests" name="BehaviorProofCompliance_GivenAnyChecklistItem_MetadataOnlyTestsAreRejectedAsInsufficient" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.RunManifestBuilder_GivenLoadedPlugins_CapturesPluginAssemblyVersionCapabilitiesAndPermissions" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="61b605da-bbaa-0277-b81c-91a2d2db89be">
+      <Execution id="672a153a-b612-4584-ac2f-c3598248ed57" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Hosting.ModusWipBridgeTests" name="RunManifestBuilder_GivenLoadedPlugins_CapturesPluginAssemblyVersionCapabilitiesAndPermissions" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.PluginLoader_GivenPluginsInConfiguredFolders_LoadsCapabilitiesOncePerShellProcess" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="2339e887-cf09-3e36-0a97-c7a89c6b2b16">
+      <Execution id="9592ec09-b987-4568-9229-973a756a51f9" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Hosting.ModusWipBridgeTests" name="PluginLoader_GivenPluginsInConfiguredFolders_LoadsCapabilitiesOncePerShellProcess" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests.ContributorWorkflowReadme_GivenMissingProofArtifact_CompletionGateFailsUntilArtifactIsProduced" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="43ffed6e-9811-9ea9-78e1-bc4532ae9e05">
+      <Execution id="d3f7e540-d930-42ed-adfb-fd7b9e47a065" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests" name="ContributorWorkflowReadme_GivenMissingProofArtifact_CompletionGateFailsUntilArtifactIsProduced" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.PluginLoader_GivenRepositoryPathMissingAndUserPathContainsPlugin_LoadsPluginFromUserPathAndReportsRepositoryDiagnostic" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="31edefc9-32c3-3b8a-74e7-ed952351f56e">
+      <Execution id="4fc15a91-62da-471a-9b20-bb1b6724a3d9" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Hosting.ModusWipBridgeTests" name="PluginLoader_GivenRepositoryPathMissingAndUserPathContainsPlugin_LoadsPluginFromUserPathAndReportsRepositoryDiagnostic" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.ContributorReadmeRequirementsTests.ContributorReadmeRequirements_GivenPendingOnboardingRow_ExpectedChecklistItemRemainsUncheckedUntilQuickstartProofExists" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="e4702fd4-8128-729c-4200-cef98af07262">
+      <Execution id="ea882211-9d14-4b56-969d-f49c44293da3" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.ContributorReadmeRequirementsTests" name="ContributorReadmeRequirements_GivenPendingOnboardingRow_ExpectedChecklistItemRemainsUncheckedUntilQuickstartProofExists" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenOutdatedMap_RuntimeVerificationTestFailsUntilReadmeUpdated" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="1759d28a-317f-d54b-3f4e-cfaca6458dd8">
+      <Execution id="c2990cb7-7c7f-4b8c-8b90-ef9aee8779d8" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests" name="WipContributorArchitectureReadme_GivenOutdatedMap_RuntimeVerificationTestFailsUntilReadmeUpdated" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.PluginLoader_GivenRepositoryAndUserPathsMissing_ReportsBothMissingPathDiagnosticsAndCapturesEmptyManifest" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="8fcda80b-8a6d-f43e-5dc2-21a39773c429">
+      <Execution id="14799a6d-47c2-4944-bd07-2b8d3e9da5ca" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Hosting.ModusWipBridgeTests" name="PluginLoader_GivenRepositoryAndUserPathsMissing_ReportsBothMissingPathDiagnosticsAndCapturesEmptyManifest" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.ContributorReadmeRequirementsTests.ContributorReadmeRequirements_GivenCoverageMatrix_ExpectedNoPendingRowWithCheckedChecklistItem" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="8125ce89-1e78-92df-e81a-9b0819bd8fda">
+      <Execution id="ba0d1d8c-65ee-48f9-9aac-306edc38e60f" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.ContributorReadmeRequirementsTests" name="ContributorReadmeRequirements_GivenCoverageMatrix_ExpectedNoPendingRowWithCheckedChecklistItem" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests.BehaviorProofCompliance_GivenPlanDocument_EachUncheckedItemHasAtLeastOneNamedBehaviorProofTest" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="30bb1ec9-ca5d-d636-95fc-7e065b75d39b">
+      <Execution id="c5801252-bb9d-43bf-bb3f-89869dc2e0a8" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests" name="BehaviorProofCompliance_GivenPlanDocument_EachUncheckedItemHasAtLeastOneNamedBehaviorProofTest" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.RepositoryLayoutTests.RepositoryLayout_GivenWipProjects_ExpectedAllResolveUnderWipFolderWithoutSrcWipAssumptions" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="a2ffd881-727c-7323-aa1c-3f10262dd6b8">
+      <Execution id="8391967e-e386-4ae2-93c1-15e121d7acbe" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.RepositoryLayoutTests" name="RepositoryLayout_GivenWipProjects_ExpectedAllResolveUnderWipFolderWithoutSrcWipAssumptions" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests.BehaviorProofCompliance_GivenApiOrCommandPath_AllApplicableRuntimeGatesMustPassForCompletion" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="48cd4a28-e605-389b-0a2d-662413f85361">
+      <Execution id="38e1ca73-30cd-42c4-b790-57e63e18e16c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.BehaviorProofComplianceReadmeTests" name="BehaviorProofCompliance_GivenApiOrCommandPath_AllApplicableRuntimeGatesMustPassForCompletion" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests.ContributorWorkflowReadme_GivenDocumentedValidationCommands_CommandsExecuteInRepositoryAndProduceExpectedSuccessSignals" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="2d7e909b-50f6-9b9d-40b5-1ab901d51136">
+      <Execution id="654e73c8-afec-4ee8-a4ad-9c49c0be4c97" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests" name="ContributorWorkflowReadme_GivenDocumentedValidationCommands_CommandsExecuteInRepositoryAndProduceExpectedSuccessSignals" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.ExternalPluginBuild_GivenConsumerProjectUsesWipBuilderApis_RegistersTypedAgentToolValidatorAndWorkflowWithoutShellHostLogic" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="617cc959-8998-609f-55ef-dee33559e609">
+      <Execution id="971ada94-bfb3-4035-a642-59befd1f25ca" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Hosting.ModusWipBridgeTests" name="ExternalPluginBuild_GivenConsumerProjectUsesWipBuilderApis_RegistersTypedAgentToolValidatorAndWorkflowWithoutShellHostLogic" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests.ContributorWorkflowReadme_GivenIntentionalRuntimeFailure_NegativePathEvidenceCapturedAndLinkedInChecklist" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="1c7d839a-bc55-b689-e1b3-50e77915bbe7">
+      <Execution id="849b9441-2312-4aa7-a04c-107091050ecf" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.ContributorValidationWorkflowReadmeTests" name="ContributorWorkflowReadme_GivenIntentionalRuntimeFailure_NegativePathEvidenceCapturedAndLinkedInChecklist" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenArchitectureMap_ContributorsCanTraceSessionCommandToRuntimeComponents" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="3fe91bed-e7ce-ce6f-ef3f-886b2f16d7a0">
+      <Execution id="e3faeef2-d175-431b-af07-f5556f60afa0" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests" name="WipContributorArchitectureReadme_GivenArchitectureMap_ContributorsCanTraceSessionCommandToRuntimeComponents" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Hosting.ModusWipBridgeTests.ModusDiscovery_GivenExternalPluginAssemblyAndBuilderWorkflowRegistrations_ListsTypedCapabilitiesAndWorkflowWithoutShellRegistrationPath" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="63ea9d16-809b-6bad-3630-5cc069ae9f97">
+      <Execution id="efe835fd-b4ed-4a35-bfe6-13d043e34c5b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Hosting.ModusWipBridgeTests" name="ModusDiscovery_GivenExternalPluginAssemblyAndBuilderWorkflowRegistrations_ListsTypedCapabilitiesAndWorkflowWithoutShellRegistrationPath" />
+    </UnitTest>
+    <UnitTest name="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole" storage="c:\users\ricar\dev\modus\wip\wip.modus.tests\bin\release\net10.0\wip.modus.tests.dll" id="34a2c0ea-82eb-267b-8217-73aefbfd7968">
+      <Execution id="41de5222-995f-4423-a510-1c7aca4ea7c5" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\bin\Release\net10.0\Wip.Modus.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests" name="WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="8fcda80b-8a6d-f43e-5dc2-21a39773c429" executionId="14799a6d-47c2-4944-bd07-2b8d3e9da5ca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="617cc959-8998-609f-55ef-dee33559e609" executionId="971ada94-bfb3-4035-a642-59befd1f25ca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1759d28a-317f-d54b-3f4e-cfaca6458dd8" executionId="c2990cb7-7c7f-4b8c-8b90-ef9aee8779d8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="31edefc9-32c3-3b8a-74e7-ed952351f56e" executionId="4fc15a91-62da-471a-9b20-bb1b6724a3d9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6e59bc5f-8aae-8430-f984-03fb24aa6c16" executionId="886e12ac-f735-4d86-b746-532729d05d1f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e4702fd4-8128-729c-4200-cef98af07262" executionId="ea882211-9d14-4b56-969d-f49c44293da3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3fe91bed-e7ce-ce6f-ef3f-886b2f16d7a0" executionId="e3faeef2-d175-431b-af07-f5556f60afa0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="61b605da-bbaa-0277-b81c-91a2d2db89be" executionId="672a153a-b612-4584-ac2f-c3598248ed57" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="43ffed6e-9811-9ea9-78e1-bc4532ae9e05" executionId="d3f7e540-d930-42ed-adfb-fd7b9e47a065" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a2ffd881-727c-7323-aa1c-3f10262dd6b8" executionId="8391967e-e386-4ae2-93c1-15e121d7acbe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="34a2c0ea-82eb-267b-8217-73aefbfd7968" executionId="41de5222-995f-4423-a510-1c7aca4ea7c5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="63ea9d16-809b-6bad-3630-5cc069ae9f97" executionId="efe835fd-b4ed-4a35-bfe6-13d043e34c5b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2339e887-cf09-3e36-0a97-c7a89c6b2b16" executionId="9592ec09-b987-4568-9229-973a756a51f9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="30bb1ec9-ca5d-d636-95fc-7e065b75d39b" executionId="c5801252-bb9d-43bf-bb3f-89869dc2e0a8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8125ce89-1e78-92df-e81a-9b0819bd8fda" executionId="ba0d1d8c-65ee-48f9-9aac-306edc38e60f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2d7e909b-50f6-9b9d-40b5-1ab901d51136" executionId="654e73c8-afec-4ee8-a4ad-9c49c0be4c97" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1c7d839a-bc55-b689-e1b3-50e77915bbe7" executionId="849b9441-2312-4aa7-a04c-107091050ecf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="48cd4a28-e605-389b-0a2d-662413f85361" executionId="38e1ca73-30cd-42c4-b790-57e63e18e16c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="18" executed="18" passed="17" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.48]   Discovering: Wip.Modus.Tests&#xD;
+[xUnit.net 00:00:00.51]   Discovered:  Wip.Modus.Tests&#xD;
+[xUnit.net 00:00:00.51]   Starting:    Wip.Modus.Tests&#xD;
+[xUnit.net 00:00:00.74]       README project map is missing 'Wip.Bones'.&#xD;
+[xUnit.net 00:00:00.74]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.74]         C:\Users\ricar\dev\Modus\WIP\Wip.Modus.Tests\Documentation\WipContributorArchitectureReadmeTests.cs(34,0): at Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole()&#xD;
+[xUnit.net 00:00:00.74]            at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)&#xD;
+[xUnit.net 00:00:00.74]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:01:29.2388658-03:00">
+        <Text>[xUnit.net 00:00:00.74]     Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:29.5221067-03:00">
+        <Text>The active test run was aborted. Reason: Test host process crashed</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Warning" timestamp="2026-11-02T12:06:29.5286812-03:00">
+        <Text>Data collector 'Blame' message: The specified inactivity time of 5 minutes has elapsed. Collecting hang dumps from testhost and its child processes.</Text>
+      </RunInfo>
+    </RunInfos>
+    <CollectorDataEntries>
+      <Collector agentName="RICARDO-PC" uri="datacollector://microsoft/TestPlatform/Extensions/Blame/v1" collectorDisplayName="Blame">
+        <UriAttachments>
+          <UriAttachment>
+            <A href="RICARDO-PC\Sequence_cf0a2e8e28d845848226e6f6ce28b4ac.xml"></A>
+          </UriAttachment>
+        </UriAttachments>
+      </Collector>
+    </CollectorDataEntries>
+  </ResultSummary>
+</TestRun>

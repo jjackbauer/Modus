@@ -1,0 +1,12 @@
+command=dotnet test WIP/Wip.Abstractions.Tests -c Release --no-build
+exit=0
+--- output ---
+Test run for C:\Users\ricar\dev\Modus\WIP\Wip.Abstractions.Tests\bin\Release\net10.0\Wip.Abstractions.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+WARNING: Overwriting results file: C:\Users\ricar\dev\Modus\docs\execution\evidence\WP-0.1\test-results\Wip.Abstractions.Tests.trx
+Results File: C:\Users\ricar\dev\Modus\docs\execution\evidence\WP-0.1\test-results\Wip.Abstractions.Tests.trx
+
+Passed!  - Failed:     0, Passed:    44, Skipped:     0, Total:    44, Duration: 98 ms - Wip.Abstractions.Tests.dll (net10.0)

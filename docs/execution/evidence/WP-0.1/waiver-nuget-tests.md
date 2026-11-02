@@ -38,3 +38,7 @@ The publication attempt failed with an **expired API key**; **no package was pub
 ## Publication result 2026-11-02T11:50-03:00
 
 The 18 packages at `0.0.2` were published to nuget.org after a new API key was supplied. They are live and a representative public install/build passed. **The WIP test suites still have not run.** This risk record remains active until the suites are executed or 2026-11-09, whichever is earlier. Publication is **not** evidence for G5.
+
+## Test inventory result 2026-11-02T12:28-03:00
+
+The WIP suite has now run: **1,354 executed, 1,305 passed, 49 failed**, with three suites aborted after hangs/crashes. The published `0.0.2` packages therefore have **no green test claim**. The failures are recorded in [baseline-test-status.md](../../../plan/baseline-test-status.md) with owners and expiry. If any failure is a product regression, publish `0.0.3` and/or unlist `0.0.2`; this risk record remains active until triage completes or 2026-11-09.

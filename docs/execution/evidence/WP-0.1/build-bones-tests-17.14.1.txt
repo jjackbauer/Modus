@@ -1,0 +1,33 @@
+command=dotnet build WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj -c Release --nologo
+exit=0
+--- output ---
+  Determining projects to restore...
+  Restored C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Wip.Bones.Tests.csproj (in 253 ms).
+  15 of 16 projects are up-to-date for restore.
+  Wip.Bones -> C:\Users\ricar\dev\Modus\WIP\Wip.Bones\bin\Release\net10.0\Wip.Bones.dll
+  Wip.Abstractions -> C:\Users\ricar\dev\Modus\WIP\Wip.Abstractions\bin\Release\net10.0\Wip.Abstractions.dll
+  Wip.Policy.LocalSafe -> C:\Users\ricar\dev\Modus\WIP\Wip.Policy.LocalSafe\bin\Release\net10.0\Wip.Policy.LocalSafe.dll
+  Wip.Builder -> C:\Users\ricar\dev\Modus\WIP\Wip.Builder\bin\Release\net10.0\Wip.Builder.dll
+  Wip.Artifacts.Local -> C:\Users\ricar\dev\Modus\WIP\Wip.Artifacts.Local\bin\Release\net10.0\Wip.Artifacts.Local.dll
+  Modus.Core -> C:\Users\ricar\dev\Modus\src\Modus.Core\bin\Release\net10.0\Modus.Core.dll
+  Wip.Workspaces.Git -> C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git\bin\Release\net10.0\Wip.Workspaces.Git.dll
+  Wip.Agent.Basic -> C:\Users\ricar\dev\Modus\WIP\Wip.Agent.Basic\bin\Release\net10.0\Wip.Agent.Basic.dll
+  Wip.Modus -> C:\Users\ricar\dev\Modus\WIP\Wip.Modus\bin\Release\net10.0\Wip.Modus.dll
+  Wip.Validation.DotNet -> C:\Users\ricar\dev\Modus\WIP\Wip.Validation.DotNet\bin\Release\net10.0\Wip.Validation.DotNet.dll
+  Wip.Runtime -> C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\bin\Release\net10.0\Wip.Runtime.dll
+  Wip.Shell -> C:\Users\ricar\dev\Modus\WIP\Wip.Shell\bin\Release\net10.0\Wip.Shell.dll
+  Wip.Bones.Agents -> C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Agents\bin\Release\net10.0\Wip.Bones.Agents.dll
+  Wip.ShellHost -> C:\Users\ricar\dev\Modus\WIP\Wip.ShellHost\bin\Release\net10.0\Wip.ShellHost.dll
+  Wip.Shell.E2E -> C:\Users\ricar\dev\Modus\WIP\Wip.Shell.E2E\bin\Release\net10.0\Wip.Shell.E2E.dll
+C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Engine\BonesGameEngineTests.cs(81,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Wip.Bones.Tests.csproj]
+C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Engine\BonesStrategyScriptHostDirectTimeoutTests.cs(94,49): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Wip.Bones.Tests.csproj]
+  Wip.Bones.Tests -> C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\bin\Release\net10.0\Wip.Bones.Tests.dll
+
+Build succeeded.
+
+C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Engine\BonesGameEngineTests.cs(81,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Wip.Bones.Tests.csproj]
+C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Engine\BonesStrategyScriptHostDirectTimeoutTests.cs(94,49): warning xUnit1031: Test methods should not use blocking task operations, as they can cause deadlocks. Use an async test method and await instead. (https://xunit.net/xunit.analyzers/rules/xUnit1031) [C:\Users\ricar\dev\Modus\WIP\Wip.Bones.Tests\Wip.Bones.Tests.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.81

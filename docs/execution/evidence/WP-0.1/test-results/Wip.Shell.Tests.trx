@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="eb3f050f-c39f-4bef-87ab-5f6773a6b420" name="ricar@RICARDO-PC 2026-11-02 12:06:39" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:06:39.9923877-03:00" queuing="2026-11-02T12:06:39.9923878-03:00" start="2026-11-02T12:06:37.8793277-03:00" finish="2026-11-02T12:06:46.7190671-03:00" />
+  <TestSettings name="default" id="aa1d4d5a-8671-4890-9bb4-7707c7771f48">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_06_39" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="512e1a5f-6d90-4847-ac30-9c17719e670d" testId="adaf05b4-cbd6-9c35-f907-f4cadd71115f" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.UseWorkflow_GivenUnknownWorkflowId_RejectsSelectionWithDeterministicErrorContract" computerName="RICARDO-PC" duration="00:00:00.0017803" startTime="2026-11-02T12:06:43.2237559-03:00" endTime="2026-11-02T12:06:43.2237560-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="512e1a5f-6d90-4847-ac30-9c17719e670d" />
+    <UnitTestResult executionId="cbc4e910-6d0d-41c4-bb41-61fbcf9a585e" testId="a9ecbe82-6b9b-3582-b145-c6d3c5de4438" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore" computerName="RICARDO-PC" duration="00:00:00.5984030" startTime="2026-11-02T12:06:46.6536786-03:00" endTime="2026-11-02T12:06:46.6536788-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cbc4e910-6d0d-41c4-bb41-61fbcf9a585e">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Sub-string not found&#xD;
+String:    "Product: testhost Version: 17.14.1\r\nRepos"···&#xD;
+Not found: "Merge completed:"</Message>
+          <StackTrace>   at Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore() in C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\Interactive\WipShellCommandLoopTests.cs:line 1355&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7322e029-391b-4b87-82df-a4d37378c671" testId="1f989cd6-284b-bd6b-0af5-22eb6618a92e" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.RunAndAbort_GivenPersistedSession_ExecutesWorkflowAndAllowsSessionRecoveryWithoutTransitionCommand" computerName="RICARDO-PC" duration="00:00:00.2941708" startTime="2026-11-02T12:06:41.0192543-03:00" endTime="2026-11-02T12:06:41.0192545-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7322e029-391b-4b87-82df-a4d37378c671" />
+    <UnitTestResult executionId="363c3b82-4ef5-416c-a344-e4a0875e07ac" testId="34c7c24d-5f2c-fa89-6d77-81d70449f247" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.ShellHelp_GivenRunCommand_ExpectedDescriptionSeparatesRunFromGovernanceLifecycle" computerName="RICARDO-PC" duration="00:00:00.0018517" startTime="2026-11-02T12:06:44.8298870-03:00" endTime="2026-11-02T12:06:44.8298871-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="363c3b82-4ef5-416c-a344-e4a0875e07ac" />
+    <UnitTestResult executionId="45cf0120-7b9e-4944-b928-9626bd7fd3fe" testId="48e21f4f-11ae-91e4-d55f-6fda61b34a08" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Diff_GivenModifiedWorktree_PrintsChangedFilesAndPersistsWorkspaceDiffAndDiffHashArtifacts" computerName="RICARDO-PC" duration="00:00:00.3060116" startTime="2026-11-02T12:06:42.9520815-03:00" endTime="2026-11-02T12:06:42.9520818-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45cf0120-7b9e-4944-b928-9626bd7fd3fe" />
+    <UnitTestResult executionId="73102d44-e777-43e8-92ce-3c4ea6629ccd" testId="8d975ada-dbb4-f7a8-b942-f50dc59acfa6" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands" computerName="RICARDO-PC" duration="00:00:00.5280390" startTime="2026-11-02T12:06:43.7608011-03:00" endTime="2026-11-02T12:06:43.7608015-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="73102d44-e777-43e8-92ce-3c4ea6629ccd">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Contains() Failure: Sub-string not found&#xD;
+String:    "Product: testhost Version: 17.14.1\r\nRepos"···&#xD;
+Not found: "Command 'merge' completed"</Message>
+          <StackTrace>   at Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands() in C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\Interactive\WipShellCommandLoopTests.cs:line 287&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="704c3f6f-3ed7-47ed-8dcf-c2a3c4e9f924" testId="babb648e-b386-a33a-6795-fc9fe0f9ff83" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenNoActiveSession_ExpectedGlobalPrompt" computerName="RICARDO-PC" duration="00:00:00.0018983" startTime="2026-11-02T12:06:44.0164896-03:00" endTime="2026-11-02T12:06:44.0164897-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="704c3f6f-3ed7-47ed-8dcf-c2a3c4e9f924" />
+    <UnitTestResult executionId="8dabd9ed-67c2-4b1d-b6a2-fe4bcfa35b45" testId="f3a94977-de73-a377-b7d5-ac98f8697824" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Approve_GivenUserDeclinesConfirmation_DoesNotCreateApprovalTokenAndLeavesSessionAwaitingApproval" computerName="RICARDO-PC" duration="00:00:00.6451542" startTime="2026-11-02T12:06:40.0623761-03:00" endTime="2026-11-02T12:06:40.0623763-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8dabd9ed-67c2-4b1d-b6a2-fe4bcfa35b45" />
+    <UnitTestResult executionId="0af6bf43-c539-4e34-ab8a-bb88eb20e37c" testId="2ec9162a-b530-e4d7-d91b-0f079b3bcbce" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenNoActiveSession_ExpectedGlobalPromptAndSessionCommandsRejectedWithGuidance" computerName="RICARDO-PC" duration="00:00:00.0041063" startTime="2026-11-02T12:06:44.0208879-03:00" endTime="2026-11-02T12:06:44.0208880-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0af6bf43-c539-4e34-ab8a-bb88eb20e37c" />
+    <UnitTestResult executionId="0c741efc-4898-4996-bff3-a5ca6a5226e2" testId="b8d68a85-dcb7-25f2-f82d-d9a7c00c967b" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.StatusCommand_GivenApprovedStatusWithoutApprovalToken_ExpectedDeterministicRecoveryGuidance" computerName="RICARDO-PC" duration="00:00:00.2569157" startTime="2026-11-02T12:06:44.2780505-03:00" endTime="2026-11-02T12:06:44.2780505-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0c741efc-4898-4996-bff3-a5ca6a5226e2" />
+    <UnitTestResult executionId="11a11374-1842-453a-8926-2aac97f4fc3f" testId="773e2d6a-fc8e-00d7-a3ac-77222a53c462" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Sessions_GivenPersistedDetachedSessions_ListsIdsTasksStatesAndUpdatedTimestampsFromDisk" computerName="RICARDO-PC" duration="00:00:00.2625670" startTime="2026-11-02T12:06:40.3252448-03:00" endTime="2026-11-02T12:06:40.3252449-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="11a11374-1842-453a-8926-2aac97f4fc3f" />
+    <UnitTestResult executionId="a283680f-879d-47a6-bcb6-30999b3d8303" testId="e14e1b51-6a3a-67bf-70f6-beca1358ac62" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Plan_GivenRegisteredModelProvider_UsesProviderPathAndRendersProviderDraft" computerName="RICARDO-PC" duration="00:00:00.2588960" startTime="2026-11-02T12:06:42.0921531-03:00" endTime="2026-11-02T12:06:42.0921534-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a283680f-879d-47a6-bcb6-30999b3d8303" />
+    <UnitTestResult executionId="dd54ca31-b86a-48a6-b755-ddc18ba1dfbc" testId="281f4670-519b-b08c-678a-4488f6be4872" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Validate_GivenNoActiveSession_ReturnsDeterministicGuidanceWithoutStateMutation" computerName="RICARDO-PC" duration="00:00:00.0027916" startTime="2026-11-02T12:06:39.4390372-03:00" endTime="2026-11-02T12:06:39.4390373-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dd54ca31-b86a-48a6-b755-ddc18ba1dfbc" />
+    <UnitTestResult executionId="3fcf8c46-069a-4674-96ed-bf18f6ec2a37" testId="b101583f-f9ec-b44b-6b6e-64d9a2e3f6b3" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Run_GivenSelectedWorkflow_ExecutesMappedStagesPersistsArtifactsAndRendersStageSummary" computerName="RICARDO-PC" duration="00:00:00.2693765" startTime="2026-11-02T12:06:43.2217457-03:00" endTime="2026-11-02T12:06:43.2217458-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3fcf8c46-069a-4674-96ed-bf18f6ec2a37" />
+    <UnitTestResult executionId="3e8b9555-65fd-4536-86b8-869ea3d0d7b6" testId="2675f12f-1736-b922-cac0-489430684795" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Workflows_GivenLoadedPluginCapabilities_ListsBuilderRegisteredWorkflowIdsForInteractiveSelection" computerName="RICARDO-PC" duration="00:00:00.0036789" startTime="2026-11-02T12:06:40.7174183-03:00" endTime="2026-11-02T12:06:40.7174184-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3e8b9555-65fd-4536-86b8-869ea3d0d7b6" />
+    <UnitTestResult executionId="297e2a34-37bb-4afd-9e6e-851499d5e664" testId="026367bf-87e4-2c22-254d-f86cc980d337" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Plan_GivenNoRegisteredModelProvider_PreservesDeterministicFallbackPlanBehavior" computerName="RICARDO-PC" duration="00:00:00.2561551" startTime="2026-11-02T12:06:44.0142927-03:00" endTime="2026-11-02T12:06:44.0142929-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="297e2a34-37bb-4afd-9e6e-851499d5e664" />
+    <UnitTestResult executionId="e2d19878-be80-4bc8-a9d2-28739803f2a6" testId="87a67359-5471-be26-87af-6d982957c68d" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Init_GivenGitRepositoryWithoutWipMetadata_CreatesDeterministicWipFolderLayoutAndConfigFile" computerName="RICARDO-PC" duration="00:00:00.0088449" startTime="2026-11-02T12:06:46.0513593-03:00" endTime="2026-11-02T12:06:46.0513595-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e2d19878-be80-4bc8-a9d2-28739803f2a6" />
+    <UnitTestResult executionId="aaf10cec-6ce0-471f-a536-cadec2f637ca" testId="94e2339b-d271-9ffc-e6e9-e34d81c88ec5" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.RunAsync_GivenMalformedDotNetFlowCommand_ExpectedUsageGuidanceWithoutSessionMutation" computerName="RICARDO-PC" duration="00:00:00.0022367" startTime="2026-11-02T12:06:46.0538723-03:00" endTime="2026-11-02T12:06:46.0538724-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aaf10cec-6ce0-471f-a536-cadec2f637ca" />
+    <UnitTestResult executionId="2543059a-f5f8-4df2-8222-2e8805904e27" testId="c7d52fc5-8234-2d3a-0e9b-5180c6586d2e" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Approve_GivenCurrentReviewValidationAndConfirmedPrompt_CreatesApprovalTokenBoundToDiffHashAndTargetCommit" computerName="RICARDO-PC" duration="00:00:00.4288964" startTime="2026-11-02T12:06:46.0400636-03:00" endTime="2026-11-02T12:06:46.0400638-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2543059a-f5f8-4df2-8222-2e8805904e27" />
+    <UnitTestResult executionId="64d3dd93-3785-49be-becf-2b18f603825c" testId="cc374547-9f37-d159-84e0-fe620bbbf8d5" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PluginsCommand_GivenLoadedDiagnostics_PrintsPluginsCapabilitiesAndPermissions" computerName="RICARDO-PC" duration="00:00:00.3657922" startTime="2026-11-02T12:06:39.4130866-03:00" endTime="2026-11-02T12:06:39.4131115-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="64d3dd93-3785-49be-becf-2b18f603825c" />
+    <UnitTestResult executionId="a1baa5bf-e5a9-4c24-aedf-7b2f32c2be43" testId="fc861178-8978-868c-8aa7-f4b0926bf585" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Plan_GivenRegisteredModelProviderFailure_EmitsDeterministicFailureContractAndDoesNotFallback" computerName="RICARDO-PC" duration="00:00:00.2515395" startTime="2026-11-02T12:06:45.6108807-03:00" endTime="2026-11-02T12:06:45.6108808-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a1baa5bf-e5a9-4c24-aedf-7b2f32c2be43" />
+    <UnitTestResult executionId="7db23dca-19be-412d-bc9b-851346a22886" testId="46b90552-b994-6b95-9921-5777a37b1970" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Merge_GivenDiffChangedAfterReviewOrApproval_RejectsWithDeterministicStaleReasonAndNoBranchMutation" computerName="RICARDO-PC" duration="00:00:00.5508681" startTime="2026-11-02T12:06:42.6458095-03:00" endTime="2026-11-02T12:06:42.6458097-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7db23dca-19be-412d-bc9b-851346a22886" />
+    <UnitTestResult executionId="225edd12-6f72-44da-b40b-432188ab7c7e" testId="fc2c12ea-bb0f-e6ce-f5a6-512c986b5d4f" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.UseWorkflow_GivenValidWorkflowId_BindsSelectedWorkflowToActiveSessionAndStatusOutput" computerName="RICARDO-PC" duration="00:00:00.2663334" startTime="2026-11-02T12:06:45.0964956-03:00" endTime="2026-11-02T12:06:45.0964957-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="225edd12-6f72-44da-b40b-432188ab7c7e" />
+    <UnitTestResult executionId="82702f70-a3d3-4153-a7a5-93f8fca54028" testId="6d5714ab-0e6e-c0ef-37c7-1a04af66c7fb" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.StatusCommand_GivenStateMergedWithoutMergeArtifact_ExpectedSurfacesGovernanceEvidenceGap" computerName="RICARDO-PC" duration="00:00:00.2664491" startTime="2026-11-02T12:06:41.5438733-03:00" endTime="2026-11-02T12:06:41.5438734-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="82702f70-a3d3-4153-a7a5-93f8fca54028" />
+    <UnitTestResult executionId="8d07f8c7-babd-4418-a458-b8fc81ce9605" testId="7eab802d-4f75-7684-662a-25840c1b0cf2" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Merge_GivenTargetBranchDriftAfterApproval_RejectsWithRefreshGuidanceAndPreservesSessionForRevalidation" computerName="RICARDO-PC" duration="00:00:00.5494785" startTime="2026-11-02T12:06:44.8278055-03:00" endTime="2026-11-02T12:06:44.8278056-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d07f8c7-babd-4418-a458-b8fc81ce9605" />
+    <UnitTestResult executionId="ffd989a6-8f19-4b10-86cc-32ab0e38229b" testId="9fee91eb-31e6-6a63-903c-ad8ec3fa297b" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Repo_GivenInitializedRepository_RendersRepositoryPathPolicyPluginPathsAndWorkspaceRootFromEffectiveConfig" computerName="RICARDO-PC" duration="00:00:00.2575627" startTime="2026-11-02T12:06:41.2771004-03:00" endTime="2026-11-02T12:06:41.2771005-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ffd989a6-8f19-4b10-86cc-32ab0e38229b" />
+    <UnitTestResult executionId="a61c58d1-d424-4b4a-8b41-ab228ba17e34" testId="1ed54d57-8a46-814e-166b-43c17415373c" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Review_GivenPassingValidationAndCurrentDiff_WritesMarkdownReportWithStalenessStatusAndRelevantArtifacts" computerName="RICARDO-PC" duration="00:00:00.3878908" startTime="2026-11-02T12:06:40.7134243-03:00" endTime="2026-11-02T12:06:40.7134244-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a61c58d1-d424-4b4a-8b41-ab228ba17e34" />
+    <UnitTestResult executionId="2a710fbe-7d35-4cc0-9a7a-3b8a2c92adf5" testId="7370329e-f658-16f8-c91b-b18233843678" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.WorkflowsCommand_GivenLoadedDiagnostics_PrintsRegisteredWorkflows" computerName="RICARDO-PC" duration="00:00:00.0070788" startTime="2026-11-02T12:06:40.7247437-03:00" endTime="2026-11-02T12:06:40.7247438-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2a710fbe-7d35-4cc0-9a7a-3b8a2c92adf5" />
+    <UnitTestResult executionId="571b2db0-5363-4fb7-8548-19278166b9b9" testId="a7bbdb62-2bff-97a5-8cb5-861e73a9d22b" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Help_GivenFreshShell_ListsMvpGlobalAndSessionCommandsWithoutTransitionEscapeHatch" computerName="RICARDO-PC" duration="00:00:00.0019349" startTime="2026-11-02T12:06:46.0422388-03:00" endTime="2026-11-02T12:06:46.0422389-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="571b2db0-5363-4fb7-8548-19278166b9b9" />
+    <UnitTestResult executionId="1e5b1897-2489-4375-a165-b4cf3a8aeacd" testId="20c19feb-2a92-358d-71a5-13065ead1410" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Help_GivenDotNetFlowSurface_ExpectedCommandCatalogIncludesRuntimeSupportedCommandsOnly" computerName="RICARDO-PC" duration="00:00:00.0021674" startTime="2026-11-02T12:06:42.0946367-03:00" endTime="2026-11-02T12:06:42.0946368-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1e5b1897-2489-4375-a165-b4cf3a8aeacd" />
+    <UnitTestResult executionId="a479133d-5756-48b9-835f-e63e7bdd2f9d" testId="6b6cbb63-3f89-79a5-7682-e68402172477" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.StatusCommand_GivenPostRunSession_ExpectedLifecycleGuidancePointsToExplicitGovernanceCommands" computerName="RICARDO-PC" duration="00:00:00.2622080" startTime="2026-11-02T12:06:45.3590379-03:00" endTime="2026-11-02T12:06:45.3590381-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a479133d-5756-48b9-835f-e63e7bdd2f9d" />
+    <UnitTestResult executionId="be7e2dbb-4f60-4398-bc72-8cdbf5ae8112" testId="88c66415-ce05-595c-d21a-efa0e9fd7eb5" testName="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.RunAsync_GivenRestoreBuildTestValidateCommands_ExpectedShellRoutesEachCommandToDeterministicRuntimeStage" computerName="RICARDO-PC" duration="00:00:00.2886299" startTime="2026-11-02T12:06:41.8329382-03:00" endTime="2026-11-02T12:06:41.8329384-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="be7e2dbb-4f60-4398-bc72-8cdbf5ae8112" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.StatusCommand_GivenApprovedStatusWithoutApprovalToken_ExpectedDeterministicRecoveryGuidance" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="b8d68a85-dcb7-25f2-f82d-d9a7c00c967b">
+      <Execution id="0c741efc-4898-4996-bff3-a5ca6a5226e2" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="StatusCommand_GivenApprovedStatusWithoutApprovalToken_ExpectedDeterministicRecoveryGuidance" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Repo_GivenInitializedRepository_RendersRepositoryPathPolicyPluginPathsAndWorkspaceRootFromEffectiveConfig" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="9fee91eb-31e6-6a63-903c-ad8ec3fa297b">
+      <Execution id="ffd989a6-8f19-4b10-86cc-32ab0e38229b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Repo_GivenInitializedRepository_RendersRepositoryPathPolicyPluginPathsAndWorkspaceRootFromEffectiveConfig" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.RunAsync_GivenMalformedDotNetFlowCommand_ExpectedUsageGuidanceWithoutSessionMutation" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="94e2339b-d271-9ffc-e6e9-e34d81c88ec5">
+      <Execution id="aaf10cec-6ce0-471f-a536-cadec2f637ca" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="RunAsync_GivenMalformedDotNetFlowCommand_ExpectedUsageGuidanceWithoutSessionMutation" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.RunAsync_GivenRestoreBuildTestValidateCommands_ExpectedShellRoutesEachCommandToDeterministicRuntimeStage" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="88c66415-ce05-595c-d21a-efa0e9fd7eb5">
+      <Execution id="be7e2dbb-4f60-4398-bc72-8cdbf5ae8112" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="RunAsync_GivenRestoreBuildTestValidateCommands_ExpectedShellRoutesEachCommandToDeterministicRuntimeStage" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.RunAndAbort_GivenPersistedSession_ExecutesWorkflowAndAllowsSessionRecoveryWithoutTransitionCommand" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="1f989cd6-284b-bd6b-0af5-22eb6618a92e">
+      <Execution id="7322e029-391b-4b87-82df-a4d37378c671" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="RunAndAbort_GivenPersistedSession_ExecutesWorkflowAndAllowsSessionRecoveryWithoutTransitionCommand" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.StatusCommand_GivenPostRunSession_ExpectedLifecycleGuidancePointsToExplicitGovernanceCommands" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="6b6cbb63-3f89-79a5-7682-e68402172477">
+      <Execution id="a479133d-5756-48b9-835f-e63e7bdd2f9d" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="StatusCommand_GivenPostRunSession_ExpectedLifecycleGuidancePointsToExplicitGovernanceCommands" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Run_GivenSelectedWorkflow_ExecutesMappedStagesPersistsArtifactsAndRendersStageSummary" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="b101583f-f9ec-b44b-6b6e-64d9a2e3f6b3">
+      <Execution id="3fcf8c46-069a-4674-96ed-bf18f6ec2a37" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Run_GivenSelectedWorkflow_ExecutesMappedStagesPersistsArtifactsAndRendersStageSummary" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Merge_GivenDiffChangedAfterReviewOrApproval_RejectsWithDeterministicStaleReasonAndNoBranchMutation" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="46b90552-b994-6b95-9921-5777a37b1970">
+      <Execution id="7db23dca-19be-412d-bc9b-851346a22886" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Merge_GivenDiffChangedAfterReviewOrApproval_RejectsWithDeterministicStaleReasonAndNoBranchMutation" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PluginsCommand_GivenLoadedDiagnostics_PrintsPluginsCapabilitiesAndPermissions" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="cc374547-9f37-d159-84e0-fe620bbbf8d5">
+      <Execution id="64d3dd93-3785-49be-becf-2b18f603825c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="PluginsCommand_GivenLoadedDiagnostics_PrintsPluginsCapabilitiesAndPermissions" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenNoActiveSession_ExpectedGlobalPromptAndSessionCommandsRejectedWithGuidance" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="2ec9162a-b530-e4d7-d91b-0f079b3bcbce">
+      <Execution id="0af6bf43-c539-4e34-ab8a-bb88eb20e37c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="PromptRendering_GivenNoActiveSession_ExpectedGlobalPromptAndSessionCommandsRejectedWithGuidance" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.WorkflowsCommand_GivenLoadedDiagnostics_PrintsRegisteredWorkflows" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="7370329e-f658-16f8-c91b-b18233843678">
+      <Execution id="2a710fbe-7d35-4cc0-9a7a-3b8a2c92adf5" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="WorkflowsCommand_GivenLoadedDiagnostics_PrintsRegisteredWorkflows" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Review_GivenPassingValidationAndCurrentDiff_WritesMarkdownReportWithStalenessStatusAndRelevantArtifacts" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="1ed54d57-8a46-814e-166b-43c17415373c">
+      <Execution id="a61c58d1-d424-4b4a-8b41-ab228ba17e34" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Review_GivenPassingValidationAndCurrentDiff_WritesMarkdownReportWithStalenessStatusAndRelevantArtifacts" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Help_GivenFreshShell_ListsMvpGlobalAndSessionCommandsWithoutTransitionEscapeHatch" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="a7bbdb62-2bff-97a5-8cb5-861e73a9d22b">
+      <Execution id="571b2db0-5363-4fb7-8548-19278166b9b9" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Help_GivenFreshShell_ListsMvpGlobalAndSessionCommandsWithoutTransitionEscapeHatch" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Diff_GivenModifiedWorktree_PrintsChangedFilesAndPersistsWorkspaceDiffAndDiffHashArtifacts" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="48e21f4f-11ae-91e4-d55f-6fda61b34a08">
+      <Execution id="45cf0120-7b9e-4944-b928-9626bd7fd3fe" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Diff_GivenModifiedWorktree_PrintsChangedFilesAndPersistsWorkspaceDiffAndDiffHashArtifacts" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Plan_GivenRegisteredModelProvider_UsesProviderPathAndRendersProviderDraft" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="e14e1b51-6a3a-67bf-70f6-beca1358ac62">
+      <Execution id="a283680f-879d-47a6-bcb6-30999b3d8303" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Plan_GivenRegisteredModelProvider_UsesProviderPathAndRendersProviderDraft" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="a9ecbe82-6b9b-3582-b145-c6d3c5de4438">
+      <Execution id="cbc4e910-6d0d-41c4-bb41-61fbcf9a585e" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="8d975ada-dbb4-f7a8-b942-f50dc59acfa6">
+      <Execution id="73102d44-e777-43e8-92ce-3c4ea6629ccd" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Merge_GivenTargetBranchDriftAfterApproval_RejectsWithRefreshGuidanceAndPreservesSessionForRevalidation" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="7eab802d-4f75-7684-662a-25840c1b0cf2">
+      <Execution id="8d07f8c7-babd-4418-a458-b8fc81ce9605" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Merge_GivenTargetBranchDriftAfterApproval_RejectsWithRefreshGuidanceAndPreservesSessionForRevalidation" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenNoActiveSession_ExpectedGlobalPrompt" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="babb648e-b386-a33a-6795-fc9fe0f9ff83">
+      <Execution id="704c3f6f-3ed7-47ed-8dcf-c2a3c4e9f924" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="PromptRendering_GivenNoActiveSession_ExpectedGlobalPrompt" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.UseWorkflow_GivenValidWorkflowId_BindsSelectedWorkflowToActiveSessionAndStatusOutput" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="fc2c12ea-bb0f-e6ce-f5a6-512c986b5d4f">
+      <Execution id="225edd12-6f72-44da-b40b-432188ab7c7e" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="UseWorkflow_GivenValidWorkflowId_BindsSelectedWorkflowToActiveSessionAndStatusOutput" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Workflows_GivenLoadedPluginCapabilities_ListsBuilderRegisteredWorkflowIdsForInteractiveSelection" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="2675f12f-1736-b922-cac0-489430684795">
+      <Execution id="3e8b9555-65fd-4536-86b8-869ea3d0d7b6" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Workflows_GivenLoadedPluginCapabilities_ListsBuilderRegisteredWorkflowIdsForInteractiveSelection" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Init_GivenGitRepositoryWithoutWipMetadata_CreatesDeterministicWipFolderLayoutAndConfigFile" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="87a67359-5471-be26-87af-6d982957c68d">
+      <Execution id="e2d19878-be80-4bc8-a9d2-28739803f2a6" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Init_GivenGitRepositoryWithoutWipMetadata_CreatesDeterministicWipFolderLayoutAndConfigFile" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Approve_GivenUserDeclinesConfirmation_DoesNotCreateApprovalTokenAndLeavesSessionAwaitingApproval" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="f3a94977-de73-a377-b7d5-ac98f8697824">
+      <Execution id="8dabd9ed-67c2-4b1d-b6a2-fe4bcfa35b45" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Approve_GivenUserDeclinesConfirmation_DoesNotCreateApprovalTokenAndLeavesSessionAwaitingApproval" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Plan_GivenRegisteredModelProviderFailure_EmitsDeterministicFailureContractAndDoesNotFallback" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="fc861178-8978-868c-8aa7-f4b0926bf585">
+      <Execution id="a1baa5bf-e5a9-4c24-aedf-7b2f32c2be43" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Plan_GivenRegisteredModelProviderFailure_EmitsDeterministicFailureContractAndDoesNotFallback" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Plan_GivenNoRegisteredModelProvider_PreservesDeterministicFallbackPlanBehavior" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="026367bf-87e4-2c22-254d-f86cc980d337">
+      <Execution id="297e2a34-37bb-4afd-9e6e-851499d5e664" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Plan_GivenNoRegisteredModelProvider_PreservesDeterministicFallbackPlanBehavior" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.ShellHelp_GivenRunCommand_ExpectedDescriptionSeparatesRunFromGovernanceLifecycle" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="34c7c24d-5f2c-fa89-6d77-81d70449f247">
+      <Execution id="363c3b82-4ef5-416c-a344-e4a0875e07ac" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="ShellHelp_GivenRunCommand_ExpectedDescriptionSeparatesRunFromGovernanceLifecycle" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Approve_GivenCurrentReviewValidationAndConfirmedPrompt_CreatesApprovalTokenBoundToDiffHashAndTargetCommit" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="c7d52fc5-8234-2d3a-0e9b-5180c6586d2e">
+      <Execution id="2543059a-f5f8-4df2-8222-2e8805904e27" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Approve_GivenCurrentReviewValidationAndConfirmedPrompt_CreatesApprovalTokenBoundToDiffHashAndTargetCommit" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.StatusCommand_GivenStateMergedWithoutMergeArtifact_ExpectedSurfacesGovernanceEvidenceGap" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="6d5714ab-0e6e-c0ef-37c7-1a04af66c7fb">
+      <Execution id="82702f70-a3d3-4153-a7a5-93f8fca54028" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="StatusCommand_GivenStateMergedWithoutMergeArtifact_ExpectedSurfacesGovernanceEvidenceGap" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Validate_GivenNoActiveSession_ReturnsDeterministicGuidanceWithoutStateMutation" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="281f4670-519b-b08c-678a-4488f6be4872">
+      <Execution id="dd54ca31-b86a-48a6-b755-ddc18ba1dfbc" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Validate_GivenNoActiveSession_ReturnsDeterministicGuidanceWithoutStateMutation" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Help_GivenDotNetFlowSurface_ExpectedCommandCatalogIncludesRuntimeSupportedCommandsOnly" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="20c19feb-2a92-358d-71a5-13065ead1410">
+      <Execution id="1e5b1897-2489-4375-a165-b4cf3a8aeacd" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Help_GivenDotNetFlowSurface_ExpectedCommandCatalogIncludesRuntimeSupportedCommandsOnly" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Sessions_GivenPersistedDetachedSessions_ListsIdsTasksStatesAndUpdatedTimestampsFromDisk" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="773e2d6a-fc8e-00d7-a3ac-77222a53c462">
+      <Execution id="11a11374-1842-453a-8926-2aac97f4fc3f" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="Sessions_GivenPersistedDetachedSessions_ListsIdsTasksStatesAndUpdatedTimestampsFromDisk" />
+    </UnitTest>
+    <UnitTest name="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.UseWorkflow_GivenUnknownWorkflowId_RejectsSelectionWithDeterministicErrorContract" storage="c:\users\ricar\dev\modus\wip\wip.shell.tests\bin\release\net10.0\wip.shell.tests.dll" id="adaf05b4-cbd6-9c35-f907-f4cadd71115f">
+      <Execution id="512e1a5f-6d90-4847-ac30-9c17719e670d" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\bin\Release\net10.0\Wip.Shell.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Shell.Tests.Interactive.WipShellCommandLoopTests" name="UseWorkflow_GivenUnknownWorkflowId_RejectsSelectionWithDeterministicErrorContract" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="adaf05b4-cbd6-9c35-f907-f4cadd71115f" executionId="512e1a5f-6d90-4847-ac30-9c17719e670d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a9ecbe82-6b9b-3582-b145-c6d3c5de4438" executionId="cbc4e910-6d0d-41c4-bb41-61fbcf9a585e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1f989cd6-284b-bd6b-0af5-22eb6618a92e" executionId="7322e029-391b-4b87-82df-a4d37378c671" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="34c7c24d-5f2c-fa89-6d77-81d70449f247" executionId="363c3b82-4ef5-416c-a344-e4a0875e07ac" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="48e21f4f-11ae-91e4-d55f-6fda61b34a08" executionId="45cf0120-7b9e-4944-b928-9626bd7fd3fe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8d975ada-dbb4-f7a8-b942-f50dc59acfa6" executionId="73102d44-e777-43e8-92ce-3c4ea6629ccd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="babb648e-b386-a33a-6795-fc9fe0f9ff83" executionId="704c3f6f-3ed7-47ed-8dcf-c2a3c4e9f924" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f3a94977-de73-a377-b7d5-ac98f8697824" executionId="8dabd9ed-67c2-4b1d-b6a2-fe4bcfa35b45" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2ec9162a-b530-e4d7-d91b-0f079b3bcbce" executionId="0af6bf43-c539-4e34-ab8a-bb88eb20e37c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b8d68a85-dcb7-25f2-f82d-d9a7c00c967b" executionId="0c741efc-4898-4996-bff3-a5ca6a5226e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="773e2d6a-fc8e-00d7-a3ac-77222a53c462" executionId="11a11374-1842-453a-8926-2aac97f4fc3f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e14e1b51-6a3a-67bf-70f6-beca1358ac62" executionId="a283680f-879d-47a6-bcb6-30999b3d8303" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="281f4670-519b-b08c-678a-4488f6be4872" executionId="dd54ca31-b86a-48a6-b755-ddc18ba1dfbc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b101583f-f9ec-b44b-6b6e-64d9a2e3f6b3" executionId="3fcf8c46-069a-4674-96ed-bf18f6ec2a37" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2675f12f-1736-b922-cac0-489430684795" executionId="3e8b9555-65fd-4536-86b8-869ea3d0d7b6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="026367bf-87e4-2c22-254d-f86cc980d337" executionId="297e2a34-37bb-4afd-9e6e-851499d5e664" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="87a67359-5471-be26-87af-6d982957c68d" executionId="e2d19878-be80-4bc8-a9d2-28739803f2a6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="94e2339b-d271-9ffc-e6e9-e34d81c88ec5" executionId="aaf10cec-6ce0-471f-a536-cadec2f637ca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c7d52fc5-8234-2d3a-0e9b-5180c6586d2e" executionId="2543059a-f5f8-4df2-8222-2e8805904e27" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cc374547-9f37-d159-84e0-fe620bbbf8d5" executionId="64d3dd93-3785-49be-becf-2b18f603825c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fc861178-8978-868c-8aa7-f4b0926bf585" executionId="a1baa5bf-e5a9-4c24-aedf-7b2f32c2be43" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="46b90552-b994-6b95-9921-5777a37b1970" executionId="7db23dca-19be-412d-bc9b-851346a22886" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="fc2c12ea-bb0f-e6ce-f5a6-512c986b5d4f" executionId="225edd12-6f72-44da-b40b-432188ab7c7e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6d5714ab-0e6e-c0ef-37c7-1a04af66c7fb" executionId="82702f70-a3d3-4153-a7a5-93f8fca54028" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7eab802d-4f75-7684-662a-25840c1b0cf2" executionId="8d07f8c7-babd-4418-a458-b8fc81ce9605" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9fee91eb-31e6-6a63-903c-ad8ec3fa297b" executionId="ffd989a6-8f19-4b10-86cc-32ab0e38229b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1ed54d57-8a46-814e-166b-43c17415373c" executionId="a61c58d1-d424-4b4a-8b41-ab228ba17e34" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7370329e-f658-16f8-c91b-b18233843678" executionId="2a710fbe-7d35-4cc0-9a7a-3b8a2c92adf5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a7bbdb62-2bff-97a5-8cb5-861e73a9d22b" executionId="571b2db0-5363-4fb7-8548-19278166b9b9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="20c19feb-2a92-358d-71a5-13065ead1410" executionId="1e5b1897-2489-4375-a165-b4cf3a8aeacd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6b6cbb63-3f89-79a5-7682-e68402172477" executionId="a479133d-5756-48b9-835f-e63e7bdd2f9d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="88c66415-ce05-595c-d21a-efa0e9fd7eb5" executionId="be7e2dbb-4f60-4398-bc72-8cdbf5ae8112" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="32" executed="32" passed="30" failed="2" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.46]   Discovering: Wip.Shell.Tests&#xD;
+[xUnit.net 00:00:00.49]   Discovered:  Wip.Shell.Tests&#xD;
+[xUnit.net 00:00:00.50]   Starting:    Wip.Shell.Tests&#xD;
+[xUnit.net 00:00:05.24]       Assert.Contains() Failure: Sub-string not found&#xD;
+[xUnit.net 00:00:05.24]       String:    "Product: testhost Version: 17.14.1\r\nRepos"···&#xD;
+[xUnit.net 00:00:05.24]       Not found: "Command 'merge' completed"&#xD;
+[xUnit.net 00:00:05.24]       Stack Trace:&#xD;
+[xUnit.net 00:00:05.24]         C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\Interactive\WipShellCommandLoopTests.cs(287,0): at Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands()&#xD;
+[xUnit.net 00:00:05.24]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:08.13]       Assert.Contains() Failure: Sub-string not found&#xD;
+[xUnit.net 00:00:08.13]       String:    "Product: testhost Version: 17.14.1\r\nRepos"···&#xD;
+[xUnit.net 00:00:08.13]       Not found: "Merge completed:"&#xD;
+[xUnit.net 00:00:08.13]       Stack Trace:&#xD;
+[xUnit.net 00:00:08.13]         C:\Users\ricar\dev\Modus\WIP\Wip.Shell.Tests\Interactive\WipShellCommandLoopTests.cs(1355,0): at Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore()&#xD;
+[xUnit.net 00:00:08.13]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:08.14]   Finished:    Wip.Shell.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:43.7598526-03:00">
+        <Text>[xUnit.net 00:00:05.24]     Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:46.6532993-03:00">
+        <Text>[xUnit.net 00:00:08.13]     Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Warning" timestamp="2026-11-02T12:06:46.6894011-03:00">
+        <Text>Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

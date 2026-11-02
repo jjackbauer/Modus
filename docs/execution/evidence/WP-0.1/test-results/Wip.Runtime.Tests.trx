@@ -1,0 +1,841 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="89567118-e924-47fb-a10a-404c91d8b6fb" name="ricar@RICARDO-PC 2026-11-02 12:06:33" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:06:33.6109408-03:00" queuing="2026-11-02T12:06:33.6109414-03:00" start="2026-11-02T12:06:32.2334251-03:00" finish="2026-11-02T12:06:37.2666778-03:00" />
+  <TestSettings name="default" id="eeadbd2a-842d-4eff-8730-da7c868372ad">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_06_33" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="62cce8e5-0705-4854-8381-3b1f40ef111e" testId="49ee6821-54d1-bd6f-ec5e-b0ef9c722349" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.CreateApprovalTokenAsync_GivenExplicitConfirmation_ExpectedApprovalStatusAndTokenArtifactAligned" computerName="RICARDO-PC" duration="00:00:00.1174403" startTime="2026-11-02T12:06:36.7947007-03:00" endTime="2026-11-02T12:06:36.7947009-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="62cce8e5-0705-4854-8381-3b1f40ef111e" />
+    <UnitTestResult executionId="07a1cddb-6ae3-438d-87af-bfa3ff274a2c" testId="5481ff3d-157f-ec64-acda-05907cfa63c0" testName="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenRunWorkflowAcrossStages_StateProgressionMatchesStageDescriptors" computerName="RICARDO-PC" duration="00:00:00.2131649" startTime="2026-11-02T12:06:33.8987748-03:00" endTime="2026-11-02T12:06:33.8987748-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="07a1cddb-6ae3-438d-87af-bfa3ff274a2c">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\eb22dec13fea435a9b76ececa559fa70\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenRunWorkflowAcrossStages_StateProgressionMatchesStageDescriptors() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\RuntimeReadmeLifecycleContractsTests.cs:line 135&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="698f67be-8321-4a47-aafc-283899d74e91" testId="f7ce8f1d-efd6-b347-4d80-436e0d4871c6" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput" computerName="RICARDO-PC" duration="00:00:00.0839331" startTime="2026-11-02T12:06:35.7915040-03:00" endTime="2026-11-02T12:06:35.7915042-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="698f67be-8321-4a47-aafc-283899d74e91">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\752416205bcd4f318339f87be59e9481\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1365&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b8b2388f-b8a0-4fb4-a1af-b48df50379fa" testId="5b5841af-da34-b814-2c51-8cf194312dbe" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.AttachSessionAsync_GivenPersistedSession_RestoresSnapshotAndDetachClearsAttachedContext" computerName="RICARDO-PC" duration="00:00:00.1117851" startTime="2026-11-02T12:06:37.1320087-03:00" endTime="2026-11-02T12:06:37.1320089-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b8b2388f-b8a0-4fb4-a1af-b48df50379fa" />
+    <UnitTestResult executionId="52058b95-f403-4435-a9b6-ee083a793972" testId="b50a132d-0d67-4b13-c890-8eded00ac851" testName="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests.TypedLinearWorkflowBuilder_GivenObjectPayloadContract_ThrowsDeterministicContractError" computerName="RICARDO-PC" duration="00:00:00.0774355" startTime="2026-11-02T12:06:33.5612856-03:00" endTime="2026-11-02T12:06:33.5613319-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="52058b95-f403-4435-a9b6-ee083a793972" />
+    <UnitTestResult executionId="9e74fda7-d36e-42f7-bcd3-5458221165f4" testId="c53ff7be-2a41-65fd-d0bd-b86d695d1b17" testName="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenValidationDiffHashMismatch_ThrowsDeterministicError" computerName="RICARDO-PC" duration="00:00:00.0011130" startTime="2026-11-02T12:06:33.5922793-03:00" endTime="2026-11-02T12:06:33.5922794-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9e74fda7-d36e-42f7-bcd3-5458221165f4" />
+    <UnitTestResult executionId="fd1da796-c7bf-4994-9cb6-1f76641049f5" testId="4288fd3b-7c0f-f1f6-e1cd-f30eb575946f" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ArchiveAndAbortAsync_GivenLiveSessions_PersistArtifactsAndEmitDedicatedJournalEvents" computerName="RICARDO-PC" duration="00:00:00.2145564" startTime="2026-11-02T12:06:34.6809433-03:00" endTime="2026-11-02T12:06:34.6809435-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fd1da796-c7bf-4994-9cb6-1f76641049f5" />
+    <UnitTestResult executionId="1a4f034a-e975-4963-bd8c-9c6a22798c86" testId="e3804bf9-017a-3644-9221-489c111b8858" testName="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenWorkingDirectoryOutsideSessionWorktree_ExpectedPolicyDeniesPathBoundaryViolation" computerName="RICARDO-PC" duration="00:00:00.0007336" startTime="2026-11-02T12:06:34.0202042-03:00" endTime="2026-11-02T12:06:34.0202043-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1a4f034a-e975-4963-bd8c-9c6a22798c86" />
+    <UnitTestResult executionId="1aa00527-5e66-42da-b8bf-ec267276e3fc" testId="aac75c6d-8243-67be-a47f-f9a813d46251" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.AddWorkflow_GivenMapThenThenValidateStages_ExpectedCompiledDescriptorsRetainStageContractNames" computerName="RICARDO-PC" duration="00:00:00.0024947" startTime="2026-11-02T12:06:35.2901650-03:00" endTime="2026-11-02T12:06:35.2901651-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1aa00527-5e66-42da-b8bf-ec267276e3fc" />
+    <UnitTestResult executionId="751e4c91-6cc0-4f98-965c-981af712a366" testId="63175a89-6cc7-8ebc-a7ba-28f5a1e21dfe" testName="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenChatCompletionRequest_ExpectedMappedHttpRequestContainsModelMessagesAndDeterministicHeaders" computerName="RICARDO-PC" duration="00:00:00.0026345" startTime="2026-11-02T12:06:33.9384467-03:00" endTime="2026-11-02T12:06:33.9384469-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="751e4c91-6cc0-4f98-965c-981af712a366" />
+    <UnitTestResult executionId="1ac57628-7a01-4e02-a099-adebf874b1f5" testId="ceac6ead-44fa-366e-d6cb-8d03eb25b18a" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.MergeAsync_GivenApprovedCurrentSession_AppliesMergeAndEmitsMergeSucceededEventWithoutShellDrivenStateHop" computerName="RICARDO-PC" duration="00:00:00.1369942" startTime="2026-11-02T12:06:34.8182026-03:00" endTime="2026-11-02T12:06:34.8182027-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1ac57628-7a01-4e02-a099-adebf874b1f5" />
+    <UnitTestResult executionId="bfe78f6f-f191-41c4-8bf7-030b414a9558" testId="d052355c-9f3f-b194-a7cf-14202281dff2" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent" computerName="RICARDO-PC" duration="00:00:00.0773834" startTime="2026-11-02T12:06:34.1516784-03:00" endTime="2026-11-02T12:06:34.1516785-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bfe78f6f-f191-41c4-8bf7-030b414a9558">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\e0c8f9faab61472bb3ee8275f1fdf497\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 398&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1570ebd5-96fa-4778-95b5-c448f7d6bd44" testId="8807d18c-4ec0-e5cf-561a-6a6e303f5304" testName="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenValidInputs_BindsTokenToSessionDiffTargetWorkflowAndValidationReport" computerName="RICARDO-PC" duration="00:00:00.0290402" startTime="2026-11-02T12:06:33.5901378-03:00" endTime="2026-11-02T12:06:33.5901379-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1570ebd5-96fa-4778-95b5-c448f7d6bd44" />
+    <UnitTestResult executionId="eb173e6f-3b9f-4418-9c86-c4a449f1f2a7" testId="b73c7e6b-7bcc-0bf4-afac-aa4f2c7be448" testName="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation" computerName="RICARDO-PC" duration="00:00:00.4386776" startTime="2026-11-02T12:06:33.9210824-03:00" endTime="2026-11-02T12:06:33.9210824-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eb173e6f-3b9f-4418-9c86-c4a449f1f2a7">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: 1&#xD;
+Actual:   0</Message>
+          <StackTrace>   at Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\DeepSeekModelProviderTests.cs:line 216&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="241958c7-b8f5-4b21-93fe-d7b994d98635" testId="eed71636-0bd1-e028-0276-4ee8ed46281c" testName="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenInvalidTransition_TransitionRejectedWithExpectedNextStateMessage" computerName="RICARDO-PC" duration="00:00:00.0890620" startTime="2026-11-02T12:06:34.0967683-03:00" endTime="2026-11-02T12:06:34.0967685-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="241958c7-b8f5-4b21-93fe-d7b994d98635">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\50585b419acf4694aa44c1de39000a3d\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenInvalidTransition_TransitionRejectedWithExpectedNextStateMessage() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\RuntimeReadmeLifecycleContractsTests.cs:line 110&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="024ae76a-45b2-4be6-8717-03544d8366b2" testId="c5211eea-17dd-c186-aaa3-adc44f6652d9" testName="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.ValidateAsync_GivenConfiguredCommandResults_PersistsOrderedCommandRollupWithEvidenceSummaries" computerName="RICARDO-PC" duration="00:00:00.1074461" startTime="2026-11-02T12:06:34.8139904-03:00" endTime="2026-11-02T12:06:34.8139906-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="024ae76a-45b2-4be6-8717-03544d8366b2" />
+    <UnitTestResult executionId="87485a2e-04c6-466f-9c36-6df450c55f77" testId="cbdfbd89-1109-16d9-6bb7-ce3bcb4c5e32" testName="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.HostLifecycle_GivenRepeatedValidationRuns_ExpectedStateTransitionsRemainDeterministicAndIsolated" computerName="RICARDO-PC" duration="00:00:00.2402885" startTime="2026-11-02T12:06:35.0545796-03:00" endTime="2026-11-02T12:06:35.0545799-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="87485a2e-04c6-466f-9c36-6df450c55f77" />
+    <UnitTestResult executionId="04575b8e-bad4-4506-b1ba-7d3a1bb24541" testId="60804167-e086-22f8-072e-fce5c3c99526" testName="Wip.Runtime.Tests.Runtime.PlanOnlyAgentTests.AgentContext_GivenRuntimeInvocation_ProvidesSessionWorktreeToolsValidatorsAndPolicyContext" computerName="RICARDO-PC" duration="00:00:00.4788869" startTime="2026-11-02T12:06:33.9632923-03:00" endTime="2026-11-02T12:06:33.9632924-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="04575b8e-bad4-4506-b1ba-7d3a1bb24541" />
+    <UnitTestResult executionId="09f9493c-ba9a-4440-afe0-f3eb89451e0c" testId="af5edd25-c4ff-501f-61a2-2641e6e8af92" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact" computerName="RICARDO-PC" duration="00:00:00.0827318" startTime="2026-11-02T12:06:36.3430364-03:00" endTime="2026-11-02T12:06:36.3430366-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="09f9493c-ba9a-4440-afe0-f3eb89451e0c">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\8c4efd89c0114f7faa7f383e2aebd80a\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 882&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e53ff6c1-9083-45f3-b3f8-d927e89c213a" testId="98bdde13-7090-f5d9-d141-f249428e110f" testName="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests.ReviewAsync_GivenValidationDiffHashMissing_MarksReviewAsStaleDueToUnavailableValidationEvidence" computerName="RICARDO-PC" duration="00:00:00.1159553" startTime="2026-11-02T12:06:33.6052523-03:00" endTime="2026-11-02T12:06:33.6052524-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e53ff6c1-9083-45f3-b3f8-d927e89c213a" />
+    <UnitTestResult executionId="b32d851a-e866-4b76-ba1c-26d8dd409f22" testId="3c115a44-4618-990f-addf-528f83aebafa" testName="Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenRegisteredToolStage_ExpectedInvokeAsyncDispatchesWithTypedRequestResult" computerName="RICARDO-PC" duration="00:00:00.4335630" startTime="2026-11-02T12:06:33.9150063-03:00" endTime="2026-11-02T12:06:33.9150064-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b32d851a-e866-4b76-ba1c-26d8dd409f22" />
+    <UnitTestResult executionId="3bf36e6f-a2fd-4852-acf0-a396c08a0880" testId="2476f744-387a-27df-15e2-09bef7cefeee" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.PlanAsync_GivenStartedSession_ProducesAgentPlanArtifactEmitsPlanEventAndTransitionsSessionToEditing" computerName="RICARDO-PC" duration="00:00:00.1038611" startTime="2026-11-02T12:06:36.8988506-03:00" endTime="2026-11-02T12:06:36.8988509-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3bf36e6f-a2fd-4852-acf0-a396c08a0880" />
+    <UnitTestResult executionId="b7982b46-a1d4-46d6-b09b-2ef2590c0062" testId="0aac6406-27c3-394a-8b23-59140568f788" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand" computerName="RICARDO-PC" duration="00:00:00.0832587" startTime="2026-11-02T12:06:36.6772676-03:00" endTime="2026-11-02T12:06:36.6772678-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b7982b46-a1d4-46d6-b09b-2ef2590c0062">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\e2ae1bd475c14d4e8d24b6b9b500113b\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 909&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="39fcf0cd-5c33-42e8-a7bb-4ab525d3919b" testId="9bf5215c-3324-3d21-5378-d5d725976393" testName="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests.TypedLinearWorkflowBuilder_GivenFluentLinearPath_CompilesExpectedStageAndMapContracts" computerName="RICARDO-PC" duration="00:00:00.0121897" startTime="2026-11-02T12:06:33.6080712-03:00" endTime="2026-11-02T12:06:33.6080713-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="39fcf0cd-5c33-42e8-a7bb-4ab525d3919b" />
+    <UnitTestResult executionId="f71ce3a9-0db4-4732-9a71-c317adf6b1fb" testId="3d909460-5795-eb23-2240-6d88a92f3237" testName="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenAttachWithoutInMemorySession_PersistedSessionStateRestoresSuccessfully" computerName="RICARDO-PC" duration="00:00:00.1049761" startTime="2026-11-02T12:06:34.2016984-03:00" endTime="2026-11-02T12:06:34.2016985-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f71ce3a9-0db4-4732-9a71-c317adf6b1fb" />
+    <UnitTestResult executionId="7cfe7a7a-fcb5-4c5c-b08f-be8f29b0b75e" testId="104c5a6a-647f-9c51-9bb2-ed931f0328dd" testName="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenReviewDiffHashMismatch_ThrowsDeterministicError" computerName="RICARDO-PC" duration="00:00:00.0775263" startTime="2026-11-02T12:06:33.5697072-03:00" endTime="2026-11-02T12:06:33.5697073-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7cfe7a7a-fcb5-4c5c-b08f-be8f29b0b75e" />
+    <UnitTestResult executionId="8e936025-78b5-41f6-bdd0-d46517f313fc" testId="09cb9fd5-f169-e548-84ed-4c0a80d813bb" testName="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenSuccessfulResponse_ExpectedTypedCompletionPayloadAndUsageSemantics" computerName="RICARDO-PC" duration="00:00:00.0014008" startTime="2026-11-02T12:06:33.9398381-03:00" endTime="2026-11-02T12:06:33.9398382-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8e936025-78b5-41f6-bdd0-d46517f313fc" />
+    <UnitTestResult executionId="b9f13912-76da-4ec4-9357-4b853ba61153" testId="72217dc7-d6e6-6ef2-875e-807cc0643c6b" testName="Wip.Runtime.Tests.Runtime.TargetBranchDriftRecoveryContractTests.Current_GivenTargetBranchDrift_ReturnsRecoveryStepsAndObservableSessionStates" computerName="RICARDO-PC" duration="00:00:00.1293776" startTime="2026-11-02T12:06:33.6108763-03:00" endTime="2026-11-02T12:06:33.6108764-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b9f13912-76da-4ec4-9357-4b853ba61153" />
+    <UnitTestResult executionId="fa8aa2af-3b82-4c3d-bccd-efffe2798068" testId="a001d683-d8dd-631f-9a0a-68e732e18a2b" testName="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.ValidateAsync_GivenRuntimeValidationAndReattach_PersistsReplayableEvidenceAndRestoresCorrelationContinuity" computerName="RICARDO-PC" duration="00:00:00.1864383" startTime="2026-11-02T12:06:34.7062387-03:00" endTime="2026-11-02T12:06:34.7062389-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fa8aa2af-3b82-4c3d-bccd-efffe2798068" />
+    <UnitTestResult executionId="85dda16c-c129-46a5-a706-acef51639182" testId="60d38c67-a36b-98c2-85bb-9937b193aa47" testName="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests.AddWipRuntime_GivenExternalCapabilityRegistration_ResolvesCapabilityWithoutShellHostComposition" computerName="RICARDO-PC" duration="00:00:00.1353939" startTime="2026-11-02T12:06:33.6167078-03:00" endTime="2026-11-02T12:06:33.6167081-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="85dda16c-c129-46a5-a706-acef51639182" />
+    <UnitTestResult executionId="fc9877d4-cd5e-49ec-ad2e-36cd9577a08e" testId="8c94a08d-d56c-cd66-53a3-aabc31845ec7" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement" computerName="RICARDO-PC" duration="00:00:00.0840317" startTime="2026-11-02T12:06:35.2879426-03:00" endTime="2026-11-02T12:06:35.2879427-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fc9877d4-cd5e-49ec-ad2e-36cd9577a08e">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\0862ec26786f41d19105807f06badf17\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 848&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="8e44e679-54f9-4689-bffc-ed053e9b1ea0" testId="b6a927bd-89fc-4620-6582-a7c86b0c072c" testName="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests.ReviewAsync_GivenCurrentDiffAndValidation_WritesMarkdownReportWithDiffSummaryChangedFilesAndValidationStatus" computerName="RICARDO-PC" duration="00:00:00.0056188" startTime="2026-11-02T12:06:33.6064673-03:00" endTime="2026-11-02T12:06:33.6064674-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8e44e679-54f9-4689-bffc-ed053e9b1ea0" />
+    <UnitTestResult executionId="a7679591-971d-4eae-9b92-39ffe8a2c877" testId="763c49b9-1751-114c-b20f-c53a142b49c0" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage" computerName="RICARDO-PC" duration="00:00:00.0848908" startTime="2026-11-02T12:06:34.9037979-03:00" endTime="2026-11-02T12:06:34.9037981-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a7679591-971d-4eae-9b92-39ffe8a2c877">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\f199ef088f8b4727aa0a0bdaf8671ee5\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1147&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9aa9808f-ea38-412a-a666-00db40eb2bc0" testId="4f72fc60-53f4-65c6-8b02-71245f4ab4c6" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.SessionAttach_GivenPersistedSnapshot_RestoresGovernanceStatusArtifactDirectoryAndPromptContext" computerName="RICARDO-PC" duration="00:00:00.2771370" startTime="2026-11-02T12:06:36.2595933-03:00" endTime="2026-11-02T12:06:36.2595936-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9aa9808f-ea38-412a-a666-00db40eb2bc0" />
+    <UnitTestResult executionId="f2bdb6c4-0bdb-4098-9744-343b1a3b9ccb" testId="3d8615f4-409c-0511-f28e-3d8c74583d03" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RuntimeOperations_GivenEditingSession_PersistArtifactsEmitExplicitEventsAndAdvanceWithoutDirectTransitionCalls" computerName="RICARDO-PC" duration="00:00:00.1262726" startTime="2026-11-02T12:06:34.2766362-03:00" endTime="2026-11-02T12:06:34.2766364-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f2bdb6c4-0bdb-4098-9744-343b1a3b9ccb" />
+    <UnitTestResult executionId="ff7cdad0-d9fb-4e81-9224-9f28f6271742" testId="ec6658c4-adad-4db2-8128-2ad686f0a004" testName="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenAllowedCommandInsideWorktree_ExpectedCommandExecutesAndProducesExecutionLogArtifact" computerName="RICARDO-PC" duration="00:00:00.0831898" startTime="2026-11-02T12:06:34.0186089-03:00" endTime="2026-11-02T12:06:34.0186090-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ff7cdad0-d9fb-4e81-9224-9f28f6271742" />
+    <UnitTestResult executionId="ef3fcfc0-e6aa-4e2a-b044-61b021e7b030" testId="47427752-5a27-6659-8d59-e2d588ec438a" testName="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenValidationDidNotPass_ThrowsDeterministicError" computerName="RICARDO-PC" duration="00:00:00.0006768" startTime="2026-11-02T12:06:33.5913071-03:00" endTime="2026-11-02T12:06:33.5913080-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ef3fcfc0-e6aa-4e2a-b044-61b021e7b030" />
+    <UnitTestResult executionId="e0a52bbf-a63d-4390-aee3-5b729f56d67b" testId="7131ae16-8ea9-3f0a-c5ff-236a1f717ee9" testName="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenDangerousCommandPattern_ExpectedPolicyDeniesBeforeExecutionAndLogsReason" computerName="RICARDO-PC" duration="00:00:00.4453187" startTime="2026-11-02T12:06:33.9271931-03:00" endTime="2026-11-02T12:06:33.9271932-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e0a52bbf-a63d-4390-aee3-5b729f56d67b" />
+    <UnitTestResult executionId="22cbdc00-e11f-4ca3-99b4-98cce7cd4ade" testId="0c460d82-f028-e445-1eb6-21f6f5c531c2" testName="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests.ReviewAsync_GivenValidationDiffHashMismatch_MarksReviewAsStaleWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.0007672" startTime="2026-11-02T12:06:33.6075658-03:00" endTime="2026-11-02T12:06:33.6075659-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="22cbdc00-e11f-4ca3-99b4-98cce7cd4ade" />
+    <UnitTestResult executionId="2b30a0ad-8072-421f-8fa1-3890aa81f56d" testId="95056efe-38dd-cb12-e080-1dbbae03ea65" testName="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionCommands_GivenNoActiveSession_RenderGuidanceForEntireSessionCommandSurface" computerName="RICARDO-PC" duration="00:00:00.0065312" startTime="2026-11-02T12:06:34.4570844-03:00" endTime="2026-11-02T12:06:34.4570845-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2b30a0ad-8072-421f-8fa1-3890aa81f56d" />
+    <UnitTestResult executionId="f81c1afd-450e-4033-b8f4-70201761eb00" testId="c620fa10-7c3a-05ef-d6f1-cbe639e0b769" testName="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionStart_GivenQuotedTask_StartsWithoutLegacyRepositoryArgumentsAndPersistsRuntimeMetadata" computerName="RICARDO-PC" duration="00:00:00.7003381" startTime="2026-11-02T12:06:34.1820698-03:00" endTime="2026-11-02T12:06:34.1820702-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f81c1afd-450e-4033-b8f4-70201761eb00" />
+    <UnitTestResult executionId="9e93372d-905d-495f-a99f-70a9d2400af0" testId="0a95db98-e681-dad4-b4d9-5fca49391443" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.SessionStateJson_GivenSessionLifecycle_StoresApprovalValidationAndArchiveStatusWithoutLosingTaskContext" computerName="RICARDO-PC" duration="00:00:00.2147251" startTime="2026-11-02T12:06:35.1184869-03:00" endTime="2026-11-02T12:06:35.1184875-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9e93372d-905d-495f-a99f-70a9d2400af0" />
+    <UnitTestResult executionId="57613946-db81-4fff-b6fb-046722d3006f" testId="19fb8706-e4cf-fefd-ee23-cdd766e6c026" testName="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenStartSession_SnapshotPersistedAndSessionStartedEventPublished" computerName="RICARDO-PC" duration="00:00:00.1124368" startTime="2026-11-02T12:06:34.0069736-03:00" endTime="2026-11-02T12:06:34.0069740-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="57613946-db81-4fff-b6fb-046722d3006f" />
+    <UnitTestResult executionId="987337f8-d542-4a62-a034-50d2c086c379" testId="dc1b80bb-317f-7048-5779-247105ab1123" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.SessionStart_GivenTaskAndWorkflowSelection_PersistsTaskDescriptionWorkflowAndRepositoryBaselines" computerName="RICARDO-PC" duration="00:00:00.2483272" startTime="2026-11-02T12:06:35.5388051-03:00" endTime="2026-11-02T12:06:35.5388054-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="987337f8-d542-4a62-a034-50d2c086c379" />
+    <UnitTestResult executionId="aa5e198c-d630-4afd-9c9f-ebe19fe45f0d" testId="371a8dd3-5c37-3ed1-a88f-b438c5a042f5" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_PersistsSessionStateJsonAtDeterministicPath" computerName="RICARDO-PC" duration="00:00:00.1059522" startTime="2026-11-02T12:06:34.3828932-03:00" endTime="2026-11-02T12:06:34.3828935-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aa5e198c-d630-4afd-9c9f-ebe19fe45f0d" />
+    <UnitTestResult executionId="35d8bdd8-136c-468d-a751-97063d169ff1" testId="63964d34-0922-be8b-8ff9-61d2a2bd3814" testName="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenGenericShellMergeCommand_ExpectedPolicyDeniesBeforeExecutionAndLogsPrivilegedReason" computerName="RICARDO-PC" duration="00:00:00.0068198" startTime="2026-11-02T12:06:33.9366150-03:00" endTime="2026-11-02T12:06:33.9366151-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="35d8bdd8-136c-468d-a751-97063d169ff1" />
+    <UnitTestResult executionId="c61bc184-a51a-4d6c-9838-2b07fe65e68b" testId="a1307f85-6915-a059-415e-62accdf2b986" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts" computerName="RICARDO-PC" duration="00:00:00.0830611" startTime="2026-11-02T12:06:36.5099360-03:00" endTime="2026-11-02T12:06:36.5099365-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c61bc184-a51a-4d6c-9838-2b07fe65e68b">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\9f865f0f66734bbfb614cd9deaa35c0a\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 807&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="cd42e455-5809-47f8-bc4f-32bb7ae835d8" testId="06aa28dc-cada-a257-a3e8-2a63f50c5187" testName="Wip.Runtime.Tests.Runtime.PlanOnlyAgentTests.PlanOnlyAgent_ExecuteAsync_GivenTaskAndRepositoryContext_WritesAgentPlanArtifactWithActionableSteps" computerName="RICARDO-PC" duration="00:00:00.0953134" startTime="2026-11-02T12:06:34.0607756-03:00" endTime="2026-11-02T12:06:34.0607757-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cd42e455-5809-47f8-bc4f-32bb7ae835d8" />
+    <UnitTestResult executionId="40e219fd-570b-4043-b65f-9f8071caf4cc" testId="6bc5d86d-da3f-e649-8aa9-1e6c585b7f9b" testName="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests.CompileLinear_GivenWorkflowRegistration_UsesTypedFluentPathWithNoObjectContracts" computerName="RICARDO-PC" duration="00:00:00.0339062" startTime="2026-11-02T12:06:33.6039410-03:00" endTime="2026-11-02T12:06:33.6039411-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="40e219fd-570b-4043-b65f-9f8071caf4cc" />
+    <UnitTestResult executionId="bd05f090-b118-4eb0-aaf0-579f2b344f25" testId="2e852234-e268-78bc-b9ce-282c0455b068" testName="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenTransientHttpFailure_ExpectedBoundedRetryThenDeterministicFailureContract" computerName="RICARDO-PC" duration="00:00:00.0049413" startTime="2026-11-02T12:06:33.9257013-03:00" endTime="2026-11-02T12:06:33.9257013-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd05f090-b118-4eb0-aaf0-579f2b344f25" />
+    <UnitTestResult executionId="c847e889-2ecd-40b5-a13f-44b63cadf8d7" testId="435edbfb-08cb-775a-bb25-a6d43e51be70" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent" computerName="RICARDO-PC" duration="00:00:00.0835435" startTime="2026-11-02T12:06:37.2161270-03:00" endTime="2026-11-02T12:06:37.2161272-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c847e889-2ecd-40b5-a13f-44b63cadf8d7">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\197ca6601a324d89ab7af13d4a82a856\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 36&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="33c353fb-94fc-4daf-b023-4179c800b3f7" testId="c09f1024-82ae-0531-7133-19f8e0e7b4ee" testName="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.ValidateAsync_GivenRuntimeDotNetValidationRequest_PersistsAuthoritativeBuildAndTestEvidence" computerName="RICARDO-PC" duration="00:00:00.6685313" startTime="2026-11-02T12:06:34.1500368-03:00" endTime="2026-11-02T12:06:34.1500370-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="33c353fb-94fc-4daf-b023-4179c800b3f7" />
+    <UnitTestResult executionId="42216fe2-faad-49a3-82da-48b7f194910e" testId="25142d81-0928-962a-8599-75336bd27ab6" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenCommandSequence_RecordsExplicitStateChangesAndSessionEvents" computerName="RICARDO-PC" duration="00:00:00.1207951" startTime="2026-11-02T12:06:37.0199198-03:00" endTime="2026-11-02T12:06:37.0199204-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="42216fe2-faad-49a3-82da-48b7f194910e" />
+    <UnitTestResult executionId="9acbad96-4905-4ffa-8f5d-f2e151d5fd81" testId="51d1b2e2-8dd3-25df-6a56-9c60c3c5e29c" testName="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionAttach_GivenPersistedSessionId_AttachesByIdWithoutLegacyRepositoryArgument" computerName="RICARDO-PC" duration="00:00:00.2678633" startTime="2026-11-02T12:06:34.4502598-03:00" endTime="2026-11-02T12:06:34.4502599-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9acbad96-4905-4ffa-8f5d-f2e151d5fd81" />
+    <UnitTestResult executionId="0ad3cde8-b3e5-4dae-80e1-674543a5cb71" testId="5920d2b2-4c7c-c713-092b-ec61cdc6cdcc" testName="Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenMissingCapability_ExpectedDeterministicFailureBeforeStateMutation" computerName="RICARDO-PC" duration="00:00:00.0888875" startTime="2026-11-02T12:06:34.0046637-03:00" endTime="2026-11-02T12:06:34.0046639-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0ad3cde8-b3e5-4dae-80e1-674543a5cb71">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\569766cb4ee04e498c78a6496ff02b4b\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenMissingCapability_ExpectedDeterministicFailureBeforeStateMutation() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WorkflowStageCapabilityDispatcherTests.cs:line 74&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="73c6866c-235e-4674-8273-89d55fffcdee" testId="8404a00e-9b34-4d37-8abb-ad2da6044e73" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection" computerName="RICARDO-PC" duration="00:00:00.0844139" startTime="2026-11-02T12:06:35.2035949-03:00" endTime="2026-11-02T12:06:35.2035951-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="73c6866c-235e-4674-8273-89d55fffcdee">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\ebd7ac3de3774b2393cd6c00d49a5451\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1452&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7fdd0840-456b-4ab9-9109-879f76532516" testId="21285bab-aa70-ace5-5ba7-88a5205a75ce" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder" computerName="RICARDO-PC" duration="00:00:00.0836259" startTime="2026-11-02T12:06:36.5936923-03:00" endTime="2026-11-02T12:06:36.5936925-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7fdd0840-456b-4ab9-9109-879f76532516">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\962f7bb6c31d4d2a8a0c80e2dc53ccf0\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1181&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9f12430b-9e2b-4df4-ba7f-84bb5d9e539b" testId="cda7229b-0a19-25cd-ad84-8f98a4543d99" testName="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenReviewAlreadyMarkedStale_ThrowsDeterministicError" computerName="RICARDO-PC" duration="00:00:00.0009553" startTime="2026-11-02T12:06:33.6033067-03:00" endTime="2026-11-02T12:06:33.6033067-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9f12430b-9e2b-4df4-ba7f-84bb5d9e539b" />
+    <UnitTestResult executionId="fb502c59-b59f-4bbd-8a05-19c071043020" testId="66eb4840-0596-f495-03bb-3bd494bf5f82" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenConcurrentCalls_AppliesSingleProcessAuthorityWithoutOverlappingSaves" computerName="RICARDO-PC" duration="00:00:00.1678043" startTime="2026-11-02T12:06:35.7072236-03:00" endTime="2026-11-02T12:06:35.7072238-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fb502c59-b59f-4bbd-8a05-19c071043020">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\448f856d2bcb4df29d98227b5ef75604\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenConcurrentCalls_AppliesSingleProcessAuthorityWithoutOverlappingSaves() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 433&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="89735f06-c4b4-4b05-881e-4142758e1e2c" testId="ae016f4a-9290-3ccc-8149-b9268de3f391" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId" computerName="RICARDO-PC" duration="00:00:00.0864074" startTime="2026-11-02T12:06:35.9824693-03:00" endTime="2026-11-02T12:06:35.9824694-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="89735f06-c4b4-4b05-881e-4142758e1e2c">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\0b78892feb424a9596034fd5e87a9afa\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1103&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="ee02ba8f-e4af-4678-b4b0-60ebd55510e2" testId="edd596e6-bb3d-249e-334f-7fef290d5b35" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ValidateAsync_GivenSessionWorktree_ExecutesConfiguredValidationCommandsPersistsValidationReportAndMarksSessionValidating" computerName="RICARDO-PC" duration="00:00:00.5906791" startTime="2026-11-02T12:06:34.0723310-03:00" endTime="2026-11-02T12:06:34.0723313-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ee02ba8f-e4af-4678-b4b0-60ebd55510e2" />
+    <UnitTestResult executionId="e6279d82-1320-477c-bbff-622465fd252d" testId="947844d2-de6b-da33-2ef3-04fe8ff9c88a" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ValidateAsync_GivenPassingBuildAndTest_ExpectedValidationStatusAndArtifactUpdatedDeterministically" computerName="RICARDO-PC" duration="00:00:00.1039012" startTime="2026-11-02T12:06:35.8955976-03:00" endTime="2026-11-02T12:06:35.8955978-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e6279d82-1320-477c-bbff-622465fd252d" />
+    <UnitTestResult executionId="c3a76175-d463-45a4-9b03-54406c9512ad" testId="b67d74ed-41be-68de-d9a6-68addf91f12a" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts" computerName="RICARDO-PC" duration="00:00:00.0829286" startTime="2026-11-02T12:06:36.4263040-03:00" endTime="2026-11-02T12:06:36.4263045-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c3a76175-d463-45a4-9b03-54406c9512ad">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\9684602e57464a39bdb6c38ac2c8e8c9\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1419&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="69094d91-2e2c-4f29-bb59-dfc090bcdebe" testId="a52accb4-852c-844a-6106-9cd6c809f9af" testName="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.ComputeBindingHash_GivenDifferentBoundCommit_ReturnsDifferentHash" computerName="RICARDO-PC" duration="00:00:00.0016916" startTime="2026-11-02T12:06:33.6016852-03:00" endTime="2026-11-02T12:06:33.6016870-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="69094d91-2e2c-4f29-bb59-dfc090bcdebe" />
+    <UnitTestResult executionId="74f4c6ac-5932-4e09-a6ee-fbdcefb24898" testId="ffb5ee7f-456d-6685-ba97-aea27f495054" testName="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests.AddWipRuntime_GivenEmptyServiceCollection_RegistersRuntimeOrchestratorAndDefaultDependencies" computerName="RICARDO-PC" duration="00:00:00.0013526" startTime="2026-11-02T12:06:33.6201757-03:00" endTime="2026-11-02T12:06:33.6201760-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="74f4c6ac-5932-4e09-a6ee-fbdcefb24898" />
+    <UnitTestResult executionId="838e55e1-3f81-4345-a174-fda8a342e416" testId="d3ce1f95-3163-af46-7167-67bde5739f44" testName="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.HostLifecycle_GivenValidationPasses_ExpectedReadinessTransitionsToHealthyWithExecutionEvidence" computerName="RICARDO-PC" duration="00:00:00.1808285" startTime="2026-11-02T12:06:34.3311988-03:00" endTime="2026-11-02T12:06:34.3311991-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="838e55e1-3f81-4345-a174-fda8a342e416" />
+    <UnitTestResult executionId="3f5b90b0-5ca8-4f92-87f1-6ced376070f7" testId="e4ddd5ec-b2e9-a9f9-e943-cc67cf068b3d" testName="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.HostLifecycle_GivenValidationFails_ExpectedReadinessRemainsBlockedWithDeterministicFailureState" computerName="RICARDO-PC" duration="00:00:00.1879724" startTime="2026-11-02T12:06:34.5194752-03:00" endTime="2026-11-02T12:06:34.5194755-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3f5b90b0-5ca8-4f92-87f1-6ced376070f7" />
+    <UnitTestResult executionId="0f5bf18a-e009-4419-bdc6-3fe0b09b9061" testId="3f2dd407-4197-c844-16fc-e17137880fb7" testName="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract" computerName="RICARDO-PC" duration="00:00:00.0828987" startTime="2026-11-02T12:06:34.4664132-03:00" endTime="2026-11-02T12:06:34.4664134-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0f5bf18a-e009-4419-bdc6-3fe0b09b9061">
+      <Output>
+        <ErrorInfo>
+          <Message>System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\611d7c1c697046bf92db103230a18c74\artifacts' is denied.</Message>
+          <StackTrace>   at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+   at System.IO.Directory.CreateDirectory(String path)&#xD;
+   at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken) in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs:line 114&#xD;
+   at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract() in C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs:line 1306&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="f68d4794-2139-4bf0-9364-04114740d8cd" testId="b5a3b41b-4dcc-332c-7f07-325c9e62c34a" testName="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenThinkingMode_ExpectedMapsThinkingPayload" computerName="RICARDO-PC" duration="00:00:00.0087721" startTime="2026-11-02T12:06:33.9345581-03:00" endTime="2026-11-02T12:06:33.9345583-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f68d4794-2139-4bf0-9364-04114740d8cd" />
+    <UnitTestResult executionId="0abc90b8-03d6-4cb2-8acb-1e54f5fa6990" testId="291c20ac-13c2-7fa6-ee18-470a2fe74ab3" testName="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests.AddWipRuntime_GivenReplaceExistingDuplicatePolicy_ReplacesDuplicateCapabilityDeterministically" computerName="RICARDO-PC" duration="00:00:00.0018892" startTime="2026-11-02T12:06:33.6191173-03:00" endTime="2026-11-02T12:06:33.6191174-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0abc90b8-03d6-4cb2-8acb-1e54f5fa6990" />
+    <UnitTestResult executionId="ffe42a69-7aef-40ad-b8d4-28875f9a5289" testId="0e63d37a-596d-ca50-e5f1-f34ed62f6fa9" testName="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionCommands_GivenLegacyRepositoryAndWorktreeArguments_RejectOldShellContractWithoutPersistingSessions" computerName="RICARDO-PC" duration="00:00:00.0045941" startTime="2026-11-02T12:06:34.4619810-03:00" endTime="2026-11-02T12:06:34.4619811-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ffe42a69-7aef-40ad-b8d4-28875f9a5289" />
+    <UnitTestResult executionId="05839f32-32e7-4487-9366-3d78b6cbd2c5" testId="33499f82-6dfe-87b7-9f33-8bc46d0c3309" testName="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenWorkflowExecutionSection_ExpectedRunSemanticsMatchShellHelpAndOrchestratorBehavior" computerName="RICARDO-PC" duration="00:00:00.0006387" startTime="2026-11-02T12:06:34.2032242-03:00" endTime="2026-11-02T12:06:34.2032243-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="05839f32-32e7-4487-9366-3d78b6cbd2c5" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="a1307f85-6915-a059-415e-62accdf2b986">
+      <Execution id="c61bc184-a51a-4d6c-9838-2b07fe65e68b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenConcurrentCalls_AppliesSingleProcessAuthorityWithoutOverlappingSaves" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="66eb4840-0596-f495-03bb-3bd494bf5f82">
+      <Execution id="fb502c59-b59f-4bbd-8a05-19c071043020" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="StartSessionAsync_GivenConcurrentCalls_AppliesSingleProcessAuthorityWithoutOverlappingSaves" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.PlanOnlyAgentTests.PlanOnlyAgent_ExecuteAsync_GivenTaskAndRepositoryContext_WritesAgentPlanArtifactWithActionableSteps" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="06aa28dc-cada-a257-a3e8-2a63f50c5187">
+      <Execution id="cd42e455-5809-47f8-bc4f-32bb7ae835d8" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.PlanOnlyAgentTests" name="PlanOnlyAgent_ExecuteAsync_GivenTaskAndRepositoryContext_WritesAgentPlanArtifactWithActionableSteps" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="f7ce8f1d-efd6-b347-4d80-436e0d4871c6">
+      <Execution id="698f67be-8321-4a47-aafc-283899d74e91" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_PersistsSessionStateJsonAtDeterministicPath" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="371a8dd3-5c37-3ed1-a88f-b438c5a042f5">
+      <Execution id="aa5e198c-d630-4afd-9c9f-ebe19fe45f0d" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="StartSessionAsync_GivenValidRepository_PersistsSessionStateJsonAtDeterministicPath" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests.ReviewAsync_GivenCurrentDiffAndValidation_WritesMarkdownReportWithDiffSummaryChangedFilesAndValidationStatus" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="b6a927bd-89fc-4620-6582-a7c86b0c072c">
+      <Execution id="8e44e679-54f9-4689-bffc-ed053e9b1ea0" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests" name="ReviewAsync_GivenCurrentDiffAndValidation_WritesMarkdownReportWithDiffSummaryChangedFilesAndValidationStatus" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenValidInputs_BindsTokenToSessionDiffTargetWorkflowAndValidationReport" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="8807d18c-4ec0-e5cf-561a-6a6e303f5304">
+      <Execution id="1570ebd5-96fa-4778-95b5-c448f7d6bd44" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests" name="Create_GivenValidInputs_BindsTokenToSessionDiffTargetWorkflowAndValidationReport" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.SessionStart_GivenTaskAndWorkflowSelection_PersistsTaskDescriptionWorkflowAndRepositoryBaselines" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="dc1b80bb-317f-7048-5779-247105ab1123">
+      <Execution id="987337f8-d542-4a62-a034-50d2c086c379" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="SessionStart_GivenTaskAndWorkflowSelection_PersistsTaskDescriptionWorkflowAndRepositoryBaselines" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenStartSession_SnapshotPersistedAndSessionStartedEventPublished" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="19fb8706-e4cf-fefd-ee23-cdd766e6c026">
+      <Execution id="57613946-db81-4fff-b6fb-046722d3006f" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests" name="RuntimeReadme_GivenStartSession_SnapshotPersistedAndSessionStartedEventPublished" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="21285bab-aa70-ace5-5ba7-88a5205a75ce">
+      <Execution id="7fdd0840-456b-4ab9-9109-879f76532516" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="8c94a08d-d56c-cd66-53a3-aabc31845ec7">
+      <Execution id="fc9877d4-cd5e-49ec-ad2e-36cd9577a08e" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RuntimeOperations_GivenEditingSession_PersistArtifactsEmitExplicitEventsAndAdvanceWithoutDirectTransitionCalls" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="3d8615f4-409c-0511-f28e-3d8c74583d03">
+      <Execution id="f2bdb6c4-0bdb-4098-9744-343b1a3b9ccb" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RuntimeOperations_GivenEditingSession_PersistArtifactsEmitExplicitEventsAndAdvanceWithoutDirectTransitionCalls" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenSuccessfulResponse_ExpectedTypedCompletionPayloadAndUsageSemantics" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="09cb9fd5-f169-e548-84ed-4c0a80d813bb">
+      <Execution id="8e936025-78b5-41f6-bdd0-d46517f313fc" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests" name="DeepSeekProvider_GivenSuccessfulResponse_ExpectedTypedCompletionPayloadAndUsageSemantics" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenThinkingMode_ExpectedMapsThinkingPayload" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="b5a3b41b-4dcc-332c-7f07-325c9e62c34a">
+      <Execution id="f68d4794-2139-4bf0-9364-04114740d8cd" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests" name="DeepSeekProvider_GivenThinkingMode_ExpectedMapsThinkingPayload" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.TargetBranchDriftRecoveryContractTests.Current_GivenTargetBranchDrift_ReturnsRecoveryStepsAndObservableSessionStates" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="72217dc7-d6e6-6ef2-875e-807cc0643c6b">
+      <Execution id="b9f13912-76da-4ec4-9357-4b853ba61153" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.TargetBranchDriftRecoveryContractTests" name="Current_GivenTargetBranchDrift_ReturnsRecoveryStepsAndObservableSessionStates" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.CreateApprovalTokenAsync_GivenExplicitConfirmation_ExpectedApprovalStatusAndTokenArtifactAligned" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="49ee6821-54d1-bd6f-ec5e-b0ef9c722349">
+      <Execution id="62cce8e5-0705-4854-8381-3b1f40ef111e" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="CreateApprovalTokenAsync_GivenExplicitConfirmation_ExpectedApprovalStatusAndTokenArtifactAligned" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenCommandSequence_RecordsExplicitStateChangesAndSessionEvents" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="25142d81-0928-962a-8599-75336bd27ab6">
+      <Execution id="42216fe2-faad-49a3-82da-48b7f194910e" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="TransitionAsync_GivenCommandSequence_RecordsExplicitStateChangesAndSessionEvents" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenDangerousCommandPattern_ExpectedPolicyDeniesBeforeExecutionAndLogsReason" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="7131ae16-8ea9-3f0a-c5ff-236a1f717ee9">
+      <Execution id="e0a52bbf-a63d-4390-aee3-5b729f56d67b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests" name="InvokeAsync_GivenDangerousCommandPattern_ExpectedPolicyDeniesBeforeExecutionAndLogsReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ArchiveAndAbortAsync_GivenLiveSessions_PersistArtifactsAndEmitDedicatedJournalEvents" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="4288fd3b-7c0f-f1f6-e1cd-f30eb575946f">
+      <Execution id="fd1da796-c7bf-4994-9cb6-1f76641049f5" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="ArchiveAndAbortAsync_GivenLiveSessions_PersistArtifactsAndEmitDedicatedJournalEvents" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenAttachWithoutInMemorySession_PersistedSessionStateRestoresSuccessfully" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="3d909460-5795-eb23-2240-6d88a92f3237">
+      <Execution id="f71ce3a9-0db4-4732-9a71-c317adf6b1fb" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests" name="RuntimeReadme_GivenAttachWithoutInMemorySession_PersistedSessionStateRestoresSuccessfully" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionCommands_GivenLegacyRepositoryAndWorktreeArguments_RejectOldShellContractWithoutPersistingSessions" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="0e63d37a-596d-ca50-e5f1-f34ed62f6fa9">
+      <Execution id="ffe42a69-7aef-40ad-b8d4-28875f9a5289" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests" name="SessionCommands_GivenLegacyRepositoryAndWorktreeArguments_RejectOldShellContractWithoutPersistingSessions" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenGenericShellMergeCommand_ExpectedPolicyDeniesBeforeExecutionAndLogsPrivilegedReason" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="63964d34-0922-be8b-8ff9-61d2a2bd3814">
+      <Execution id="35d8bdd8-136c-468d-a751-97063d169ff1" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests" name="InvokeAsync_GivenGenericShellMergeCommand_ExpectedPolicyDeniesBeforeExecutionAndLogsPrivilegedReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenInvalidTransition_TransitionRejectedWithExpectedNextStateMessage" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="eed71636-0bd1-e028-0276-4ee8ed46281c">
+      <Execution id="241958c7-b8f5-4b21-93fe-d7b994d98635" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests" name="RuntimeReadme_GivenInvalidTransition_TransitionRejectedWithExpectedNextStateMessage" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenWorkingDirectoryOutsideSessionWorktree_ExpectedPolicyDeniesPathBoundaryViolation" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="e3804bf9-017a-3644-9221-489c111b8858">
+      <Execution id="1a4f034a-e975-4963-bd8c-9c6a22798c86" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests" name="InvokeAsync_GivenWorkingDirectoryOutsideSessionWorktree_ExpectedPolicyDeniesPathBoundaryViolation" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="0aac6406-27c3-394a-8b23-59140568f788">
+      <Execution id="b7982b46-a1d4-46d6-b09b-2ef2590c0062" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.PlanOnlyAgentTests.AgentContext_GivenRuntimeInvocation_ProvidesSessionWorktreeToolsValidatorsAndPolicyContext" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="60804167-e086-22f8-072e-fce5c3c99526">
+      <Execution id="04575b8e-bad4-4506-b1ba-7d3a1bb24541" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.PlanOnlyAgentTests" name="AgentContext_GivenRuntimeInvocation_ProvidesSessionWorktreeToolsValidatorsAndPolicyContext" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests.InvokeAsync_GivenAllowedCommandInsideWorktree_ExpectedCommandExecutesAndProducesExecutionLogArtifact" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="ec6658c4-adad-4db2-8128-2ad686f0a004">
+      <Execution id="ff7cdad0-d9fb-4e81-9224-9f28f6271742" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeToolGatewayTests" name="InvokeAsync_GivenAllowedCommandInsideWorktree_ExpectedCommandExecutesAndProducesExecutionLogArtifact" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="ae016f4a-9290-3ccc-8149-b9268de3f391">
+      <Execution id="89735f06-c4b4-4b05-881e-4142758e1e2c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.PlanAsync_GivenStartedSession_ProducesAgentPlanArtifactEmitsPlanEventAndTransitionsSessionToEditing" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="2476f744-387a-27df-15e2-09bef7cefeee">
+      <Execution id="3bf36e6f-a2fd-4852-acf0-a396c08a0880" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="PlanAsync_GivenStartedSession_ProducesAgentPlanArtifactEmitsPlanEventAndTransitionsSessionToEditing" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests.AddWipRuntime_GivenEmptyServiceCollection_RegistersRuntimeOrchestratorAndDefaultDependencies" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="ffb5ee7f-456d-6685-ba97-aea27f495054">
+      <Execution id="74f4c6ac-5932-4e09-a6ee-fbdcefb24898" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests" name="AddWipRuntime_GivenEmptyServiceCollection_RegistersRuntimeOrchestratorAndDefaultDependencies" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="b67d74ed-41be-68de-d9a6-68addf91f12a">
+      <Execution id="c3a76175-d463-45a4-9b03-54406c9512ad" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests.CompileLinear_GivenWorkflowRegistration_UsesTypedFluentPathWithNoObjectContracts" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="6bc5d86d-da3f-e649-8aa9-1e6c585b7f9b">
+      <Execution id="40e219fd-570b-4043-b65f-9f8071caf4cc" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests" name="CompileLinear_GivenWorkflowRegistration_UsesTypedFluentPathWithNoObjectContracts" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="435edbfb-08cb-775a-bb25-a6d43e51be70">
+      <Execution id="c847e889-2ecd-40b5-a13f-44b63cadf8d7" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.ValidateAsync_GivenConfiguredCommandResults_PersistsOrderedCommandRollupWithEvidenceSummaries" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="c5211eea-17dd-c186-aaa3-adc44f6652d9">
+      <Execution id="024ae76a-45b2-4be6-8717-03544d8366b2" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests" name="ValidateAsync_GivenConfiguredCommandResults_PersistsOrderedCommandRollupWithEvidenceSummaries" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="763c49b9-1751-114c-b20f-c53a142b49c0">
+      <Execution id="a7679591-971d-4eae-9b92-39ffe8a2c877" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.ComputeBindingHash_GivenDifferentBoundCommit_ReturnsDifferentHash" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="a52accb4-852c-844a-6106-9cd6c809f9af">
+      <Execution id="69094d91-2e2c-4f29-bb59-dfc090bcdebe" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests" name="ComputeBindingHash_GivenDifferentBoundCommit_ReturnsDifferentHash" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.SessionStateJson_GivenSessionLifecycle_StoresApprovalValidationAndArchiveStatusWithoutLosingTaskContext" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="0a95db98-e681-dad4-b4d9-5fca49391443">
+      <Execution id="9e93372d-905d-495f-a99f-70a9d2400af0" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="SessionStateJson_GivenSessionLifecycle_StoresApprovalValidationAndArchiveStatusWithoutLosingTaskContext" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="8404a00e-9b34-4d37-8abb-ad2da6044e73">
+      <Execution id="73c6866c-235e-4674-8273-89d55fffcdee" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests.ReviewAsync_GivenValidationDiffHashMissing_MarksReviewAsStaleDueToUnavailableValidationEvidence" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="98bdde13-7090-f5d9-d141-f249428e110f">
+      <Execution id="e53ff6c1-9083-45f3-b3f8-d927e89c213a" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests" name="ReviewAsync_GivenValidationDiffHashMissing_MarksReviewAsStaleDueToUnavailableValidationEvidence" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenWorkflowExecutionSection_ExpectedRunSemanticsMatchShellHelpAndOrchestratorBehavior" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="33499f82-6dfe-87b7-9f33-8bc46d0c3309">
+      <Execution id="05839f32-32e7-4487-9366-3d78b6cbd2c5" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests" name="RuntimeReadme_GivenWorkflowExecutionSection_ExpectedRunSemanticsMatchShellHelpAndOrchestratorBehavior" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="b73c7e6b-7bcc-0bf4-afac-aa4f2c7be448">
+      <Execution id="eb173e6f-3b9f-4418-9c86-c4a449f1f2a7" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests" name="DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="d052355c-9f3f-b194-a7cf-14202281dff2">
+      <Execution id="bfe78f6f-f191-41c4-8bf7-030b414a9558" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.ValidateAsync_GivenRuntimeDotNetValidationRequest_PersistsAuthoritativeBuildAndTestEvidence" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="c09f1024-82ae-0531-7133-19f8e0e7b4ee">
+      <Execution id="33c353fb-94fc-4daf-b023-4179c800b3f7" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests" name="ValidateAsync_GivenRuntimeDotNetValidationRequest_PersistsAuthoritativeBuildAndTestEvidence" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ValidateAsync_GivenPassingBuildAndTest_ExpectedValidationStatusAndArtifactUpdatedDeterministically" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="947844d2-de6b-da33-2ef3-04fe8ff9c88a">
+      <Execution id="e6279d82-1320-477c-bbff-622465fd252d" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="ValidateAsync_GivenPassingBuildAndTest_ExpectedValidationStatusAndArtifactUpdatedDeterministically" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests.AddWipRuntime_GivenExternalCapabilityRegistration_ResolvesCapabilityWithoutShellHostComposition" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="60d38c67-a36b-98c2-85bb-9937b193aa47">
+      <Execution id="85dda16c-c129-46a5-a706-acef51639182" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests" name="AddWipRuntime_GivenExternalCapabilityRegistration_ResolvesCapabilityWithoutShellHostComposition" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.MergeAsync_GivenApprovedCurrentSession_AppliesMergeAndEmitsMergeSucceededEventWithoutShellDrivenStateHop" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="ceac6ead-44fa-366e-d6cb-8d03eb25b18a">
+      <Execution id="1ac57628-7a01-4e02-a099-adebf874b1f5" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="MergeAsync_GivenApprovedCurrentSession_AppliesMergeAndEmitsMergeSucceededEventWithoutShellDrivenStateHop" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionCommands_GivenNoActiveSession_RenderGuidanceForEntireSessionCommandSurface" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="95056efe-38dd-cb12-e080-1dbbae03ea65">
+      <Execution id="2b30a0ad-8072-421f-8fa1-3890aa81f56d" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests" name="SessionCommands_GivenNoActiveSession_RenderGuidanceForEntireSessionCommandSurface" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionStart_GivenQuotedTask_StartsWithoutLegacyRepositoryArgumentsAndPersistsRuntimeMetadata" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="c620fa10-7c3a-05ef-d6f1-cbe639e0b769">
+      <Execution id="f81c1afd-450e-4033-b8f4-70201761eb00" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests" name="SessionStart_GivenQuotedTask_StartsWithoutLegacyRepositoryArgumentsAndPersistsRuntimeMetadata" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenRunWorkflowAcrossStages_StateProgressionMatchesStageDescriptors" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="5481ff3d-157f-ec64-acda-05907cfa63c0">
+      <Execution id="07a1cddb-6ae3-438d-87af-bfa3ff274a2c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests" name="RuntimeReadme_GivenRunWorkflowAcrossStages_StateProgressionMatchesStageDescriptors" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.ValidateAsync_GivenRuntimeValidationAndReattach_PersistsReplayableEvidenceAndRestoresCorrelationContinuity" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="a001d683-d8dd-631f-9a0a-68e732e18a2b">
+      <Execution id="fa8aa2af-3b82-4c3d-bccd-efffe2798068" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests" name="ValidateAsync_GivenRuntimeValidationAndReattach_PersistsReplayableEvidenceAndRestoresCorrelationContinuity" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenReviewDiffHashMismatch_ThrowsDeterministicError" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="104c5a6a-647f-9c51-9bb2-ed931f0328dd">
+      <Execution id="7cfe7a7a-fcb5-4c5c-b08f-be8f29b0b75e" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests" name="Create_GivenReviewDiffHashMismatch_ThrowsDeterministicError" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.HostLifecycle_GivenRepeatedValidationRuns_ExpectedStateTransitionsRemainDeterministicAndIsolated" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="cbdfbd89-1109-16d9-6bb7-ce3bcb4c5e32">
+      <Execution id="87485a2e-04c6-466f-9c36-6df450c55f77" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests" name="HostLifecycle_GivenRepeatedValidationRuns_ExpectedStateTransitionsRemainDeterministicAndIsolated" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ValidateAsync_GivenSessionWorktree_ExecutesConfiguredValidationCommandsPersistsValidationReportAndMarksSessionValidating" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="edd596e6-bb3d-249e-334f-7fef290d5b35">
+      <Execution id="ee02ba8f-e4af-4678-b4b0-60ebd55510e2" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="ValidateAsync_GivenSessionWorktree_ExecutesConfiguredValidationCommandsPersistsValidationReportAndMarksSessionValidating" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenMissingCapability_ExpectedDeterministicFailureBeforeStateMutation" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="5920d2b2-4c7c-c713-092b-ec61cdc6cdcc">
+      <Execution id="0ad3cde8-b3e5-4dae-80e1-674543a5cb71" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests" name="WorkflowStageCapabilityDispatcher_GivenMissingCapability_ExpectedDeterministicFailureBeforeStateMutation" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenChatCompletionRequest_ExpectedMappedHttpRequestContainsModelMessagesAndDeterministicHeaders" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="63175a89-6cc7-8ebc-a7ba-28f5a1e21dfe">
+      <Execution id="751e4c91-6cc0-4f98-965c-981af712a366" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests" name="DeepSeekProvider_GivenChatCompletionRequest_ExpectedMappedHttpRequestContainsModelMessagesAndDeterministicHeaders" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="af5edd25-c4ff-501f-61a2-2641e6e8af92">
+      <Execution id="09f9493c-ba9a-4440-afe0-f3eb89451e0c" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.HostLifecycle_GivenValidationPasses_ExpectedReadinessTransitionsToHealthyWithExecutionEvidence" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="d3ce1f95-3163-af46-7167-67bde5739f44">
+      <Execution id="838e55e1-3f81-4345-a174-fda8a342e416" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests" name="HostLifecycle_GivenValidationPasses_ExpectedReadinessTransitionsToHealthyWithExecutionEvidence" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenValidationDiffHashMismatch_ThrowsDeterministicError" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="c53ff7be-2a41-65fd-d0bd-b86d695d1b17">
+      <Execution id="9e74fda7-d36e-42f7-bcd3-5458221165f4" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests" name="Create_GivenValidationDiffHashMismatch_ThrowsDeterministicError" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests.SessionAttach_GivenPersistedSessionId_AttachesByIdWithoutLegacyRepositoryArgument" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="51d1b2e2-8dd3-25df-6a56-9c60c3c5e29c">
+      <Execution id="9acbad96-4905-4ffa-8f5d-f2e151d5fd81" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Shell.WipShellSessionCommandContractTests" name="SessionAttach_GivenPersistedSessionId_AttachesByIdWithoutLegacyRepositoryArgument" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.SessionAttach_GivenPersistedSnapshot_RestoresGovernanceStatusArtifactDirectoryAndPromptContext" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="4f72fc60-53f4-65c6-8b02-71245f4ab4c6">
+      <Execution id="9aa9808f-ea38-412a-a666-00db40eb2bc0" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="SessionAttach_GivenPersistedSnapshot_RestoresGovernanceStatusArtifactDirectoryAndPromptContext" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.AttachSessionAsync_GivenPersistedSession_RestoresSnapshotAndDetachClearsAttachedContext" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="5b5841af-da34-b814-2c51-8cf194312dbe">
+      <Execution id="b8b2388f-b8a0-4fb4-a1af-b48df50379fa" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="AttachSessionAsync_GivenPersistedSession_RestoresSnapshotAndDetachClearsAttachedContext" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests.TypedLinearWorkflowBuilder_GivenObjectPayloadContract_ThrowsDeterministicContractError" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="b50a132d-0d67-4b13-c890-8eded00ac851">
+      <Execution id="52058b95-f403-4435-a9b6-ee083a793972" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests" name="TypedLinearWorkflowBuilder_GivenObjectPayloadContract_ThrowsDeterministicContractError" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests.ReviewAsync_GivenValidationDiffHashMismatch_MarksReviewAsStaleWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="0c460d82-f028-e445-1eb6-21f6f5c531c2">
+      <Execution id="22cbdc00-e11f-4ca3-99b4-98cce7cd4ade" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeReviewGeneratorTests" name="ReviewAsync_GivenValidationDiffHashMismatch_MarksReviewAsStaleWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="3f2dd407-4197-c844-16fc-e17137880fb7">
+      <Execution id="0f5bf18a-e009-4419-bdc6-3fe0b09b9061" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenTransientHttpFailure_ExpectedBoundedRetryThenDeterministicFailureContract" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="2e852234-e268-78bc-b9ce-282c0455b068">
+      <Execution id="bd05f090-b118-4eb0-aaf0-579f2b344f25" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests" name="DeepSeekProvider_GivenTransientHttpFailure_ExpectedBoundedRetryThenDeterministicFailureContract" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenValidationDidNotPass_ThrowsDeterministicError" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="47427752-5a27-6659-8d59-e2d588ec438a">
+      <Execution id="ef3fcfc0-e6aa-4e2a-b044-61b021e7b030" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests" name="Create_GivenValidationDidNotPass_ThrowsDeterministicError" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests.Create_GivenReviewAlreadyMarkedStale_ThrowsDeterministicError" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="cda7229b-0a19-25cd-ad84-8f98a4543d99">
+      <Execution id="9f12430b-9e2b-4df4-ba7f-84bb5d9e539b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeApprovalTokenFactoryTests" name="Create_GivenReviewAlreadyMarkedStale_ThrowsDeterministicError" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenRegisteredToolStage_ExpectedInvokeAsyncDispatchesWithTypedRequestResult" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="3c115a44-4618-990f-addf-528f83aebafa">
+      <Execution id="b32d851a-e866-4b76-ba1c-26d8dd409f22" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests" name="WorkflowStageCapabilityDispatcher_GivenRegisteredToolStage_ExpectedInvokeAsyncDispatchesWithTypedRequestResult" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests.HostLifecycle_GivenValidationFails_ExpectedReadinessRemainsBlockedWithDeterministicFailureState" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="e4ddd5ec-b2e9-a9f9-e943-cc67cf068b3d">
+      <Execution id="3f5b90b0-5ca8-4f92-87f1-6ced376070f7" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeValidationReportTests" name="HostLifecycle_GivenValidationFails_ExpectedReadinessRemainsBlockedWithDeterministicFailureState" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.AddWorkflow_GivenMapThenThenValidateStages_ExpectedCompiledDescriptorsRetainStageContractNames" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="aac75c6d-8243-67be-a47f-f9a813d46251">
+      <Execution id="1aa00527-5e66-42da-b8bf-ec267276e3fc" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests" name="AddWorkflow_GivenMapThenThenValidateStages_ExpectedCompiledDescriptorsRetainStageContractNames" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests.TypedLinearWorkflowBuilder_GivenFluentLinearPath_CompilesExpectedStageAndMapContracts" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="9bf5215c-3324-3d21-5378-d5d725976393">
+      <Execution id="39fcf0cd-5c33-42e8-a7bb-4ab525d3919b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.TypedLinearWorkflowBuilderTests" name="TypedLinearWorkflowBuilder_GivenFluentLinearPath_CompilesExpectedStageAndMapContracts" />
+    </UnitTest>
+    <UnitTest name="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests.AddWipRuntime_GivenReplaceExistingDuplicatePolicy_ReplacesDuplicateCapabilityDeterministically" storage="c:\users\ricar\dev\modus\wip\wip.runtime.tests\bin\release\net10.0\wip.runtime.tests.dll" id="291c20ac-13c2-7fa6-ee18-470a2fe74ab3">
+      <Execution id="0abc90b8-03d6-4cb2-8acb-1e54f5fa6990" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\bin\Release\net10.0\Wip.Runtime.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Runtime.Tests.Runtime.WipRuntimeServiceCollectionExtensionsTests" name="AddWipRuntime_GivenReplaceExistingDuplicatePolicy_ReplacesDuplicateCapabilityDeterministically" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="49ee6821-54d1-bd6f-ec5e-b0ef9c722349" executionId="62cce8e5-0705-4854-8381-3b1f40ef111e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5481ff3d-157f-ec64-acda-05907cfa63c0" executionId="07a1cddb-6ae3-438d-87af-bfa3ff274a2c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f7ce8f1d-efd6-b347-4d80-436e0d4871c6" executionId="698f67be-8321-4a47-aafc-283899d74e91" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5b5841af-da34-b814-2c51-8cf194312dbe" executionId="b8b2388f-b8a0-4fb4-a1af-b48df50379fa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b50a132d-0d67-4b13-c890-8eded00ac851" executionId="52058b95-f403-4435-a9b6-ee083a793972" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c53ff7be-2a41-65fd-d0bd-b86d695d1b17" executionId="9e74fda7-d36e-42f7-bcd3-5458221165f4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4288fd3b-7c0f-f1f6-e1cd-f30eb575946f" executionId="fd1da796-c7bf-4994-9cb6-1f76641049f5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e3804bf9-017a-3644-9221-489c111b8858" executionId="1a4f034a-e975-4963-bd8c-9c6a22798c86" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="aac75c6d-8243-67be-a47f-f9a813d46251" executionId="1aa00527-5e66-42da-b8bf-ec267276e3fc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="63175a89-6cc7-8ebc-a7ba-28f5a1e21dfe" executionId="751e4c91-6cc0-4f98-965c-981af712a366" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ceac6ead-44fa-366e-d6cb-8d03eb25b18a" executionId="1ac57628-7a01-4e02-a099-adebf874b1f5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d052355c-9f3f-b194-a7cf-14202281dff2" executionId="bfe78f6f-f191-41c4-8bf7-030b414a9558" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8807d18c-4ec0-e5cf-561a-6a6e303f5304" executionId="1570ebd5-96fa-4778-95b5-c448f7d6bd44" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b73c7e6b-7bcc-0bf4-afac-aa4f2c7be448" executionId="eb173e6f-3b9f-4418-9c86-c4a449f1f2a7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="eed71636-0bd1-e028-0276-4ee8ed46281c" executionId="241958c7-b8f5-4b21-93fe-d7b994d98635" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c5211eea-17dd-c186-aaa3-adc44f6652d9" executionId="024ae76a-45b2-4be6-8717-03544d8366b2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cbdfbd89-1109-16d9-6bb7-ce3bcb4c5e32" executionId="87485a2e-04c6-466f-9c36-6df450c55f77" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="60804167-e086-22f8-072e-fce5c3c99526" executionId="04575b8e-bad4-4506-b1ba-7d3a1bb24541" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="af5edd25-c4ff-501f-61a2-2641e6e8af92" executionId="09f9493c-ba9a-4440-afe0-f3eb89451e0c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="98bdde13-7090-f5d9-d141-f249428e110f" executionId="e53ff6c1-9083-45f3-b3f8-d927e89c213a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3c115a44-4618-990f-addf-528f83aebafa" executionId="b32d851a-e866-4b76-ba1c-26d8dd409f22" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2476f744-387a-27df-15e2-09bef7cefeee" executionId="3bf36e6f-a2fd-4852-acf0-a396c08a0880" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0aac6406-27c3-394a-8b23-59140568f788" executionId="b7982b46-a1d4-46d6-b09b-2ef2590c0062" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9bf5215c-3324-3d21-5378-d5d725976393" executionId="39fcf0cd-5c33-42e8-a7bb-4ab525d3919b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3d909460-5795-eb23-2240-6d88a92f3237" executionId="f71ce3a9-0db4-4732-9a71-c317adf6b1fb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="104c5a6a-647f-9c51-9bb2-ed931f0328dd" executionId="7cfe7a7a-fcb5-4c5c-b08f-be8f29b0b75e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="09cb9fd5-f169-e548-84ed-4c0a80d813bb" executionId="8e936025-78b5-41f6-bdd0-d46517f313fc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="72217dc7-d6e6-6ef2-875e-807cc0643c6b" executionId="b9f13912-76da-4ec4-9357-4b853ba61153" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a001d683-d8dd-631f-9a0a-68e732e18a2b" executionId="fa8aa2af-3b82-4c3d-bccd-efffe2798068" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="60d38c67-a36b-98c2-85bb-9937b193aa47" executionId="85dda16c-c129-46a5-a706-acef51639182" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8c94a08d-d56c-cd66-53a3-aabc31845ec7" executionId="fc9877d4-cd5e-49ec-ad2e-36cd9577a08e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b6a927bd-89fc-4620-6582-a7c86b0c072c" executionId="8e44e679-54f9-4689-bffc-ed053e9b1ea0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="763c49b9-1751-114c-b20f-c53a142b49c0" executionId="a7679591-971d-4eae-9b92-39ffe8a2c877" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4f72fc60-53f4-65c6-8b02-71245f4ab4c6" executionId="9aa9808f-ea38-412a-a666-00db40eb2bc0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3d8615f4-409c-0511-f28e-3d8c74583d03" executionId="f2bdb6c4-0bdb-4098-9744-343b1a3b9ccb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ec6658c4-adad-4db2-8128-2ad686f0a004" executionId="ff7cdad0-d9fb-4e81-9224-9f28f6271742" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="47427752-5a27-6659-8d59-e2d588ec438a" executionId="ef3fcfc0-e6aa-4e2a-b044-61b021e7b030" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7131ae16-8ea9-3f0a-c5ff-236a1f717ee9" executionId="e0a52bbf-a63d-4390-aee3-5b729f56d67b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0c460d82-f028-e445-1eb6-21f6f5c531c2" executionId="22cbdc00-e11f-4ca3-99b4-98cce7cd4ade" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="95056efe-38dd-cb12-e080-1dbbae03ea65" executionId="2b30a0ad-8072-421f-8fa1-3890aa81f56d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c620fa10-7c3a-05ef-d6f1-cbe639e0b769" executionId="f81c1afd-450e-4033-b8f4-70201761eb00" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0a95db98-e681-dad4-b4d9-5fca49391443" executionId="9e93372d-905d-495f-a99f-70a9d2400af0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="19fb8706-e4cf-fefd-ee23-cdd766e6c026" executionId="57613946-db81-4fff-b6fb-046722d3006f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="dc1b80bb-317f-7048-5779-247105ab1123" executionId="987337f8-d542-4a62-a034-50d2c086c379" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="371a8dd3-5c37-3ed1-a88f-b438c5a042f5" executionId="aa5e198c-d630-4afd-9c9f-ebe19fe45f0d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="63964d34-0922-be8b-8ff9-61d2a2bd3814" executionId="35d8bdd8-136c-468d-a751-97063d169ff1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1307f85-6915-a059-415e-62accdf2b986" executionId="c61bc184-a51a-4d6c-9838-2b07fe65e68b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="06aa28dc-cada-a257-a3e8-2a63f50c5187" executionId="cd42e455-5809-47f8-bc4f-32bb7ae835d8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6bc5d86d-da3f-e649-8aa9-1e6c585b7f9b" executionId="40e219fd-570b-4043-b65f-9f8071caf4cc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2e852234-e268-78bc-b9ce-282c0455b068" executionId="bd05f090-b118-4eb0-aaf0-579f2b344f25" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="435edbfb-08cb-775a-bb25-a6d43e51be70" executionId="c847e889-2ecd-40b5-a13f-44b63cadf8d7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c09f1024-82ae-0531-7133-19f8e0e7b4ee" executionId="33c353fb-94fc-4daf-b023-4179c800b3f7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="25142d81-0928-962a-8599-75336bd27ab6" executionId="42216fe2-faad-49a3-82da-48b7f194910e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="51d1b2e2-8dd3-25df-6a56-9c60c3c5e29c" executionId="9acbad96-4905-4ffa-8f5d-f2e151d5fd81" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5920d2b2-4c7c-c713-092b-ec61cdc6cdcc" executionId="0ad3cde8-b3e5-4dae-80e1-674543a5cb71" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8404a00e-9b34-4d37-8abb-ad2da6044e73" executionId="73c6866c-235e-4674-8273-89d55fffcdee" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="21285bab-aa70-ace5-5ba7-88a5205a75ce" executionId="7fdd0840-456b-4ab9-9109-879f76532516" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cda7229b-0a19-25cd-ad84-8f98a4543d99" executionId="9f12430b-9e2b-4df4-ba7f-84bb5d9e539b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="66eb4840-0596-f495-03bb-3bd494bf5f82" executionId="fb502c59-b59f-4bbd-8a05-19c071043020" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae016f4a-9290-3ccc-8149-b9268de3f391" executionId="89735f06-c4b4-4b05-881e-4142758e1e2c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="edd596e6-bb3d-249e-334f-7fef290d5b35" executionId="ee02ba8f-e4af-4678-b4b0-60ebd55510e2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="947844d2-de6b-da33-2ef3-04fe8ff9c88a" executionId="e6279d82-1320-477c-bbff-622465fd252d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b67d74ed-41be-68de-d9a6-68addf91f12a" executionId="c3a76175-d463-45a4-9b03-54406c9512ad" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a52accb4-852c-844a-6106-9cd6c809f9af" executionId="69094d91-2e2c-4f29-bb59-dfc090bcdebe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ffb5ee7f-456d-6685-ba97-aea27f495054" executionId="74f4c6ac-5932-4e09-a6ee-fbdcefb24898" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d3ce1f95-3163-af46-7167-67bde5739f44" executionId="838e55e1-3f81-4345-a174-fda8a342e416" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e4ddd5ec-b2e9-a9f9-e943-cc67cf068b3d" executionId="3f5b90b0-5ca8-4f92-87f1-6ced376070f7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3f2dd407-4197-c844-16fc-e17137880fb7" executionId="0f5bf18a-e009-4419-bdc6-3fe0b09b9061" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b5a3b41b-4dcc-332c-7f07-325c9e62c34a" executionId="f68d4794-2139-4bf0-9364-04114740d8cd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="291c20ac-13c2-7fa6-ee18-470a2fe74ab3" executionId="0abc90b8-03d6-4cb2-8acb-1e54f5fa6990" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0e63d37a-596d-ca50-e5f1-f34ed62f6fa9" executionId="ffe42a69-7aef-40ad-b8d4-28875f9a5289" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="33499f82-6dfe-87b7-9f33-8bc46d0c3309" executionId="05839f32-32e7-4487-9366-3d78b6cbd2c5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="72" executed="72" passed="54" failed="18" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.49]   Discovering: Wip.Runtime.Tests&#xD;
+[xUnit.net 00:00:00.52]   Discovered:  Wip.Runtime.Tests&#xD;
+[xUnit.net 00:00:00.52]   Starting:    Wip.Runtime.Tests&#xD;
+[xUnit.net 00:00:00.97]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\eb22dec13fea435a9b76ececa559fa70\artifacts' is denied.&#xD;
+[xUnit.net 00:00:00.97]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.97]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:00.97]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:00.97]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:00.97]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\RuntimeReadmeLifecycleContractsTests.cs(135,0): at Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenRunWorkflowAcrossStages_StateProgressionMatchesStageDescriptors()&#xD;
+[xUnit.net 00:00:00.97]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.99]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:00.99]       Expected: 1&#xD;
+[xUnit.net 00:00:00.99]       Actual:   0&#xD;
+[xUnit.net 00:00:01.00]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.00]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\DeepSeekModelProviderTests.cs(216,0): at Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation()&#xD;
+[xUnit.net 00:00:01.00]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.08]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\569766cb4ee04e498c78a6496ff02b4b\artifacts' is denied.&#xD;
+[xUnit.net 00:00:01.08]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.08]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:01.08]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:01.08]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.08]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WorkflowStageCapabilityDispatcherTests.cs(74,0): at Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenMissingCapability_ExpectedDeterministicFailureBeforeStateMutation()&#xD;
+[xUnit.net 00:00:01.08]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.17]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\50585b419acf4694aa44c1de39000a3d\artifacts' is denied.&#xD;
+[xUnit.net 00:00:01.17]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.17]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:01.17]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:01.17]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.17]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\RuntimeReadmeLifecycleContractsTests.cs(110,0): at Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenInvalidTransition_TransitionRejectedWithExpectedNextStateMessage()&#xD;
+[xUnit.net 00:00:01.17]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.23]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\e0c8f9faab61472bb3ee8275f1fdf497\artifacts' is denied.&#xD;
+[xUnit.net 00:00:01.23]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.23]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:01.23]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:01.23]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.23]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(398,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent()&#xD;
+[xUnit.net 00:00:01.23]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.54]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\611d7c1c697046bf92db103230a18c74\artifacts' is denied.&#xD;
+[xUnit.net 00:00:01.54]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.54]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:01.54]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:01.54]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.54]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1306,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract()&#xD;
+[xUnit.net 00:00:01.54]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:01.98]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\f199ef088f8b4727aa0a0bdaf8671ee5\artifacts' is denied.&#xD;
+[xUnit.net 00:00:01.98]       Stack Trace:&#xD;
+[xUnit.net 00:00:01.98]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:01.98]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:01.98]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:01.98]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1147,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage()&#xD;
+[xUnit.net 00:00:01.98]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.28]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\ebd7ac3de3774b2393cd6c00d49a5451\artifacts' is denied.&#xD;
+[xUnit.net 00:00:02.28]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.28]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:02.28]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:02.28]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:02.28]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1452,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection()&#xD;
+[xUnit.net 00:00:02.28]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.36]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\0862ec26786f41d19105807f06badf17\artifacts' is denied.&#xD;
+[xUnit.net 00:00:02.36]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.36]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:02.36]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:02.36]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:02.36]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(848,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement()&#xD;
+[xUnit.net 00:00:02.36]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.78]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\448f856d2bcb4df29d98227b5ef75604\artifacts' is denied.&#xD;
+[xUnit.net 00:00:02.78]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.78]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:02.78]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:02.78]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:02.78]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(433,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenConcurrentCalls_AppliesSingleProcessAuthorityWithoutOverlappingSaves()&#xD;
+[xUnit.net 00:00:02.78]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:02.87]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\752416205bcd4f318339f87be59e9481\artifacts' is denied.&#xD;
+[xUnit.net 00:00:02.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:02.87]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:02.87]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:02.87]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:02.87]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1365,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput()&#xD;
+[xUnit.net 00:00:02.87]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.06]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\0b78892feb424a9596034fd5e87a9afa\artifacts' is denied.&#xD;
+[xUnit.net 00:00:03.06]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.06]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:03.06]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:03.06]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.06]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1103,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId()&#xD;
+[xUnit.net 00:00:03.06]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.42]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\8c4efd89c0114f7faa7f383e2aebd80a\artifacts' is denied.&#xD;
+[xUnit.net 00:00:03.42]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.42]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:03.42]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:03.42]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.42]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(882,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact()&#xD;
+[xUnit.net 00:00:03.42]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.50]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\9684602e57464a39bdb6c38ac2c8e8c9\artifacts' is denied.&#xD;
+[xUnit.net 00:00:03.50]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.50]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:03.50]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:03.50]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.50]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1419,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts()&#xD;
+[xUnit.net 00:00:03.50]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.58]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\9f865f0f66734bbfb614cd9deaa35c0a\artifacts' is denied.&#xD;
+[xUnit.net 00:00:03.58]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.58]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:03.58]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:03.58]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.58]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(807,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts()&#xD;
+[xUnit.net 00:00:03.58]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.67]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\962f7bb6c31d4d2a8a0c80e2dc53ccf0\artifacts' is denied.&#xD;
+[xUnit.net 00:00:03.67]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.67]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:03.67]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:03.67]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.67]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(1181,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder()&#xD;
+[xUnit.net 00:00:03.67]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:03.75]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\e2ae1bd475c14d4e8d24b6b9b500113b\artifacts' is denied.&#xD;
+[xUnit.net 00:00:03.75]       Stack Trace:&#xD;
+[xUnit.net 00:00:03.75]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:03.75]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:03.75]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:03.75]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(909,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand()&#xD;
+[xUnit.net 00:00:03.75]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:04.29]       System.UnauthorizedAccessException : Access to the path 'C:\repo\.wip\sessions\197ca6601a324d89ab7af13d4a82a856\artifacts' is denied.&#xD;
+[xUnit.net 00:00:04.29]       Stack Trace:&#xD;
+[xUnit.net 00:00:04.29]            at System.IO.FileSystem.CreateDirectory(String fullPath, Byte[] securityDescriptor)&#xD;
+[xUnit.net 00:00:04.29]            at System.IO.Directory.CreateDirectory(String path)&#xD;
+[xUnit.net 00:00:04.29]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime\Runtime\WipRuntimeOrchestrator.cs(114,0): at Wip.Runtime.Runtime.WipRuntimeOrchestrator.StartSessionAsync(SessionStartRequest request, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:04.29]         C:\Users\ricar\dev\Modus\WIP\Wip.Runtime.Tests\Runtime\WipRuntimeOrchestratorTests.cs(36,0): at Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent()&#xD;
+[xUnit.net 00:00:04.29]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:04.29]   Finished:    Wip.Runtime.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:33.8971291-03:00">
+        <Text>[xUnit.net 00:00:00.97]     Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenRunWorkflowAcrossStages_StateProgressionMatchesStageDescriptors [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:33.9210025-03:00">
+        <Text>[xUnit.net 00:00:00.99]     Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:34.0046082-03:00">
+        <Text>[xUnit.net 00:00:01.08]     Wip.Runtime.Tests.Runtime.WorkflowStageCapabilityDispatcherTests.WorkflowStageCapabilityDispatcher_GivenMissingCapability_ExpectedDeterministicFailureBeforeStateMutation [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:34.0967318-03:00">
+        <Text>[xUnit.net 00:00:01.17]     Wip.Runtime.Tests.Runtime.RuntimeReadmeLifecycleContractsTests.RuntimeReadme_GivenInvalidTransition_TransitionRejectedWithExpectedNextStateMessage [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:34.1516593-03:00">
+        <Text>[xUnit.net 00:00:01.23]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.TransitionAsync_GivenInvalidTransition_ThrowsAndDoesNotMutateStateOrEmitTransitionEvent [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:34.4663651-03:00">
+        <Text>[xUnit.net 00:00:01.54]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflow_GivenMappedStageChain_ExpectedEachStageReceivesMappedInputContract [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:34.9036883-03:00">
+        <Text>[xUnit.net 00:00:01.98]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:35.2034897-03:00">
+        <Text>[xUnit.net 00:00:02.28]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:35.2878557-03:00">
+        <Text>[xUnit.net 00:00:02.36]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:35.7071317-03:00">
+        <Text>[xUnit.net 00:00:02.78]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenConcurrentCalls_AppliesSingleProcessAuthorityWithoutOverlappingSaves [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:35.7914022-03:00">
+        <Text>[xUnit.net 00:00:02.87]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:35.9823695-03:00">
+        <Text>[xUnit.net 00:00:03.06]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:36.3429361-03:00">
+        <Text>[xUnit.net 00:00:03.42]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:36.4262061-03:00">
+        <Text>[xUnit.net 00:00:03.50]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:36.5096569-03:00">
+        <Text>[xUnit.net 00:00:03.58]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:36.5935969-03:00">
+        <Text>[xUnit.net 00:00:03.67]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:36.6771782-03:00">
+        <Text>[xUnit.net 00:00:03.75]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Error" timestamp="2026-11-02T12:06:37.2160369-03:00">
+        <Text>[xUnit.net 00:00:04.29]     Wip.Runtime.Tests.Runtime.WipRuntimeOrchestratorTests.StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="RICARDO-PC" outcome="Warning" timestamp="2026-11-02T12:06:37.2444443-03:00">
+        <Text>Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="e394f1d3-e7e0-4c66-9168-68e1d4b839ee" name="ricar@RICARDO-PC 2026-11-02 12:07:04" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:07:04.6490858-03:00" queuing="2026-11-02T12:07:04.6490859-03:00" start="2026-11-02T12:07:02.5063362-03:00" finish="2026-11-02T12:07:11.6644659-03:00" />
+  <TestSettings name="default" id="7c014380-9023-46db-896a-fb0b31e4cdb5">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_07_04" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="7f1efad7-8cff-47ca-ab15-3f9ddcc11d52" testId="cdb5ef4f-bff9-4460-977e-74731165853f" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergePreviewAsync_GivenTargetBranchDrift_ReturnsBlockedPreviewAndDriftSignal" computerName="RICARDO-PC" duration="00:00:00.6524014" startTime="2026-11-02T12:07:09.9241770-03:00" endTime="2026-11-02T12:07:09.9241772-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7f1efad7-8cff-47ca-ab15-3f9ddcc11d52" />
+    <UnitTestResult executionId="e8e02b89-dbbb-4980-9ee5-754766d290a9" testId="d5df1c65-9c56-b224-6bba-59f4ecdeaa14" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenValidatedReviewedConfirmedAndCurrentApproval_MergesFastForwardWithoutDrift" computerName="RICARDO-PC" duration="00:00:00.8655716" startTime="2026-11-02T12:07:07.0294714-03:00" endTime="2026-11-02T12:07:07.0294717-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e8e02b89-dbbb-4980-9ee5-754766d290a9" />
+    <UnitTestResult executionId="fb6253e9-7d99-486b-bf4f-9469c28f5f56" testId="45ef357a-aea5-3bb5-a6b5-48931a6a1c35" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.CreateAsync_GivenSessionStart_CreatesIsolatedGitWorktreeAndSessionBranch" computerName="RICARDO-PC" duration="00:00:00.4679529" startTime="2026-11-02T12:07:10.3924105-03:00" endTime="2026-11-02T12:07:10.3924107-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fb6253e9-7d99-486b-bf4f-9469c28f5f56" />
+    <UnitTestResult executionId="c46c631b-a22c-4a6c-a351-e8f457a79359" testId="cacbf1c2-3aee-47d8-1559-899470033e94" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenMissingValidationEvidence_RejectsMergeWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.6196321" startTime="2026-11-02T12:07:05.5473080-03:00" endTime="2026-11-02T12:07:05.5473082-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c46c631b-a22c-4a6c-a351-e8f457a79359" />
+    <UnitTestResult executionId="5b9da506-b54e-43b6-8b3e-186d28e0ae48" testId="6f308c90-efe9-d455-676e-d7f3e16c82d3" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenApprovedTokenAndTargetBranchDrift_RejectsMergeWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.7694837" startTime="2026-11-02T12:07:11.1622426-03:00" endTime="2026-11-02T12:07:11.1622429-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5b9da506-b54e-43b6-8b3e-186d28e0ae48" />
+    <UnitTestResult executionId="148f034d-2973-4398-9475-9d2b8b4d74ed" testId="30d754f3-1b94-31c4-d794-c3001876b0b0" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenMissingApprovalEvidence_RejectsMergeWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.5469749" startTime="2026-11-02T12:07:04.9273924-03:00" endTime="2026-11-02T12:07:04.9273929-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="148f034d-2973-4398-9475-9d2b8b4d74ed" />
+    <UnitTestResult executionId="27d9c0e6-4890-4519-8950-d9b5266d6669" testId="654a6b9a-76fd-0af3-2594-60fe26e554d4" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.WriteGuard_GivenPathEscapeAttempt_ExpectedOperationBlockedAndNoExternalMutation" computerName="RICARDO-PC" duration="00:00:00.4434060" startTime="2026-11-02T12:07:11.6059680-03:00" endTime="2026-11-02T12:07:11.6059683-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="27d9c0e6-4890-4519-8950-d9b5266d6669" />
+    <UnitTestResult executionId="df048e14-8944-4dbe-a7f1-70289bd02817" testId="4e1407b4-9567-e925-6e38-35af7e64aad4" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenDiffChangedAfterApproval_RejectsMergeAndMarksApprovalStale" computerName="RICARDO-PC" duration="00:00:00.8300281" startTime="2026-11-02T12:07:07.8598681-03:00" endTime="2026-11-02T12:07:07.8598685-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="df048e14-8944-4dbe-a7f1-70289bd02817" />
+    <UnitTestResult executionId="185be7d3-b2b7-4196-baa1-532498be754f" testId="d493a881-d056-6b18-e451-f80a95ab1401" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenMissingReviewEvidence_RejectsMergeWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.7180839" startTime="2026-11-02T12:07:04.3793125-03:00" endTime="2026-11-02T12:07:04.3793366-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="185be7d3-b2b7-4196-baa1-532498be754f" />
+    <UnitTestResult executionId="f7c1f5f6-f4e1-4136-b590-88515456777b" testId="3a0278a2-4ccd-be8f-8056-1f3b8b89d5ee" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenApprovalNotConfirmed_RejectsMergeWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.6146928" startTime="2026-11-02T12:07:08.4748894-03:00" endTime="2026-11-02T12:07:08.4748898-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f7c1f5f6-f4e1-4136-b590-88515456777b" />
+    <UnitTestResult executionId="eafb8053-0be4-4c22-a216-63b9d0c0b74a" testId="0a9fa890-86c3-5823-978f-f2b037f84e9b" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.ComputeDiffHashAsync_GivenEquivalentChangesWithLineEndingNoise_ReturnsStableNormalizedHash" computerName="RICARDO-PC" duration="00:00:00.7962036" startTime="2026-11-02T12:07:09.2714195-03:00" endTime="2026-11-02T12:07:09.2714204-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="eafb8053-0be4-4c22-a216-63b9d0c0b74a" />
+    <UnitTestResult executionId="2bd9efd6-c55b-4dbd-9770-4e53b1b0f779" testId="62204438-dfda-5b44-5105-3b2dca54a24b" testName="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenAbortedSession_RejectsMergeWithDeterministicReason" computerName="RICARDO-PC" duration="00:00:00.6159144" startTime="2026-11-02T12:07:06.1635523-03:00" endTime="2026-11-02T12:07:06.1635526-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2bd9efd6-c55b-4dbd-9770-4e53b1b0f779" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.ComputeDiffHashAsync_GivenEquivalentChangesWithLineEndingNoise_ReturnsStableNormalizedHash" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="0a9fa890-86c3-5823-978f-f2b037f84e9b">
+      <Execution id="eafb8053-0be4-4c22-a216-63b9d0c0b74a" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="ComputeDiffHashAsync_GivenEquivalentChangesWithLineEndingNoise_ReturnsStableNormalizedHash" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenAbortedSession_RejectsMergeWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="62204438-dfda-5b44-5105-3b2dca54a24b">
+      <Execution id="2bd9efd6-c55b-4dbd-9770-4e53b1b0f779" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenAbortedSession_RejectsMergeWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergePreviewAsync_GivenTargetBranchDrift_ReturnsBlockedPreviewAndDriftSignal" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="cdb5ef4f-bff9-4460-977e-74731165853f">
+      <Execution id="7f1efad7-8cff-47ca-ab15-3f9ddcc11d52" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergePreviewAsync_GivenTargetBranchDrift_ReturnsBlockedPreviewAndDriftSignal" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenMissingValidationEvidence_RejectsMergeWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="cacbf1c2-3aee-47d8-1559-899470033e94">
+      <Execution id="c46c631b-a22c-4a6c-a351-e8f457a79359" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenMissingValidationEvidence_RejectsMergeWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenDiffChangedAfterApproval_RejectsMergeAndMarksApprovalStale" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="4e1407b4-9567-e925-6e38-35af7e64aad4">
+      <Execution id="df048e14-8944-4dbe-a7f1-70289bd02817" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenDiffChangedAfterApproval_RejectsMergeAndMarksApprovalStale" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenApprovedTokenAndTargetBranchDrift_RejectsMergeWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="6f308c90-efe9-d455-676e-d7f3e16c82d3">
+      <Execution id="5b9da506-b54e-43b6-8b3e-186d28e0ae48" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenApprovedTokenAndTargetBranchDrift_RejectsMergeWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenMissingReviewEvidence_RejectsMergeWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="d493a881-d056-6b18-e451-f80a95ab1401">
+      <Execution id="185be7d3-b2b7-4196-baa1-532498be754f" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenMissingReviewEvidence_RejectsMergeWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenMissingApprovalEvidence_RejectsMergeWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="30d754f3-1b94-31c4-d794-c3001876b0b0">
+      <Execution id="148f034d-2973-4398-9475-9d2b8b4d74ed" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenMissingApprovalEvidence_RejectsMergeWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenApprovalNotConfirmed_RejectsMergeWithDeterministicReason" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="3a0278a2-4ccd-be8f-8056-1f3b8b89d5ee">
+      <Execution id="f7c1f5f6-f4e1-4136-b590-88515456777b" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenApprovalNotConfirmed_RejectsMergeWithDeterministicReason" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.MergeAsync_GivenValidatedReviewedConfirmedAndCurrentApproval_MergesFastForwardWithoutDrift" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="d5df1c65-9c56-b224-6bba-59f4ecdeaa14">
+      <Execution id="e8e02b89-dbbb-4980-9ee5-754766d290a9" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="MergeAsync_GivenValidatedReviewedConfirmedAndCurrentApproval_MergesFastForwardWithoutDrift" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.WriteGuard_GivenPathEscapeAttempt_ExpectedOperationBlockedAndNoExternalMutation" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="654a6b9a-76fd-0af3-2594-60fe26e554d4">
+      <Execution id="27d9c0e6-4890-4519-8950-d9b5266d6669" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="WriteGuard_GivenPathEscapeAttempt_ExpectedOperationBlockedAndNoExternalMutation" />
+    </UnitTest>
+    <UnitTest name="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests.CreateAsync_GivenSessionStart_CreatesIsolatedGitWorktreeAndSessionBranch" storage="c:\users\ricar\dev\modus\wip\wip.workspaces.git.tests\bin\release\net10.0\wip.workspaces.git.tests.dll" id="45ef357a-aea5-3bb5-a6b5-48931a6a1c35">
+      <Execution id="fb6253e9-7d99-486b-bf4f-9469c28f5f56" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Workspaces.Git.Tests\bin\Release\net10.0\Wip.Workspaces.Git.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Workspaces.Git.Tests.Git.WipWorkspaceProviderGitTests" name="CreateAsync_GivenSessionStart_CreatesIsolatedGitWorktreeAndSessionBranch" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="cdb5ef4f-bff9-4460-977e-74731165853f" executionId="7f1efad7-8cff-47ca-ab15-3f9ddcc11d52" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d5df1c65-9c56-b224-6bba-59f4ecdeaa14" executionId="e8e02b89-dbbb-4980-9ee5-754766d290a9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="45ef357a-aea5-3bb5-a6b5-48931a6a1c35" executionId="fb6253e9-7d99-486b-bf4f-9469c28f5f56" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cacbf1c2-3aee-47d8-1559-899470033e94" executionId="c46c631b-a22c-4a6c-a351-e8f457a79359" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6f308c90-efe9-d455-676e-d7f3e16c82d3" executionId="5b9da506-b54e-43b6-8b3e-186d28e0ae48" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="30d754f3-1b94-31c4-d794-c3001876b0b0" executionId="148f034d-2973-4398-9475-9d2b8b4d74ed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="654a6b9a-76fd-0af3-2594-60fe26e554d4" executionId="27d9c0e6-4890-4519-8950-d9b5266d6669" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4e1407b4-9567-e925-6e38-35af7e64aad4" executionId="df048e14-8944-4dbe-a7f1-70289bd02817" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d493a881-d056-6b18-e451-f80a95ab1401" executionId="185be7d3-b2b7-4196-baa1-532498be754f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3a0278a2-4ccd-be8f-8056-1f3b8b89d5ee" executionId="f7c1f5f6-f4e1-4136-b590-88515456777b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="0a9fa890-86c3-5823-978f-f2b037f84e9b" executionId="eafb8053-0be4-4c22-a216-63b9d0c0b74a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="62204438-dfda-5b44-5105-3b2dca54a24b" executionId="2bd9efd6-c55b-4dbd-9770-4e53b1b0f779" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="12" executed="12" passed="12" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.42]   Discovering: Wip.Workspaces.Git.Tests&#xD;
+[xUnit.net 00:00:00.44]   Discovered:  Wip.Workspaces.Git.Tests&#xD;
+[xUnit.net 00:00:00.45]   Starting:    Wip.Workspaces.Git.Tests&#xD;
+[xUnit.net 00:00:08.43]   Finished:    Wip.Workspaces.Git.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="RICARDO-PC" outcome="Warning" timestamp="2026-11-02T12:07:11.6373976-03:00">
+        <Text>Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

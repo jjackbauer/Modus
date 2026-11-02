@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="2e31e814-7068-4a0c-bc52-baf8a20a7af1" name="ricar@RICARDO-PC 2026-11-02 12:01:24" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-02T12:01:24.9080079-03:00" queuing="2026-11-02T12:01:24.9080080-03:00" start="2026-11-02T12:01:23.5539065-03:00" finish="2026-11-02T12:01:24.9111889-03:00" />
+  <TestSettings name="default" id="67d0e4a9-b3e8-4d36-b4c5-62c413d92a8b">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-02_12_01_24" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="a17d2244-efd2-4289-b89f-aea983425df4" testId="35e43bb9-60e2-10e4-1895-8169387bba39" testName="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.SaveAsync_GivenSameFileNameWithDifferentArtifactIds_PersistsDeterministicDistinctArtifactsWithMetadata" computerName="RICARDO-PC" duration="00:00:00.0398781" startTime="2026-11-02T12:01:24.8311701-03:00" endTime="2026-11-02T12:01:24.8311703-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a17d2244-efd2-4289-b89f-aea983425df4" />
+    <UnitTestResult executionId="5610ae92-3227-4cea-919f-06e6a82f1a05" testId="06400406-0dec-4b32-7772-bedf87a6aae6" testName="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.SaveAsync_GivenRequiredArtifactTypes_ExpectedFilesPersistedUnderSessionArtifactLayout" computerName="RICARDO-PC" duration="00:00:00.1641963" startTime="2026-11-02T12:01:24.7746159-03:00" endTime="2026-11-02T12:01:24.7746388-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5610ae92-3227-4cea-919f-06e6a82f1a05" />
+    <UnitTestResult executionId="0bacb1bf-8cb1-4fac-9a27-f80f77f9ae09" testId="a4605aab-2ff4-e6ee-b9ed-b93ef3a844eb" testName="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.SaveAsync_GivenFileNameWithDirectorySegments_ThrowsArgumentException" computerName="RICARDO-PC" duration="00:00:00.0033502" startTime="2026-11-02T12:01:24.7845393-03:00" endTime="2026-11-02T12:01:24.7845394-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0bacb1bf-8cb1-4fac-9a27-f80f77f9ae09" />
+    <UnitTestResult executionId="6a60b07b-84c0-44e2-a38a-cd55b7ebfc19" testId="f02cc5ee-3a1d-d591-f5bc-45abb2c6769f" testName="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.ListAsync_GivenMultipleArtifacts_ExpectedDescriptorsIncludeIdTypeProducerTimestampAndPath" computerName="RICARDO-PC" duration="00:00:00.0116484" startTime="2026-11-02T12:01:24.7910025-03:00" endTime="2026-11-02T12:01:24.7910026-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6a60b07b-84c0-44e2-a38a-cd55b7ebfc19" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.ListAsync_GivenMultipleArtifacts_ExpectedDescriptorsIncludeIdTypeProducerTimestampAndPath" storage="c:\users\ricar\dev\modus\wip\wip.artifacts.local.tests\bin\release\net10.0\wip.artifacts.local.tests.dll" id="f02cc5ee-3a1d-d591-f5bc-45abb2c6769f">
+      <Execution id="6a60b07b-84c0-44e2-a38a-cd55b7ebfc19" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Artifacts.Local.Tests\bin\Release\net10.0\Wip.Artifacts.Local.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests" name="ListAsync_GivenMultipleArtifacts_ExpectedDescriptorsIncludeIdTypeProducerTimestampAndPath" />
+    </UnitTest>
+    <UnitTest name="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.SaveAsync_GivenFileNameWithDirectorySegments_ThrowsArgumentException" storage="c:\users\ricar\dev\modus\wip\wip.artifacts.local.tests\bin\release\net10.0\wip.artifacts.local.tests.dll" id="a4605aab-2ff4-e6ee-b9ed-b93ef3a844eb">
+      <Execution id="0bacb1bf-8cb1-4fac-9a27-f80f77f9ae09" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Artifacts.Local.Tests\bin\Release\net10.0\Wip.Artifacts.Local.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests" name="SaveAsync_GivenFileNameWithDirectorySegments_ThrowsArgumentException" />
+    </UnitTest>
+    <UnitTest name="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.SaveAsync_GivenSameFileNameWithDifferentArtifactIds_PersistsDeterministicDistinctArtifactsWithMetadata" storage="c:\users\ricar\dev\modus\wip\wip.artifacts.local.tests\bin\release\net10.0\wip.artifacts.local.tests.dll" id="35e43bb9-60e2-10e4-1895-8169387bba39">
+      <Execution id="a17d2244-efd2-4289-b89f-aea983425df4" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Artifacts.Local.Tests\bin\Release\net10.0\Wip.Artifacts.Local.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests" name="SaveAsync_GivenSameFileNameWithDifferentArtifactIds_PersistsDeterministicDistinctArtifactsWithMetadata" />
+    </UnitTest>
+    <UnitTest name="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests.SaveAsync_GivenRequiredArtifactTypes_ExpectedFilesPersistedUnderSessionArtifactLayout" storage="c:\users\ricar\dev\modus\wip\wip.artifacts.local.tests\bin\release\net10.0\wip.artifacts.local.tests.dll" id="06400406-0dec-4b32-7772-bedf87a6aae6">
+      <Execution id="5610ae92-3227-4cea-919f-06e6a82f1a05" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\WIP\Wip.Artifacts.Local.Tests\bin\Release\net10.0\Wip.Artifacts.Local.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Artifacts.Local.Tests.Artifacts.WipArtifactStoreLocalTests" name="SaveAsync_GivenRequiredArtifactTypes_ExpectedFilesPersistedUnderSessionArtifactLayout" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="35e43bb9-60e2-10e4-1895-8169387bba39" executionId="a17d2244-efd2-4289-b89f-aea983425df4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="06400406-0dec-4b32-7772-bedf87a6aae6" executionId="5610ae92-3227-4cea-919f-06e6a82f1a05" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4605aab-2ff4-e6ee-b9ed-b93ef3a844eb" executionId="0bacb1bf-8cb1-4fac-9a27-f80f77f9ae09" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f02cc5ee-3a1d-d591-f5bc-45abb2c6769f" executionId="6a60b07b-84c0-44e2-a38a-cd55b7ebfc19" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="4" executed="4" passed="4" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
+[xUnit.net 00:00:00.36]   Discovering: Wip.Artifacts.Local.Tests&#xD;
+[xUnit.net 00:00:00.39]   Discovered:  Wip.Artifacts.Local.Tests&#xD;
+[xUnit.net 00:00:00.39]   Starting:    Wip.Artifacts.Local.Tests&#xD;
+[xUnit.net 00:00:00.65]   Finished:    Wip.Artifacts.Local.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="RICARDO-PC" outcome="Warning" timestamp="2026-11-02T12:01:24.8710328-03:00">
+        <Text>Data collector 'Blame' message: All tests finished running, Sequence file will not be generated.</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
