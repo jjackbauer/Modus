@@ -1,0 +1,36 @@
+name: WIP Restore Diagnostics
+
+on:
+  push:
+    branches:
+      - WIP
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore-diagnostics:
+    name: restore-diagnostics
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore with diagnostics
+        shell: bash
+        run: |
+          set +e
+          dotnet restore Wip.slnx -v normal > restore.log 2>&1
+          code=$?
+          echo "restore_exit=$code"
+          {
+            echo "### WIP restore exit $code"
+            echo "summary:"
+            grep -iE "error|NU[0-9]+|MSB[0-9]+" restore.log | tail -120
+          } >> "$GITHUB_STEP_SUMMARY"
+          tail -120 restore.log
+          exit $code
