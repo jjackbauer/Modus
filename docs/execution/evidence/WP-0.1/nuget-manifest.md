@@ -68,3 +68,12 @@ Never put the API key in the repository or a command transcript.
 - Nuspec validation: all 18 IDs are `0.0.2`; internal dependencies resolve to `0.0.2`.
 - **Publication attempted and failed:** `dotnet nuget push` returned **403 — the API key has expired**. The loop stopped on the first package; **no package was published**. See [nuget-publish-0.0.2.txt](nuget-publish-0.0.2.txt) and [fail-2-nuget-key-expired.md](fail-2-nuget-key-expired.md).
 - Next: replace the expired key with a new push-scoped key and retry the 18 pushes; tests remain blocked by `BLK-TESTHOST-ENV`.
+
+## Published 0.0.2 (2026-11-02T11:50-03:00)
+
+- **Push:** a new unexpired key was accepted. All **18 `.nupkg`** packages were created on nuget.org (`201 Created`); the matching **18 `.snupkg`** symbol packages were also accepted. The publish log is [nuget-publish-0.0.2-retry.txt](nuget-publish-0.0.2-retry.txt).
+- **Registry:** all **18/18** flat-container indexes now include `0.0.2`; the first checks showed NuGet.org indexing lag ([nuget-registry-after.txt](nuget-registry-after.txt), [nuget-registry-final.txt](nuget-registry-final.txt)).
+- **Public consumption:** with a fresh NuGet HTTP cache, a clean console project installed `Modus.Core 0.0.2` and `Wip.Modus 0.0.2` (which depends on `Modus.Core 0.0.2`) and built with **0 warnings / 0 errors** ([nuget-consume-public-retry.txt](nuget-consume-public-retry.txt)). An earlier attempt [nuget-consume-public.txt](nuget-consume-public.txt) failed because of a stale client HTTP cache, not a missing package.
+- **Not published:** `Wip.Bones.Host` and `Wip.Bones.Web` (Web SDK applications, not packable by default).
+- **Tests:** still not executed; the test risk record remains active: [waiver-nuget-tests.md](waiver-nuget-tests.md).
+- **Key hygiene:** revoke the API key and delete `%USERPROFILE%\.secrets\nuget.key` now that publication is complete.

@@ -34,3 +34,7 @@ This record does **not** claim tests passed. No test count or green suite is ass
 ## Update 2026-11-02T11:29:25-03:00
 
 The publication attempt failed with an **expired API key**; **no package was published**. This risk record therefore describes a prepared-but-unexecuted publication, not a completed release. It remains valid only if a later authorized push succeeds.
+
+## Publication result 2026-11-02T11:50-03:00
+
+The 18 packages at `0.0.2` were published to nuget.org after a new API key was supplied. They are live and a representative public install/build passed. **The WIP test suites still have not run.** This risk record remains active until the suites are executed or 2026-11-09, whichever is earlier. Publication is **not** evidence for G5.

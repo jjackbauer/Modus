@@ -1,0 +1,310 @@
+# NuGet publish 0.0.2 - retry
+captured=2026-11-02T11:34:10.0508211-03:00
+key_file_modified=2026-11-02T11:33:55.3523002-03:00
+source=https://api.nuget.org/v3/index.json
+
+PUSH Modus.Core.0.0.2.nupkg EXIT 0
+Pushing Modus.Core.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+  Created https://www.nuget.org/api/v2/package/ 784ms
+Your package was pushed.
+Pushing Modus.Core.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 271ms
+Your package was pushed.
+
+PUSH Modus.Host.0.0.2.nupkg EXIT 0
+Pushing Modus.Host.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+  Created https://www.nuget.org/api/v2/package/ 1429ms
+Your package was pushed.
+Pushing Modus.Host.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 296ms
+Your package was pushed.
+
+PUSH Wip.Abstractions.0.0.2.nupkg EXIT 0
+Pushing Wip.Abstractions.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1122ms
+Your package was pushed.
+Pushing Wip.Abstractions.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 256ms
+Your package was pushed.
+
+PUSH Wip.Agent.Basic.0.0.2.nupkg EXIT 0
+Pushing Wip.Agent.Basic.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 964ms
+Your package was pushed.
+Pushing Wip.Agent.Basic.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 247ms
+Your package was pushed.
+
+PUSH Wip.Artifacts.Local.0.0.2.nupkg EXIT 0
+Pushing Wip.Artifacts.Local.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 958ms
+Your package was pushed.
+Pushing Wip.Artifacts.Local.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 263ms
+Your package was pushed.
+
+PUSH Wip.Bones.0.0.2.nupkg EXIT 0
+Pushing Wip.Bones.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1097ms
+Your package was pushed.
+Pushing Wip.Bones.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 245ms
+Your package was pushed.
+
+PUSH Wip.Bones.Agents.0.0.2.nupkg EXIT 0
+Pushing Wip.Bones.Agents.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1389ms
+Your package was pushed.
+Pushing Wip.Bones.Agents.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 339ms
+Your package was pushed.
+
+PUSH Wip.Bones.ModelProviders.DeepSeek.0.0.2.nupkg EXIT 0
+Pushing Wip.Bones.ModelProviders.DeepSeek.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1178ms
+Your package was pushed.
+Pushing Wip.Bones.ModelProviders.DeepSeek.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 248ms
+Your package was pushed.
+
+PUSH Wip.Builder.0.0.2.nupkg EXIT 0
+Pushing Wip.Builder.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1001ms
+Your package was pushed.
+Pushing Wip.Builder.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 247ms
+Your package was pushed.
+
+PUSH Wip.Modus.0.0.2.nupkg EXIT 0
+Pushing Wip.Modus.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1059ms
+Your package was pushed.
+Pushing Wip.Modus.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 254ms
+Your package was pushed.
+
+PUSH Wip.Policy.LocalSafe.0.0.2.nupkg EXIT 0
+Pushing Wip.Policy.LocalSafe.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 944ms
+Your package was pushed.
+Pushing Wip.Policy.LocalSafe.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 272ms
+Your package was pushed.
+
+PUSH Wip.Runtime.0.0.2.nupkg EXIT 0
+Pushing Wip.Runtime.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1291ms
+Your package was pushed.
+Pushing Wip.Runtime.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 258ms
+Your package was pushed.
+
+PUSH Wip.Shell.0.0.2.nupkg EXIT 0
+Pushing Wip.Shell.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1223ms
+Your package was pushed.
+Pushing Wip.Shell.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 257ms
+Your package was pushed.
+
+PUSH Wip.Shell.E2E.0.0.2.nupkg EXIT 0
+Pushing Wip.Shell.E2E.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1113ms
+Your package was pushed.
+Pushing Wip.Shell.E2E.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 240ms
+Your package was pushed.
+
+PUSH Wip.ShellHost.0.0.2.nupkg EXIT 0
+Pushing Wip.ShellHost.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1214ms
+Your package was pushed.
+Pushing Wip.ShellHost.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 240ms
+Your package was pushed.
+
+PUSH Wip.Tools.Shell.0.0.2.nupkg EXIT 0
+Pushing Wip.Tools.Shell.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1058ms
+Your package was pushed.
+Pushing Wip.Tools.Shell.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 267ms
+Your package was pushed.
+
+PUSH Wip.Validation.DotNet.0.0.2.nupkg EXIT 0
+Pushing Wip.Validation.DotNet.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1077ms
+Your package was pushed.
+Pushing Wip.Validation.DotNet.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 247ms
+Your package was pushed.
+
+PUSH Wip.Workspaces.Git.0.0.2.nupkg EXIT 0
+Pushing Wip.Workspaces.Git.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+warn : Readme missing. Go to https://aka.ms/nuget-include-readme learn How to include a readme file within the package.
+  Created https://www.nuget.org/api/v2/package/ 1156ms
+Your package was pushed.
+Pushing Wip.Workspaces.Git.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Created https://www.nuget.org/api/v2/symbolpackage/ 282ms
+Your package was pushed.
+
+PUSH Modus.Core.0.0.2.snupkg EXIT 0
+Pushing Modus.Core.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 778ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Modus.Core.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Modus.Host.0.0.2.snupkg EXIT 0
+Pushing Modus.Host.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 916ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Modus.Host.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Abstractions.0.0.2.snupkg EXIT 0
+Pushing Wip.Abstractions.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 555ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Abstractions.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Agent.Basic.0.0.2.snupkg EXIT 0
+Pushing Wip.Agent.Basic.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 479ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Agent.Basic.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Artifacts.Local.0.0.2.snupkg EXIT 0
+Pushing Wip.Artifacts.Local.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 565ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Artifacts.Local.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Bones.0.0.2.snupkg EXIT 0
+Pushing Wip.Bones.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 564ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Bones.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Bones.Agents.0.0.2.snupkg EXIT 0
+Pushing Wip.Bones.Agents.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 789ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Bones.Agents.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Bones.ModelProviders.DeepSeek.0.0.2.snupkg EXIT 0
+Pushing Wip.Bones.ModelProviders.DeepSeek.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 563ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Bones.ModelProviders.DeepSeek.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Builder.0.0.2.snupkg EXIT 0
+Pushing Wip.Builder.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 481ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Builder.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Modus.0.0.2.snupkg EXIT 0
+Pushing Wip.Modus.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 562ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Modus.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Policy.LocalSafe.0.0.2.snupkg EXIT 0
+Pushing Wip.Policy.LocalSafe.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 534ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Policy.LocalSafe.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Runtime.0.0.2.snupkg EXIT 0
+Pushing Wip.Runtime.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 680ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Runtime.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Shell.0.0.2.snupkg EXIT 0
+Pushing Wip.Shell.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 704ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Shell.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Shell.E2E.0.0.2.snupkg EXIT 0
+Pushing Wip.Shell.E2E.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 560ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Shell.E2E.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.ShellHost.0.0.2.snupkg EXIT 0
+Pushing Wip.ShellHost.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 582ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.ShellHost.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Tools.Shell.0.0.2.snupkg EXIT 0
+Pushing Wip.Tools.Shell.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 554ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Tools.Shell.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Validation.DotNet.0.0.2.snupkg EXIT 0
+Pushing Wip.Validation.DotNet.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 568ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Validation.DotNet.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+PUSH Wip.Workspaces.Git.0.0.2.snupkg EXIT 0
+Pushing Wip.Workspaces.Git.0.0.2.snupkg to 'https://www.nuget.org/api/v2/symbolpackage'...
+  PUT https://www.nuget.org/api/v2/symbolpackage/
+  Conflict https://www.nuget.org/api/v2/symbolpackage/ 569ms
+Package 'C:\Users\ricar\dev\Modus\artifacts\nuget-0.0.2\Wip.Workspaces.Git.0.0.2.snupkg' already exists at feed 'https://www.nuget.org/api/v2/symbolpackage'.
+
+RESULT=ok

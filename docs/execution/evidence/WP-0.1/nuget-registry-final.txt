@@ -1,0 +1,22 @@
+# NuGet registry verification after 0.0.2 publish
+captured=2026-11-02T11:44:50.6049647-03:00
+
+modus.core 0.0.2=True
+modus.host 0.0.2=True
+wip.abstractions 0.0.2=True
+wip.agent.basic 0.0.2=True
+wip.artifacts.local 0.0.2=True
+wip.bones 0.0.2=True
+wip.bones.agents 0.0.2=True
+wip.bones.modelproviders.deepseek 0.0.2=True
+wip.builder 0.0.2=True
+wip.modus 0.0.2=True
+wip.policy.localsafe 0.0.2=True
+wip.runtime 0.0.2=True
+wip.shell 0.0.2=True
+wip.shell.e2e 0.0.2=True
+wip.shellhost 0.0.2=True
+wip.tools.shell 0.0.2=True
+wip.validation.dotnet 0.0.2=True
+wip.workspaces.git 0.0.2=True
+MISSING=

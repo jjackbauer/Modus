@@ -1,6 +1,6 @@
 # BLK-NUGET-PUBLISH — publication is blocked on credentials, version, and release approval
 
-**Status:** open
+**Status:** resolved — publication complete; test risk remains open
 **Opened:** 2026-11-02T11:00:00-03:00
 **Owner:** product owner + release engineer
 
@@ -89,3 +89,11 @@ This is the safest option: the key never enters the agent process or this transc
 - The key file decrypts correctly (46-char NuGet-shaped value), so the problem is key expiry, not format or network.
 - **Action required:** create a new NuGet API key (push-only, short expiry, scoped to the package IDs), replace the encrypted file, and ask for a retry. Do not paste the key in chat.
 - Evidence: [nuget-publish-0.0.2.txt](../evidence/WP-0.1/nuget-publish-0.0.2.txt), [fail-2-nuget-key-expired.md](../evidence/WP-0.1/fail-2-nuget-key-expired.md).
+
+## Resolution 2026-11-02T11:50-03:00
+
+- A new unexpired push-scoped key was used; **all 18 nupkgs and 18 symbol packages were accepted** by nuget.org.
+- Registry verification: **18/18** IDs expose `0.0.2`.
+- Public consumption: `Modus.Core 0.0.2` + `Wip.Modus 0.0.2` installed from nuget.org and built successfully with a fresh HTTP cache.
+- **Closed for publication.** The remaining gap is test evidence (`BLK-TESTHOST-ENV`), recorded in `waiver-nuget-tests.md` until 2026-11-09.
+- Key must be revoked and the encrypted file deleted.

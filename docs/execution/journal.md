@@ -54,3 +54,12 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Publish attempt:** `dotnet nuget push Modus.Core.0.0.2.nupkg` -> exit 1, **403 expired API key**; loop stopped; **no package published**.
 - **Blocker:** owner must issue a new short-lived push-scoped key and replace the encrypted file; no retry with the expired key.
 - **Tests:** still blocked by `BLK-TESTHOST-ENV`; no green test claim.
+
+## 2026-11-02T11:48:04-03:00 - WP-0.1 (NuGet 0.0.2 published and verified)
+
+- **Key:** the replacement key was accepted; the expired key had produced 403 and no publication.
+- **Push:** all 18 `.nupkg` + 18 `.snupkg` packages were accepted by nuget.org (201 Created). No secret was printed or committed.
+- **Registry:** 18/18 flat-container indexes expose `0.0.2`; NuGet indexing lag was observed and resolved.
+- **Public consume:** `Modus.Core 0.0.2` + `Wip.Modus 0.0.2` installed from nuget.org with a fresh HTTP cache and built (exit 0, 0 warnings/errors).
+- **Residual:** tests still unexecuted (`BLK-TESTHOST-ENV`); publication is not G5/WIP 1.0. Key must be revoked and the encrypted file deleted.
+- **Next:** run the 17 WIP suites on an unconfined host/CI, record TRX, then WP-0.2.

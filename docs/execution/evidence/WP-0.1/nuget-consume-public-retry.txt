@@ -1,0 +1,55 @@
+# Public nuget.org consumption test 2 (fresh HTTP cache)
+captured=2026-11-02T11:46:51.9089432-03:00
+http_cache=C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\http-cache
+
+CMD: dotnet new console --framework net10.0 --no-restore
+EXIT: 0
+CMD: dotnet add package Modus.Core --version 0.0.2
+EXIT: 0
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Modus.Core' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj...
+info :   GET https://api.nuget.org/v3-flatcontainer/modus.core/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/modus.core/index.json 465ms
+info :   GET https://api.nuget.org/v3-flatcontainer/modus.core/0.0.2/modus.core.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/modus.core/0.0.2/modus.core.0.0.2.nupkg 298ms
+info : Installed Modus.Core 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\modus.core\0.0.2 with content hash V7Dnirirsufe2KbpbRTrUNAR4CBSoZR5C3ns2KKn9AzGlhUs2LUAWWpMqpmdeFY324hZbm7PjGeZjWelA5AG7g==.
+info :   GET https://api.nuget.org/v3/vulnerabilities/index.json
+info :   OK https://api.nuget.org/v3/vulnerabilities/index.json 160ms
+info :   GET https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/vulnerability.base.json
+info :   GET https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/2026.11.02.11.41.55/vulnerability.update.json
+info :   OK https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/vulnerability.base.json 398ms
+info :   OK https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/2026.11.02.11.41.55/vulnerability.update.json 850ms
+info : Package 'Modus.Core' is compatible with all the specified frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj'.
+info : PackageReference for package 'Modus.Core' version '0.0.2' added to file 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj'.
+info : Generating MSBuild file C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\obj\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj.nuget.g.props.
+info : Generating MSBuild file C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\obj\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj.nuget.g.targets.
+info : Writing assets file to disk. Path: C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\obj\project.assets.json
+log  : Restored C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj (in 44.9 sec).
+
+CMD: dotnet add package Wip.Modus --version 0.0.2
+EXIT: 0
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Wip.Modus' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj...
+info :   CACHE https://api.nuget.org/v3/vulnerabilities/index.json
+info :   CACHE https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/vulnerability.base.json
+info :   CACHE https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/2026.11.02.11.41.55/vulnerability.update.json
+info : Package 'Wip.Modus' is compatible with all the specified frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj'.
+info : PackageReference for package 'Wip.Modus' version '0.0.2' added to file 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj'.
+info : Writing assets file to disk. Path: C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\obj\project.assets.json
+log  : Restored C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.csproj (in 154 ms).
+
+CMD: dotnet build --no-restore
+EXIT: 0
+  wip-nuget-public2-baf12a50646745d3b4c04921324b81f7 -> C:\Users\ricar\AppData\Local\Temp\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7\bin\Debug\net10.0\wip-nuget-public2-baf12a50646745d3b4c04921324b81f7.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.74
+
+RESULT modus=0 wip_modus=0 build=0

@@ -1,0 +1,80 @@
+# NuGet registry verification after 0.0.2 publish
+captured=2026-11-02T11:35:51.7413657-03:00
+
+modus.core 0.0.2=False
+{
+  "versions": [
+    "0.0.1"
+  ]
+}
+modus.host 0.0.2=False
+{
+  "versions": [
+    "0.0.1"
+  ]
+}
+wip.abstractions 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:80f28f25-b01e-004a-37d7-6a1e78000000
+Time:2026-11-02T14:35:53.7788302Z</Message></Error>
+wip.agent.basic 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:3311b526-a01e-0069-05d7-6a84bb000000
+Time:2026-11-02T14:35:54.3840093Z</Message></Error>
+wip.artifacts.local 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:3e33157a-d01e-0001-5fd7-6ae22b000000
+Time:2026-11-02T14:35:55.2106518Z</Message></Error>
+wip.bones 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:9db0a76e-901e-0062-79d7-6a7fd0000000
+Time:2026-11-02T14:35:56.0915513Z</Message></Error>
+wip.bones.agents 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:f1fff5d7-801e-0051-7fd7-6a207b000000
+Time:2026-11-02T14:35:56.6394725Z</Message></Error>
+wip.bones.modelproviders.deepseek 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:c4f8cb7d-901e-0010-43d7-6a789f000000
+Time:2026-11-02T14:35:57.4668906Z</Message></Error>
+wip.builder 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:93036207-501e-001f-73d7-6a0ef3000000
+Time:2026-11-02T14:35:58.0860968Z</Message></Error>
+wip.modus 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:61a00479-e01e-0057-39d7-6a13c4000000
+Time:2026-11-02T14:35:58.6996259Z</Message></Error>
+wip.policy.localsafe 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:e8c5e91d-c01e-0022-26d7-6a78e8000000
+Time:2026-11-02T14:35:59.2473549Z</Message></Error>
+wip.runtime 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:80f2ae30-b01e-004a-30d7-6a1e78000000
+Time:2026-11-02T14:35:59.7596427Z</Message></Error>
+wip.shell 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:d9fa6e10-f01e-0074-4ed7-6a8907000000
+Time:2026-11-02T14:36:00.5803582Z</Message></Error>
+wip.shell.e2e 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:f5062667-d01e-003e-44d7-6a2a88000000
+Time:2026-11-02T14:36:01.1871454Z</Message></Error>
+wip.shellhost 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:5b7043f9-001e-0060-4ed7-6ac168000000
+Time:2026-11-02T14:36:02.0359968Z</Message></Error>
+wip.tools.shell 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:2a8476d1-401e-005e-07d7-6a5617000000
+Time:2026-11-02T14:36:02.6488850Z</Message></Error>
+wip.validation.dotnet 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:f8181efd-001e-0002-52d7-6a034f000000
+Time:2026-11-02T14:36:03.2696885Z</Message></Error>
+wip.workspaces.git 0.0.2=False
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:65f53f47-c01e-001d-30d7-6ab04b000000
+Time:2026-11-02T14:36:03.8829998Z</Message></Error>
+MISSING=18

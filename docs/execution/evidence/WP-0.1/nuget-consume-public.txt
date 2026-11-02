@@ -1,0 +1,97 @@
+# Public nuget.org consumption test (0.0.2)
+captured=2026-11-02T11:45:01.8497862-03:00
+
+CMD: dotnet new console --framework net10.0 --no-restore
+EXIT: 0
+CMD: dotnet add package Modus.Core --version 0.0.2
+EXIT: 1
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Modus.Core' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj...
+info :   CACHE https://api.nuget.org/v3-flatcontainer/modus.core/index.json
+error: NU1102: Unable to find package Modus.Core with version (>= 0.0.2)
+error:   - Found 1 version(s) in nuget.org [ Nearest version: 0.0.1 ]
+error:   - Found 0 version(s) in C:\Program Files\dotnet\library-packs
+error: Package 'Modus.Core' is incompatible with 'all' frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+
+CMD: dotnet add package Wip.Modus --version 0.0.2
+EXIT: 1
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Wip.Modus' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj...
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.modus/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.modus/index.json 42236ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.modus/0.0.2/wip.modus.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.modus/0.0.2/wip.modus.0.0.2.nupkg 303ms
+info :   CACHE https://api.nuget.org/v3-flatcontainer/modus.core/index.json
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.builder/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.builder/index.json 28ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.builder/0.0.2/wip.builder.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.builder/0.0.2/wip.builder.0.0.2.nupkg 313ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.abstractions/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.abstractions/index.json 36ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.abstractions/0.0.2/wip.abstractions.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.abstractions/0.0.2/wip.abstractions.0.0.2.nupkg 205ms
+info : Installed Wip.Abstractions 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.abstractions\0.0.2 with content hash GD0DXyjZ/gib9f1xD6nQCE1/33ipB4nmjyqu+p90pFMW/lJIpF30L4vD769uqe33sdem+e0l3JnEdpfl3P0RCQ==.
+info : Installed Wip.Modus 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.modus\0.0.2 with content hash 7v+INR96XWcDIKgDy70rKFqWkFIlcrnb7Pk4zSPqKiVdYpqZHy+P6tZYcP5KLRIBBsiXYdKozl9UUyB4IVyw7A==.
+info : Installed Wip.Builder 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.builder\0.0.2 with content hash KqRBmZHpxwh9ikmXIBiQowWFYiXb0IAy49vaIooXIf0iS3YdgJP40rzC7lm2ljMO4t/YTVFPB4RAzlmY6FRsBg==.
+error: NU1102: Unable to find package Modus.Core with version (>= 0.0.2)
+error:   - Found 1 version(s) in nuget.org [ Nearest version: 0.0.1 ]
+error:   - Found 0 version(s) in C:\Program Files\dotnet\library-packs
+info :   GET https://api.nuget.org/v3/vulnerabilities/index.json
+info :   OK https://api.nuget.org/v3/vulnerabilities/index.json 406ms
+info :   GET https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/vulnerability.base.json
+info :   GET https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/2026.11.02.11.41.55/vulnerability.update.json
+info :   OK https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/vulnerability.base.json 156ms
+info :   OK https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/2026.11.02.11.41.55/vulnerability.update.json 364ms
+error: Package 'Wip.Modus' is incompatible with 'all' frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+
+CMD: dotnet add package Wip.Runtime --version 0.0.2
+EXIT: 0
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Wip.Runtime' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj...
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.runtime/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.runtime/index.json 42911ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.runtime/0.0.2/wip.runtime.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.runtime/0.0.2/wip.runtime.0.0.2.nupkg 293ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.agent.basic/index.json
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.workspaces.git/index.json
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.validation.dotnet/index.json
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.agent.basic/index.json 228ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.agent.basic/0.0.2/wip.agent.basic.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.workspaces.git/index.json 436ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.workspaces.git/0.0.2/wip.workspaces.git.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.validation.dotnet/index.json 662ms
+info :   GET https://api.nuget.org/v3-flatcontainer/wip.validation.dotnet/0.0.2/wip.validation.dotnet.0.0.2.nupkg
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.agent.basic/0.0.2/wip.agent.basic.0.0.2.nupkg 956ms
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.workspaces.git/0.0.2/wip.workspaces.git.0.0.2.nupkg 1280ms
+info :   OK https://api.nuget.org/v3-flatcontainer/wip.validation.dotnet/0.0.2/wip.validation.dotnet.0.0.2.nupkg 1465ms
+info : Installed Wip.Workspaces.Git 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.workspaces.git\0.0.2 with content hash 7Aowm2LENujrHJ95Ew38JHA8hqFnDdM7EOBi7UDtj170WfOarzi/H9F4pzN6a1iQexP9N4BiEwavgRociL2srA==.
+info : Installed Wip.Agent.Basic 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.agent.basic\0.0.2 with content hash Vzw3ePcIU+cjJjaw9FFPKyO4QZ/R7Ga3+oWlHgXp+TyGbI74vW9dFB231cCvp4k/hb8ph3yql2k1XX/kXGETxw==.
+info : Installed Wip.Validation.DotNet 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.validation.dotnet\0.0.2 with content hash 0wn9Y+CWTNdc+GZEFESX7uq35+4cGRgv7TlkRn+PRjDCpUzI1Z6bLORLtb23v4+l4C9Ehy9tVvA4GiEB7pr3rQ==.
+info : Installed Wip.Runtime 0.0.2 from https://api.nuget.org/v3/index.json to C:\Users\ricar\.nuget\packages\wip.runtime\0.0.2 with content hash nNTvB6bKzeYr72tuLLf1//cTmrEjE844ZDbsilcav1GpL3eKux82gP1EQC6QkupQsRvUEB0/alklKZP5s6y6zg==.
+info :   CACHE https://api.nuget.org/v3/vulnerabilities/index.json
+info :   CACHE https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/vulnerability.base.json
+info :   CACHE https://api.nuget.org/v3-vulnerabilities/2026.10.28.05.41.06/2026.11.02.11.41.55/vulnerability.update.json
+info : Package 'Wip.Runtime' is compatible with all the specified frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+info : PackageReference for package 'Wip.Runtime' version '0.0.2' added to file 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj'.
+info : Generating MSBuild file C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\obj\wip-nuget-public-30085e3863174987926000057927a84e.csproj.nuget.g.props.
+info : Generating MSBuild file C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\obj\wip-nuget-public-30085e3863174987926000057927a84e.csproj.nuget.g.targets.
+info : Writing assets file to disk. Path: C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\obj\project.assets.json
+log  : Restored C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\wip-nuget-public-30085e3863174987926000057927a84e.csproj (in 45.93 sec).
+
+CMD: dotnet build --no-restore
+EXIT: 0
+  wip-nuget-public-30085e3863174987926000057927a84e -> C:\Users\ricar\AppData\Local\Temp\wip-nuget-public-30085e3863174987926000057927a84e\bin\Debug\net10.0\wip-nuget-public-30085e3863174987926000057927a84e.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.49
+
+RESULT modus=1 wip_modus=1 wip_runtime=0 build=0

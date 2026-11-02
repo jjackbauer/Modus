@@ -1,6 +1,6 @@
 # DEV-001 — NuGet publication requested before the plan's release gate
 
-**Status:** proposed
+**Status:** executed — 0.0.2 published on nuget.org
 **Date:** 2026-11-02
 **Trigger:** user instruction: "I want you to pack and publish wip in nuget as well. and update modus. I think it is outdated in nuget"
 
@@ -42,3 +42,9 @@ Keep WIP 1.0 behind G5. Treat this request as a **pre-release packaging task**:
 | C — defer to WP-6.2 | No packages now; deliver at the planned release | Safest for the plan, does not satisfy the immediate request |
 
 **Recommendation:** A. I will prepare local packages and exact push commands; the human decision is the version, package list, API key, and publication timing.
+
+## Execution result 2026-11-02T11:50-03:00
+
+- Version `0.0.2` was packed and published for 18 Modus/WIP packages; `Wip.Bones.Host` and `Wip.Bones.Web` remain application-only.
+- Registry shows `0.0.2` for all 18 IDs; a clean public install of `Modus.Core` + `Wip.Modus` built successfully.
+- Tests remain unexecuted (`BLK-TESTHOST-ENV`); the release did not pass G5 and does not constitute WIP 1.0.

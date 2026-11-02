@@ -12,9 +12,9 @@
   "attempts": {
     "WP-0.1": 1
   },
-  "last_verified_at": "2026-11-02T11:29:52-03:00",
-  "next_action": "Ask the owner for a new unexpired, push-scoped NuGet API key; retry the 18 packages at 0.0.2, then run the test inventory on an unconfined host/CI.",
-  "open_blockers": ["BLK-TESTHOST-ENV", "BLK-NUGET-PUBLISH"],
+  "last_verified_at": "2026-11-02T11:48:04-03:00",
+  "next_action": "Run the WP-0.1 test inventory on an unconfined host/CI (testhost is blocked here), then continue with WP-0.2; G0 remains not ready.",
+  "open_blockers": ["BLK-TESTHOST-ENV"],
   "deviations": ["DEV-001"],
   "dirty_tree": {
     "porcelain_entries": 308,
@@ -31,9 +31,12 @@
     "local_source": "artifacts/nuget-0.0.2",
     "manifest": "docs/execution/evidence/WP-0.1/nuget-manifest.md",
     "packages": 18,
-    "publish": "blocked_expired_key",
-    "publish_attempt": "2026-11-02T11:29:25-03:00",
-    "published": false
+    "publish": "published_0.0.2",
+    "publish_attempt": "2026-11-02T11:34:00-03:00",
+    "published": true,
+    "published_at": "2026-11-02T11:34:00-03:00",
+    "registry_verified": true,
+    "public_consume": true
   },
   "evidence": {
     "WP-0.1": "docs/execution/evidence/WP-0.1/",
