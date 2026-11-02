@@ -8,7 +8,7 @@
   "work_package": "WP-0.6",
   "status": "done",
   "gate": "G0",
-  "gate_status": "g0_ci_gate_failed_run_41480351635",
+  "gate_status": "g0_ci_gate_failed_11_exposed_fixes_pushed",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
@@ -17,8 +17,8 @@
     "WP-0.5": 1,
     "WP-0.6": 1
   },
-  "last_verified_at": "2026-11-02T13:40:33-03:00",
-  "next_action": "Run 41480351635 passed builds/architecture but failed the offline gate. Inspect the annotated rerun 41483737752, fix the gate failure, and rerun. WP-0.4 stays blocked; G0 not passed.",
+  "last_verified_at": "2026-11-02T14:00:35-03:00",
+  "next_action": "Run 41483737752 exposed 11 unwaived CI failures. Chromium installation and README path fixes were pushed in 3f0a4da; await run 41486872592. WP-0.4 stays blocked; G0 not passed.",
   "open_blockers": ["BLK-CI-REMOTE"],
   "deviations": ["DEV-001", "DEV-002"],
   "dirty_tree": {
@@ -62,7 +62,8 @@
     "offline_projects": 15,
     "waived_failures": 21,
     "known_aborts": 2,
-    "remote_ci": "run_41480351635_gate_failure",
+    "remote_ci": "run_41486872592_in_progress",
+    "ci_exposed_failures": 11,
     "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]
   },
   "work_packages": {

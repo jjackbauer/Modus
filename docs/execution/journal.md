@@ -140,3 +140,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Rerun:** `243769c` tees the gate output to `gate.log` and emits `::error::` annotations. WIP run **41483737752** (Tests CI) is queued.
 - **Modus CI:** separate workflow fails at the pre-existing migration regression; not part of the WIP gate.
 - **Status:** WP-0.4 **blocked**; G0 **not passed**. Phase 1 not started.
+
+## 2026-11-02T14:00:35-03:00 - CI gate exposes 11; Chromium/README fixes pushed
+
+- **Gate:** run 41483737752 failed with `errors=11` (9 annotations visible; 2 truncated). Failures were in Bones host/meta tests (Playwright), the Bones board meta-test, and a Modus README path test.
+- **Fixes (`3f0a4da`):** offline job installs Chromium via `playwright.ps1`; README trace paths are code-spanned and the artifact path is `bin/Release`.
+- **Evidence:** `docs/execution/evidence/G0/ci-gate-errors-41483737752.md`.
+- **Rerun:** WIP run **41486872592** in progress. No waivers added for the 11.
