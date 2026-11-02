@@ -30,7 +30,7 @@ jobs:
           {
             echo "### WIP restore exit $code"
             echo "summary:"
-            grep -iE "error|NU[0-9]+|MSB[0-9]+" restore.log | tail -120
+            tail -120 restore.log
           } >> "$GITHUB_STEP_SUMMARY"
           tail -120 restore.log
           exit $code
@@ -40,7 +40,8 @@ jobs:
         run: |
           git config user.name "wip-ci"
           git config user.email "wip-ci@users.noreply.github.com"
-          { grep -iE "error|NU[0-9]+|MSB[0-9]+|Restore|Project" restore.log || true; } | tail -300 > ci-restore.log
+          tail -500 restore.log > ci-restore.log
+          echo "log_bytes=$(wc -c < ci-restore.log)"
           git checkout -B "ci-restore-diagnostics-$GITHUB_RUN_ID"
           git add ci-restore.log
           git commit -m "ci: restore diagnostics $GITHUB_RUN_ID"
