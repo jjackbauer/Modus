@@ -81,3 +81,11 @@ This is the safest option: the key never enters the agent process or this transc
 - Scope the key to push-only for `Modus.*` and `Wip.*` with a short expiry; revoke it after publishing (https://www.nuget.org/account/apikeys).
 - Delete the encrypted file after use and clear the environment variable.
 - If the key is exposed, revoke it immediately.
+
+## Update 2026-11-02T11:29:25-03:00 — publish attempt failed: expired API key
+
+- `dotnet nuget push` of `Modus.Core.0.0.2.nupkg` returned **403: The specified API key has expired**. The loop stopped on the first package.
+- **No package was published.** The 18 packages remain in `artifacts/nuget-0.0.2`.
+- The key file decrypts correctly (46-char NuGet-shaped value), so the problem is key expiry, not format or network.
+- **Action required:** create a new NuGet API key (push-only, short expiry, scoped to the package IDs), replace the encrypted file, and ask for a retry. Do not paste the key in chat.
+- Evidence: [nuget-publish-0.0.2.txt](../evidence/WP-0.1/nuget-publish-0.0.2.txt), [fail-2-nuget-key-expired.md](../evidence/WP-0.1/fail-2-nuget-key-expired.md).

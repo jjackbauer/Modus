@@ -1,0 +1,11 @@
+# NuGet publish 0.0.2
+captured=2026-11-02T11:29:25.8543423-03:00
+source=https://api.nuget.org/v3/index.json
+
+PUSH Modus.Core.0.0.2.nupkg EXIT 1
+Pushing Modus.Core.0.0.2.nupkg to 'https://www.nuget.org/api/v2/package'...
+  PUT https://www.nuget.org/api/v2/package/
+  Forbidden https://www.nuget.org/api/v2/package/ 832ms
+error: Response status code does not indicate success: 403 (The specified API key has expired. Please create a new API key at https://www.nuget.org/account/apikeys.).
+
+RESULT=failed

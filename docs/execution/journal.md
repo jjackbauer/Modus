@@ -46,3 +46,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Registry check:** `Modus.Core` and `Modus.Host` publish `0.0.1`; checked `Wip.*` IDs are unpublished. Evidence `nuget-registry-check.txt`.
 - **Network correction:** `curl` and `dotnet package search` reach nuget.org; the earlier PowerShell `Invoke-WebRequest` timeout was tool-specific, not a general outage. No `dotnet nuget push` attempted because no API key is present.
 - **Implication:** publication is blocked by the missing key, the version decision, and the testhost blocker — not by connectivity.
+
+## 2026-11-02T11:29:52-03:00 - WP-0.1 (NuGet 0.0.2 prepared; publish blocked by expired key)
+
+- **Version:** `Directory.Build.props` bumped to `0.0.2`; `dotnet build Modus.slnx -c Release` -> exit 0, 0 errors, 121 warnings.
+- **Pack:** 18 packages + 18 symbols at `0.0.2` in `artifacts/nuget-0.0.2`; all pack exits 0; nuspec IDs/dependencies consistent.
+- **Publish attempt:** `dotnet nuget push Modus.Core.0.0.2.nupkg` -> exit 1, **403 expired API key**; loop stopped; **no package published**.
+- **Blocker:** owner must issue a new short-lived push-scoped key and replace the encrypted file; no retry with the expired key.
+- **Tests:** still blocked by `BLK-TESTHOST-ENV`; no green test claim.

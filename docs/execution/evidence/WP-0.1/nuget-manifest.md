@@ -60,3 +60,11 @@ Never put the API key in the repository or a command transcript.
 ## Registry check
 
 `Modus.Core` and `Modus.Host` publish **0.0.1** on nuget.org. All checked WIP IDs (`Wip.Abstractions`, `Wip.Runtime`, `Wip.Builder`, `Wip.ShellHost`, `Wip.Shell`) are unpublished. Read-only evidence: [nuget-registry-check.txt](nuget-registry-check.txt). This confirms the Modus package is outdated relative to the working tree, but a version bump still requires an owner decision.
+
+## 0.0.2 release candidate (2026-11-02T11:29)
+
+- `Directory.Build.props` was bumped to **0.0.2**; `dotnet build Modus.slnx -c Release` -> exit 0, **0 errors**, **121 warnings**, 13.63 s ([build-modus-0.0.2.txt](build-modus-0.0.2.txt)).
+- **18 packages** + 18 symbol packages packed at **0.0.2** into `artifacts/nuget-0.0.2`; every `dotnet pack` exited 0 ([pack-0.0.2.txt](pack-0.0.2.txt)).
+- Nuspec validation: all 18 IDs are `0.0.2`; internal dependencies resolve to `0.0.2`.
+- **Publication attempted and failed:** `dotnet nuget push` returned **403 — the API key has expired**. The loop stopped on the first package; **no package was published**. See [nuget-publish-0.0.2.txt](nuget-publish-0.0.2.txt) and [fail-2-nuget-key-expired.md](fail-2-nuget-key-expired.md).
+- Next: replace the expired key with a new push-scoped key and retry the 18 pushes; tests remain blocked by `BLK-TESTHOST-ENV`.

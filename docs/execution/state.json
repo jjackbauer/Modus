@@ -12,8 +12,8 @@
   "attempts": {
     "WP-0.1": 1
   },
-  "last_verified_at": "2026-11-02T11:15:12-03:00",
-  "next_action": "Await the owner's NuGet version/API-key decision and an unconfined test run; registry shows Modus 0.0.1 and no WIP packages; 18 local packages are validated at 0.0.2-local; no push attempted.",
+  "last_verified_at": "2026-11-02T11:29:52-03:00",
+  "next_action": "Ask the owner for a new unexpired, push-scoped NuGet API key; retry the 18 packages at 0.0.2, then run the test inventory on an unconfined host/CI.",
   "open_blockers": ["BLK-TESTHOST-ENV", "BLK-NUGET-PUBLISH"],
   "deviations": ["DEV-001"],
   "dirty_tree": {
@@ -27,11 +27,13 @@
   "gate_packet": "docs/execution/evidence/G0/gate-packet.md",
   "decision_record": "docs/execution/evidence/G0/decision-2026-11-02.md",
   "nuget": {
-    "local_version": "0.0.2-local",
-    "local_source": "artifacts/nuget-local",
+    "local_version": "0.0.2",
+    "local_source": "artifacts/nuget-0.0.2",
     "manifest": "docs/execution/evidence/WP-0.1/nuget-manifest.md",
     "packages": 18,
-    "publish": "blocked"
+    "publish": "blocked_expired_key",
+    "publish_attempt": "2026-11-02T11:29:25-03:00",
+    "published": false
   },
   "evidence": {
     "WP-0.1": "docs/execution/evidence/WP-0.1/",
