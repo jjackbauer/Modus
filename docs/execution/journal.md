@@ -125,3 +125,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **First pushed run (41475818406):** Ubuntu build/architecture failed at restore; Windows build succeeded; legacy `tests` job failed at the migration regression. After the rename, run 41477649857 shows Ubuntu build **success**, architecture **success**, Windows build **success**; offline tests were still running when the next push superseded it.
 - **CI split (`269c614`):** `Tests CI` now contains only WIP jobs; the legacy Modus `tests` job moved to `Modus CI` (`modus-ci.yml`). The Modus migration regression is outside the WIP gate. Offline suites now use a 15-minute blame-hang timeout.
 - **Pending:** WIP run 41480351635 (post-split). WP-0.4 remains **blocked** until its offline waiver gate is green; G0 not passed. ADRs accepted and push authorized by the product owner.
+
+## 2026-11-02T13:23:23-03:00 - G0 CI (post-split run 41480351635)
+
+- **Run 41480351635:** `wip-build (ubuntu)` success, `wip-architecture` success; `wip-build (windows)` in progress; `wip-offline-tests` running.
+- **WP-0.4:** still blocked until the offline waiver/zero-test/count gate is green. **G0:** not passed.
+- **G0 packet:** ADRs marked accepted; criterion 3 now in progress; no self-approval.
+- **Modus CI:** separate workflow completed failure at the pre-existing migration regression; not part of the WIP gate.

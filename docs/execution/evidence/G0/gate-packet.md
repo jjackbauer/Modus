@@ -2,27 +2,27 @@
 
 **Plan:** WIP-IMPL-001
 **Phase:** 0 — Truth and baseline
-**Packet date:** 2026-11-02T12:58-03:00
+**Packet date:** 2026-11-02T13:24-03:00
 **Prepared by:** WIP Program Executor
 **Evidence root:** `docs/execution/evidence/`
 
 ## Status
 
-**NOT READY — two decisions required.**
+**NOT READY — CI run in progress.**
 
-Phase 0 implementation is complete except for the first GitHub Actions run and ADR acceptance. This packet asks for those two decisions. It does not self-approve G0.
+Phase 0 implementation is complete. The product owner authorized the push and accepted ADR-IMPL-01..07 on 2026-11-02. The post-split WIP run is in progress; G0 cannot pass until its offline waiver gate is green. This packet does not self-approve G0.
 
-## Criteria (plan `3.2 / `5.1)
+## Criteria (plan §3.2 / §5.1)
 
 | # | Criterion | Status | Evidence / blocker |
 |---|---|---|---|
 | 1 | Baseline tag and clean working tree | **PASS** | Tag `wip-baseline-2026-11-02` → `99c0b08`; working tree clean. |
 | 2 | `Wip.slnx` includes all 37 WIP projects; coverage check fails on orphans | **PASS** | 37/37 WIP + architecture test project = 38 solution projects; [coverage-after](../WP-0.3/coverage-after.txt); orphan case [coverage-orphan-red](../WP-0.3/coverage-orphan-red.txt) exits 1. |
-| 3 | CI runs all offline suites; known failures waived with owners/expiry | **BLOCKED** | Workflows/scripts/waivers are committed; local gate green (15 projects / 21 waivers) and negative cases exit 1. GitHub Actions has not run: [BLK-CI-REMOTE](../blockers/BLK-CI-REMOTE.md). |
-| 4 | Governance guard committed and tested in CI | **PASS local / CI pending** | 3 runtime + 2 Shell E2E guard tests green ([WP-0.2](../WP-0.2/notes.md)); CI steps added; first remote run pending. |
-| 5 | Architecture fitness tests exist and run | **PASS local / CI pending** | WIP architecture tests 3/3; injected forbidden edge exits 1 and source restored with 0 diff ([WP-0.5](../WP-0.5/notes.md)); CI step added; remote run pending. |
-| 6 | ADR-IMPL-01..07 reviewed and accepted | **NOT MET** | Seven **Proposed** ADRs; no ADR is self-accepted. [decisions](../decisions/README.md). |
-| 7 | G0 passed | **NOT MET** | Criteria 3 and 6. |
+| 3 | CI runs all offline suites; known failures waived with owners/expiry | **IN PROGRESS** | Post-split run [41480351635](https://github.com/jjackbauer/Modus/actions/runs/41480351635): Ubuntu build, Windows build, and architecture jobs green; offline waiver gate running. Earlier failures were caused by `WIP.slnx` vs `Wip.slnx` case on Ubuntu, fixed in `6a06e4c`. |
+| 4 | Governance guard committed and tested in CI | **PASS** | 3 runtime + 2 Shell E2E guard tests green locally ([WP-0.2](../WP-0.2/notes.md)); guard steps run in the WIP workflow. |
+| 5 | Architecture fitness tests exist and run | **PASS** | WIP architecture tests 3/3; injected forbidden edge exits 1 and source restored with 0 diff ([WP-0.5](../WP-0.5/notes.md)); `wip-architecture` job green in run 41480351635. |
+| 6 | ADR-IMPL-01..07 reviewed and accepted | **PASS** | Accepted by the product owner on 2026-11-02; [decision record](decision-2026-11-02-g0-adrs.md). ADR-07 expires 2026-11-30. |
+| 7 | G0 passed | **NOT MET** | Criterion 3 is still running. |
 
 ## Verified state
 
@@ -33,11 +33,12 @@ Phase 0 implementation is complete except for the first GitHub Actions run and A
 - Architecture tests: 3/3; one temporary `Wip.ShellHost → Wip.Bones` waiver under ADR-07.
 - NuGet 0.0.2: 18 packages published at the user's explicit direction; the red test baseline is recorded as a risk (DEV-001).
 
-## Decisions required
+## Decisions
 
-1. **Authorize a push** of `WIP` or a short-lived branch to run `Tests CI`. This is the only way to close WP-0.4. No push has been made. After the run, attach the run URL/artifacts; the gate must pass against `docs/plan/test-waivers.json`.
-2. **Accept or amend ADR-IMPL-01..07.** ADR-07 is a time-bounded waiver (expiry 2026-11-30) for the known ShellHost→Bones coupling; WP-2.6 removes it. G0 cannot pass with them still `Proposed`.
-3. **Acknowledge the deviations/risks:** DEV-001 (out-of-plan NuGet 0.0.2), DEV-002 (project-level CI categories instead of Category traits until WP-4.3), and the 32 red-baseline failures/3 aborts with their owners/expiry.
+1. **Completed:** the product owner authorized pushing `WIP`; the branch is pushed.
+2. **Completed:** ADR-IMPL-01..07 accepted; ADR-07 remains time-bounded (expiry 2026-11-30) and G1–G4 still gate their mechanisms/contracts.
+3. **Acknowledged:** DEV-001 (out-of-plan NuGet 0.0.2), DEV-002 (project-level CI categories until WP-4.3), and the red-baseline failures/aborts with owners/expiry.
+4. **Remaining:** the offline waiver gate in run 41480351635 must finish green.
 
 ## Risks
 
@@ -49,11 +50,11 @@ Phase 0 implementation is complete except for the first GitHub Actions run and A
 
 ## Recommendation
 
-Authorize the short-lived-branch push and accept ADR-IMPL-01..07 with ADR-07's expiry and DEV-002 noted. Then run CI, attach the evidence, and pass G0 if the waiver gate is green and no unwaived failure appears. Do not start Phase 1 before that.
+Wait for run 41480351635. If the offline gate is green and no unwaived failure appears, close WP-0.4, record the run/TRX evidence, and pass G0. Do not start Phase 1 before that.
 
-## If approved, next action
+## If CI is green
 
-Push a short-lived branch, run `Tests CI`, attach the run URL/TRX, update WP-0.4 and WP-0.6, and produce the G0 pass record. Phase 1 starts only after G0.
+Attach the run URL/TRX, update WP-0.4 to done, produce the G0 pass record, and start Phase 1.
 
 ## Evidence index
 
@@ -62,5 +63,6 @@ Push a short-lived branch, run `Tests CI`, attach the run URL/TRX, update WP-0.4
 - [WP-0.3 solution topology](../WP-0.3/notes.md)
 - [WP-0.4 CI gate](../WP-0.4/notes.md), [gate green](../WP-0.4/gate-green.txt), [gate negative](../WP-0.4/gate-negative.txt)
 - [WP-0.5 architecture tests](../WP-0.5/notes.md)
-- [WP-0.6 ADRs](../decisions/README.md)
+- [WP-0.6 ADRs](../decisions/README.md), [G0 ADR decision](decision-2026-11-02-g0-adrs.md)
+- [WIP run 41480351635](https://github.com/jjackbauer/Modus/actions/runs/41480351635)
 - [BLK-CI-REMOTE](../blockers/BLK-CI-REMOTE.md), [DEV-001](../deviations/DEV-001-nuget-release.md), [DEV-002](../deviations/DEV-002-ci-category-traits.md)
