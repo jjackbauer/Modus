@@ -91,7 +91,21 @@ jobs:
       - name: Run offline WIP suites
         run: pwsh -NoProfile -File tools/run-wip-tests.ps1 -Configuration Release -ResultsDirectory artifacts/ci-test-results
       - name: Gate known failures, zero tests, and test counts
-        run: pwsh -NoProfile -File tools/verify-test-results.ps1 -ResultsDirectory artifacts/ci-test-results -WaiverPath docs/plan/test-waivers.json
+        shell: pwsh
+        run: |
+          $log = 'artifacts/ci-test-results/gate.log'
+          pwsh -NoProfile -File tools/verify-test-results.ps1 -ResultsDirectory artifacts/ci-test-results -WaiverPath docs/plan/test-waivers.json 2>&1 | Tee-Object -FilePath $log
+          $code = $LASTEXITCODE
+          Write-Output ("gate_exit=" + $code)
+          exit $code
+      - name: Surface gate failure
+        if: failure()
+        shell: pwsh
+        run: |
+          $log = 'artifacts/ci-test-results/gate.log'
+          if (Test-Path $log) {
+            Get-Content $log | ForEach-Object { Write-Output ("::error::" + $_) }
+          }
       - name: Upload offline test results
         if: always()
         uses: actions/upload-artifact@v4
