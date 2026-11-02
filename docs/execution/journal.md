@@ -132,3 +132,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **WP-0.4:** still blocked until the offline waiver/zero-test/count gate is green. **G0:** not passed.
 - **G0 packet:** ADRs marked accepted; criterion 3 now in progress; no self-approval.
 - **Modus CI:** separate workflow completed failure at the pre-existing migration regression; not part of the WIP gate.
+
+## 2026-11-02T13:40:33-03:00 - G0 CI gate failure (run 41480351635)
+
+- **Builds:** Ubuntu, Windows, and architecture jobs all **success**.
+- **Offline job:** test runner completed, but the `Gate known failures, zero tests, and test counts` step failed with exit 1. The gate output was only in the job log; the uploaded artifact requires authentication.
+- **Rerun:** `243769c` tees the gate output to `gate.log` and emits `::error::` annotations. WIP run **41483737752** (Tests CI) is queued.
+- **Modus CI:** separate workflow fails at the pre-existing migration regression; not part of the WIP gate.
+- **Status:** WP-0.4 **blocked**; G0 **not passed**. Phase 1 not started.
