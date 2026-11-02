@@ -1,0 +1,8 @@
+command=verify-solution-coverage Wip.slnx
+exit=0
+solution=Wip.slnx
+wip_project_count=37
+solution_wip_project_count=37
+missing_from_solution=0
+solution_paths_not_on_disk=0
+solution_coverage=ok

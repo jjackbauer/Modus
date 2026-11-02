@@ -16,7 +16,7 @@
 | Elapsed | 12.76 s |
 | Evidence | [build-testsdk-17.14.1.txt](../execution/evidence/WP-0.1/build-testsdk-17.14.1.txt) |
 
-`Modus.slnx` contains 34 of 37 WIP projects. `Wip.Bones.Tests`, `Wip.Bones.Benchmark`, and `BonesLibraryRecovery` are outside both solutions (WP-0.3).
+`Wip.slnx` now contains all **37** WIP projects (WP-0.3); `Modus.slnx` remains the product solution with its 34 WIP projects. No WIP project is absent from both solutions.
 
 ## Test surface
 

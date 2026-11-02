@@ -1,0 +1,20 @@
+command=verify-solution-coverage Wip.slnx
+EXIT=1
+solution=Wip.slnx
+wip_project_count=37
+solution_wip_project_count=24
+missing_from_solution=13
+MISSING WIP/BonesLibraryRecovery/BonesLibraryRecovery.csproj
+MISSING WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj
+MISSING WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj
+MISSING WIP/Wip.Bones.E2E.Tests/Wip.Bones.E2E.Tests.csproj
+MISSING WIP/Wip.Bones.Host.Tests/Wip.Bones.Host.Tests.csproj
+MISSING WIP/Wip.Bones.Host/Wip.Bones.Host.csproj
+MISSING WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Wip.Bones.ModelProviders.DeepSeek.Tests.csproj
+MISSING WIP/Wip.Bones.ModelProviders.DeepSeek/Wip.Bones.ModelProviders.DeepSeek.csproj
+MISSING WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj
+MISSING WIP/Wip.Bones.Web.Tests/Wip.Bones.Web.Tests.csproj
+MISSING WIP/Wip.Bones.Web/Wip.Bones.Web.csproj
+MISSING WIP/Wip.Bones/Wip.Bones.csproj
+MISSING WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj
+solution_paths_not_on_disk=0

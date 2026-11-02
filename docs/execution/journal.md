@@ -79,3 +79,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **CI:** added runtime and shell governance-guard steps to `.github/workflows/tests-ci.yml`.
 - **Evidence:** `docs/execution/evidence/WP-0.2/runtime-guard.txt`, `shell-guard.txt`, `notes.md`; baseline total now 1,322 passed / 32 failed.
 - **Next:** WP-0.3 (full `Wip.slnx` topology + coverage check).
+
+## 2026-11-02T12:39:06-03:00 - WP-0.3 (full WIP solution topology; done)
+
+- **Wip.slnx:** 24 → **37** WIP projects; `src/Samples.TodoApp` was accidentally added by `dotnet sln` and removed; final count 37.
+- **Coverage check:** `tools/verify-solution-coverage.ps1` — 37/37 green; orphan simulation (remove `Wip.Bones.Tests`) exits 1.
+- **Build:** `dotnet build Wip.slnx -c Release` → exit 0, 0 errors, 113 warnings, 53.06 s.
+- **Evidence:** `docs/execution/evidence/WP-0.3/` (coverage-before/after, orphan red, build, notes).
+- **Next:** WP-0.4 (CI truth gate).

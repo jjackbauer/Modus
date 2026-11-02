@@ -1,0 +1,8 @@
+command=verify-solution-coverage .tmp/Wip.orphan.slnx (Wip.Bones.Tests removed)
+exit=1
+solution=.tmp/Wip.orphan.slnx
+wip_project_count=37
+solution_wip_project_count=36
+missing_from_solution=1
+MISSING WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj
+solution_paths_not_on_disk=0
