@@ -8,7 +8,7 @@
   "work_package": "WP-0.6",
   "status": "done",
   "gate": "G0",
-  "gate_status": "g0_ci_run_41486872592_in_progress",
+  "gate_status": "g0_ci_rerun_with_waivers_pending",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
@@ -17,10 +17,10 @@
     "WP-0.5": 1,
     "WP-0.6": 1
   },
-  "last_verified_at": "2026-11-02T14:02:38-03:00",
-  "next_action": "Run 41486872592: builds/architecture green, Chromium installed, offline suites running. Close WP-0.4 and pass G0 only if the gate is green; otherwise triage the remaining failures. Phase 1 stays blocked.",
+  "last_verified_at": "2026-11-02T14:16:50-03:00",
+  "next_action": "Rerun CI with the six CI-exposed Bones waivers and the committed proof artifacts. If green, close WP-0.4 and present G0; if not, triage the remaining exact failure. Phase 1 stays blocked.",
   "open_blockers": ["BLK-CI-REMOTE"],
-  "deviations": ["DEV-001", "DEV-002"],
+  "deviations": ["DEV-001", "DEV-002", "DEV-003"],
   "dirty_tree": {
     "porcelain_entries": 0,
     "status": "clean",
@@ -53,6 +53,8 @@
     "executed": 1354,
     "passed": 1322,
     "failed": 32,
+    "ci_exposed_failed": 6,
+    "known_failed_total": 38,
     "aborted_suites": 3,
     "green_projects": 8,
     "total_projects": 17,
@@ -60,10 +62,10 @@
   },
   "test_gate": {
     "offline_projects": 15,
-    "waived_failures": 21,
+    "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_41486872592_in_progress",
-    "ci_exposed_failures": 11,
+    "remote_ci": "rerun_with_waivers_pending",
+    "ci_exposed_failures": 6,
     "chromium_install": "success",
     "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]
   },

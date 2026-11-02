@@ -1,0 +1,15 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Modus.Core -> C:\Users\ricar\dev\Modus\src\Modus.Core\bin\Debug\net10.0\Modus.Core.dll
+  Wip.Abstractions -> C:\Users\ricar\dev\Modus\src\Wip.Abstractions\bin\Debug\net10.0\Wip.Abstractions.dll
+  Wip.Builder -> C:\Users\ricar\dev\Modus\src\Wip.Builder\bin\Debug\net10.0\Wip.Builder.dll
+  Wip.Modus -> C:\Users\ricar\dev\Modus\src\Wip.Modus\bin\Debug\net10.0\Wip.Modus.dll
+  Samples.TodoApp.WipAgents -> C:\Users\ricar\dev\Modus\src\Samples.TodoApp.WipAgents\bin\Debug\net10.0\Samples.TodoApp.WipAgents.dll
+  Wip.Modus.Tests -> C:\Users\ricar\dev\Modus\tests\Wip.Modus.Tests\bin\Debug\net10.0\Wip.Modus.Tests.dll
+Test run for C:\Users\ricar\dev\Modus\tests\Wip.Modus.Tests\bin\Debug\net10.0\Wip.Modus.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+
+Passed!  - Failed:     0, Passed:    10, Skipped:     0, Total:    10, Duration: 220 ms - Wip.Modus.Tests.dll (net10.0)

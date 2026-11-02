@@ -4,7 +4,7 @@
 out/
 artifacts/
 
-# C# source folders named "Artifacts" hold source, not build output — keep them tracked.
+# C# source folders named "Artifacts" hold source, not build output â€” keep them tracked.
 !WIP/Wip.Abstractions/Artifacts/
 !WIP/Wip.Artifacts.Local/Artifacts/
 !WIP/Wip.Artifacts.Local.Tests/Artifacts/
@@ -46,6 +46,7 @@ packages/
 
 # Execution evidence logs are contractual artifacts (red.log, verify.log)
 !docs/execution/**/*.log
+!.github/requirements/proof-artifacts/**/*.log
 
 # Local scratch and generated runtime state (kept on disk, not committed)
 .tmp/

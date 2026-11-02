@@ -158,6 +158,54 @@
                          "test":  "Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands",
                          "owner":  "runtime lead",
                          "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Tests",
+                         "test":  "Wip.Bones.Tests.BonesBoardOrientationBehaviorProofComplianceGateTests.BehaviorProofComplianceGate_GivenBoardOrientationChecklist_ExpectedAllTraitsBound",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-16",
+                         "reason":  "CI-exposed meta-gate; nested Web tests need a dedicated browser matrix; triage WP-2.1",
+                         "source":  "CI 41486872592"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesHostDeepSeekIntegrationTests.BonesHostDeepSeekIntegration_GivenMockHandlerReturningDistinctStrategy_ExpectedPersistedStrategyDiffersFromStubBoilerplate",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-16",
+                         "reason":  "CI-exposed host ordering/resource failure; deterministic across runs 41483737752/41486872592; triage WP-2.1",
+                         "source":  "CI 41486872592"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesCoLearningHostTests.BonesCoLearningHost_GivenRestartWithResumeFromBest_ExpectedAllFourSeatsLoadLibraryStrategies",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-16",
+                         "reason":  "CI-exposed host ordering/resource failure; deterministic across runs; triage WP-2.1",
+                         "source":  "CI 41486872592"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesLearningLoopPromotionHostTests.BonesLearningLoop_GivenStrongCandidateEnhancement_ExpectedCandidateBecomesActiveForNextIteration",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-16",
+                         "reason":  "CI-exposed host ordering/resource failure; deterministic across runs; triage WP-2.1",
+                         "source":  "CI 41486872592"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesHostDeepSeekIntegrationTests.BonesHostDeepSeekIntegration_GivenMockHandlerReturningPlayMoves_ExpectedMatchTranscriptReflectsMockedSelections",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-16",
+                         "reason":  "CI-exposed host ordering/resource failure; deterministic across runs; triage WP-2.1",
+                         "source":  "CI 41486872592"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.StatusApiFixesBehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenStatusApiFixesChecklistItems_RequiresExecutableRuntimeProofForEachItem",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-16",
+                         "reason":  "CI-exposed compliance meta-test tied to host ordering; triage WP-2.1",
+                         "source":  "CI 41486872592"
                      }
                  ]
 }

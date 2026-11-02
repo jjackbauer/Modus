@@ -153,3 +153,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - `wip-build (ubuntu)`, `wip-build (windows)`, and `wip-architecture` **success**.
 - `Install Playwright Chromium` **success** (15s); offline suites started at 17:02:18Z.
 - Gate step still pending. WP-0.4 blocked; G0 not passed.
+
+## 2026-11-02T14:16:50-03:00 - CI-exposed waivers and proof artifacts
+
+- **Run 41486872592:** builds/architecture green, Chromium install green; gate **failure errors=8**.
+- **Remaining:** 2 Modus documentation proof-artifact tests (files were gitignored/untracked), 1 Bones board meta-gate, 5 Bones host tests.
+- **Fix:** commit the three required proof artifacts (unignore `.github/requirements/proof-artifacts/**/*.log`) so the Modus tests read them in CI.
+- **Waivers:** add six exact CI-exposed Bones failures under DEV-003, owner Bones engineer + QA, expiry 2026-11-16; tests still run/count.
+- **Next:** rerun CI; if green, close WP-0.4 and present G0.
