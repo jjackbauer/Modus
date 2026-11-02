@@ -1,0 +1,61 @@
+# Local NuGet pack attempt (no publish)
+captured=2026-11-02T11:11:08.4566450-03:00
+version=0.0.2-local
+
+PROJECT src/Modus.Core/Modus.Core.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Modus.Core.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Modus.Core.0.0.2-local.snupkg'.
+PROJECT src/Modus.Host/Modus.Host.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Modus.Host.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Modus.Host.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Abstractions/Wip.Abstractions.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Abstractions.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Abstractions.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Agent.Basic/Wip.Agent.Basic.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Agent.Basic.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Agent.Basic.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Artifacts.Local/Wip.Artifacts.Local.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Artifacts.Local.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Artifacts.Local.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Bones/Wip.Bones.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Bones.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Bones.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Bones.Agents.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Bones.Agents.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Bones.Host/Wip.Bones.Host.csproj EXIT 0
+PROJECT WIP/Wip.Bones.ModelProviders.DeepSeek/Wip.Bones.ModelProviders.DeepSeek.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Bones.ModelProviders.DeepSeek.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Bones.ModelProviders.DeepSeek.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Bones.Web/Wip.Bones.Web.csproj EXIT 0
+PROJECT WIP/Wip.Builder/Wip.Builder.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Builder.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Builder.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Modus/Wip.Modus.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Modus.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Modus.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Policy.LocalSafe/Wip.Policy.LocalSafe.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Policy.LocalSafe.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Policy.LocalSafe.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Runtime/Wip.Runtime.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Runtime.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Runtime.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Shell/Wip.Shell.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Shell.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Shell.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Shell.E2E.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Shell.E2E.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.ShellHost/Wip.ShellHost.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.ShellHost.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.ShellHost.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Tools.Shell/Wip.Tools.Shell.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Tools.Shell.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Tools.Shell.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Validation.DotNet/Wip.Validation.DotNet.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Validation.DotNet.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Validation.DotNet.0.0.2-local.snupkg'.
+PROJECT WIP/Wip.Workspaces.Git/Wip.Workspaces.Git.csproj EXIT 0
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Workspaces.Git.0.0.2-local.nupkg'.
+  Successfully created package 'C:\Users\ricar\dev\Modus\artifacts\nuget-local\Wip.Workspaces.Git.0.0.2-local.snupkg'.
+FAILURES=0

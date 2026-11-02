@@ -1,0 +1,46 @@
+# Local NuGet consumption smoke test
+captured=2026-11-02T11:12:11.5524660-03:00
+packages=0.0.2-local
+source=artifacts/nuget-local
+
+CMD: dotnet new console --framework net10.0 --no-restore
+EXIT: 0
+The template "Console App" was created successfully.
+
+
+CMD: dotnet add package Wip.Abstractions --version 0.0.2-local
+EXIT: 0
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Wip.Abstractions' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj...
+info : Package 'Wip.Abstractions' is compatible with all the specified frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj'.
+info : PackageReference for package 'Wip.Abstractions' version '0.0.2-local' added to file 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj'.
+info : Generating MSBuild file C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\obj\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj.nuget.g.props.
+info : Generating MSBuild file C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\obj\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj.nuget.g.targets.
+info : Writing assets file to disk. Path: C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\obj\project.assets.json
+log  : Restored C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj (in 75 ms).
+
+CMD: dotnet add package Modus.Core --version 0.0.2-local
+EXIT: 0
+info : X.509 certificate chain validation will use the default trust store selected by .NET for code signing.
+info : X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.
+info : Adding PackageReference for package 'Modus.Core' into project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj'.
+info : Restoring packages for C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj...
+info : Package 'Modus.Core' is compatible with all the specified frameworks in project 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj'.
+info : PackageReference for package 'Modus.Core' version '0.0.2-local' added to file 'C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj'.
+info : Writing assets file to disk. Path: C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\obj\project.assets.json
+log  : Restored C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.csproj (in 98 ms).
+
+CMD: dotnet build --no-restore
+EXIT: 0
+  wip-nuget-consume-d416ff879f2e4e919fa62613263bf193 -> C:\Users\ricar\AppData\Local\Temp\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193\bin\Debug\net10.0\wip-nuget-consume-d416ff879f2e4e919fa62613263bf193.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:00.57
+
+
+RESULT: add_wip=0 add_modus=0 build=0

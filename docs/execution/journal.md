@@ -25,3 +25,18 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Tooling fix:** `HarnessSync --check` initially failed only on UTF-16 files under scratch `.tmp/`; added `.tmp` to the encoding validator's excluded directories plus a focused test, then re-ran `--check` -> exit 0. Evidence: [harnesssync-check.txt](evidence/WP-0.1/harnesssync-check.txt), [harnesssync-check-after.txt](evidence/WP-0.1/harnesssync-check-after.txt).
 - **Blocker:** `dotnet test` cannot start testhost under this environment: `Win32Exception (5): Access is denied` at `SetParentProcessExitCallback`; three launch variants reproduced it. No test was executed. Recorded as F-ENV in [fail-1-testhost.md](evidence/WP-0.1/fail-1-testhost.md) and [BLK-TESTHOST-ENV](blockers/BLK-TESTHOST-ENV.md).
 - **Next:** stage and commit the baseline, tag `wip-baseline-2026-11-02`, build/pack locally; do not push to NuGet without a version, API key, and green tests.- **Pre-commit verification:** `HarnessSync --check` exit 0; staged encoding check exit 0 after fixing non-ASCII path handling in `Test-StagedTextFileEncoding.ps1`; staged secret scan found only the 3 known pre-existing files (0 added-line hits); 395 files staged, 0 deletions, 0 suspicious paths.
+
+## 2026-11-02T11:09:22-03:00 - WP-0.1 (baseline frozen)
+
+- **Commit:** 99c0b087e8ad5b9993baef807bab92b4cd37aa0e - chore(wip): freeze baseline at d6b895f + 308-path working tree (399 files, +42,880/-1,427).
+- **Tag:** annotated wip-baseline-2026-11-02 -> 99c0b08.
+- **Verification:** staged encoding check exit 0; HarnessSync --check exit 0 after excluding .tmp scratch; secret scan shows only the 3 known pre-existing files; git status --porcelain = 0 after commit. No push.
+- **Next:** build Modus.slnx Release, record build result; test inventory remains blocked by BLK-TESTHOST-ENV; prepare NuGet packages locally.
+
+## 2026-11-02T11:13:00-03:00 - WP-0.1 (build and local NuGet pack)
+
+- **Build:** `dotnet build Modus.slnx -c Release --nologo` -> exit 0, 0 errors, 115 warnings, 13.33 s; evidence `build-modus.txt`.
+- **NuGet local pack:** 18 packages + 18 symbol packages at `0.0.2-local` in `artifacts/nuget-local`, all pack exits 0; manifest `nuget-manifest.md`. `Wip.Bones.Host`/`Wip.Bones.Web` are Web SDK apps and do not pack by default.
+- **Consumption smoke test:** clean temp project with local-only source added `Wip.Abstractions` + `Modus.Core` and built -> exit 0, 0 warnings/errors; evidence `nuget-consume.txt`.
+- **Publish blocked:** no API key, no version decision, HTTPS to api.nuget.org times out (NU1900), and tests are blocked by `BLK-TESTHOST-ENV`. No push attempted. See `BLK-NUGET-PUBLISH.md` and `DEV-001`.
+- **WP-0.1 status:** build green; test inventory incomplete; baseline commit/tag done. G0 still not passed.
