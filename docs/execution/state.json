@@ -5,18 +5,19 @@
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
   "phase": 0,
-  "work_package": "WP-0.4",
-  "status": "blocked",
+  "work_package": "WP-0.6",
+  "status": "in_progress",
   "gate": "G0",
-  "gate_status": "wp04_ci_configured_remote_run_pending",
+  "gate_status": "wp06_adrs_drafted_g0_acceptance_pending",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
     "WP-0.3": 1,
-    "WP-0.4": 1
+    "WP-0.4": 1,
+    "WP-0.6": 1
   },
-  "last_verified_at": "2026-11-02T12:44:13-03:00",
-  "next_action": "Await an authorized push/CI run for WP-0.4; meanwhile start WP-0.6 ADRs (unblocked). G0 remains not ready.",
+  "last_verified_at": "2026-11-02T12:45:24-03:00",
+  "next_action": "Draft WP-0.5 architecture tests, then the G0 packet; WP-0.4 remains blocked on an authorized remote CI run.",
   "open_blockers": ["BLK-CI-REMOTE"],
   "deviations": ["DEV-001", "DEV-002"],
   "dirty_tree": {
@@ -43,6 +44,7 @@
     "WP-0.2": "docs/execution/evidence/WP-0.2/",
     "WP-0.3": "docs/execution/evidence/WP-0.3/",
     "WP-0.4": "docs/execution/evidence/WP-0.4/",
+    "WP-0.6": "docs/execution/decisions/",
     "G0": "docs/execution/evidence/G0/"
   },
   "test_inventory": {
@@ -67,6 +69,6 @@
     "WP-0.3": "done",
     "WP-0.4": "blocked",
     "WP-0.5": "not_started",
-    "WP-0.6": "not_started"
+    "WP-0.6": "in_progress"
   }
 }

@@ -96,3 +96,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Blocker:** `BLK-CI-REMOTE` — GitHub Actions has not run because no push was authorized; WP-0.4 is blocked on that run.
 - **Deviation:** `DEV-002` — project-level categories instead of xUnit Category traits until WP-4.3.
 - **Next:** WP-0.6 (ADRs) while CI awaits authorization; then WP-0.5 and G0.
+
+## 2026-11-02T12:45:24-03:00 - WP-0.6 (ADR-IMPL-01..06 drafted; G0 acceptance pending)
+
+- **ADRs:** six Proposed records under `docs/execution/decisions/` with owners, reversal triggers, and open questions; no ADR is self-accepted.
+- **Index:** `docs/execution/decisions/README.md` maps each ADR to its gate.
+- **Status:** WP-0.6 is in progress until G0 review; acceptance remains a human decision.
+- **Next:** WP-0.5 architecture tests, then the G0 packet; WP-0.4 remains blocked on an authorized remote CI run.
