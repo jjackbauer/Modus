@@ -1,0 +1,57 @@
+# NuGet registry check (read-only)
+captured=2026-11-02T11:14:51.6733916-03:00
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/modus.core/index.json
+EXIT: 0
+{
+  "versions": [
+    "0.0.1"
+  ]
+}
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/modus.host/index.json
+EXIT: 0
+{
+  "versions": [
+    "0.0.1"
+  ]
+}
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/wip.abstractions/index.json
+EXIT: 0
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:04e9eab9-301e-0054-3fd4-6af2a0000000
+Time:2026-11-02T14:14:53.1809755Z</Message></Error>
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/wip.runtime/index.json
+EXIT: 0
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:04e9ed9d-301e-0054-80d4-6af2a0000000
+Time:2026-11-02T14:14:53.6813569Z</Message></Error>
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/wip.builder/index.json
+EXIT: 0
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:9fdedb7d-301e-0036-52d4-6a3087000000
+Time:2026-11-02T14:14:54.2148604Z</Message></Error>
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/wip.shellhost/index.json
+EXIT: 0
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:428d007b-f01e-0006-15d4-6a8e48000000
+Time:2026-11-02T14:14:54.8127654Z</Message></Error>
+
+CMD: curl.exe -sS -m 15 https://api.nuget.org/v3-flatcontainer/wip.shell/index.json
+EXIT: 0
+<?xml version="1.0" encoding="utf-8"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.
+RequestId:bf04c0cd-601e-0059-5dd4-6a3a74000000
+Time:2026-11-02T14:14:55.6233368Z</Message></Error>
+
+CMD: dotnet package search Modus.Core --exact-match --take 5
+EXIT: 0
+****************************************
+Source: nuget.org (https://api.nuget.org/v3/index.json)
+| Package ID | Version | Owners | Total Downloads |
+| ---------- | ------- | ------ | --------------- |
+| Modus.Core | 0.0.1   |        | N/A             |
+| ---------- | ------- | ------ | --------------- |

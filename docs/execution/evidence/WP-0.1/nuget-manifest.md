@@ -35,8 +35,8 @@ source=artifacts/nuget-local
 ## Publication blockers
 
 1. **No API key:** no `NUGET_API_KEY` (or equivalent) in the process, user, or machine environment.
-2. **No version decision:** packages were built as `0.0.2-local` only. `Directory.Build.props` still says `0.0.1`; the published NuGet versions could not be read because HTTPS to `api.nuget.org` timed out from this environment.
-3. **Network:** `Invoke-WebRequest https://api.nuget.org/v3/index.json` timed out (10 s); `dotnet restore` reports NU1900 "Unable to load the service index". A push cannot succeed from here even with a key.
+2. **No version decision:** packages were built as `0.0.2-local` only. `Directory.Build.props` still says `0.0.1`. Registry check: `Modus.Core` and `Modus.Host` publish **0.0.1**; all checked `Wip.*` IDs are absent (BlobNotFound).
+3. **Push not tested:** PowerShell `Invoke-WebRequest` timed out, but `curl` and `dotnet package search` reach nuget.org (see [nuget-registry-check.txt](nuget-registry-check.txt)). No `dotnet nuget push` was attempted because no API key is available.
 4. **Tests:** `BLK-TESTHOST-ENV` prevents a green WIP test run.
 5. **Release gate:** WIP-IMPL-001 packs at WP-6.2/G5; this request is `DEV-001`.
 
@@ -56,3 +56,7 @@ dotnet nuget push "artifacts/nuget-<version>/*.nupkg" --source https://api.nuget
 ```
 
 Never put the API key in the repository or a command transcript.
+
+## Registry check
+
+`Modus.Core` and `Modus.Host` publish **0.0.1** on nuget.org. All checked WIP IDs (`Wip.Abstractions`, `Wip.Runtime`, `Wip.Builder`, `Wip.ShellHost`, `Wip.Shell`) are unpublished. Read-only evidence: [nuget-registry-check.txt](nuget-registry-check.txt). This confirms the Modus package is outdated relative to the working tree, but a version bump still requires an owner decision.

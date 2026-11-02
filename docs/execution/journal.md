@@ -40,3 +40,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Consumption smoke test:** clean temp project with local-only source added `Wip.Abstractions` + `Modus.Core` and built -> exit 0, 0 warnings/errors; evidence `nuget-consume.txt`.
 - **Publish blocked:** no API key, no version decision, HTTPS to api.nuget.org times out (NU1900), and tests are blocked by `BLK-TESTHOST-ENV`. No push attempted. See `BLK-NUGET-PUBLISH.md` and `DEV-001`.
 - **WP-0.1 status:** build green; test inventory incomplete; baseline commit/tag done. G0 still not passed.
+
+## 2026-11-02T11:15:12-03:00 - WP-0.1 (NuGet registry correction)
+
+- **Registry check:** `Modus.Core` and `Modus.Host` publish `0.0.1`; checked `Wip.*` IDs are unpublished. Evidence `nuget-registry-check.txt`.
+- **Network correction:** `curl` and `dotnet package search` reach nuget.org; the earlier PowerShell `Invoke-WebRequest` timeout was tool-specific, not a general outage. No `dotnet nuget push` attempted because no API key is present.
+- **Implication:** publication is blocked by the missing key, the version decision, and the testhost blocker — not by connectivity.

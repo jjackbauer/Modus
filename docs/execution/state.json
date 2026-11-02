@@ -12,8 +12,8 @@
   "attempts": {
     "WP-0.1": 1
   },
-  "last_verified_at": "2026-11-02T11:13:00-03:00",
-  "next_action": "Await the owner's NuGet version/API-key decision and an unconfined test run; 18 local packages are validated at 0.0.2-local but publication is blocked by network, key, version, and tests.",
+  "last_verified_at": "2026-11-02T11:15:12-03:00",
+  "next_action": "Await the owner's NuGet version/API-key decision and an unconfined test run; registry shows Modus 0.0.1 and no WIP packages; 18 local packages are validated at 0.0.2-local; no push attempted.",
   "open_blockers": ["BLK-TESTHOST-ENV", "BLK-NUGET-PUBLISH"],
   "deviations": ["DEV-001"],
   "dirty_tree": {

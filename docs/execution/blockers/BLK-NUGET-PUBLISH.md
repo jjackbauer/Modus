@@ -30,6 +30,7 @@ Do not push to nuget.org from this session. Prepare local packages and a validat
 
 - **Local pack succeeded:** 18 `.nupkg` + 18 `.snupkg` at `0.0.2-local`; every `dotnet pack` exited 0 ([pack-local.txt](../evidence/WP-0.1/pack-local.txt), [nuget-manifest.md](../evidence/WP-0.1/nuget-manifest.md)).
 - **Consumption smoke test succeeded:** local-only restore and build of `Wip.Abstractions` + `Modus.Core` in a clean temp project (exit 0, 0 warnings/errors; [nuget-consume.txt](../evidence/WP-0.1/nuget-consume.txt)).
-- **Network is unavailable for publication:** HTTPS to `api.nuget.org` times out from this environment; `dotnet restore` reports NU1900. A push cannot succeed here even with a key.
+- **Network correction:** `curl` and `dotnet package search` reach nuget.org; the published Modus versions are 0.0.1 and the checked WIP IDs are absent. `Invoke-WebRequest` timed out, but that is not a general network block. No push was attempted because no API key is available (see [nuget-registry-check.txt](../evidence/WP-0.1/nuget-registry-check.txt)).
 - **Still missing:** API key, version decision, green test evidence, and a release-gate exception/approval.
 - **Not packaged:** `Wip.Bones.Host` and `Wip.Bones.Web` (Web SDK, not packable by default); they are applications.
+- **Published check:** `Modus.Core`/`Modus.Host` = 0.0.1; `Wip.*` sample IDs = unpublished. This confirms the Modus update is real, not just suspected.
