@@ -88,6 +88,8 @@ jobs:
         run: |
           dotnet restore Wip.slnx
           dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Install Playwright Chromium
+        run: pwsh -NoProfile -File WIP/Wip.Bones.Host.Tests/bin/Release/net10.0/playwright.ps1 install chromium
       - name: Run offline WIP suites
         run: pwsh -NoProfile -File tools/run-wip-tests.ps1 -Configuration Release -ResultsDirectory artifacts/ci-test-results
       - name: Gate known failures, zero tests, and test counts

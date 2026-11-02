@@ -26,7 +26,7 @@ Reproducible local shell transcript. Build the host once, then run from a git re
 
 ```powershell
 dotnet build WIP/Wip.ShellHost/Wip.ShellHost.csproj -v minimal
-dotnet WIP/Wip.ShellHost/bin/Debug/net10.0/Wip.ShellHost.dll
+dotnet WIP/Wip.ShellHost/bin/Release/net10.0/Wip.ShellHost.dll
 ```
 
 ### Bootstrap and execution path
@@ -93,11 +93,11 @@ Contributors should treat these shell commands as the supported observability su
 
 Use this path when validating how a contributor command travels through runtime components:
 
-1. Shell receives `transition planning` in WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs.
-2. Shell delegates transition execution to WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs.
-3. Policy checks for operation safety run through WIP/Wip.Policy.LocalSafe/LocalSafePolicy.cs before sensitive operations.
-4. Runtime can surface plugin/workflow manifest diagnostics through WIP/Wip.Modus/Hosting/ModusWipBridge.cs.
-5. State and workflow definitions consumed by runtime are registered through WIP/Wip.Builder/WipBuilder.cs and typed contracts in Wip.Abstractions.
+1. Shell receives `transition planning` in `WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs`.
+2. Shell delegates transition execution to `WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs`.
+3. Policy checks for operation safety run through `WIP/Wip.Policy.LocalSafe/LocalSafePolicy.cs` before sensitive operations.
+4. Runtime can surface plugin/workflow manifest diagnostics through `WIP/Wip.Modus/Hosting/ModusWipBridge.cs`.
+5. State and workflow definitions consumed by runtime are registered through `WIP/Wip.Builder/WipBuilder.cs` and typed contracts in Wip.Abstractions.
 
 ## Contributor Extension Rules
 
