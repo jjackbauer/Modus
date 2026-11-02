@@ -1,6 +1,6 @@
 # ADR-IMPL-05 — Agent runtime scope
 
-- **Status:** Proposed (G1 decision required)
+- **Status:** Accepted as ADR at G0 (2026-11-02); autonomy/streaming scope still requires G1
 - **Date:** 2026-11-02
 - **Owner:** product owner + agent/LLM engineer
 - **Reversal cost:** High

@@ -1,6 +1,6 @@
 # ADR-IMPL-01 — Solution topology
 
-- **Status:** Proposed (acceptance requested at G0)
+- **Status:** Accepted at G0 (2026-11-02) — approved by product owner
 - **Date:** 2026-11-02
 - **Owner:** tech lead
 - **Reversal cost:** Medium

@@ -1,6 +1,6 @@
 # ADR-IMPL-06 — Compatibility and deprecation policy
 
-- **Status:** Proposed (G0/G5 review)
+- **Status:** Accepted at G0 (2026-11-02); G5 reviews release compatibility
 - **Date:** 2026-11-02
 - **Owner:** tech lead + product owner
 - **Reversal cost:** Medium

@@ -1,6 +1,6 @@
 # WIP architecture decision records
 
-All ADRs are **Proposed**. None is accepted until G0; this directory must not be used as evidence of approval.
+Accepted at **G0 on 2026-11-02** by the product owner. Acceptance of an ADR does **not** replace the later gate decision named in the Gate column (G1–G4 still decide scope/contracts/residual risk).
 
 | ADR | Title | Owner | Gate |
 |---|---|---|---|

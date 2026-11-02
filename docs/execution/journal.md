@@ -111,3 +111,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Evidence:** 3/3 tests pass; injected `Wip.Runtime -> Wip.Shell` makes the test fail (exit 1) and the source restores with 0 diff; `dotnet build Wip.slnx` exit 0, 0 errors.
 - **G0 packet:** rewritten with Phase 0 status, two decisions (CI push authorization; ADR acceptance), deviations and red-baseline risks.
 - **Gate:** G0 **NOT READY** — WP-0.4 awaits the first remote CI run and WP-0.6 ADRs await acceptance. Stop for explicit decisions; do not start Phase 1.
+
+## 2026-11-02T12:51:53-03:00 - WP-0.6 (ADRs accepted at G0; CI push authorized)
+
+- **Decision:** product owner accepted ADR-IMPL-01..07 and authorized pushing `WIP` for the CI run. ADR-07 expires 2026-11-30; G1–G4 still gate their mechanisms/contracts; DEV-002 noted.
+- **Record:** `docs/execution/evidence/G0/decision-2026-11-02-g0-adrs.md`.
+- **WP-0.6:** done. G0 remains **NOT READY** until the pushed CI run passes the waiver/zero-test gate.
+- **Next:** commit, push `WIP`, monitor `Tests CI`, fix unwaived failures, close WP-0.4 and pass G0.

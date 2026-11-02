@@ -1,6 +1,6 @@
 # ADR-IMPL-03 — Permission model and enforcement
 
-- **Status:** Proposed (G3 decision required)
+- **Status:** Accepted as ADR at G0 (2026-11-02); catalog/enforcement still require G3
 - **Date:** 2026-11-02
 - **Owner:** security reviewer + runtime lead
 - **Reversal cost:** High

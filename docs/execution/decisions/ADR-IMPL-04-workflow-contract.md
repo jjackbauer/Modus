@@ -1,6 +1,6 @@
 # ADR-IMPL-04 — Workflow definition and executor contract
 
-- **Status:** Proposed (G4 decision required)
+- **Status:** Accepted as ADR at G0 (2026-11-02); concrete contracts still require G4
 - **Date:** 2026-11-02
 - **Owner:** tech lead + runtime lead
 - **Reversal cost:** Medium
