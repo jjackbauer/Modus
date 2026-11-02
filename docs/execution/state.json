@@ -8,7 +8,7 @@
   "work_package": "WP-0.4",
   "status": "done",
   "gate": "G0",
-  "gate_status": "g0_green_awaiting_human_approval",
+  "gate_status": "g0_green_decision_pending_no_response",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
@@ -28,6 +28,7 @@
   },
   "gate_packet": "docs/execution/evidence/G0/gate-packet.md",
   "decision_record": "docs/execution/evidence/G0/decision-2026-11-02.md",
+  "g0_decision_record": "docs/execution/evidence/G0/decision-2026-11-02-g0.md",
   "nuget": {
     "local_version": "0.0.2",
     "local_source": "artifacts/nuget-0.0.2",

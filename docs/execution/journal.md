@@ -168,3 +168,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **WP-0.4:** done; `BLK-CI-REMOTE` resolved.
 - **G0:** all technical criteria pass. The six CI-exposed Bones failures are waived under DEV-003 (expiry 2026-11-16); the two Modus documentation failures were fixed by committed proof artifacts.
 - **Gate:** awaiting explicit human approval; no self-approval. Phase 1 stays blocked.
+
+## 2026-11-02T14:33:54-03:00 - G0 approval requested; no response yet
+
+- **G0:** all technical criteria pass; green run 41489673359 (4/4 jobs, 15 projects, 27 waivers, 0 unwaived).
+- **Decision:** pending. `decision-2026-11-02-g0.md` records the exact question and marks it **not approved**.
+- **Phase 1:** blocked. No self-approval.
