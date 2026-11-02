@@ -161,3 +161,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Fix:** commit the three required proof artifacts (unignore `.github/requirements/proof-artifacts/**/*.log`) so the Modus tests read them in CI.
 - **Waivers:** add six exact CI-exposed Bones failures under DEV-003, owner Bones engineer + QA, expiry 2026-11-16; tests still run/count.
 - **Next:** rerun CI; if green, close WP-0.4 and present G0.
+
+## 2026-11-02T14:31:23-03:00 - WP-0.4 done; G0 ready for decision
+
+- **Green CI:** run [41489673359](https://github.com/jjackbauer/Modus/actions/runs/41489673359) — `wip-build (ubuntu)`, `wip-build (windows)`, `wip-architecture`, and `wip-offline-tests` all **success**; 15 projects, 27 waivers, 0 unwaived failures.
+- **WP-0.4:** done; `BLK-CI-REMOTE` resolved.
+- **G0:** all technical criteria pass. The six CI-exposed Bones failures are waived under DEV-003 (expiry 2026-11-16); the two Modus documentation failures were fixed by committed proof artifacts.
+- **Gate:** awaiting explicit human approval; no self-approval. Phase 1 stays blocked.

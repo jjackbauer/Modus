@@ -1,8 +1,10 @@
 # BLK-CI-REMOTE — first GitHub Actions run requires an authorized push
 
-**Status:** open
+**Status:** resolved 2026-11-02T17:29:46Z
 **Opened:** 2026-11-02T12:50:00-03:00
 **Owner:** product owner / release engineer
+
+**Resolution:** the product owner authorized the `WIP` push. After the `WIP.slnx`/`Wip.slnx` case fix, the CI split, Chromium installation, proof-artifact commit, and six CI-exposed waivers, run [41489673359](https://github.com/jjackbauer/Modus/actions/runs/41489673359) is green on all four WIP jobs.
 
 ## What is blocked
 
@@ -14,7 +16,7 @@ WP-0.4's acceptance requires the restructured CI to run the offline suites, the 
 - Optional workflow: `.github/workflows/wip-optional.yml`.
 - Scripts: `tools/run-wip-tests.ps1`, `tools/verify-test-results.ps1`.
 - Local gate: green on 15 projects / 21 waivers; missing, unwaived, and zero-test cases fail (`docs/execution/evidence/WP-0.4/`).
-- No push was performed; `origin/WIP` is unchanged.
+- Green remote run: [41489673359](https://github.com/jjackbauer/Modus/actions/runs/41489673359) — 15 projects / 27 waivers / 0 unwaived failures.
 
 ## Options
 
