@@ -4,21 +4,22 @@
   "baseline_freeze_commit": "99c0b087e8ad5b9993baef807bab92b4cd37aa0e",
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
-  "phase": 0,
-  "work_package": "WP-0.4",
-  "status": "done",
-  "gate": "G0",
-  "gate_status": "g0_green_decision_pending_no_response",
+  "phase": 1,
+  "work_package": "WP-1.1",
+  "status": "in_progress",
+  "gate": "G2",
+  "gate_status": "wp11_docs_draft_pending_security_review",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
     "WP-0.3": 1,
     "WP-0.4": 1,
     "WP-0.5": 1,
-    "WP-0.6": 1
+    "WP-0.6": 1,
+    "WP-1.1": 1
   },
-  "last_verified_at": "2026-11-02T14:31:00-03:00",
-  "next_action": "Present G0 with green run 41489673359 and await explicit human approval. Phase 1 stays blocked until approval.",
+  "last_verified_at": "2026-11-02T16:48:33-03:00",
+  "next_action": "Security review the WP-1.1 threat model/protocol and record G2; then start WP-1.2 worker host against the draft. G2 remains required before WP-1.3.",
   "open_blockers": [],
   "deviations": ["DEV-001", "DEV-002", "DEV-003"],
   "dirty_tree": {
@@ -48,6 +49,7 @@
     "WP-0.4": "docs/execution/evidence/WP-0.4/",
     "WP-0.5": "docs/execution/evidence/WP-0.5/",
     "WP-0.6": "docs/execution/decisions/",
+    "WP-1.1": "docs/execution/evidence/WP-1.1/",
     "G0": "docs/execution/evidence/G0/"
   },
   "test_inventory": {
@@ -76,6 +78,7 @@
     "WP-0.3": "done",
     "WP-0.4": "done",
     "WP-0.5": "done",
-    "WP-0.6": "done"
+    "WP-0.6": "done",
+    "WP-1.1": "in_progress"
   }
 }

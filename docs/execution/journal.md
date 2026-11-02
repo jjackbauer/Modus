@@ -174,3 +174,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **G0:** all technical criteria pass; green run 41489673359 (4/4 jobs, 15 projects, 27 waivers, 0 unwaived).
 - **Decision:** pending. `decision-2026-11-02-g0.md` records the exact question and marks it **not approved**.
 - **Phase 1:** blocked. No self-approval.
+
+## 2026-11-02T16:48:33-03:00 - G0 approved; Phase 1 WP-1.1 draft
+
+- **G0:** approved by the product owner’s instruction “go on... unblock it...” (recorded in `decision-2026-11-02-g0.md`); Phase 0 is complete.
+- **Phase 1 / WP-1.1:** threat model and worker protocol v1.0 drafted under `docs/security/`; abuse cases TM-01..12 mapped to planned WP-1.5 tests.
+- **Status:** WP-1.1 draft complete; security review/G2 **not passed**; WP-1.2 can scaffold against the draft, WP-1.3 waits for G2.

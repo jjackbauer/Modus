@@ -8,9 +8,9 @@
 
 ## Status
 
-**READY FOR G0 DECISION.**
+**PASSED — approved by the product owner on 2026-11-02T16:47:02-03:00** via the instruction “go on... unblock it...”.
 
-Phase 0 criteria are met and CI is green. The product owner authorized the push and accepted ADR-IMPL-01..07 on 2026-11-02. This packet does **not** self-approve G0; it requests the explicit G0 decision, including the six CI-exposed waivers under DEV-003.
+Phase 0 criteria are met and CI is green. The approval is recorded in [decision-2026-11-02-g0.md](decision-2026-11-02-g0.md) and [g0-pass.md](g0-pass.md). DEV-003 is accepted with its 2026-11-16 expiry. Phase 1 has started with WP-1.1.
 
 ## Criteria (plan §3.2 / §5.1)
 
@@ -22,7 +22,7 @@ Phase 0 criteria are met and CI is green. The product owner authorized the push 
 | 4 | Governance guard committed and tested in CI | **PASS** | 3 runtime + 2 Shell E2E guard tests green locally ([WP-0.2](../WP-0.2/notes.md)); guard steps run in the WIP workflow. |
 | 5 | Architecture fitness tests exist and run | **PASS** | WIP architecture tests 3/3; injected forbidden edge exits 1 and source restored with 0 diff ([WP-0.5](../WP-0.5/notes.md)); `wip-architecture` job green in run 41489673359. |
 | 6 | ADR-IMPL-01..07 reviewed and accepted | **PASS** | Accepted by the product owner on 2026-11-02; [decision record](decision-2026-11-02-g0-adrs.md). ADR-07 expires 2026-11-30. |
-| 7 | G0 passed | **AWAITING HUMAN APPROVAL** | All technical criteria pass; this packet does not self-approve. |
+| 7 | G0 passed | **PASS** | Approved by the product owner on 2026-11-02T16:47:02-03:00; [g0-pass.md](g0-pass.md). |
 
 ## Verified state
 
@@ -38,7 +38,7 @@ Phase 0 criteria are met and CI is green. The product owner authorized the push 
 1. **Completed:** the product owner authorized pushing `WIP`; the branch is pushed.
 2. **Completed:** ADR-IMPL-01..07 accepted; ADR-07 remains time-bounded (expiry 2026-11-30) and G1–G4 still gate their mechanisms/contracts.
 3. **Acknowledged:** DEV-001 (out-of-plan NuGet 0.0.2), DEV-002 (project-level CI categories until WP-4.3), and DEV-003 (six CI-exposed Bones failures, including two compliance meta-tests, waived until 2026-11-16).
-4. **Remaining:** explicit G0 approval. All technical criteria pass; approval starts Phase 1.
+4. **Completed:** G0 approved by the product owner; Phase 1 started.
 
 ## Risks
 
@@ -50,11 +50,7 @@ Phase 0 criteria are met and CI is green. The product owner authorized the push 
 
 ## Recommendation
 
-Approve G0 with DEV-003 disclosed, or reject and require the six Bones waivers to be fixed first. CI is green; the remaining decision is human.
-
-## If approved
-
-Record the G0 approval, mark Phase 0 complete, and start Phase 1. If rejected, fix the DEV-003 tests and rerun before G0.
+G0 was approved with DEV-003 disclosed. Phase 0 is complete; Phase 1 is in progress (WP-1.1).
 
 ## Evidence index
 
@@ -66,4 +62,5 @@ Record the G0 approval, mark Phase 0 complete, and start Phase 1. If rejected, f
 - [WP-0.6 ADRs](../decisions/README.md), [G0 ADR decision](decision-2026-11-02-g0-adrs.md)
 - [Green WIP run 41489673359](https://github.com/jjackbauer/Modus/actions/runs/41489673359)
 - [DEV-003](../deviations/DEV-003-ci-exposed-bones-waivers.md)
+- [G0 pass record](g0-pass.md)
 - [BLK-CI-REMOTE](../blockers/BLK-CI-REMOTE.md), [DEV-001](../deviations/DEV-001-nuget-release.md), [DEV-002](../deviations/DEV-002-ci-category-traits.md)
