@@ -41,7 +41,7 @@ $summary = @(
 foreach ($project in $projects) {
     $name = [IO.Path]::GetFileNameWithoutExtension($project)
     $started = Get-Date
-    $output = & dotnet test $project --configuration $Configuration --no-build --logger ('trx;LogFileName=' + $name + '.trx') --results-directory $ResultsDirectory 2>&1 | Out-String
+    $output = & dotnet test $project --configuration $Configuration --no-build --blame-hang-timeout 15m --blame-hang-dump-type none --logger ('trx;LogFileName=' + $name + '.trx') --results-directory $ResultsDirectory 2>&1 | Out-String
     $exitCode = $LASTEXITCODE
     $line = ('{0} EXIT {1} duration={2}' -f $name, $exitCode, ((Get-Date) - $started).ToString('hh\:mm\:ss'))
     $summary += $line
