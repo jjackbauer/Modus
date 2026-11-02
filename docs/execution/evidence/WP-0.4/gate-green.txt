@@ -1,0 +1,4 @@
+command=verify-test-results (current 15-project baseline)
+exit=0
+--- output ---
+test_gate=ok projects=15 waived_failures=21

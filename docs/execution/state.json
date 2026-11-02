@@ -5,25 +5,24 @@
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
   "phase": 0,
-  "work_package": "WP-0.3",
-  "status": "done",
+  "work_package": "WP-0.4",
+  "status": "blocked",
   "gate": "G0",
-  "gate_status": "wp03_done_g0_not_ready",
+  "gate_status": "wp04_ci_configured_remote_run_pending",
   "attempts": {
     "WP-0.1": 2,
-    "WP-0.2": 1
+    "WP-0.2": 1,
+    "WP-0.3": 1,
+    "WP-0.4": 1
   },
-  "last_verified_at": "2026-11-02T12:38:56-03:00",
-  "next_action": "Start WP-0.4 (CI truth gate: build, architecture, unit, integration, e2e, security, bones-offline jobs); G0 remains not ready until WP-0.4–WP-0.6 complete.",
-  "open_blockers": [],
-  "deviations": ["DEV-001"],
+  "last_verified_at": "2026-11-02T12:44:13-03:00",
+  "next_action": "Await an authorized push/CI run for WP-0.4; meanwhile start WP-0.6 ADRs (unblocked). G0 remains not ready.",
+  "open_blockers": ["BLK-CI-REMOTE"],
+  "deviations": ["DEV-001", "DEV-002"],
   "dirty_tree": {
-    "porcelain_entries": 308,
-    "modified": 148,
-    "untracked_entries": 160,
-    "untracked_files": 522,
-    "untracked_bytes": 18178919,
-    "diff": "148 files changed, 6758 insertions(+), 1427 deletions(-)"
+    "porcelain_entries": 0,
+    "status": "clean",
+    "note": "Baseline 308-path inventory is preserved under docs/execution/evidence/WP-0.1/."
   },
   "gate_packet": "docs/execution/evidence/G0/gate-packet.md",
   "decision_record": "docs/execution/evidence/G0/decision-2026-11-02.md",
@@ -41,6 +40,9 @@
   },
   "evidence": {
     "WP-0.1": "docs/execution/evidence/WP-0.1/",
+    "WP-0.2": "docs/execution/evidence/WP-0.2/",
+    "WP-0.3": "docs/execution/evidence/WP-0.3/",
+    "WP-0.4": "docs/execution/evidence/WP-0.4/",
     "G0": "docs/execution/evidence/G0/"
   },
   "test_inventory": {
@@ -52,12 +54,18 @@
     "total_projects": 17,
     "evidence": "docs/plan/baseline-test-status.md"
   },
+  "test_gate": {
+    "offline_projects": 15,
+    "waived_failures": 21,
+    "known_aborts": 2,
+    "remote_ci": "pending_authorized_push",
+    "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]
+  },
   "work_packages": {
     "WP-0.1": "done",
     "WP-0.2": "done",
     "WP-0.3": "done",
-    "WP-0.3": "done",
-    "WP-0.4": "not_started",
+    "WP-0.4": "blocked",
     "WP-0.5": "not_started",
     "WP-0.6": "not_started"
   }

@@ -1,0 +1,18 @@
+# WP-0.4 gate negative checks
+captured=2026-11-02T12:42:50.4698629-03:00
+
+CASE missing_project
+exit=1
+test_gate=FAIL errors=1
+ERROR Wip.Abstractions.Tests: missing TRX (project removed or did not run)
+
+CASE unwaived_failure
+exit=1
+test_gate=FAIL errors=1
+ERROR Wip.Bones.E2E.Tests: unwaived failure: Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk
+
+CASE zero_tests
+exit=1
+test_gate=FAIL errors=1
+ERROR Wip.Abstractions.Tests: zero tests discovered
+

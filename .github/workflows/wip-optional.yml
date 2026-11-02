@@ -1,0 +1,42 @@
+name: WIP Optional E2E and Security
+
+on:
+  workflow_dispatch:
+
+jobs:
+  wip-e2e:
+    name: wip-e2e-optional
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and build WIP solution
+        run: |
+          dotnet restore Wip.slnx
+          dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Run Bones.Web Playwright suite (optional)
+        continue-on-error: true
+        run: dotnet test WIP/Wip.Bones.Web.Tests/Wip.Bones.Web.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Wip.Bones.Web.Tests.trx"
+      - name: Run Shell E2E suite (optional)
+        continue-on-error: true
+        run: dotnet test WIP/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Wip.Shell.E2E.Tests.trx"
+      - name: Upload optional E2E results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wip-optional-e2e-results
+          path: |
+            WIP/Wip.Bones.Web.Tests/TestResults/**
+            WIP/Wip.Shell.E2E.Tests/TestResults/**
+          if-no-files-found: warn
+
+  wip-security:
+    name: wip-security-placeholder
+    runs-on: ubuntu-latest
+    steps:
+      - name: Security suite status
+        run: echo "Security category tests are introduced in WP-1.5; no Security suite exists at Phase 0."

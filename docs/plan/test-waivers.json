@@ -1,0 +1,163 @@
+{
+    "generated":  "2026-11-02T12:41:23.6902693-03:00",
+    "description":  "Known red-baseline failures for the offline suite (Playwright projects excluded and run optionally); CI gate fails on unlisted failures, zero tests, missing projects, or new partial suites.",
+    "expectedTotals":  {
+                           "Wip.Validation.DotNet.Tests":  54,
+                           "Wip.Bones.E2E.Tests":  10,
+                           "Wip.Bones.Host.Tests":  153,
+                           "Wip.Shell.Tests":  32,
+                           "Wip.Policy.LocalSafe.Tests":  40,
+                           "Wip.ShellHost.Tests":  47,
+                           "Wip.Bones.ModelProviders.DeepSeek.Tests":  48,
+                           "Wip.Artifacts.Local.Tests":  4,
+                           "Wip.Modus.Tests":  18,
+                           "Wip.Workspaces.Git.Tests":  12,
+                           "Wip.Tools.Shell.Tests":  25,
+                           "Wip.Bones.Tests":  383,
+                           "Wip.Abstractions.Tests":  44,
+                           "Wip.Runtime.Tests":  72,
+                           "Wip.Builder.Tests":  32
+                       },
+    "knownAborted":  [
+                         {
+                             "project":  "Wip.Modus.Tests",
+                             "owner":  "tech lead / docs",
+                             "expiry":  "2026-11-09",
+                             "reason":  "layout scan hang; suite aborted after 5 minutes"
+                         },
+                         {
+                             "project":  "Wip.Bones.Host.Tests",
+                             "owner":  "Bones engineer + QA",
+                             "expiry":  "2026-11-09",
+                             "reason":  "status API timeouts; testhost crash after abort"
+                         }
+                     ],
+    "failures":  [
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenCompletedRun_ExpectedStrategyAndMatchArtifactsExistOnDisk",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFullScript_ExpectedExitCodeZeroAndSessionStateEditingOrCheckpointed",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenFourAgents_ExpectedDistinctStrategyArtifactPathsInTranscript",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenPlayStage_ExpectedStdoutContainsLegalMovePromptEvidence",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenEnhanceStage_ExpectedStdoutOrArtifactShowsStrategyVersionIncrement",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BonesLearningShellE2EHarnessTests.BonesLearningE2E_GivenShellTranscript_ExpectedWorkflowStagesReportedInStdout",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.E2E.Tests",
+                         "test":  "Wip.Bones.E2E.Tests.E2E.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesChecklistItems_RequiresExecutableRuntimeProofForEachItem",
+                         "owner":  "Bones engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesHostChecklistItems_RequiresExecutableRuntimeProofForEachItem",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesLearningLoopReliabilityHostTests.BonesLearningLoopHost_GivenPonderFailure_ExpectedMarksFailedAndStartsNextIteration",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesStatusApiTests.BonesStatusApi_GivenCompiledButUnevaluatedStrategies_StrategiesPendingMatchesExpected",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesLearningLoopReliabilityHostTests.BonesLearningLoopHost_GivenSuccessfulIteration_ExpectedStageNamesIncludePonderPlayEnhance",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesLearningLoopReliabilityHostTests.BonesStatusApi_GivenPonderInProgressNoActivePointer_ExpectedReturns200WithNullLearningPlayer",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesStatusApiTests.BonesStatusApi_GivenRunningLoop_ExpectedReportsLearningPlayerBudgetAndResumeFields",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.Host.Tests",
+                         "test":  "Wip.Bones.Host.Tests.BonesStatusApiTests.BonesStatusApi_GivenRunningLoop_ActualGamesSimulatedMatchesGamesSimulated",
+                         "owner":  "Bones engineer + QA",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Bones.ModelProviders.DeepSeek.Tests",
+                         "test":  "Wip.Bones.ModelProviders.DeepSeek.Tests.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesDeepSeekChecklistItems_RequiresExecutableRuntimeProofForEachItem",
+                         "owner":  "tech lead + QA",
+                         "expiry":  "2026-11-16"
+                     },
+                     {
+                         "project":  "Wip.Bones.Tests",
+                         "test":  "Wip.Bones.Tests.BonesLearningLoopReliabilityBehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenWipBonesLearningLoopReliabilityChecklist_RequiresExecutableRuntimeProofForEachItem",
+                         "owner":  "tech lead + QA",
+                         "expiry":  "2026-11-16"
+                     },
+                     {
+                         "project":  "Wip.Bones.Tests",
+                         "test":  "Wip.Bones.Tests.BehaviorProofComplianceGateTests.BehaviorProofCompliance_GivenScriptStrategiesRequirements_RequiresExecutableRuntimeProofForEachItem",
+                         "owner":  "tech lead + QA",
+                         "expiry":  "2026-11-16"
+                     },
+                     {
+                         "project":  "Wip.Modus.Tests",
+                         "test":  "Wip.Modus.Tests.Documentation.WipContributorArchitectureReadmeTests.WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole",
+                         "owner":  "tech lead / docs",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Runtime.Tests",
+                         "test":  "Wip.Runtime.Tests.Runtime.DeepSeekModelProviderTests.DeepSeekProvider_GivenCancellationRequested_ExpectedRequestAbortedWithoutBackgroundContinuation",
+                         "owner":  "runtime engineer",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Shell.Tests",
+                         "test":  "Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.Artifacts_GivenSessionWithGovernanceEvidence_ListsArtifactIdsKindsProducersAndPathsFromStore",
+                         "owner":  "runtime lead",
+                         "expiry":  "2026-11-09"
+                     },
+                     {
+                         "project":  "Wip.Shell.Tests",
+                         "test":  "Wip.Shell.Tests.Interactive.WipShellCommandLoopTests.PromptRendering_GivenAttachedSession_ExpectedPromptIncludesSessionIdAcrossPlanRunValidateReviewAndMergeCommands",
+                         "owner":  "runtime lead",
+                         "expiry":  "2026-11-09"
+                     }
+                 ]
+}

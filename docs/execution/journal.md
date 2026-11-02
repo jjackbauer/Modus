@@ -87,3 +87,12 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Build:** `dotnet build Wip.slnx -c Release` → exit 0, 0 errors, 113 warnings, 53.06 s.
 - **Evidence:** `docs/execution/evidence/WP-0.3/` (coverage-before/after, orphan red, build, notes).
 - **Next:** WP-0.4 (CI truth gate).
+
+## 2026-11-02T12:44:13-03:00 - WP-0.4 (CI truth gate configured; remote run blocked)
+
+- **Workflow:** `.github/workflows/tests-ci.yml` now has WIP build jobs (Ubuntu + Windows), an architecture job, and a Windows offline-test job with the waiver/zero-test gate; `.github/workflows/wip-optional.yml` holds manual Playwright and security placeholders.
+- **Scripts:** `tools/run-wip-tests.ps1` (15 offline projects) and `tools/verify-test-results.ps1` (waivers, zero tests, expected counts, missing projects).
+- **Gate evidence:** green 15 projects / 21 waivers; missing-project, unwaived-failure, and zero-test cases exit 1 (`docs/execution/evidence/WP-0.4/`).
+- **Blocker:** `BLK-CI-REMOTE` — GitHub Actions has not run because no push was authorized; WP-0.4 is blocked on that run.
+- **Deviation:** `DEV-002` — project-level categories instead of xUnit Category traits until WP-4.3.
+- **Next:** WP-0.6 (ADRs) while CI awaits authorization; then WP-0.5 and G0.

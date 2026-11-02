@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - WIP
   pull_request:
     branches:
       - main
+      - WIP
   workflow_dispatch:
 
 concurrency:
@@ -14,6 +16,88 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  wip-build-ubuntu:
+    name: wip-build (ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore WIP solution
+        run: dotnet restore Wip.slnx
+      - name: Check harness adapter sync
+        run: dotnet run --project tools/HarnessSync -- --check
+      - name: Build WIP solution
+        run: dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Verify solution coverage
+        run: pwsh -NoProfile -File tools/verify-solution-coverage.ps1
+
+  wip-build-windows:
+    name: wip-build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore WIP solution
+        run: dotnet restore Wip.slnx
+      - name: Check harness adapter sync
+        run: dotnet run --project tools/HarnessSync -- --check
+      - name: Build WIP solution
+        run: dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Verify solution coverage
+        run: pwsh -NoProfile -File tools/verify-solution-coverage.ps1
+
+  wip-architecture:
+    name: wip-architecture
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and build WIP solution
+        run: |
+          dotnet restore Wip.slnx
+          dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Test Modus architecture
+        run: dotnet test tests/Modus.Architecture.Tests/Modus.Architecture.Tests.csproj --configuration Release --no-build --logger "trx;LogFileName=Modus.Architecture.Tests.trx"
+
+  wip-offline-tests:
+    name: wip-offline-tests
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and build WIP solution
+        run: |
+          dotnet restore Wip.slnx
+          dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Run offline WIP suites
+        run: pwsh -NoProfile -File tools/run-wip-tests.ps1 -Configuration Release -ResultsDirectory artifacts/ci-test-results
+      - name: Gate known failures, zero tests, and test counts
+        run: pwsh -NoProfile -File tools/verify-test-results.ps1 -ResultsDirectory artifacts/ci-test-results -WaiverPath docs/plan/test-waivers.json
+      - name: Upload offline test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wip-offline-test-results
+          path: artifacts/ci-test-results/**
+          if-no-files-found: warn
+
   tests:
     name: tests
     runs-on: ubuntu-latest
