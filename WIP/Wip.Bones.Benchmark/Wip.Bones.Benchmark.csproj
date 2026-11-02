@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <Description>Deterministic held-out benchmark and promotion-rule experiments for the Bones learning loop.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
+    <ProjectReference Include="..\Wip.Bones.Agents\Wip.Bones.Agents.csproj" />
+  </ItemGroup>
+</Project>

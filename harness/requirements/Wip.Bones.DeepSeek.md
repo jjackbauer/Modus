@@ -44,7 +44,7 @@
 | Provider contract | `IModelProvider<Bones*Request, Bones*Result>` per stage | Same contracts; adapters translate to `DeepSeekChatCompletionRequest` |
 | Configuration | No model-provider section in `appsettings.json` | `BonesHost:ModelProvider: deepseek` with nested DeepSeek options |
 | API key | N/A for stubs | `env:DEEPSEEK_API_KEY` (same pattern as `WipShellHost`) |
-| Default models | `bones-strategy-author`, `bones-play-turn`, `bones-strategy-enhance` agent defaults | Host config supplies `deepseek-chat` or `deepseek-reasoner`; adapters pass configured model to DeepSeek HTTP payload |
+| Default models | `bones-strategy-author`, `bones-play-turn`, `bones-strategy-enhance` agent defaults | Host config supplies `deepseek-flash` (V4.1 Flash, default) or `deepseek-v4-pro`; adapters pass configured model to DeepSeek HTTP payload |
 | Tests / CI | Stubs everywhere | Stubs only when `ModelProvider=stub`; DeepSeek path tested via mock handler |
 | Shell host | Stubs for Bones E2E (`WIP_BONES_E2E`) | Unchanged; shell path remains test-only legacy |
 
@@ -115,7 +115,7 @@ classDiagram
 ### Completeness Checklist
 
 - [x] Introduce `Wip.Bones.ModelProviders.DeepSeek` class library referencing `Wip.Bones.Agents`, `Wip.Abstractions`, and `Wip.Runtime` (for `DeepSeekModelProvider` reuse) [foundation for DeepSeek adapters] [mandatory - adapter assembly]
-- [x] Implement `BonesDeepSeekProviderOptions` with validated `BaseUrl` (absolute HTTP/HTTPS), supported model identifier (`deepseek-chat`, `deepseek-reasoner`), positive `Timeout`, and `ApiKeySource` in `env:<VARIABLE_NAME>` format matching `DeepSeekModelProviderOptions` conventions [depends on adapter assembly] [mandatory - configuration contract]
+- [x] Implement `BonesDeepSeekProviderOptions` with validated `BaseUrl` (absolute HTTP/HTTPS), supported model identifier (`deepseek-flash`, `deepseek-v4-pro`), positive `Timeout`, and `ApiKeySource` in `env:<VARIABLE_NAME>` format matching `DeepSeekModelProviderOptions` conventions [depends on adapter assembly] [mandatory - configuration contract]
 - [x] Implement shared message mapper translating `BonesStrategyAuthoringMessage`, `BonesPlayTurnMessage`, and `BonesStrategyEnhancementMessage` into `DeepSeekChatMessage` lists for outbound HTTP requests [depends on options contract]
 - [x] Implement `DeepSeekBonesStrategyAuthoringProvider` implementing `IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>` — forwards ponder prompts to `DeepSeekModelProvider`, returns assistant markdown as `BonesStrategyAuthoringResult`, propagates `providerId=deepseek`, configured `modelId`, usage tokens, and `correlationId` [depends on message mapper] [mandatory - strategy authoring LLM]
 - [x] Implement `DeepSeekBonesPlayTurnProvider` implementing `IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>` — includes allowed-move enumeration in user prompt, instructs model to reply with exactly one move id from the list (or `pass` when only pass is legal), parses response via `BonesPlayTurnResponseParser`, and returns `BonesPlayTurnResult` with selected move id [depends on message mapper] [mandatory - play-turn LLM engine]
@@ -124,7 +124,7 @@ classDiagram
 - [x] Add `AddBonesDeepSeekModelProviders(IServiceCollection, BonesDeepSeekProviderOptions)` extension registering `DeepSeekModelProviderOptions`, `HttpClient`, inner `DeepSeekModelProvider`, and all three Bones adapter singletons [depends on all three adapters]
 - [x] Extend `BonesHostOptions` with `ModelProvider` enum (`DeepSeek` default, `Stub` for offline/test) and nested `DeepSeek` options bound from `BonesHost:ModelProvider` and `BonesHost:DeepSeek` configuration sections [depends on options contract]
 - [x] Update `BonesHostServiceCollectionExtensions` to register DeepSeek adapters when `ModelProvider=DeepSeek` and stub providers only when `ModelProvider=Stub`; production default must be DeepSeek [depends on host options and registration extension] [mandatory - production default]
-- [x] Pass configured DeepSeek model identifier into workflow stage requests (ponder/play/enhance) so HTTP payloads use `deepseek-chat` or `deepseek-reasoner` rather than bones-local default model names when DeepSeek is active [depends on host DI wiring]
+- [x] Pass configured DeepSeek model identifier into workflow stage requests (ponder/play/enhance) so HTTP payloads use `deepseek-flash` or `deepseek-v4-pro` rather than bones-local default model names when DeepSeek is active [depends on host DI wiring]
 - [x] Expose startup and `GET /api/bones/status` diagnostics proving active model provider (`deepseek` vs `stub`), configured model name, base URL, timeout, and key source reference without leaking secret values [depends on host wiring] [mandatory - observability]
 - [x] Add `Wip.Bones.ModelProviders.DeepSeek.Tests` with mock `HttpMessageHandler` proving outbound request contains ponder/play/enhance prompt content, correct model id, bearer auth, and correlation id continuity on success paths [depends on adapters] [mandatory - HTTP mapping proof]
 - [x] Add negative-path tests: missing `DEEPSEEK_API_KEY`, unsupported model selection, HTTP 503 endpoint failure, malformed empty choices payload, and play-turn response with illegal move id — each must fail deterministically without mutating artifact store or board state [depends on adapter tests] [mandatory - negative-path isolation]
@@ -158,8 +158,8 @@ classDiagram
 | 2 | Bones agents already depend on typed `IModelProvider` interfaces | `BonesPonderAgent.cs`, `BonesPlayMatchTool.cs`, `BonesEnhanceStrategyAgent.cs` | Supported | Three injection points; no agent code changes required beyond model id passthrough |
 | 3 | Prompt builders produce structured messages suitable for DeepSeek | `BonesPonderPromptBuilder.cs`, `BonesPlayMatchPromptBuilder.cs`, `BonesEnhancePromptBuilder.cs` | Supported | System/user message pairs with legal-move vocabulary and outcome summaries |
 | 4 | `BonesPlayMatchTool` already retries invalid model move selections | `BonesPlayMatchTool.cs:225-254` | Supported | Retry loop calls model provider again; parser returning null triggers retry |
-| 5 | `Wip.Bones.Host` currently registers stubs only | `BonesHostServiceCollectionExtensions.cs:114` | Supported | Production path must be replaced/configured |
-| 6 | Shell host DeepSeek config pattern is reusable | `WipShellHostOptions.cs:57-61,257-299` | Supported | Same supported models and env key source format |
+| 5 | `Wip.Bones.Host` registers DeepSeek adapters by default and stubs only in explicit stub mode | `BonesHostServiceCollectionExtensions.cs`; `BonesHostOptions.cs` | Supported | Production default is DeepSeek; stub registration is opt-in |
+| 6 | Shell host DeepSeek env-key-source pattern is reusable | `WipShellHostOptions.cs:57-61,257-299` | Supported | Env key source format is shared; Bones validates the current V4 model catalog while the legacy shell host retains its older catalog |
 | 7 | No existing Bones DeepSeek adapter assembly | Workspace grep for `DeepSeekBones`, `Bones.ModelProviders.DeepSeek` | Supported | Greenfield adapter layer |
 | 8 | Mock HTTP handler tests avoid live API dependency | `DeepSeekModelProviderTests.cs` handler injection pattern | Supported | CI-safe without network or secrets |
 
@@ -178,10 +178,13 @@ Zero Falsified rows.
    *Assumption*: Non-absolute base URL is rejected at construction. [negative path]
 
 3. `BonesDeepSeekProviderOptions_GivenUnsupportedModel_ExpectedDeterministicValidationFailure`
-   *Assumption*: Model identifiers outside `deepseek-chat` and `deepseek-reasoner` are rejected. [negative path]
+   *Assumption*: Model identifiers outside `deepseek-flash`, `deepseek-v4-pro`, and the legacy `deepseek-v4-flash` aliases are rejected with deterministic validation errors. [negative path]
 
 4. `BonesDeepSeekProviderOptions_GivenInvalidApiKeySource_ExpectedDeterministicValidationFailure`
    *Assumption*: Api key source not matching `env:<NAME>` format throws deterministically. [negative path]
+
+5. `BonesDeepSeekProviderOptions_GivenThinkingEnabled_ExpectedPreservedForRequestMapping`
+   *Assumption*: Runtime options preserve `DeepSeekThinkingMode.Enabled` so outbound HTTP request mapping can enable thinking deterministically. [behavior-proof runtime contract]
 
 ### BonesDeepSeekMessageMapper
 
@@ -236,6 +239,9 @@ Zero Falsified rows.
 4. `DeepSeekBonesPlayTurnProvider_GivenEndpoint503_ExpectedDeterministicHttpFailure`
    *Assumption*: Transient-exhausted endpoint failure throws without board state mutation. [negative path]
 
+5. `DeepSeekBonesPlayTurnProvider_GivenSupportedPerStageModel_ExpectedPayloadUsesRequestedModel`
+   *Assumption*: Runtime HTTP payload uses the requested `deepseek-v4-pro` per-stage model id instead of falling back to the configured global model. [runtime HTTP mapping]
+
 ### DeepSeekBonesStrategyEnhancementProvider
 
 1. `DeepSeekBonesStrategyEnhancementProvider_GivenEnhancementRequest_ExpectedHttpPayloadContainsPriorStrategyAndMatchSummaries`
@@ -272,7 +278,7 @@ Zero Falsified rows.
    *Assumption*: Explicit stub mode registers existing stub implementations for offline runs.
 
 3. `BonesHostServiceCollection_GivenDeepSeekConfig_ExpectedWorkflowUsesConfiguredModelIdInProviderRequests`
-   *Assumption*: Captured model provider requests use configured `deepseek-chat` or `deepseek-reasoner` model id.
+   *Assumption*: Captured model provider requests use configured `deepseek-flash` or `deepseek-v4-pro` model id.
 
 ### Bones Status Diagnostics
 

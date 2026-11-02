@@ -205,7 +205,7 @@ classDiagram
 
 ### Absolute Behavior-Proof Compliance Gate
 
-1. `BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEveryItem`
+1. `BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEachItem`
    *Assumption*: Each checklist item is compliant only when backed by executable runtime-proof tests.
 
 2. `BehaviorProofCompliance_GivenMetadataOnlyAssertions_RejectsCompletionAsInsufficient`

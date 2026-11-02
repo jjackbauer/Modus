@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Shared E2E compliance registry and aggregated behavior-proof gates for WIP requirements documents.</Description>
+    <PackageId>Wip.Shell.E2E</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.ShellHost\Wip.ShellHost.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,38 @@
+---
+description: Always write text files as UTF-8 (never UTF-16) on Windows.
+alwaysApply: true
+---
+
+# UTF-8 file encoding (Windows)
+
+All text/source files must be **UTF-8 without BOM**. UTF-16 breaks `dotnet build` and wastes tokens.
+
+## Proven behavior (Windows)
+
+| Method | Encoding |
+|--------|----------|
+| Cursor `Write` | **UTF-16 — never use for text files** |
+| Cursor `StrReplace` | UTF-8 (edits to existing UTF-8 files only) |
+| Shell `WriteAllText` + `UTF8Encoding(false)` | UTF-8 (new files) |
+
+## Mandatory workflow
+
+1. **Edits:** `StrReplace` on existing UTF-8 files only.
+2. **New files:** shell only — **never** Cursor `Write`:
+   ```powershell
+   $utf8 = New-Object System.Text.UTF8Encoding $false
+   [System.IO.File]::WriteAllText('<path>', @'
+   <content>
+   '@, $utf8)
+   ```
+   Or: `powershell -NoProfile -ExecutionPolicy Bypass -File tools/encoding/WriteUtf8.ps1 -Path <path> -Content '<content>'`
+3. **Never** use PowerShell defaults: `Out-File`, bare `Set-Content`, `>` / `>>` redirection.
+
+## Enforcement
+
+- `dotnet run --project tools/HarnessSync -- --check` fails on UTF-16 text files.
+- Optional pre-commit: `git config core.hooksPath .githooks`
+
+## Recovery (legacy corruption only)
+
+If a file is already UTF-16: `tools/encoding/Repair-TextFileUtf8.ps1` — not part of normal create flow.

@@ -208,8 +208,8 @@ classDiagram
 | E2E-020 | Status consistency across session lifecycle transitions | `StatusCommand_GivenSessionLifecycleTransitions_ExpectedBaseCommitWorkflowValidationAndApprovalFieldsRemainConsistent` |
 | E2E-021 | Run command executes mapped stages and summary | `Run_GivenSelectedWorkflow_ExecutesMappedStagesPersistsArtifactsAndRendersStageSummary` |
 | E2E-022 | Run selection prompt when workflow is ambiguous | `RunCommand_GivenMultipleEligibleWorkflowsAndNoDefault_ExpectedExplicitSelectionPromptBeforeExecution` |
-| E2E-023 | Planned workflow artifact production | `RunArtifacts_GivenPlannedTypedWorkflow_ProducesAgentPlanAndAgentRunResultArtifacts` |
-| E2E-024 | Artifacts command stable descriptor ordering | `ArtifactsCommand_GivenSessionArtifacts_ReturnsDeterministicDescriptorFieldsAndStableOrdering` |
+| E2E-023 | Planned workflow artifact production | `RunArtifacts_GivenPlannedTypedWorkflow_ExpectedAgentRunResultReflectsExecutedCapabilitiesNotMetadataOnly` |
+| E2E-024 | Artifacts command stable descriptor ordering | `Artifacts_GivenRunWithDispatchedStages_ExpectedListsStageExecutionEntriesWithStableSortOrder` |
 | E2E-025 | Correlation continuity into provider/artifact path | `ProviderInvocation_GivenSessionContext_ExpectedCorrelationIdPropagatesAcrossRequestResponseAndArtifacts` |
 | E2E-026 | Diff hash stability across line-ending noise | `DiffAndCheckpoint_GivenEquivalentLineEndingNoise_KeepStableNormalizedDiffHash` |
 | E2E-027 | Diff evidence persistence for committed candidate change | `Diff_GivenCommittedCandidateChange_PersistsPatchAndChangedFilesEvidence` |

@@ -1,0 +1,25 @@
+captured=2026-11-02T10:42:26.9285691-03:00
+WIP_csproj_total=37
+WIP_slnx_projects=24
+Modus_slnx_WIP_projects=34
+WIP_test_projects=17
+
+## Projects missing from WIP.slnx (13)
+WIP/BonesLibraryRecovery/BonesLibraryRecovery.csproj
+WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj
+WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj
+WIP/Wip.Bones.E2E.Tests/Wip.Bones.E2E.Tests.csproj
+WIP/Wip.Bones.Host.Tests/Wip.Bones.Host.Tests.csproj
+WIP/Wip.Bones.Host/Wip.Bones.Host.csproj
+WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Wip.Bones.ModelProviders.DeepSeek.Tests.csproj
+WIP/Wip.Bones.ModelProviders.DeepSeek/Wip.Bones.ModelProviders.DeepSeek.csproj
+WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj
+WIP/Wip.Bones.Web.Tests/Wip.Bones.Web.Tests.csproj
+WIP/Wip.Bones.Web/Wip.Bones.Web.csproj
+WIP/Wip.Bones/Wip.Bones.csproj
+WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj
+
+## Projects in neither solution (3)
+WIP/BonesLibraryRecovery/BonesLibraryRecovery.csproj
+WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj
+WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj

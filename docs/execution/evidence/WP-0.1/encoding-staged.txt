@@ -1,0 +1,17 @@
+command=powershell -NoProfile -ExecutionPolicy Bypass -File tools/encoding/Test-StagedTextFileEncoding.ps1
+exit=1
+--- output ---
+powershell.exe : Exception calling "GetExtension" with "1" argument(s): "Illegal characters in path."
+At line:5 char:11
++ $encOut = & powershell -NoProfile -ExecutionPolicy Bypass -File tools ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Exception calli...cters in path.":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+At C:\Users\ricar\dev\Modus\tools\encoding\Test-StagedTextFileEncoding.ps1:22 char:5
++     $extension = [System.IO.Path]::GetExtension($relativePath)
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : ArgumentException
+ 
+

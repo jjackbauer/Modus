@@ -23,7 +23,7 @@ public sealed class BonesHostDeepSeekStatusApiTests
                 {
                     settings["BonesHost:ModelProvider"] = "deepseek";
                     settings["BonesHost:DeepSeek:BaseUrl"] = "https://api.deepseek.com";
-                    settings["BonesHost:DeepSeek:Model"] = "deepseek-chat";
+                    settings["BonesHost:DeepSeek:Model"] = "deepseek-flash";
                     settings["BonesHost:DeepSeek:TimeoutSeconds"] = "30";
                     settings["BonesHost:DeepSeek:ApiKeySource"] = "env:WIP_BONES_HOST_TEST_API_KEY";
                 });
@@ -37,12 +37,13 @@ public sealed class BonesHostDeepSeekStatusApiTests
             var modelProvider = document.RootElement.GetProperty("modelProvider");
 
             Assert.Equal("deepseek", modelProvider.GetProperty("provider").GetString());
-            Assert.Equal("deepseek-chat", modelProvider.GetProperty("model").GetString());
+            Assert.Equal("deepseek-flash", modelProvider.GetProperty("model").GetString());
             Assert.Equal("https://api.deepseek.com/", modelProvider.GetProperty("baseUrl").GetString());
             Assert.Equal(30, modelProvider.GetProperty("timeoutSeconds").GetInt32());
             Assert.Equal(
                 "environment:WIP_BONES_HOST_TEST_API_KEY",
                 modelProvider.GetProperty("apiKeySource").GetString());
+            Assert.Equal("disabled", modelProvider.GetProperty("thinking").GetString());
             Assert.DoesNotContain("super-secret-value", json, StringComparison.Ordinal);
         }
         finally
@@ -83,7 +84,7 @@ public sealed class BonesHostDeepSeekStatusApiTests
                 {
                     ["BonesHost:ModelProvider"] = "deepseek",
                     ["BonesHost:DeepSeek:BaseUrl"] = "https://api.deepseek.com",
-                    ["BonesHost:DeepSeek:Model"] = "deepseek-chat",
+                    ["BonesHost:DeepSeek:Model"] = "deepseek-flash",
                     ["BonesHost:DeepSeek:TimeoutSeconds"] = "30",
                     ["BonesHost:DeepSeek:ApiKeySource"] = "env:WIP_BONES_HOST_TEST_API_KEY",
                 })
@@ -93,7 +94,8 @@ public sealed class BonesHostDeepSeekStatusApiTests
             var diagnostics = options.GetStartupDiagnostics();
 
             Assert.Contains(diagnostics, line => line == "modelProvider=deepseek");
-            Assert.Contains(diagnostics, line => line == "modelProvider.deepseek.model=deepseek-chat");
+            Assert.Contains(diagnostics, line => line == "modelProvider.deepseek.model=deepseek-flash");
+            Assert.Contains(diagnostics, line => line == "modelProvider.deepseek.thinking=disabled");
             Assert.Contains(
                 diagnostics,
                 line => line == "modelProvider.deepseek.apiKeySource=environment:WIP_BONES_HOST_TEST_API_KEY");
@@ -117,7 +119,7 @@ public sealed class BonesHostDeepSeekStatusApiTests
                     {
                       "id": "chatcmpl-status-test",
                       "object": "chat.completion",
-                      "model": "deepseek-chat",
+                      "model": "deepseek-flash",
                       "choices": [
                         {
                           "index": 0,

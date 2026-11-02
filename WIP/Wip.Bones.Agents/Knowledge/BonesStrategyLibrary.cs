@@ -72,7 +72,7 @@ internal sealed record BonesStrategyLibraryEntryPersistence(
 
 public sealed class BonesStrategyLibrary
 {
-    private const string LibraryDirectoryName = ".bones";
+    internal const string LibraryDirectoryName = ".bones";
     private const string StrategyLibrarySegment = "strategy-library";
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -81,8 +81,9 @@ public sealed class BonesStrategyLibrary
     };
 
     private readonly string _libraryRoot;
+    private readonly BonesStrategyDiversityGate? _diversityGate;
 
-    public BonesStrategyLibrary(string dataDirectory)
+    public BonesStrategyLibrary(string dataDirectory, BonesStrategyDiversityGate? diversityGate = null)
     {
         if (string.IsNullOrWhiteSpace(dataDirectory))
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(dataDirectory));
@@ -91,6 +92,7 @@ public sealed class BonesStrategyLibrary
             Path.GetFullPath(dataDirectory),
             LibraryDirectoryName,
             StrategyLibrarySegment);
+        _diversityGate = diversityGate;
     }
 
     public BonesStrategyArtifact? LoadBestStrategy(BonesPlayerId playerId)
@@ -129,6 +131,76 @@ public sealed class BonesStrategyLibrary
         var integrity = VerifyIntegrity();
         return (strategies, integrity);
     }
+
+    /// <summary>
+    /// Determines whether a seat's library entry is viable (can skip Ponder).
+    /// A seat is viable if it has a Script or Markdown entry with at least 1 match played.
+    /// Both kinds represent strategies that have gone through at least one learning cycle.
+    /// </summary>
+    public bool IsEntryViable(BonesPlayerId playerId)
+    {
+        var entry = TryLoadEntry(playerId);
+        if (entry is null)
+            return false;
+
+        // Script and Markdown entries are both viable when they have match history.
+        if (entry.Kind is not (BonesStrategyKind.Script or BonesStrategyKind.Markdown))
+            return false;
+
+        return entry.Effectiveness.MatchesPlayed >= 1;
+    }
+
+    /// <summary>
+    /// When a diversity gate is configured and the seat has fewer than the
+    /// required minimum of meaningfully distinct strategies, Ponder should be
+    /// invoked even if a viable entry exists.
+    /// </summary>
+    public bool ShouldInvokePonderForDiversity(BonesPlayerId playerId)
+    {
+        if (_diversityGate is null)
+            return false;
+
+        var allEntries = GetAllEntries(playerId);
+        return _diversityGate.ShouldInvokePonder(playerId, allEntries);
+    }
+
+    /// <summary>
+    /// Returns all library entries for a given seat (not just the best one).
+    /// This is used by the diversity gate to count distinct strategies.
+    /// </summary>
+    public IReadOnlyList<BonesStrategyLibraryEntry> GetAllEntries(BonesPlayerId playerId)
+    {
+        var bestEntry = TryLoadEntry(playerId);
+        if (bestEntry is null)
+            return Array.Empty<BonesStrategyLibraryEntry>();
+
+        // Also include historical candidates stored on disk.
+        var candidates = LoadCandidates(playerId);
+        var entries = new List<BonesStrategyLibraryEntry> { bestEntry };
+        foreach (var candidate in candidates)
+        {
+            entries.Add(new BonesStrategyLibraryEntry(
+                candidate.StrategyId,
+                candidate.PlayerId,
+                candidate.Kind,
+                candidate.Source,
+                new BonesStrategyEffectivenessRecord(
+                    candidate.StrategyId,
+                    candidate.PlayerId,
+                    candidate.EvaluationMetrics.EvaluationMatchCount,
+                    candidate.EvaluationMetrics.CandidateWins,
+                    candidate.EvaluationMetrics.IncumbentWins,
+                    (int)Math.Round(candidate.EvaluationMetrics.ScoreDifferentialDelta)),
+                candidate.StoredAtUtc));
+        }
+
+        return entries;
+    }
+
+    /// <summary>
+    /// Returns the configured diversity gate, if any.
+    /// </summary>
+    public BonesStrategyDiversityGate? DiversityGate => _diversityGate;
 
     public IReadOnlyList<BonesStrategyLibraryEntry> GetRanking(BonesPlayerId playerId)
     {
@@ -211,7 +283,7 @@ public sealed class BonesStrategyLibrary
 
             try
             {
-                var json = File.ReadAllText(path);
+                var json = ReadAllTextShared(path);
                 var persistence = JsonSerializer.Deserialize<BonesStrategyLibraryEntryPersistence>(json, JsonOptions);
                 if (persistence is null)
                     throw new JsonException("Deserialized to null.");
@@ -276,7 +348,7 @@ public sealed class BonesStrategyLibrary
 
         try
         {
-            var json = File.ReadAllText(path);
+            var json = ReadAllTextShared(path);
             var persisted = JsonSerializer.Deserialize<BonesStrategyCandidatePersistence[]>(json, JsonOptions);
             return persisted?.Select(p => p.ToEntry(playerId)).ToArray()
                 ?? Array.Empty<BonesStrategyCandidateEntry>();
@@ -304,6 +376,19 @@ public sealed class BonesStrategyLibrary
     internal BonesStrategyLibraryEntry? TryLoadEntryForTests(BonesPlayerId playerId)
         => TryLoadEntry(playerId);
 
+    private static string ReadAllTextShared(string path)
+    {
+        using var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete,
+            bufferSize: 4096,
+            FileOptions.SequentialScan);
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+
     private static void AtomicWriteAllText(string path, string json)
     {
         var tempPath = path + ".tmp" + Guid.NewGuid().ToString("N");
@@ -319,7 +404,7 @@ public sealed class BonesStrategyLibrary
 
         try
         {
-            var json = File.ReadAllText(path);
+            var json = ReadAllTextShared(path);
             var persistence = JsonSerializer.Deserialize<BonesStrategyLibraryEntryPersistence>(json, JsonOptions);
             return persistence?.ToEntry(playerId);
         }

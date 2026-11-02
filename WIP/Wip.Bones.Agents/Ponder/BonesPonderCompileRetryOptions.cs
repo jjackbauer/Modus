@@ -1,6 +1,6 @@
 namespace Wip.Bones.Agents.Ponder;
 
-public sealed class BonesPonderCompileRetryOptions
+public sealed class BonesCompileRetryOptions
 {
     public const string ConfigurationSectionName = "BonesHost:Ponder";
 

@@ -2,7 +2,7 @@
 
 Wip.ShellHost is the startup composition root for interactive shell execution. It resolves effective configuration, creates the runtime and diagnostics bridge, and wires host-only commands into the shell loop.
 
-Dependency note: shell command dispatch semantics are owned by Wip.Shell. See src/Wip.Shell/README.md for command and failure contracts.
+Dependency note: shell command dispatch semantics are owned by Wip.Shell. See `WIP/Wip.Shell/README.md` for command and failure contracts.
 
 ## Host Startup Composition
 
@@ -24,19 +24,19 @@ Factory wiring in `WipShellHostFactory` then composes:
 Run the shell host from repository root:
 
 ```powershell
-dotnet run --project src/Wip.ShellHost/Wip.ShellHost.csproj
+dotnet run --project WIP/Wip.ShellHost/Wip.ShellHost.csproj
 ```
 
 Run with an explicit plugins path (first non-option argument):
 
 ```powershell
-dotnet run --project src/Wip.ShellHost/Wip.ShellHost.csproj -- .\plugins
+dotnet run --project WIP/Wip.ShellHost/Wip.ShellHost.csproj -- .\plugins
 ```
 
 Run with startup mode override:
 
 ```powershell
-dotnet run --project src/Wip.ShellHost/Wip.ShellHost.csproj -- --startup-mode=autoload
+dotnet run --project WIP/Wip.ShellHost/Wip.ShellHost.csproj -- --startup-mode=autoload
 ```
 
 Supported startup mode values:
@@ -65,7 +65,7 @@ After startup, use a contributor-friendly flow:
 8. `detach`
 9. `exit`
 
-For command syntax and deterministic shell-level error contracts, see `src/Wip.Shell/README.md`.
+For command syntax and deterministic shell-level error contracts, see `WIP/Wip.Shell/README.md`.
 
 ## Host Command Extensions
 
@@ -113,4 +113,4 @@ Effective config output always includes:
 - `pluginStartupMode: <effective startup mode>`
 - `validationCommands: <joined command list>`
 
-Contributors changing precedence semantics or output field names must update this README and tests in tests/Wip.Shell.E2E.Tests.
+Contributors changing precedence semantics or output field names must update this README and tests in `WIP/Wip.Shell.E2E.Tests`.

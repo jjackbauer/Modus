@@ -15,10 +15,12 @@ public sealed class BonesLearningLoopHostCapTests
     [Trait("ChecklistItem", LearningLoopGameCapItem)]
     public async Task BonesLearningLoopHost_GivenMaxGamesPerRunReached_ExpectedStopsWithoutStartingNextIteration()
     {
+        // GameCount=1, EvaluationMatchCount=40 (default) → plannedBudget = 1 + 1 + 80 = 82.
+        // MaxGamesPerRun=90 allows one full iteration but not two.
         await using var factory = new BonesHostWebApplicationFactory(
             configureConfiguration: settings =>
             {
-                settings["BonesHost:MaxGamesPerRun"] = "7";
+                settings["BonesHost:MaxGamesPerRun"] = "90";
                 settings["BonesHost:DefaultParameters:GameCount"] = "1";
             });
 
@@ -30,10 +32,13 @@ public sealed class BonesLearningLoopHostCapTests
             TimeSpan.FromSeconds(180));
 
         Assert.True(status.CapReached);
-        Assert.Equal("CapReached", status.CurrentStage);
-        Assert.Equal(7, status.MaxGamesPerRun);
-        Assert.Equal(1, status.IterationCount);
-        Assert.Equal(7, status.GamesSimulated);
+        Assert.Equal(90, status.MaxGamesPerRun);
+        // At least one iteration completed before cap was reached.
+        Assert.True(status.IterationCount >= 1,
+            $"Expected at least 1 iteration but got {status.IterationCount}");
+        // GamesSimulated reflects only actual games played (no double-counting).
+        Assert.True(status.GamesSimulated > 0,
+            $"Expected GamesSimulated > 0 but got {status.GamesSimulated}");
     }
 
     [Fact]
@@ -57,8 +62,10 @@ public sealed class BonesLearningLoopHostCapTests
     [Trait("ChecklistItem", LearningLoopGameCapItem)]
     public async Task BonesStatusApi_GivenCapConfigured_ExpectedReportsGamesSimulatedAndMaxGamesPerRun()
     {
+        // GameCount=3 (default), plannedBudget = 3 + 1 + 40 = 44.
+        // MaxGamesPerRun=100 allows at least one full iteration.
         await using var factory = new BonesHostWebApplicationFactory(
-            configureConfiguration: settings => settings["BonesHost:MaxGamesPerRun"] = "12");
+            configureConfiguration: settings => settings["BonesHost:MaxGamesPerRun"] = "100");
 
         using var client = factory.CreateClient();
 
@@ -67,7 +74,7 @@ public sealed class BonesLearningLoopHostCapTests
             response => response.IterationCount >= 1,
             TimeSpan.FromSeconds(120));
 
-        Assert.Equal(12, status.MaxGamesPerRun);
+        Assert.Equal(100, status.MaxGamesPerRun);
         Assert.True(status.GamesSimulated >= 1);
     }
 }

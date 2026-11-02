@@ -2,7 +2,9 @@
 
 Wip.Runtime is the session-lifecycle orchestrator for WIP execution. It applies deterministic state transitions, persists session snapshots, restores sessions on attach, and executes workflow stages in a fixed progression.
 
-Dependency note: workflow registrations consumed by the runtime are produced by Wip.Builder. See src/Wip.Builder/README.md for registration contracts and workflow-selection constraints.
+Dependency note: workflow registrations consumed by the runtime are produced by Wip.Builder. See `WIP/Wip.Builder/README.md` for registration contracts and workflow-selection constraints.
+
+Shell command semantics for execution vs governance boundaries are defined in `WIP/Wip.Shell/Interactive/WipShellCommandSemantics.cs` and surfaced through shell `help` and `status`.
 
 ## Orchestrator Lifecycle
 
@@ -11,8 +13,11 @@ Dependency note: workflow registrations consumed by the runtime are produced by 
 | API | Lifecycle contract | Deterministic outcome |
 |---|---|---|
 | `StartSessionAsync` | Creates a new session snapshot in `Created` state, fills task and repository metadata, and emits a start event. | Persisted snapshot exists at `.wip/sessions/{sessionId}/session-state.json` with task, workflow, branch, commit, worktree, artifact, and governance fields, and `SessionStarted` is published. |
-| `TransitionAsync` | Enforces linear next-state transitions only. | Invalid jumps throw `InvalidOperationException` with expected-next-state details. |
-| `RunWorkflowAsync` | Maps workflow stages to runtime states and applies transitions when required. | Stage descriptors execute in fixed order: Plan -> Run -> Validate -> Review -> RequireApproval -> Merge. |
+| `TransitionAsync` | Enforces linear next-state transitions only. | Invalid jumps throw `InvalidOperationException` with expected-next-state details. Not exposed as an interactive shell command. |
+| `RunWorkflowAsync` | Executes compiled workflow **Plan** and **Run** stages for shell `run` (execution-only). | Dispatches Plan and Run capabilities, persists stage execution artifacts, and leaves governance completion to explicit `validate`, `review`, `approve`, and `merge` shell commands. |
+| `ValidateAsync` | Governance validation path invoked by shell `validate`. | Records validation evidence, updates `ValidationStatus`, and persists a `validation-report` artifact. |
+| `CreateApprovalTokenAsync` | Governance approval path invoked by shell `approve`. | Records an `approval-token` artifact and aligns `ApprovalStatus`. |
+| `MergeAsync` | Governance merge path invoked by shell `merge`. | Records merge evidence and advances to `Merged` when prerequisites are satisfied. |
 | `AttachSessionAsync` | Restores an existing session from in-memory store or persisted snapshot. | Rehydrates snapshot, tracks attached session, and emits `SessionAttached`. |
 | `DetachSessionAsync` | Clears currently attached session context. | Returns `true` once when a session is detached, then `false` for repeated detach calls. |
 
@@ -23,6 +28,8 @@ Runtime transitions are strict and linear:
 `Created -> Editing -> Validating -> AwaitingApproval -> Approved -> Merged`
 
 Transition attempts that skip or reorder this sequence are rejected.
+
+Shell users advance governance through explicit commands (`validate`, `review`, `approve`, `merge`). The `run` command executes workflow stages but does **not** substitute for those governance commands.
 
 ## Persisted Session Snapshots
 
@@ -74,17 +81,24 @@ The journal records `SessionStarted`, `SessionTransitioned`, `SessionAttached`, 
 4. `DetachSessionAsync()` clears the attached session and emits `SessionDetached`.
 5. A second detach without re-attach returns `false` and does not emit additional detach state mutation.
 
-## Workflow Stage Progression
+## Workflow Execution Boundary
 
-`RunWorkflowAsync` uses a fixed stage map and session-state mapping:
+`RunWorkflowAsync` (shell `run`) is **execution-only**:
 
-| Stage | Session state after stage | Transition applied |
+| Stage executed by `run` | Purpose | Governance substitute? |
 |---|---|---|
-| Plan | Editing | Yes (Created -> Editing) |
-| Run | Editing | No (state already Editing) |
-| Validate | Validating | Yes |
-| Review | AwaitingApproval | Yes |
-| RequireApproval | Approved | Yes |
-| Merge | Merged | Yes |
+| Plan | Compile and execute the planning stage; advance to `Editing` when required. | No |
+| Run | Dispatch tool/agent capabilities for the run stage; persist execution artifacts. | No |
 
-Contributors changing workflow stage order or state mapping must update this document and runtime behavior tests in tests/Wip.Runtime.Tests.
+Governance stages require explicit shell commands and artifact-backed operations:
+
+| Governance stage | Shell command | Runtime API | Evidence artifact |
+|---|---|---|---|
+| Validate | `validate` | `ValidateAsync` | `validation-report-*` |
+| Review | `review` | review generator path | `review-report-*` |
+| Require approval | `approve` | `CreateApprovalTokenAsync` | `approval-token-*` |
+| Merge | `merge` | `MergeAsync` | `merge-result-*` |
+
+`run` does not replace validate, review, approve, or merge, and does **not** complete the governance lifecycle on its own.
+
+Contributors changing workflow stage order, execution boundaries, or governance mapping must update this document, `WipShellCommandSemantics`, and runtime behavior tests in `WIP/Wip.Runtime.Tests`.

@@ -1,4 +1,5 @@
 using Wip.Bones.Agents.Workflow;
+using Wip.Bones.Engine;
 
 namespace Wip.Bones.Host;
 
@@ -21,7 +22,7 @@ public sealed class BonesHostSessionStore
         ArgumentNullException.ThrowIfNull(parameters);
         ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
 
-        var derivedSeed = HashCode.Combine(parameters.Seed, (int)iterationNumber);
+        var derivedSeed = BonesSeedDerivation.Derive(parameters.Seed, (int)iterationNumber);
         var taskDescription = BonesLearningWorkflowParameters.FormatTaskDescription(
             parameters.GameCount,
             derivedSeed,
@@ -31,7 +32,8 @@ public sealed class BonesHostSessionStore
             allSeatsLearning: parameters.AllSeatsLearning,
             ponderModelId: parameters.PonderModelId,
             playModelId: parameters.PlayModelId,
-            enhanceModelId: parameters.EnhanceModelId);
+            enhanceModelId: parameters.EnhanceModelId,
+            evaluationTargetScore: parameters.EvaluationTargetScore);
 
         var worktreePath = Path.Combine(
             repositoryPath,

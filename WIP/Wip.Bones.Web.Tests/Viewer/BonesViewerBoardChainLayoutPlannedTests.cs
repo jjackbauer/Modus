@@ -149,7 +149,7 @@ public sealed class BonesViewerBoardChainLayoutPlannedTests : IClassFixture<Bone
             var engine = new BonesGameEngine();
             var roundConfig = new BonesRoundConfig(
                 new BonesGameId($"{matchId.Value}-r{lastRound.RoundNumber}"),
-                HashCode.Combine(seed, lastRound.RoundNumber));
+                BonesSeedDerivation.Derive(seed, lastRound.RoundNumber));
             var state = engine.StartRound(roundConfig);
 
             foreach (var roundEvent in lastRound.EventLog)

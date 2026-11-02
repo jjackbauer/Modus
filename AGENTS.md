@@ -21,6 +21,23 @@ The architecture emphasizes strict module boundaries, explicit plugin contracts,
 4. Plugins must be discoverable, validated, and registered through a deterministic startup pipeline.
 5. Public APIs and plugin contracts must be covered by automated e2e integration tests before behavioral changes are accepted.
 
+## File encoding
+
+**Proven on Windows:** Cursor `Write` always creates UTF-16. **Do not use `Write` for text files.**
+
+- All text files must be **UTF-8 without BOM**. UTF-16 breaks `dotnet build` (CS1056 / garbled identifiers).
+- **Edits to existing UTF-8 files:** `StrReplace` only.
+- **New files:** create from shell only — never `Write`:
+  ```powershell
+  $utf8 = New-Object System.Text.UTF8Encoding $false
+  [System.IO.File]::WriteAllText('<path>', @'
+  <content>
+  '@, $utf8)
+  ```
+  Small files: `powershell -NoProfile -ExecutionPolicy Bypass -File tools/encoding/WriteUtf8.ps1 -Path <path> -Content '<content>'`
+- Never use `Out-File`, bare `Set-Content`, or `>` redirection.
+- `dotnet run --project tools/HarnessSync -- --check` fails on UTF-16 text files repo-wide.
+
 ## Naming and Style
 
 - Use English identifiers and .NET naming conventions.

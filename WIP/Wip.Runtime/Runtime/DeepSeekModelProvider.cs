@@ -9,7 +9,16 @@ namespace Wip.Runtime.Runtime;
 
 public sealed record DeepSeekChatMessage(string Role, string Content);
 
-public sealed record DeepSeekChatCompletionRequest(IReadOnlyList<DeepSeekChatMessage> Messages);
+public enum DeepSeekThinkingMode
+{
+    Default = 0,
+    Enabled = 1,
+    Disabled = 2,
+}
+
+public sealed record DeepSeekChatCompletionRequest(
+    IReadOnlyList<DeepSeekChatMessage> Messages,
+    DeepSeekThinkingMode Thinking = DeepSeekThinkingMode.Default);
 
 public sealed record DeepSeekChatCompletionResult(string Content, string? FinishReason);
 
@@ -19,7 +28,8 @@ public sealed record DeepSeekModelProviderOptions
         Uri baseUrl,
         string apiKey,
         TimeSpan timeout,
-        int maxTransientRetries = 2)
+        int maxTransientRetries = 2,
+        double? temperature = null)
     {
         ArgumentNullException.ThrowIfNull(baseUrl);
 
@@ -38,10 +48,14 @@ public sealed record DeepSeekModelProviderOptions
         if (maxTransientRetries < 0)
             throw new ArgumentOutOfRangeException(nameof(maxTransientRetries), "Value must be greater than or equal to zero.");
 
+        if (temperature.HasValue && (temperature.Value < 0.0 || temperature.Value > 2.0))
+            throw new ArgumentOutOfRangeException(nameof(temperature), "Temperature must be between 0 and 2.");
+
         BaseUrl = baseUrl;
         ApiKey = apiKey;
         Timeout = timeout;
         MaxTransientRetries = maxTransientRetries;
+        Temperature = temperature;
     }
 
     public Uri BaseUrl { get; }
@@ -51,6 +65,8 @@ public sealed record DeepSeekModelProviderOptions
     public TimeSpan Timeout { get; }
 
     public int MaxTransientRetries { get; }
+
+    public double? Temperature { get; }
 }
 
 public sealed class DeepSeekModelProvider : IModelProvider<DeepSeekChatCompletionRequest, DeepSeekChatCompletionResult>
@@ -73,11 +89,21 @@ public sealed class DeepSeekModelProvider : IModelProvider<DeepSeekChatCompletio
 
     private readonly HttpClient _httpClient;
     private readonly DeepSeekModelProviderOptions _options;
+    private readonly Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? _resilienceHandler;
 
     public DeepSeekModelProvider(HttpClient httpClient, DeepSeekModelProviderOptions options)
+        : this(httpClient, options, resilienceHandler: null)
+    {
+    }
+
+    public DeepSeekModelProvider(
+        HttpClient httpClient,
+        DeepSeekModelProviderOptions options,
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? resilienceHandler)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _resilienceHandler = resilienceHandler;
 
         if (_httpClient.BaseAddress is null)
             _httpClient.BaseAddress = _options.BaseUrl;
@@ -97,17 +123,34 @@ public sealed class DeepSeekModelProvider : IModelProvider<DeepSeekChatCompletio
         using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeoutSource.CancelAfter(_options.Timeout);
         var token = timeoutSource.Token;
+
+        using var httpRequest = BuildHttpRequest(request);
+
+        if (_resilienceHandler is not null)
+        {
+            using var response = await _resilienceHandler(httpRequest, token);
+
+            if (response.IsSuccessStatusCode)
+                return await MapSuccessResponseAsync(request, response, token);
+
+            // If the pipeline let a non-success through (shouldn't normally happen),
+            // throw with the status code.
+            throw new HttpRequestException(
+                $"DeepSeek request failed with status code {(int)response.StatusCode} ({response.StatusCode}) after resilience pipeline exhausted retries.");
+        }
+
+        // Fallback: manual retry loop (used when resilience pipeline is not configured).
         var maxAttempts = _options.MaxTransientRetries + 1;
 
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             token.ThrowIfCancellationRequested();
 
-            using var httpRequest = BuildHttpRequest(request);
+            using var httpRequestManual = attempt == 1 ? httpRequest : BuildHttpRequest(request);
 
             try
             {
-                using var response = await _httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, token);
+                using var response = await _httpClient.SendAsync(httpRequestManual, HttpCompletionOption.ResponseHeadersRead, token);
 
                 if (response.IsSuccessStatusCode)
                     return await MapSuccessResponseAsync(request, response, token);
@@ -136,11 +179,20 @@ public sealed class DeepSeekModelProvider : IModelProvider<DeepSeekChatCompletio
     private HttpRequestMessage BuildHttpRequest(ModelProviderRequest<DeepSeekChatCompletionRequest> request)
     {
         var apiKey = ResolveApiKey();
+        DeepSeekThinkingPayload? thinking = request.Payload.Thinking switch
+        {
+            DeepSeekThinkingMode.Enabled => new DeepSeekThinkingPayload("enabled"),
+            DeepSeekThinkingMode.Disabled => new DeepSeekThinkingPayload("disabled"),
+            _ => null,
+        };
+
         var payload = new DeepSeekChatCompletionHttpRequest(
             Model: request.ModelId,
             Messages: request.Payload.Messages
                 .Select(static message => new DeepSeekChatMessagePayload(message.Role, message.Content))
-                .ToArray());
+                .ToArray(),
+            Temperature: _options.Temperature,
+            Thinking: thinking);
 
         var json = JsonSerializer.Serialize(payload, JsonOptions);
 
@@ -258,7 +310,14 @@ public sealed class DeepSeekModelProvider : IModelProvider<DeepSeekChatCompletio
 
     private sealed record DeepSeekChatCompletionHttpRequest(
         [property: JsonPropertyName("model")] string Model,
-        [property: JsonPropertyName("messages")] IReadOnlyList<DeepSeekChatMessagePayload> Messages);
+        [property: JsonPropertyName("messages")] IReadOnlyList<DeepSeekChatMessagePayload> Messages,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
+         JsonPropertyName("temperature")] double? Temperature = null,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
+         JsonPropertyName("thinking")] DeepSeekThinkingPayload? Thinking = null);
+
+    private sealed record DeepSeekThinkingPayload(
+        [property: JsonPropertyName("type")] string Type);
 
     private sealed record DeepSeekChatMessagePayload(
         [property: JsonPropertyName("role")] string Role,

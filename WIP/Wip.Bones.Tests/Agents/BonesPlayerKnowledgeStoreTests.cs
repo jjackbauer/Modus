@@ -388,7 +388,7 @@ public sealed class BonesPlayerKnowledgeStoreTests
     {
         var options = new BonesStrategyPromotionOptions();
 
-        Assert.Equal(20, options.EvaluationMatchCount);
+        Assert.Equal(40, options.EvaluationMatchCount);
         Assert.Equal(0.05, options.MinimumWinRateImprovement);
         Assert.Equal(1, options.MinimumScoreDifferentialImprovement);
     }

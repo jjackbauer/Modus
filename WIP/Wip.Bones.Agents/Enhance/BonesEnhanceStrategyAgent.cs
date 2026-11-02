@@ -1,10 +1,12 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Budget;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Play;
+using Wip.Bones.Agents.Ponder;
 using Wip.Bones.Agents.Script;
 using Wip.Bones.Domain;
 using Wip.Bones.Engine;
@@ -19,15 +21,21 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
     private const string DefaultModelId = "bones-strategy-enhance";
     private const string DefaultPlayModelId = "bones-play-turn";
     private const int DefaultEvaluationTargetScore = 8;
+    private const double DefaultBaseTemperature = 0.7;
+    private const double TemperatureIncrement = 0.2;
+    private const double MaxTemperature = 2.0;
 
     private readonly IArtifactStore _artifactStore;
     private readonly IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult> _modelProvider;
     private readonly BonesStrategyScriptHost _scriptHost;
     private readonly BonesStrategyPromotionEvaluator _promotionEvaluator;
     private readonly BonesStrategyPromotionOptions _promotionOptions;
+    private readonly BonesCompileRetryOptions _compileRetryOptions;
+    private readonly BonesAggressiveIterationOptions _aggressiveIterationOptions;
     private readonly BonesStrategyLibrary? _strategyLibrary;
     private readonly int? _forcedEvaluationSeed;
     private readonly string _playModelId;
+    private readonly ILogger<BonesEnhanceStrategyAgent>? _logger;
 
     public BonesEnhanceStrategyAgent(
         IArtifactStore artifactStore,
@@ -35,11 +43,14 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         BonesStrategyScriptHost? scriptHost = null,
         BonesStrategyPromotionEvaluator? promotionEvaluator = null,
         BonesStrategyPromotionOptions? promotionOptions = null,
+        BonesCompileRetryOptions? compileRetryOptions = null,
+        BonesAggressiveIterationOptions? aggressiveIterationOptions = null,
         BonesGameSimulationBudget? gameBudget = null,
         BonesStrategyLibrary? strategyLibrary = null,
         int? forcedEvaluationSeed = null,
         IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>? playModelProvider = null,
-        string? playModelId = null)
+        string? playModelId = null,
+        ILogger<BonesEnhanceStrategyAgent>? logger = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _modelProvider = modelProvider ?? throw new ArgumentNullException(nameof(modelProvider));
@@ -51,9 +62,12 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
                 gameBudget,
                 playModelProvider);
         _promotionOptions = promotionOptions ?? new BonesStrategyPromotionOptions();
+        _compileRetryOptions = compileRetryOptions ?? new BonesCompileRetryOptions();
+        _aggressiveIterationOptions = aggressiveIterationOptions ?? new BonesAggressiveIterationOptions();
         _strategyLibrary = strategyLibrary;
         _forcedEvaluationSeed = forcedEvaluationSeed;
         _playModelId = string.IsNullOrWhiteSpace(playModelId) ? DefaultPlayModelId : playModelId;
+        _logger = logger;
     }
 
     public async ValueTask<BonesEnhanceStrategyResult> ExecuteAsync(
@@ -96,49 +110,160 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
             request.PlayerId,
             cancellationToken);
 
-        var enhancementRequest = BonesEnhancePromptBuilder.BuildEnhancementRequest(
-            request.PlayerId,
-            priorStrategy,
-            matchHistories,
-            matchHistoryPaths,
-            opponentStrategies);
-
         var modelId = string.IsNullOrWhiteSpace(request.ModelId) ? DefaultModelId : request.ModelId;
         var correlationId = $"bones-enhance-seat-{request.PlayerId.Seat}-{context.SessionId.Value}";
 
-        const int maxCompileRetries = 3;
-        string? scriptSource = null;
-        string? lastCompileFailureReason = null;
-        var compileAttempts = 0;
-        var lastModelResponseMarkdown = (string?)null;
-        BonesStrategyScriptCompileResult? compileResult = null;
+        // ---- F2: EnhanceIterationsPerMatch loop ----
+        var totalIterations = Math.Max(1, _aggressiveIterationOptions.EnhanceIterationsPerMatch);
+        var totalCompileAttempts = 0;
+        var totalStagnationDetected = 0;
+        BonesStrategyDocument currentPriorStrategy = priorStrategy;
+        BonesStrategyArtifact currentPriorArtifact = priorArtifact;
+        BonesStrategyId currentStrategyId = BonesStrategyVersioning.NextVersion(
+            priorStrategy.StrategyId,
+            request.PlayerId,
+            Array.Empty<string>().ToHashSet(StringComparer.Ordinal));
+        string? finalScriptSource = null;
+        BonesPromotionDecision? finalPromotionDecision = null;
+        BonesStrategyId finalActiveStrategyId = priorArtifact.StrategyId;
+        ArtifactDescriptor? finalPromotionDecisionArtifact = null;
+        ArtifactDescriptor? finalStrategyArtifact = null;
+        ArtifactDescriptor? finalExecutionArtifact = null;
+        var lastIteration = 0;
 
-        var existingDescriptors = await scopedKnowledgeStore.ListStrategyArtifacts(request.PlayerId, cancellationToken);
-        const string artifactIdPrefix = "bones-strategy-";
-        var existingIds = existingDescriptors
-            .Select(descriptor => descriptor.ArtifactId.Value.StartsWith(artifactIdPrefix, StringComparison.Ordinal)
-                ? descriptor.ArtifactId.Value[artifactIdPrefix.Length..]
-                : descriptor.ArtifactId.Value)
-            .ToHashSet(StringComparer.Ordinal);
-        var strategyId = BonesStrategyVersioning.NextVersion(priorStrategy.StrategyId, request.PlayerId, existingIds);
-
-        for (var attempt = 1; attempt <= maxCompileRetries; attempt++)
+        for (var iteration = 1; iteration <= totalIterations; iteration++)
         {
-            compileAttempts = attempt;
+            lastIteration = iteration;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            var modelResponse = await _modelProvider.ExecuteAsync(
-                new ModelProviderRequest<BonesStrategyEnhancementRequest>(
-                    payload: enhancementRequest,
-                    modelId: modelId,
-                    correlationId: $"{correlationId}-attempt-{attempt}"),
-                context,
+            var enhancementRequest = BonesEnhancePromptBuilder.BuildEnhancementRequest(
+                request.PlayerId,
+                currentPriorStrategy,
+                matchHistories,
+                matchHistoryPaths,
+                opponentStrategies);
+
+            var existingDescriptors = await scopedKnowledgeStore.ListStrategyArtifacts(
+                request.PlayerId,
                 cancellationToken);
+            const string artifactIdPrefix = "bones-strategy-";
+            var existingIds = existingDescriptors
+                .Select(descriptor => descriptor.ArtifactId.Value.StartsWith(artifactIdPrefix, StringComparison.Ordinal)
+                    ? descriptor.ArtifactId.Value[artifactIdPrefix.Length..]
+                    : descriptor.ArtifactId.Value)
+                .ToHashSet(StringComparer.Ordinal);
+            currentStrategyId = BonesStrategyVersioning.NextVersion(
+                currentPriorStrategy.StrategyId,
+                request.PlayerId,
+                existingIds);
 
-            lastModelResponseMarkdown = modelResponse.Payload.Markdown;
-            scriptSource = BonesStrategyScriptResponseParser.TryParseScriptSource(lastModelResponseMarkdown);
-            if (scriptSource is null)
+            var maxCompileRetries = _compileRetryOptions.MaxCompileRetries;
+            string? scriptSource = null;
+            string? lastCompileFailureReason = null;
+            var compileAttempts = 0;
+            var lastModelResponseMarkdown = (string?)null;
+            BonesStrategyScriptCompileResult? compileResult = null;
+
+            // ---- F3: stagnation detection state ----
+            var stagnationCount = 0;
+            var currentTemperature = DefaultBaseTemperature + ((iteration - 1) * TemperatureIncrement);
+            if (currentTemperature > MaxTemperature)
+                currentTemperature = MaxTemperature;
+            var distinctOutputRetries = _aggressiveIterationOptions.RequireDistinctOutput
+                ? _aggressiveIterationOptions.DistinctOutputMaxRetries
+                : 0;
+
+            for (var attempt = 1; attempt <= maxCompileRetries; attempt++)
             {
-                lastCompileFailureReason = "Model response did not contain a compilable IBonesPlayerSlot script.";
+                compileAttempts = attempt;
+
+                var modelResponse = await _modelProvider.ExecuteAsync(
+                    new ModelProviderRequest<BonesStrategyEnhancementRequest>(
+                        payload: enhancementRequest,
+                        modelId: modelId,
+                        correlationId: $"{correlationId}-iter-{iteration}-attempt-{attempt}"),
+                    context,
+                    cancellationToken);
+
+                lastModelResponseMarkdown = modelResponse.Payload.Markdown;
+                scriptSource = BonesStrategyScriptResponseParser.TryParseScriptSource(lastModelResponseMarkdown);
+
+                if (scriptSource is null)
+                {
+                    lastCompileFailureReason = "Model response did not contain a compilable IBonesPlayerSlot script.";
+                    if (attempt >= maxCompileRetries)
+                    {
+                        await SaveEnhanceFailureArtifactAsync(
+                            context.SessionId,
+                            request.PlayerId,
+                            maxCompileRetries,
+                            lastCompileFailureReason,
+                            lastModelResponseMarkdown,
+                            cancellationToken);
+
+                        throw new InvalidOperationException(lastCompileFailureReason);
+                    }
+
+                    enhancementRequest = BonesEnhancePromptBuilder.AppendCompileRetryMessage(
+                        enhancementRequest,
+                        lastCompileFailureReason,
+                        lastModelResponseMarkdown);
+                    continue;
+                }
+
+                // ---- F3: RequireDistinctOutput gate ----
+                if (_aggressiveIterationOptions.RequireDistinctOutput
+                    && IsSourceIdentical(scriptSource, currentPriorStrategy.Markdown))
+                {
+                    stagnationCount++;
+                    totalStagnationDetected++;
+
+                    if (stagnationCount <= distinctOutputRetries)
+                    {
+                        currentTemperature = Math.Min(
+                            currentTemperature + TemperatureIncrement,
+                            MaxTemperature);
+
+                        _logger?.LogWarning(
+                            "Stagnation detected for seat {Seat} iteration {Iteration} attempt {Attempt}: "
+                            + "model returned source identical to input. Temperature increased to {Temperature:F1}.",
+                            request.PlayerId.Seat,
+                            iteration,
+                            attempt,
+                            currentTemperature);
+
+                        // Retry with higher temperature — append a retry message.
+                        enhancementRequest = BonesEnhancePromptBuilder.AppendCompileRetryMessage(
+                            enhancementRequest,
+                            "Output was identical to the input strategy. Produce a meaningfully different strategy.",
+                            lastModelResponseMarkdown);
+                        continue;
+                    }
+
+                    var stagnationEx = new BonesStagnationException(
+                        $"Model returned byte-identical output to input strategy after "
+                        + $"{stagnationCount} stagnation detections and {distinctOutputRetries} temperature-ramp "
+                        + $"retries for seat {request.PlayerId.Seat} iteration {iteration}.")
+                    {
+                        StagnationCount = stagnationCount,
+                        FinalTemperature = currentTemperature,
+                        PriorStrategyId = currentPriorStrategy.StrategyId.Value,
+                    };
+
+                    _logger?.LogError(stagnationEx, stagnationEx.Message);
+                    throw stagnationEx;
+                }
+
+                compileResult = _scriptHost.TryCompile(currentStrategyId, scriptSource);
+                if (compileResult.Succeeded)
+                {
+                    lastCompileFailureReason = null;
+                    break;
+                }
+
+                lastCompileFailureReason = compileResult.FailureReason
+                    ?? "Enhanced strategy script compilation failed before persistence.";
+
                 if (attempt >= maxCompileRetries)
                 {
                     await SaveEnhanceFailureArtifactAsync(
@@ -156,130 +281,170 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
                     enhancementRequest,
                     lastCompileFailureReason,
                     lastModelResponseMarkdown);
-                continue;
             }
 
-            compileResult = _scriptHost.TryCompile(strategyId, scriptSource);
-            if (compileResult.Succeeded)
+            // F3: If stagnation retries exhausted all loop attempts without
+            // reaching the explicit throw inside the loop, raise it now.
+            if (_aggressiveIterationOptions.RequireDistinctOutput
+                && stagnationCount > distinctOutputRetries
+                && (compileResult is not { Succeeded: true } || scriptSource is null))
             {
-                lastCompileFailureReason = null;
-                break;
+                var stagnationEx = new BonesStagnationException(
+                    $"Model returned byte-identical output to input strategy after "
+                    + $"{stagnationCount} stagnation detections and {distinctOutputRetries} temperature-ramp "
+                    + $"retries for seat {request.PlayerId.Seat} iteration {iteration}.")
+                {
+                    StagnationCount = stagnationCount,
+                    FinalTemperature = currentTemperature,
+                    PriorStrategyId = currentPriorStrategy.StrategyId.Value,
+                };
+
+                _logger?.LogError(stagnationEx, stagnationEx.Message);
+                throw stagnationEx;
             }
 
-            lastCompileFailureReason = compileResult.FailureReason
-                ?? "Enhanced strategy script compilation failed before persistence.";
-
-            if (attempt >= maxCompileRetries)
+            if (compileResult is not { Succeeded: true } || scriptSource is null)
             {
-                await SaveEnhanceFailureArtifactAsync(
-                    context.SessionId,
-                    request.PlayerId,
-                    maxCompileRetries,
-                    lastCompileFailureReason,
-                    lastModelResponseMarkdown,
-                    cancellationToken);
-
-                throw new InvalidOperationException(lastCompileFailureReason);
+                throw new InvalidOperationException(
+                    lastCompileFailureReason
+                    ?? "Enhanced strategy script compilation failed before persistence.");
             }
 
-            enhancementRequest = BonesEnhancePromptBuilder.AppendCompileRetryMessage(
-                enhancementRequest,
-                lastCompileFailureReason,
-                lastModelResponseMarkdown);
-        }
+            totalCompileAttempts += compileAttempts;
+            finalScriptSource = scriptSource;
 
-        if (compileResult is not { Succeeded: true } || scriptSource is null)
-        {
-            throw new InvalidOperationException(
-                lastCompileFailureReason
-                ?? "Enhanced strategy script compilation failed before persistence.");
-        }
+            var candidateArtifact = new BonesStrategyArtifact(
+                currentStrategyId,
+                request.PlayerId,
+                BonesStrategyKind.Script,
+                scriptSource,
+                BonesPromotionStatus.Candidate);
 
-        var candidateArtifact = new BonesStrategyArtifact(
-            strategyId,
-            request.PlayerId,
-            BonesStrategyKind.Script,
-            scriptSource,
-            BonesPromotionStatus.Candidate);
-
-        var strategyArtifact = await scopedKnowledgeStore.SaveCandidateStrategy(
-            request.PlayerId,
-            candidateArtifact,
-            cancellationToken);
-
-        var evalOpponentStrategies = await LoadOpponentActiveStrategiesAsync(
-            knowledgeStore,
-            request.PlayerId,
-            cancellationToken);
-
-        var evaluationRequest = new BonesStrategyPromotionEvaluationRequest(
-            request.PlayerId,
-            priorArtifact,
-            candidateArtifact,
-            evalOpponentStrategies,
-            _promotionOptions,
-            request.EvaluationSeed ?? _forcedEvaluationSeed ?? ResolveEvaluationSeed(context, priorArtifact.StrategyId),
-            request.EvaluationTargetScore ?? DefaultEvaluationTargetScore,
-            context,
-            _playModelId);
-
-        var promotionDecision = await _promotionEvaluator.EvaluateAsync(evaluationRequest, cancellationToken);
-
-        BonesStrategyId activeStrategyId;
-        if (promotionDecision.Outcome == BonesPromotionDecisionOutcome.Promoted)
-        {
-            await scopedKnowledgeStore.PromoteStrategy(request.PlayerId, strategyId, cancellationToken);
-            activeStrategyId = strategyId;
-            await TryUpsertLibraryBestAsync(
-                scopedKnowledgeStore,
+            finalStrategyArtifact = await scopedKnowledgeStore.SaveCandidateStrategy(
                 request.PlayerId,
                 candidateArtifact,
                 cancellationToken);
-        }
-        else
-        {
-            var rejected = new BonesStrategyArtifact(
-                candidateArtifact.StrategyId,
-                candidateArtifact.PlayerId,
-                candidateArtifact.Kind,
-                candidateArtifact.Source,
-                BonesPromotionStatus.Rejected);
 
-            await scopedKnowledgeStore.SaveStrategyArtifact(request.PlayerId, rejected, cancellationToken);
-            activeStrategyId = priorArtifact.StrategyId;
-        }
+            var evalOpponentStrategies = await LoadOpponentActiveStrategiesAsync(
+                knowledgeStore,
+                request.PlayerId,
+                cancellationToken);
 
-        var promotionDecisionArtifact = await SavePromotionDecisionArtifactAsync(
-            context.SessionId,
-            request.PlayerId,
-            promotionDecision,
-            cancellationToken);
+            // Evaluate against the *original* prior artifact (incumbent)
+            var evaluationRequest = new BonesStrategyPromotionEvaluationRequest(
+                request.PlayerId,
+                priorArtifact,
+                candidateArtifact,
+                evalOpponentStrategies,
+                _promotionOptions,
+                request.EvaluationSeed ?? _forcedEvaluationSeed
+                    ?? ResolveEvaluationSeed(context, priorArtifact.StrategyId),
+                request.EvaluationTargetScore ?? DefaultEvaluationTargetScore,
+                context,
+                _playModelId);
+
+            var promotionDecision = await _promotionEvaluator.EvaluateAsync(
+                evaluationRequest,
+                cancellationToken,
+                scopedKnowledgeStore);
+
+            finalPromotionDecision = promotionDecision;
+
+            if (promotionDecision.Outcome == BonesPromotionDecisionOutcome.Promoted)
+            {
+                await scopedKnowledgeStore.PromoteStrategy(
+                    request.PlayerId,
+                    currentStrategyId,
+                    cancellationToken);
+                finalActiveStrategyId = currentStrategyId;
+                await TryUpsertLibraryBestAsync(
+                    scopedKnowledgeStore,
+                    request.PlayerId,
+                    candidateArtifact,
+                    cancellationToken);
+            }
+            else
+            {
+                var rejected = new BonesStrategyArtifact(
+                    candidateArtifact.StrategyId,
+                    candidateArtifact.PlayerId,
+                    candidateArtifact.Kind,
+                    candidateArtifact.Source,
+                    BonesPromotionStatus.Rejected);
+
+                await scopedKnowledgeStore.SaveStrategyArtifact(
+                    request.PlayerId,
+                    rejected,
+                    cancellationToken);
+
+                // F2: Early exit — if rejected and not the final iteration, stop iterating
+                if (iteration < totalIterations)
+                {
+                    _logger?.LogWarning(
+                        "Enhance iteration {Iteration}/{Total} for seat {Seat} was rejected. "
+                        + "Exiting early to avoid wasted work.",
+                        iteration,
+                        totalIterations,
+                        request.PlayerId.Seat);
+
+                    finalActiveStrategyId = priorArtifact.StrategyId;
+                    break;
+                }
+
+                finalActiveStrategyId = priorArtifact.StrategyId;
+            }
+
+            finalPromotionDecisionArtifact = await SavePromotionDecisionArtifactAsync(
+                context.SessionId,
+                request.PlayerId,
+                promotionDecision,
+                cancellationToken);
+
+            finalExecutionArtifact = await SaveExecutionArtifactAsync(
+                context.SessionId,
+                request,
+                currentPriorStrategy.StrategyId,
+                currentStrategyId,
+                matchHistories.Count,
+                compileAttempts,
+                promotionDecision.Outcome,
+                cancellationToken);
+
+            // F2: If promoted and more iterations remain, feed output as input for next iteration.
+            if (iteration < totalIterations
+                && promotionDecision.Outcome == BonesPromotionDecisionOutcome.Promoted)
+            {
+                currentPriorStrategy = new BonesStrategyDocument(
+                    currentStrategyId,
+                    request.PlayerId,
+                    scriptSource);
+
+                currentPriorArtifact = new BonesStrategyArtifact(
+                    currentStrategyId,
+                    request.PlayerId,
+                    BonesStrategyKind.Script,
+                    scriptSource,
+                    BonesPromotionStatus.Active);
+            }
+        }
 
         var strategyDocument = new BonesStrategyDocument(
-            strategyId,
+            currentStrategyId,
             request.PlayerId,
-            scriptSource);
-
-        var executionArtifact = await SaveExecutionArtifactAsync(
-            context.SessionId,
-            request,
-            priorStrategy.StrategyId,
-            strategyId,
-            matchHistories.Count,
-            compileAttempts,
-            promotionDecision.Outcome,
-            cancellationToken);
+            finalScriptSource ?? priorStrategy.Markdown);
 
         return new BonesEnhanceStrategyResult(
             priorStrategy.StrategyId,
-            strategyId,
+            currentStrategyId,
             strategyDocument,
-            strategyArtifact,
+            finalStrategyArtifact!,
             matchHistories.Count,
-            executionArtifact,
-            promotionDecision.Outcome,
-            activeStrategyId,
-            promotionDecisionArtifact);
+            finalExecutionArtifact!,
+            finalPromotionDecision?.Outcome ?? BonesPromotionDecisionOutcome.Rejected,
+            finalActiveStrategyId,
+            finalPromotionDecisionArtifact!,
+            StagnationDetected: totalStagnationDetected,
+            EnhanceIterationsCompleted: lastIteration);
     }
 
     private async ValueTask TryUpsertLibraryBestAsync(
@@ -296,7 +461,19 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
             artifact.StrategyId,
             cancellationToken);
 
-        _strategyLibrary.UpsertBestStrategy(playerId, artifact, effectiveness);
+        var upserted = _strategyLibrary.UpsertBestStrategy(playerId, artifact, effectiveness);
+        if (!upserted)
+        {
+            var reason = BonesStrategyLibraryRanking.IsEligible(effectiveness)
+                ? "strategy does not rank higher than the incumbent"
+                : "effectiveness is not eligible (MatchesPlayed < 1)";
+
+            _logger?.LogWarning(
+                "UpsertBestStrategy rejected for strategy {StrategyId} of player seat {Seat}: {Reason}.",
+                artifact.StrategyId.Value,
+                playerId.Seat,
+                reason);
+        }
     }
 
     private static async ValueTask<Dictionary<BonesPlayerId, BonesStrategyArtifact>> LoadOpponentActiveStrategiesAsync(
@@ -320,6 +497,26 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
 
     private static string BuildMatchHistoryPath(BonesPlayerId playerId, BonesGameId gameId)
         => $"bones-player-{playerId.Seat}-match-{gameId.Value}";
+
+    /// <summary>
+    /// F3: Compares two C# source strings after normalization (line endings, whitespace trimming).
+    /// Returns true when the sources are byte-identical or semantically indistinguishable.
+    /// </summary>
+    private static bool IsSourceIdentical(string sourceA, string sourceB)
+    {
+        if (ReferenceEquals(sourceA, sourceB))
+            return true;
+
+        var normalizedA = NormalizeSourceForComparison(sourceA);
+        var normalizedB = NormalizeSourceForComparison(sourceB);
+        return string.Equals(normalizedA, normalizedB, StringComparison.Ordinal);
+    }
+
+    private static string NormalizeSourceForComparison(string source)
+        => (source ?? string.Empty)
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Trim();
 
     private async ValueTask<ArtifactDescriptor> SavePromotionDecisionArtifactAsync(
         SessionId sessionId,
@@ -419,7 +616,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         if (int.TryParse(testSeed, out var parsedSeed))
             return parsedSeed;
 
-        return HashCode.Combine(context.SessionId.Value, incumbentStrategyId.Value);
+        return BonesSeedDerivation.DeriveWithLabel(0, $"{context.SessionId.Value}|{incumbentStrategyId.Value}");
     }
 
     private sealed record BonesEnhanceStrategyExecutionLog(

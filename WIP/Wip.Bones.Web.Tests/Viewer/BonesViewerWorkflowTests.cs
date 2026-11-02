@@ -190,7 +190,7 @@ public sealed class BonesViewerWorkflowTests
 
             Assert.True(snapshot.FrameCount > 0);
             Assert.Equal(registered.MatchResult.Transcript.Length, frames.Count);
-            Assert.Equal(HashCode.Combine(seed, 1), registered.MatchSeed);
+            Assert.Equal(BonesSeedDerivation.Derive(seed, 1), registered.MatchSeed);
         }
         finally
         {

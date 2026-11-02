@@ -1,0 +1,39 @@
+{
+  "plan_id": "WIP-IMPL-001",
+  "baseline_commit": "d6b895f56af6f633dc3c009cbf93a862a0e920c1",
+  "branch": "WIP",
+  "phase": 0,
+  "work_package": "WP-0.1",
+  "status": "in_progress",
+  "gate": "G0",
+  "gate_status": "baseline_approved_commit_pending",
+  "attempts": {
+    "WP-0.1": 1
+  },
+  "last_verified_at": "2026-11-02T11:08:59-03:00",
+  "next_action": "Execute the approved WP-0.1 baseline commit and annotated tag, then build/pack; NuGet publication is blocked on API key, version, green tests, and release approval (DEV-001).",
+  "open_blockers": ["BLK-TESTHOST-ENV", "BLK-NUGET-PUBLISH"],
+  "deviations": ["DEV-001"],
+  "dirty_tree": {
+    "porcelain_entries": 308,
+    "modified": 148,
+    "untracked_entries": 160,
+    "untracked_files": 522,
+    "untracked_bytes": 18178919,
+    "diff": "148 files changed, 6758 insertions(+), 1427 deletions(-)"
+  },
+  "gate_packet": "docs/execution/evidence/G0/gate-packet.md",
+  "decision_record": "docs/execution/evidence/G0/decision-2026-11-02.md",
+  "evidence": {
+    "WP-0.1": "docs/execution/evidence/WP-0.1/",
+    "G0": "docs/execution/evidence/G0/"
+  },
+  "work_packages": {
+    "WP-0.1": "in_progress",
+    "WP-0.2": "not_started",
+    "WP-0.3": "not_started",
+    "WP-0.4": "not_started",
+    "WP-0.5": "not_started",
+    "WP-0.6": "not_started"
+  }
+}

@@ -236,13 +236,66 @@ public sealed record BonesStrategyMatchOutcome(
     }
 }
 
+public enum BonesPromotionGateMode
+{
+    LegacyOr = 0,
+    ConfidenceComposite = 1,
+}
+
 public sealed class BonesStrategyPromotionOptions
 {
-    public int EvaluationMatchCount { get; set; } = 20;
+    public int EvaluationMatchCount { get; set; } = 40;
+
+    /// <summary>
+    /// Maximum evaluation matches allowed to run concurrently for one seat.
+    /// Evaluation matches are CPU-bound; unbounded fan-out starves the thread pool.
+    /// </summary>
+    public int MaxConcurrentMatches { get; set; } = 8;
 
     public double MinimumWinRateImprovement { get; set; } = 0.05;
 
     public int MinimumScoreDifferentialImprovement { get; set; } = 1;
+
+    /// <summary>
+    /// Minimum number of distinct seats from which a candidate strategy must
+    /// achieve at least MinimumWinRateImprovement to be promoted.
+    /// Default 2 means the candidate must beat the incumbent from at least two
+    /// different seat positions.
+    /// </summary>
+    public int MinimumCrossSeatCount { get; set; } = 2;
+
+    /// <summary>
+    /// Promotion decision rule. <see cref="BonesPromotionGateMode.ConfidenceComposite"/>
+    /// combines paired score evidence and win-rate evidence into a z-score and requires
+    /// at least a minimum amount of evidence; <see cref="BonesPromotionGateMode.LegacyOr"/>
+    /// preserves the earlier "either metric passes" OR rule.
+    /// </summary>
+    public BonesPromotionGateMode GateMode { get; set; } = BonesPromotionGateMode.ConfidenceComposite;
+
+    /// <summary>
+    /// When true, the candidate and incumbent are evaluated on the same deal seed
+    /// (paired design). Pairing removes deal-to-deal variance and increases the power
+    /// of the promotion decision at the same match cost.
+    /// </summary>
+    public bool UsePairedEvaluationSeeds { get; set; } = true;
+
+    /// <summary>
+    /// Composite z-score required by <see cref="BonesPromotionGateMode.ConfidenceComposite"/>.
+    /// One-sided 84% confidence corresponds to 1.0.
+    /// </summary>
+    public double ConfidenceZThreshold { get; set; } = 1.0;
+
+    /// <summary>
+    /// A candidate is rejected when its win-rate delta is below this floor, regardless
+    /// of its score evidence.
+    /// </summary>
+    public double WinRateHardFloor { get; set; } = -0.10;
+
+    /// <summary>
+    /// A candidate is rejected when its score-differential delta is below this floor,
+    /// regardless of its win-rate evidence.
+    /// </summary>
+    public double ScoreDifferentialHardFloor { get; set; } = -2.0;
 }
 
 internal sealed record BonesStrategyPromotionDecisionPersistence(

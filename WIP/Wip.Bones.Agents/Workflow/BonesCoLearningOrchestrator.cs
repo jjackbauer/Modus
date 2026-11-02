@@ -15,17 +15,20 @@ public sealed class BonesCoLearningOrchestrator
     private readonly BonesStrategyLibrary _strategyLibrary;
     private readonly BonesPonderAgent? _ponderAgent;
     private readonly BonesEnhanceStrategyAgent? _enhanceAgent;
+    private readonly StrategyPool? _pool;
 
     public BonesCoLearningOrchestrator(
         IArtifactStore artifactStore,
         BonesStrategyLibrary strategyLibrary,
         BonesPonderAgent? ponderAgent = null,
-        BonesEnhanceStrategyAgent? enhanceAgent = null)
+        BonesEnhanceStrategyAgent? enhanceAgent = null,
+        StrategyPool? pool = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _strategyLibrary = strategyLibrary ?? throw new ArgumentNullException(nameof(strategyLibrary));
         _ponderAgent = ponderAgent;
         _enhanceAgent = enhanceAgent;
+        _pool = pool;
     }
 
     /// <summary>
@@ -61,7 +64,8 @@ public sealed class BonesCoLearningOrchestrator
             cancellationToken.ThrowIfCancellationRequested();
             var playerId = new BonesPlayerId(seat);
 
-            if (request.AllSeatsLearning && IsLibraryEntryViable(playerId))
+            if (request.AllSeatsLearning && IsLibraryEntryViable(playerId)
+                && !ShouldInvokePonderForDiversity(playerId))
                 continue;
 
             try
@@ -72,6 +76,15 @@ public sealed class BonesCoLearningOrchestrator
 
                 var ponderResult = await _ponderAgent.ExecuteAsync(ponderRequest, context, cancellationToken);
                 completed.Add(ponderResult);
+
+                // Add to population pool if configured
+                _pool?.Add(new StrategyEntry(
+                    ponderResult.StrategyId,
+                    seat,
+                    ponderResult.AuthoredStrategy.Kind,
+                    ponderResult.AuthoredStrategy.Source,
+                    0, 0, 0, 0,
+                    1500.0));
             }
             catch (InvalidOperationException)
             {
@@ -141,6 +154,19 @@ public sealed class BonesCoLearningOrchestrator
 
                 var enhanceResult = await _enhanceAgent.ExecuteAsync(enhanceRequest, context, cancellationToken);
                 completed.Add(enhanceResult);
+
+                // Add enhanced strategy to population pool if configured
+                if (_pool is not null &&
+                    enhanceResult.StrategyDocument.StrategyId != enhanceResult.PriorStrategyId)
+                {
+                    _pool.Add(new StrategyEntry(
+                        enhanceResult.StrategyId,
+                        seat,
+                        BonesStrategyKind.Script,
+                        enhanceResult.StrategyDocument.Markdown,
+                        0, 0, 0, 0,
+                        1500.0));
+                }
             }
             catch (Exception ex)
             {
@@ -163,28 +189,20 @@ public sealed class BonesCoLearningOrchestrator
 
     /// <summary>
     /// Determines whether a seat already has a viable strategy in the library.
-    /// A seat is viable if its library entry is a Script with at least 1 match played.
-    /// Markdown entries are never viable — the seat must go through Ponder to author a Script.
+    /// Delegates to BonesStrategyLibrary.IsEntryViable for the unified viability check.
     /// </summary>
     private bool IsLibraryEntryViable(BonesPlayerId playerId)
     {
-        var ranking = _strategyLibrary.GetRanking(playerId);
-        if (ranking.Count == 0)
-            return false;
+        return _strategyLibrary.IsEntryViable(playerId);
+    }
 
-        var best = ranking[0];
-
-        // Only Script entries are viable; Markdown entries must go through Ponder.
-        if (best.Kind != BonesStrategyKind.Script)
-            return false;
-
-        var effectiveness = best.Effectiveness;
-
-        // Viable if at least 1 match played
-        if (effectiveness.MatchesPlayed >= 1)
-            return true;
-
-        return false;
+    /// <summary>
+    /// Returns true when the diversity gate requires Ponder despite the seat
+    /// having a viable entry (too few meaningfully distinct strategies).
+    /// </summary>
+    private bool ShouldInvokePonderForDiversity(BonesPlayerId playerId)
+    {
+        return _strategyLibrary.ShouldInvokePonderForDiversity(playerId);
     }
 
     private async ValueTask<ArtifactDescriptor> SavePonderFailureArtifactAsync(

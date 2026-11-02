@@ -17,6 +17,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Wip.Workspaces.Git;
 using Wip.Policy.LocalSafe;
+using Wip.Shell.CommandSemantics;
 using Wip.Shell.History;
 using Wip.Shell.Prompting;
 
@@ -106,7 +107,7 @@ public sealed class WipShellCommandLoop
         ["dotnet"] = CommandScope.Global,
     };
 
-    private static readonly string HelpText = $"Available commands: {string.Join(", ", HelpCommandSurface)}";
+    private static readonly string HelpText = WipShellCommandSemantics.RenderHelpText();
     private const string DotNetFlowUsage = "Usage: dotnet <restore|build|test|validate>";
     private const string DotNetFlowSequence = "Sequence: dotnet restore -> dotnet build -> dotnet test -> dotnet validate";
     private static readonly JsonSerializerOptions PersistedSessionJsonOptions = new()
@@ -1160,10 +1161,15 @@ public sealed class WipShellCommandLoop
             if (!await EnsureWorkflowSelectionForRunAsync(snapshot, cancellationToken))
                 return;
 
-            var result = await _orchestrator.RunWorkflowAsync(snapshot.SessionId, _builder, _selectedWorkflowId, cancellationToken);
+            var artifactStore = new SessionArtifactStore(snapshot);
+            var result = await _orchestrator.RunWorkflowAsync(
+                snapshot.SessionId,
+                _builder,
+                _selectedWorkflowId,
+                cancellationToken,
+                artifactStore);
             _activeSession = await _orchestrator.GetSessionAsync(snapshot.SessionId, cancellationToken) ?? snapshot;
             _selectedWorkflowId = _activeSession.WorkflowId;
-            var artifactStore = new SessionArtifactStore(_activeSession);
             var summaryArtifact = await artifactStore.SaveAsync(
                 _activeSession.SessionId,
                 BuildWorkflowExecutionArtifact(result),
@@ -2130,8 +2136,47 @@ public sealed class WipShellCommandLoop
             }
         }
 
+        var artifactStore = new SessionArtifactStore(snapshot);
+        var descriptors = await artifactStore.ListAsync(snapshot.SessionId, cancellationToken);
+        var hasValidationArtifact = HasArtifactWithPrefix(descriptors, "validation-report-");
+        var hasReviewSummaryArtifact = HasArtifactWithPrefix(descriptors, "review-summary-");
+        var hasApprovalArtifact = HasArtifactWithPrefix(descriptors, "approval-token-");
+        var hasMergeArtifact = HasArtifactWithPrefix(descriptors, "merge-result-");
+
+        var evidenceGapLines = WipShellCommandSemantics.BuildGovernanceEvidenceGapLines(
+            snapshot.State,
+            snapshot.ValidationStatus,
+            snapshot.ApprovalStatus,
+            hasValidationArtifact,
+            hasReviewSummaryArtifact,
+            hasApprovalArtifact,
+            hasMergeArtifact);
+
+        foreach (var gapLine in evidenceGapLines)
+            lines.Add($"- {gapLine}");
+
+        if (evidenceGapLines.Count == 0
+            && WipShellCommandSemantics.RequiresGovernanceLifecycleGuidance(
+                snapshot.ValidationStatus,
+                snapshot.ApprovalStatus,
+                hasValidationArtifact,
+                hasReviewSummaryArtifact,
+                hasApprovalArtifact))
+        {
+            foreach (var guidanceLine in WipShellCommandSemantics.BuildPostExecutionGovernanceGuidance(
+                         hasValidationArtifact,
+                         hasReviewSummaryArtifact,
+                         hasApprovalArtifact))
+            {
+                lines.Add($"- {guidanceLine}");
+            }
+        }
+
         await WriteDeterministicBlockAsync(lines);
     }
+
+    private static bool HasArtifactWithPrefix(IReadOnlyList<ArtifactDescriptor> descriptors, string prefix)
+        => descriptors.Any(descriptor => descriptor.ArtifactId.Value.StartsWith(prefix, StringComparison.Ordinal));
 
     private async Task HandleArchiveAsync(string[] parts, CancellationToken cancellationToken)
     {

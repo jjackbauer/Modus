@@ -86,12 +86,13 @@ graph TB
 
 ### Completeness Checklist
 
-- [ ] Create the workspace-root `WIP/` parent folder and relocate every Wip.* source project plus every Wip.* test project beneath it without changing assembly identities [foundation]
-- [ ] Update solution and project path references so every moved project resolves from `WIP/<Project>/` and all inter-project references remain valid [depends on relocation]
-- [ ] Update repository build, test, and host entrypoints that hardcode flat `WIP/Wip.*` paths or old test-root assumptions [depends on relocated project paths]
-- [ ] Preserve plugin, runtime, shell, and shell-host startup behavior after the source and test directory move [depends on solution path updates]
-- [ ] Verify repository-wide build and targeted Wip.* test suites still pass from the new root-level WIP layout [depends on relocation and path updates]
-- [ ] Verify no stale flat `WIP/Wip.*` path assumptions remain in code, scripts, or execution-affecting docs [depends on path updates]
+- [x] Create the workspace-root `WIP/` parent folder and relocate every Wip.* source project plus every Wip.* test project beneath it without changing assembly identities [foundation]
+- [x] Update solution and project path references so every moved project resolves from `WIP/<Project>/` and all inter-project references remain valid [depends on relocation]
+- [x] Update repository build, test, and host entrypoints that hardcode flat `WIP/Wip.*` paths or old test-root assumptions [depends on relocated project paths]
+- [x] Preserve plugin, runtime, shell, and shell-host startup behavior after the source and test directory move [depends on solution path updates]
+- [x] Verify repository-wide build and targeted Wip.* test suites still pass from the new root-level WIP layout [depends on relocation and path updates]
+- [x] Verify no stale flat `WIP/Wip.*` path assumptions remain in code, scripts, or execution-affecting docs [depends on path updates]
+- [x] Verify no execution-affecting `src/Wip.*` path references remain in WIP contributor docs, project README files, or WIP source entrypoints [depends on path updates]
 - [ ] Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
 
 ---

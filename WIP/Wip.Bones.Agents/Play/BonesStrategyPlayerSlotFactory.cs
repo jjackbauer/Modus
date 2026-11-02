@@ -52,7 +52,8 @@ public sealed class BonesStrategyPlayerSlotFactory
             return new BonesScriptStrategyPlayerSlot(
                 _scriptHost,
                 strategy.StrategyId,
-                strategy.Source);
+                strategy.Source,
+                executionMode: BonesScriptExecutionMode.Direct);
         }
 
         if (_playModelProvider is not null && context is not null)

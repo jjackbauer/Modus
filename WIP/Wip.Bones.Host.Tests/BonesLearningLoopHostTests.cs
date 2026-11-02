@@ -1,8 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Wip.Bones.Agents.Workflow;
+using Wip.Bones.Engine;
 using Wip.Bones.Host;
+using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
+using Wip.Bones.Engine;
 using Xunit;
 
 namespace Wip.Bones.Host.Tests;
@@ -134,8 +137,8 @@ public sealed class BonesLearningLoopHostTests
             var second = BonesHostSessionStoreTestExtensions.GetDerivedSeed(store, 2, defaults, dataDirectory);
             var firstAgain = BonesHostSessionStoreTestExtensions.GetDerivedSeed(store, 1, defaults, dataDirectory);
 
-            Assert.Equal(HashCode.Combine(defaults.Seed, 1), first);
-            Assert.Equal(HashCode.Combine(defaults.Seed, 2), second);
+            Assert.Equal(BonesSeedDerivation.Derive(defaults.Seed, 1), first);
+            Assert.Equal(BonesSeedDerivation.Derive(defaults.Seed, 2), second);
             Assert.NotEqual(first, second);
             Assert.Equal(first, firstAgain);
         }
@@ -154,29 +157,33 @@ public sealed class BonesLearningLoopHostTests
         //   GameCount (observe games)
         //   + 1 (play match)
         //   + EvaluationMatchCount * 2 (evaluation phase: 2 games per match)
-        // With GameCount=3 and EvaluationMatchCount=20:
-        //   3 + 1 + 20 * 2 = 44
+        // With GameCount=3 and EvaluationMatchCount=40 (default):
+        //   3 + 1 + 40 * 2 = 84
         var gameCount = 3;
-        var evaluationMatchCount = 20;
+        var evaluationMatchCount = 40;
         var plannedBudget = gameCount + 1 + evaluationMatchCount * 2;
 
-        Assert.Equal(44, plannedBudget);
+        Assert.Equal(84, plannedBudget);
     }
 
     [Fact]
     [Trait("ChecklistItem", GameSimulationBudgetItem)]
     public void ComputePlannedIterationGameBudget_GivenBudgetExhausted_GameBudgetTryReserveReturnsFalse()
     {
-        // Budget for GameCount=3 + 1 play + 20 evaluation matches * 2 games each = 44
-        var plannedBudget = 3 + 1 + 20 * 2;
-        Assert.Equal(44, plannedBudget);
+        // Budget for GameCount=3 + 1 play + 40 evaluation matches * 2 games each = 84
+        var plannedBudget = 3 + 1 + 40 * 2;
+        Assert.Equal(84, plannedBudget);
 
         var budget = new Wip.Bones.Agents.Budget.BonesGameSimulationBudget(maxGamesPerRun: plannedBudget);
 
-        // Reserve the full planned iteration budget
+        // Reserve the full planned iteration budget (pure check, does not increment).
         Assert.True(budget.TryReserve(plannedBudget));
 
-        // The next reservation must fail because the cap is exhausted
+        // Record the actual games played.
+        budget.RecordGames(plannedBudget);
+        Assert.Equal(plannedBudget, budget.GamesSimulated);
+
+        // The next reservation must fail because the cap is exhausted.
         Assert.False(budget.TryReserve(1));
     }
 }

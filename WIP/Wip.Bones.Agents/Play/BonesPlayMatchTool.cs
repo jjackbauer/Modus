@@ -27,6 +27,9 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
     private readonly BonesLearningViewerCoordinator? _viewerCoordinator;
     private readonly BonesGameSimulationBudget? _gameBudget;
     private readonly BonesStrategyLibrary? _strategyLibrary;
+    private readonly StrategyPool? _strategyPool;
+    private readonly PopulationMatchComposer? _matchComposer;
+    private readonly SemaphoreSlim? _concurrencyThrottle;
 
     public BonesPlayMatchTool(
         IArtifactStore artifactStore,
@@ -35,7 +38,10 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
         BonesLearningViewerCoordinator? viewerCoordinator = null,
         BonesStrategyScriptHost? scriptHost = null,
         BonesGameSimulationBudget? gameBudget = null,
-        BonesStrategyLibrary? strategyLibrary = null)
+        BonesStrategyLibrary? strategyLibrary = null,
+        StrategyPool? strategyPool = null,
+        PopulationMatchComposer? matchComposer = null,
+        SemaphoreSlim? concurrencyThrottle = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _engine = engine ?? throw new ArgumentNullException(nameof(engine));
@@ -45,6 +51,9 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
         _playerSlotFactory = new BonesStrategyPlayerSlotFactory(_scriptHost, _modelProvider);
         _gameBudget = gameBudget;
         _strategyLibrary = strategyLibrary;
+        _strategyPool = strategyPool;
+        _matchComposer = matchComposer;
+        _concurrencyThrottle = concurrencyThrottle;
     }
 
     public async ValueTask<BonesPlayMatchResult> ExecuteAsync(
@@ -57,8 +66,82 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
         if (string.IsNullOrWhiteSpace(request.RepositoryPath))
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(request.RepositoryPath));
 
+        var concurrentGameCount = Math.Max(1, request.ConcurrentGameCount);
+
+        if (concurrentGameCount == 1)
+        {
+            return await PlaySingleGameAsync(request, request.GameId, context, cancellationToken);
+        }
+
+        // Parallel execution: play N matches concurrently, each with distinct artifacts.
+        var tasks = new Task<BonesPlayMatchResult>[concurrentGameCount];
+        for (var i = 0; i < concurrentGameCount; i++)
+        {
+            var gameIndex = i;
+            tasks[i] = Task.Run(async () =>
+            {
+                if ((_concurrencyThrottle ?? _gameBudget?.GameConcurrencyThrottle) is not null)
+                    await (_concurrencyThrottle ?? _gameBudget?.GameConcurrencyThrottle)!.WaitAsync(cancellationToken);
+                try
+                {
+                    var perGameId = new BonesGameId(
+                        $"play-{request.Seed}-g{gameIndex}-{Guid.NewGuid():N}");
+                    return await PlaySingleGameAsync(request, perGameId, context, cancellationToken);
+                }
+                finally
+                {
+                    (_concurrencyThrottle ?? _gameBudget?.GameConcurrencyThrottle)?.Release();
+                }
+            }, cancellationToken);
+        }
+
+        var results = await Task.WhenAll(tasks);
+
+        // Return the first result as the primary (API compatibility).
+        // Each game independently recorded its outcomes and knowledge.
+        return results[0];
+    }
+
+    private async ValueTask<BonesPlayMatchResult> PlaySingleGameAsync(
+        BonesPlayMatchRequest request,
+        BonesGameId? explicitGameId,
+        CapabilityContext context,
+        CancellationToken cancellationToken)
+    {
+        var reservationHeld = false;
+        if (_gameBudget is not null)
+        {
+            if (!_gameBudget.TryReserve(1))
+            {
+                throw new BonesGameSimulationBudgetExhaustedException(
+                    $"Game budget exhausted before play: {_gameBudget.GamesSimulated}/{_gameBudget.MaxGamesPerRun} games used, {_gameBudget.ReservedGames} reserved.");
+            }
+
+            reservationHeld = true;
+        }
+
+        try
+        {
+            var result = await PlaySingleGameCoreAsync(request, explicitGameId, context, cancellationToken);
+            _gameBudget?.RecordGames(1);
+            reservationHeld = false;
+            return result;
+        }
+        finally
+        {
+            if (reservationHeld)
+                _gameBudget?.ReleaseReservation(1);
+        }
+    }
+
+    private async ValueTask<BonesPlayMatchResult> PlaySingleGameCoreAsync(
+        BonesPlayMatchRequest request,
+        BonesGameId? explicitGameId,
+        CapabilityContext context,
+        CancellationToken cancellationToken)
+    {
         var targetScore = request.TargetScore > 0 ? request.TargetScore : DefaultTargetScore;
-        var gameId = request.GameId ?? new BonesGameId($"play-{request.Seed}-{Guid.NewGuid():N}");
+        var gameId = explicitGameId ?? request.GameId ?? new BonesGameId($"play-{request.Seed}-{Guid.NewGuid():N}");
         var knowledgeStore = new BonesPlayerKnowledgeStore(
             _artifactStore,
             request.RepositoryPath,
@@ -70,12 +153,25 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
             strategies = await BuildCoLearningPlayerSlotsAsync(
                 request.Seed,
                 knowledgeStore,
+                crossSeatConfig: null,
                 cancellationToken);
         }
         else
         {
-            strategies = await LoadAllActiveStrategiesAsync(knowledgeStore, cancellationToken);
+            // I7: Use pool-driven match composition when pool has enough entries.
+            if (_matchComposer is not null && _strategyPool is not null && _strategyPool.Count >= 4)
+            {
+                strategies = ComposePoolDrivenStrategies(_strategyPool);
+            }
+            else
+            {
+                strategies = await LoadAllActiveStrategiesAsync(knowledgeStore, cancellationToken);
+            }
         }
+
+        // Pool composition and active-strategy loading can both miss a seat after
+        // promotion/pruning. Never let a match start with an incomplete seat map.
+        strategies = await EnsureCompleteSeatCoverageAsync(strategies, knowledgeStore, request.Seed, cancellationToken);
 
         if (_viewerCoordinator is not null)
         {
@@ -143,6 +239,22 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
                 cancellationToken);
         }
 
+        // I5: Record outcome in the population pool for ELO updates.
+        if (_strategyPool is not null)
+        {
+            var seatToStrategyId = new Dictionary<int, BonesStrategyId>();
+            for (var seat = BonesPlayerId.MinSeat; seat <= BonesPlayerId.MaxSeat; seat++)
+            {
+                var playerId = new BonesPlayerId(seat);
+                if (strategies.TryGetValue(playerId, out var strategyArtifact))
+                {
+                    seatToStrategyId[seat] = strategyArtifact.StrategyId;
+                }
+            }
+
+            _strategyPool.RecordOutcome(matchResult, seatToStrategyId);
+        }
+
         if (_viewerCoordinator is not null)
         {
             _viewerCoordinator.PublishLiveMatchState(
@@ -151,8 +263,6 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
                 matchResult,
                 isComplete: true);
         }
-
-        _gameBudget?.RecordGames(1);
 
         return new BonesPlayMatchResult(
             gameId,
@@ -172,9 +282,6 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
         CancellationToken cancellationToken)
     {
         if (_strategyLibrary is null)
-            return;
-
-        if (strategy.Kind != BonesStrategyKind.Script)
             return;
 
         var effectiveness = await knowledgeStore.GetEffectiveness(
@@ -200,9 +307,58 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
         return strategies.ToImmutable();
     }
 
+    /// <summary>
+    /// Composes match strategies from the population pool using
+    /// <see cref="PopulationMatchComposer"/>. Converts pool entries
+    /// to <see cref="BonesStrategyArtifact"/> for use by the match engine.
+    /// </summary>
+    private ImmutableDictionary<BonesPlayerId, BonesStrategyArtifact> ComposePoolDrivenStrategies(
+        StrategyPool pool)
+    {
+        var composition = _matchComposer!.ComposeMatch(pool);
+        var strategies = ImmutableDictionary.CreateBuilder<BonesPlayerId, BonesStrategyArtifact>();
+
+        foreach (var entry in composition.Entries)
+        {
+            var playerId = new BonesPlayerId(entry.Seat);
+            var artifact = new BonesStrategyArtifact(
+                entry.Id,
+                playerId,
+                entry.Kind,
+                entry.Source,
+                BonesPromotionStatus.Active);
+            strategies[playerId] = artifact;
+        }
+
+        return strategies.ToImmutable();
+    }
+
+    private async ValueTask<ImmutableDictionary<BonesPlayerId, BonesStrategyArtifact>> EnsureCompleteSeatCoverageAsync(
+        ImmutableDictionary<BonesPlayerId, BonesStrategyArtifact> strategies,
+        BonesPlayerKnowledgeStore knowledgeStore,
+        int seed,
+        CancellationToken cancellationToken)
+    {
+        var builder = strategies.ToBuilder();
+
+        for (var seat = BonesPlayerId.MinSeat; seat <= BonesPlayerId.MaxSeat; seat++)
+        {
+            var playerId = new BonesPlayerId(seat);
+            if (builder.ContainsKey(playerId))
+                continue;
+
+            var activeStrategy = await knowledgeStore.TryLoadActiveStrategy(playerId, cancellationToken);
+            builder[playerId] = activeStrategy
+                ?? CreateDeterministicSeedFallbackStrategy(playerId, seed);
+        }
+
+        return builder.ToImmutable();
+    }
+
     private async ValueTask<ImmutableDictionary<BonesPlayerId, BonesStrategyArtifact>> BuildCoLearningPlayerSlotsAsync(
         int seed,
         BonesPlayerKnowledgeStore knowledgeStore,
+        BonesCrossSeatMatchConfig? crossSeatConfig,
         CancellationToken cancellationToken)
     {
         var strategies = ImmutableDictionary.CreateBuilder<BonesPlayerId, BonesStrategyArtifact>();
@@ -211,23 +367,28 @@ public sealed class BonesPlayMatchTool : ITool<BonesPlayMatchRequest, BonesPlayM
         for (var seat = BonesPlayerId.MinSeat; seat <= BonesPlayerId.MaxSeat; seat++)
         {
             var playerId = new BonesPlayerId(seat);
+            var effectivePlayerId = crossSeatConfig is not null
+                ? crossSeatConfig.GetDeployedSeat(playerId)
+                : playerId;
+
             var activeStrategy = await knowledgeStore.TryLoadActiveStrategy(playerId, cancellationToken);
 
             var libraryHasEntry = libraryBestBySeat.TryGetValue(playerId, out var libraryStrategy);
 
             if (activeStrategy is not null && activeStrategy.Kind == BonesStrategyKind.Script)
             {
+                // When cross-seat is active, remap: strategy authored for playerId plays at effectivePlayerId.
                 // Prefer the freshly-Ponder-authored active Script over a stale library Markdown entry.
                 // If the library entry is also Script, prefer the active one (it is fresher).
-                strategies[playerId] = activeStrategy;
+                strategies[effectivePlayerId] = activeStrategy;
             }
             else if (libraryHasEntry)
             {
-                strategies[playerId] = libraryStrategy!;
+                strategies[effectivePlayerId] = libraryStrategy!;
             }
             else
             {
-                strategies[playerId] = CreateDeterministicSeedFallbackStrategy(playerId, seed);
+                strategies[effectivePlayerId] = CreateDeterministicSeedFallbackStrategy(effectivePlayerId, seed);
             }
         }
 
@@ -254,8 +415,9 @@ public sealed class SeatStrategy : IBonesPlayerSlot
         if (legalMoves.Count == 0)
             throw new System.InvalidOperationException(""No legal moves."");
 
-        // Deterministic seed-based selection: hash the seed, seat, first tile, and move count
-        var fingerprint = System.HashCode.Combine(Seed, Seat, state.CurrentPlayer.Seat, legalMoves.Count);
+        // Deterministic seed-based selection. Do NOT use System.HashCode here: it is
+        // randomized per process, which would make the fallback strategy change between runs.
+        var fingerprint = unchecked((Seed * 397) ^ (Seat * 31) ^ (state.CurrentPlayer.Seat * 17) ^ legalMoves.Count);
         var index = (fingerprint & int.MaxValue) % legalMoves.Count;
         return legalMoves[index];
     }}
@@ -282,7 +444,8 @@ public sealed class SeatStrategy : IBonesPlayerSlot
             scriptSlots[playerId] = new BonesScriptStrategyPlayerSlot(
                 _scriptHost,
                 strategy.StrategyId,
-                strategy.Source);
+                strategy.Source,
+                executionMode: BonesScriptExecutionMode.Direct);
         }
 
         return scriptSlots.ToImmutable();
@@ -308,7 +471,7 @@ public sealed class SeatStrategy : IBonesPlayerSlot
         while (matchWinner is null)
         {
             roundNumber++;
-            var roundSeed = HashCode.Combine(request.Seed, roundNumber);
+            var roundSeed = BonesSeedDerivation.Derive(request.Seed, roundNumber);
             var roundGameId = new BonesGameId($"{gameId.Value}-r{roundNumber}");
             var roundConfig = new BonesRoundConfig(roundGameId, roundSeed);
             var state = _engine.StartRound(roundConfig);

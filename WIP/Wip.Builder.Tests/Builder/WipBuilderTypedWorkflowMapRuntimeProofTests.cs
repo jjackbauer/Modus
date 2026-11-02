@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Samples.TodoApp.WipAgents;
+using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
 using Wip.Runtime.Runtime;
@@ -19,6 +20,12 @@ public sealed class WipBuilderTypedWorkflowMapRuntimeProofTests
         var services = new ServiceCollection();
         var builder = services.AddWipCapabilities();
         builder.AddTodoAppWipAgents();
+        builder.AddAgent<TodoCompiledPlanAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Compiled plan stage agent");
+        builder.AddTool<TodoCompiledRunTool, TodoWorkflowRequest, TodoWorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Compiled run stage tool");
 
         var workflowRegistration = Assert.Single(
             builder.WorkflowRegistrations,
@@ -69,6 +76,12 @@ public sealed class WipBuilderTypedWorkflowMapRuntimeProofTests
         var services = new ServiceCollection();
         var builder = services.AddWipCapabilities();
         builder.AddTodoAppWipAgents();
+        builder.AddAgent<TodoCompiledPlanAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Compiled plan stage agent");
+        builder.AddTool<TodoCompiledRunTool, TodoWorkflowRequest, TodoWorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Compiled run stage tool");
 
         var sessionStore = new InMemorySessionStore();
         var publisher = new CollectingSessionEventPublisher();
@@ -90,11 +103,13 @@ public sealed class WipBuilderTypedWorkflowMapRuntimeProofTests
                     ArtifactDirectory: artifactsPath),
                 CancellationToken.None);
 
+            var artifactStore = new BuilderTestInMemoryArtifactStore();
             var result = await orchestrator.RunWorkflowAsync(
                 started.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("todoapp.workflow.delivery"),
-                cancellationToken: CancellationToken.None);
+                cancellationToken: CancellationToken.None,
+                artifactStore: artifactStore);
 
             var runStage = Assert.Single(
                 result.Stages,
@@ -122,6 +137,21 @@ public sealed class WipBuilderTypedWorkflowMapRuntimeProofTests
                 Directory.Delete(root, recursive: true);
             }
         }
+    }
+
+    private sealed class TodoCompiledRunTool : ITool<TodoWorkflowRequest, TodoWorkflowResult>
+    {
+        public ValueTask<TodoWorkflowResult> ExecuteAsync(
+            TodoWorkflowRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult(new TodoWorkflowResult($"{request.Title}:{context.SessionId.Value}"));
+    }
+
+    private sealed class TodoCompiledPlanAgent : IAgent<PlanStageRequest, PlanStageResult>
+    {
+        public ValueTask<PlanStageResult> ExecuteAsync(PlanStageRequest request, CapabilityContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new PlanStageResult(true));
     }
 
     private sealed class InMemorySessionStore : ISessionStore

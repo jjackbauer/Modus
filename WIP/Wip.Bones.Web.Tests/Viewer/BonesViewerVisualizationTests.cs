@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using AngleSharp;
 using AngleSharp.Dom;
@@ -433,7 +433,7 @@ public sealed class BonesViewerVisualizationDomTests : IClassFixture<BonesWebApp
         var engine = new BonesGameEngine();
         var config = new BonesRoundConfig(
             new BonesGameId($"{matchId.Value}-r1"),
-            HashCode.Combine(matchSeed, 1));
+            BonesSeedDerivation.Derive(matchSeed, 1));
         var state = engine.StartRound(config);
 
         for (var attempt = 0; attempt < 40; attempt++)

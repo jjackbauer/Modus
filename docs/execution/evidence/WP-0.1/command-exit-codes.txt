@@ -1,0 +1,37 @@
+# Command exit-code ledger - captured 2026-11-02T10:42:24.4352541-03:00
+CMD: git branch --show-current
+EXIT: 0
+WIP
+
+CMD: git rev-parse HEAD
+EXIT: 0
+d6b895f56af6f633dc3c009cbf93a862a0e920c1
+
+CMD: git status --porcelain | Measure-Object -Line
+EXIT: 0
+308
+
+CMD: git status --porcelain -uall | Measure-Object -Line
+EXIT: 0
+676
+
+CMD: git diff --stat
+EXIT: 0
+ 148 files changed, 6758 insertions(+), 1427 deletions(-)
+
+CMD: git tag --list 'wip-baseline*'
+EXIT: 0
+
+
+CMD: dotnet --version
+EXIT: 0
+10.0.103
+
+CMD: Test-Path plan / report / prompt
+EXIT: 0
+True / True / True
+
+CMD: Test-Path docs/execution/state.json (pre-start)
+EXIT: 0
+False
+

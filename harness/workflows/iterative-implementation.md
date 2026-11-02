@@ -7,6 +7,9 @@ composes:
   - ../skills/falsify-claims.md
   - ../skills/test-standards.md
   - ../skills/impl-completeness.md
+  - ../skills/trace-runtime-path.md
+  - ../rules/protect-user-workspace-data.md
+  - ../rules/di-factory-override.md
 ---
 
 # Workflow: Iterative Implementation

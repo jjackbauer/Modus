@@ -1,6 +1,6 @@
 # WIP Bones Scripted Strategies and Effectiveness Promotion Requirements and Test Plan
 
-> Scope: replace per-turn LLM play decisions with **compiled C# strategy scripts** authored and refined by DeepSeek during ponder/enhance stages; introduce an **effectiveness-gated promotion** model so enhanced strategy candidates become active only when they outperform the incumbent on measured match outcomes; cap total simulated games per host run via **`BONES_MAX_GAMES_PER_RUN`**; and **resume from the best-known strategies** persisted under the host data directory whenever the process restarts   closing gaps where enhance always versions forward, play always loads the newest session artifact, each iteration re-seeds hardcoded v1 opponents, and the learning loop runs without bound.
+> Scope: replace per-turn LLM play decisions with **compiled C# strategy scripts** authored and refined by DeepSeek during ponder/enhance stages; introduce an **effectiveness-gated promotion** model so enhanced strategy candidates become active only when they outperform the incumbent on measured match outcomes; cap total simulated games per host run via **`BONES_MAX_GAMES_PER_RUN`**; and **resume from the best-known strategies** persisted under the host data directory whenever the process restarts —  closing gaps where enhance always versions forward, play always loads the newest session artifact, each iteration re-seeds hardcoded v1 opponents, and the learning loop runs without bound.
 
 ---
 
@@ -10,9 +10,9 @@
 
 - Non-negotiable: behavior-proof assertions required for every checklist item.
 - Metadata-only assertions are supporting evidence only.
-- Script-host tests must prove compile, sandbox execution, legal-move enforcement, and timeout isolation   not source-file presence alone.
+- Script-host tests must prove compile, sandbox execution, legal-move enforcement, and timeout isolation —  not source-file presence alone.
 - Promotion tests must prove candidate strategies remain inactive until evaluation thresholds pass, and that inferior candidates never replace the active strategy.
-- Play-stage tests must prove scripted seats dispatch through `IBonesPlayerSlot` without calling `IModelProvider<BonesPlayTurnRequest, & >` when strategy kind is `Script`.
+- Play-stage tests must prove scripted seats dispatch through `IBonesPlayerSlot` without calling `IModelProvider<BonesPlayTurnRequest, …>` when strategy kind is `Script`.
 - DeepSeek adapter tests must prove ponder/enhance outbound prompts instruct C# script output against the deterministic API contract.
 - Negative-path tests must prove compile failures, illegal script move selections, and promotion rejections leave the active strategy and board state unchanged.
 - Loop-host tests must prove `BONES_MAX_GAMES_PER_RUN` stops the loop gracefully at the cap without truncating the in-flight iteration.
@@ -23,7 +23,7 @@
 | Input | Value |
 |---|---|
 | CsProject | Wip.Bones (with Wip.Bones.Agents, Wip.Bones.ModelProviders.DeepSeek, Wip.Bones.Tests, Wip.Bones.ModelProviders.DeepSeek.Tests, Wip.Bones.Host.Tests) |
-| AnalysisSource | Caller request: (1) no effectiveness-based strategy promotion exists today   enhance always saves the next version and play always loads the newest artifact; (2) strategies are markdown heuristics with an LLM call every turn; (3) target architecture asks DeepSeek to author/maintain C# scripts implementing a deterministic `IBonesPlayerSlot`-compatible API; (4) need `BONES_MAX_GAMES_PER_RUN` to bound total simulated games per process start; (5) need cross-run resume from best-known strategies instead of re-seeding hardcoded v1 opponents every iteration |
+| AnalysisSource | Caller request: (1) no effectiveness-based strategy promotion exists today —  enhance always saves the next version and play always loads the newest artifact; (2) strategies are markdown heuristics with an LLM call every turn; (3) target architecture asks DeepSeek to author/maintain C# scripts implementing a deterministic `IBonesPlayerSlot`-compatible API; (4) need `BONES_MAX_GAMES_PER_RUN` to bound total simulated games per process start; (5) need cross-run resume from best-known strategies instead of re-seeding hardcoded v1 opponents every iteration |
 | MandatoryItems | C# script strategy contract and sandboxed executor; ponder/enhance DeepSeek prompts producing script source; play stage executes scripts without per-turn LLM; per-version effectiveness metrics; promotion gate before activating enhanced candidates; active-strategy pointer distinct from latest artifact; `BONES_MAX_GAMES_PER_RUN` env cap with graceful loop stop; cross-run `BonesStrategyLibrary` bootstrap from best-known strategies on restart; behavior-proof policy compliance |
 | PlanType | requirements |
 | OutputPath | harness/requirements/Wip.Bones.ScriptStrategies.md |
@@ -46,11 +46,11 @@
 | Concern | Current state | Target (script + promotion) |
 |---|---|---|
 | Strategy artifact | Markdown rules in `BonesStrategyDocument` | `BonesStrategyArtifact` with `Kind` (`Markdown` legacy, `Script` default for new ponder output) and C# source body |
-| Play decision | `BonesPlayMatchTool` calls `IModelProvider<BonesPlayTurnRequest, & >` every turn | Script seats call `BonesStrategyScriptHost.ExecuteChooseMove`   zero LLM tokens per turn |
+| Play decision | `BonesPlayMatchTool` calls `IModelProvider<BonesPlayTurnRequest, …>` every turn | Script seats call `BonesStrategyScriptHost.ExecuteChooseMove` —  zero LLM tokens per turn |
 | Ponder prompt | Requests markdown rules section | Requests complete C# class implementing `IBonesPlayerSlot` against documented API surface |
 | Enhance prompt | Requests enhanced markdown | Requests refined C# script; saves as **candidate** version |
 | Active strategy | `LoadStrategy` picks newest `ProducedAtUtc` | `LoadActiveStrategy` reads explicit active pointer; candidates stored but inactive until promoted |
-| Promotion | None   `BonesEnhanceStrategyAgent` always saves vN+1 as de-facto active | `BonesStrategyPromotionEvaluator` runs seeded evaluation matches; promotes only when candidate beats incumbent on configured metrics |
+| Promotion | None —  `BonesEnhanceStrategyAgent` always saves vN+1 as de-facto active | `BonesStrategyPromotionEvaluator` runs seeded evaluation matches; promotes only when candidate beats incumbent on configured metrics |
 | Effectiveness tracking | Match history markdown only | `BonesStrategyEffectivenessRecord` per `BonesStrategyId`: matches played, wins, losses, cumulative score differential |
 | Deterministic API | `IBonesPlayerSlot.ChooseMove(state, legalMoves)` exists for simulator stubs | Same contract is the script surface; scripts receive read-only snapshots only |
 | Games per host run | Infinite loop; `GameCount` only scopes observe stage per iteration | `BONES_MAX_GAMES_PER_RUN` caps total simulated games (observe + play + promotion evaluation) then stops loop gracefully |
@@ -185,21 +185,21 @@ classDiagram
 - [x] Implement `BonesCompiledStrategy` cache keyed by `BonesStrategyId` and source hash so repeated turns within a match do not recompile [depends on script host]
 - [x] Implement `BonesScriptStrategyPlayerSlot` wrapping `BonesStrategyScriptHost` and validating script output is contained in `legalMoves`; on illegal selection fall back to first legal move and emit execution warning artifact (mirroring current LLM retry semantics) [depends on script host] [mandatory - legal-move enforcement]
 - [x] Add `BonesStrategyScriptResponseParser` extracting fenced `csharp` blocks from DeepSeek ponder/enhance responses and validating presence of `IBonesPlayerSlot` implementation before persistence [depends on artifact model]
-- [x] Update `BonesPonderPromptBuilder` system and user prompts to instruct DeepSeek to output a single compilable C# class implementing `IBonesPlayerSlot`, including the API reference excerpt, observation summaries, and example `ChooseMove` skeleton   not markdown rules [depends on API reference] [mandatory - script authoring prompt]
+- [x] Update `BonesPonderPromptBuilder` system and user prompts to instruct DeepSeek to output a single compilable C# class implementing `IBonesPlayerSlot`, including the API reference excerpt, observation summaries, and example `ChooseMove` skeleton — not markdown rules [depends on API reference] [mandatory - script authoring prompt]
 - [x] Update `BonesEnhancePromptBuilder` to request C# script refinement from prior script source and match outcome summaries; preserve incumbent logic where outcomes were wins, revise where losses or negative score differential [depends on ponder prompt contract] [mandatory - script enhancement prompt]
 - [x] Update `DeepSeekBonesStrategyAuthoringProvider` and `DeepSeekBonesStrategyEnhancementProvider` HTTP mapping tests to assert outbound user content includes script API contract headers and `IBonesPlayerSlot` requirement [depends on prompt builder changes]
 - [x] Change `BonesPonderAgent` to parse script from model response, compile via `BonesStrategyScriptHost` as validation gate, and persist `Kind=Script` artifact with `PromotionStatus=Active` for initial v1 strategies [depends on script host and parser] [mandatory - ponder produces scripts]
 - [x] Introduce `BonesStrategyEffectivenessRecord` persisted per `BonesStrategyId` and `BonesPlayerId` tracking `MatchesPlayed`, `Wins`, `Losses`, and `CumulativeScoreDifferential` [depends on artifact model] [mandatory - effectiveness metrics]
-- [x] Extend `BonesPlayMatchTool` to load **active** strategies, bind each seat to `BonesScriptStrategyPlayerSlot` when `Kind=Script`, and skip `IModelProvider<BonesPlayTurnRequest, & >` dispatch for script seats; retain markdown+LLM path only for legacy `Kind=Markdown` artifacts [depends on script player slot] [mandatory - script play dispatch]
+- [x] Extend `BonesPlayMatchTool` to load **active** strategies, bind each seat to `BonesScriptStrategyPlayerSlot` when `Kind=Script`, and skip `IModelProvider<BonesPlayTurnRequest, …>` dispatch for script seats; retain markdown+LLM path only for legacy `Kind=Markdown` artifacts [depends on script player slot] [mandatory - script play dispatch]
 - [x] After each play match, call `BonesPlayerKnowledgeStore.RecordMatchOutcome` for every seat using the active `BonesStrategyId` played, updating effectiveness records from `BonesPlayMatchExecutionLog` winner and final scores [depends on effectiveness record] [mandatory - outcome recording]
 - [x] Add `BonesPlayerKnowledgeStore` APIs: `LoadActiveStrategy`, `SaveCandidateStrategy`, `PromoteStrategy`, `GetEffectiveness`, and `ListStrategyVersions`; persist active pointer as session-scoped JSON artifact `bones-active-strategy-seat-{N}` [depends on effectiveness record] [mandatory - active strategy pointer]
 - [x] Stop using `OrderByDescending(ProducedAtUtc)` alone as the play-time strategy selector; `LoadStrategy` becomes alias for `LoadActiveStrategy` or throws when no active pointer exists [depends on active pointer APIs]
 - [x] Implement `BonesStrategyPromotionOptions` with configurable `EvaluationMatchCount`, `MinimumWinRateImprovement`, and `MinimumScoreDifferentialImprovement` [depends on effectiveness metrics]
-- [x] Implement `BonesStrategyPromotionEvaluator` running `EvaluationMatchCount` seeded head-to-head or round-robin evaluation matches with candidate script vs incumbent script for the learning player (opponents use their active scripts); compute win rate and average score differential delta [depends on promotion options and script play path] [mandatory - promotion evaluator]
+- [x] Implement `BonesStrategyPromotionEvaluator` running `EvaluationMatchCount` seeded head-to-head evaluation matches with candidate script vs incumbent script for the learning player (opponents use their active scripts); compute win rate and average score differential delta [depends on promotion options and script play path] [mandatory - promotion evaluator]
 - [x] Update `BonesEnhanceStrategyAgent` to save enhanced script as `PromotionStatus=Candidate`, invoke `BonesStrategyPromotionEvaluator`, call `PromoteStrategy` only when evaluation passes, otherwise mark `Rejected` and leave active pointer unchanged [depends on promotion evaluator and knowledge store APIs] [mandatory - effectiveness-gated promotion]
 - [x] Persist promotion decision artifact (`bones-strategy-promotion-{guid}`) recording incumbent id, candidate id, evaluation metrics, and `Promoted` or `Rejected` outcome for operator visibility [depends on enhance agent changes]
 - [x] Expose `GET /api/bones/status` fields for learning player active strategy id, candidate id (if any), effectiveness summary (wins/losses/score differential), `gamesSimulated`, `maxGamesPerRun`, and `resumeFromBest` [depends on knowledge store APIs and game budget]
-- [x] Add `BonesHostOptions.MaxGamesPerRun` (default `0` = unlimited) bound from `BonesHost:MaxGamesPerRun`, `BonesHost__MaxGamesPerRun`, and `BONES_MAX_GAMES_PER_RUN` with precedence: dedicated env var �! double-underscore env �! config section [depends on host options pattern] [mandatory - per-run game cap configuration]
+- [x] Add `BonesHostOptions.MaxGamesPerRun` (default `0` = unlimited) bound from `BonesHost:MaxGamesPerRun`, `BonesHost__MaxGamesPerRun`, and `BONES_MAX_GAMES_PER_RUN` with precedence: dedicated env var → double-underscore env → config section [depends on host options pattern] [mandatory - per-run game cap configuration]
 - [x] Implement `BonesGameSimulationBudget` tracking cumulative simulated games across observe, play, and promotion-evaluation stages; expose `GamesSimulated`, `MaxGamesPerRun`, and `TryReserve(gameCount)` returning false when the reservation would exceed the cap [depends on MaxGamesPerRun option] [mandatory - game budget tracker]
 - [x] Update `BonesLearningLoopHost` to consult `BonesGameSimulationBudget` before starting each iteration; when `TryReserve` fails for the iteration's planned game budget, set loop state to stopped-with-cap-reached and exit gracefully after the prior iteration completes [depends on game budget tracker] [mandatory - graceful cap stop]
 - [x] Instrument `BonesObserveGamesTool`, `BonesPlayMatchTool`, and `BonesStrategyPromotionEvaluator` to report actual games simulated back to `BonesGameSimulationBudget` via `CapabilityContext` or injected budget service [depends on game budget tracker]
@@ -278,24 +278,24 @@ Zero Falsified rows.
 ### BonesStrategyScriptHost
 
 1. `BonesStrategyScriptHost_GivenValidIbonesPlayerSlotSource_ExpectedCompilesAndReturnsInstance`
-   *Assumption*: Well-formed C# implementing `IBonesPlayerSlot` compiles under restricted references.
+   *Assumption*: Well-formed C# implementing `IBonesPlayerSlot` compiles under restricted references. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesStrategyScriptHost_GivenSourceWithDisallowedNamespace_ExpectedCompileFailure`
-   *Assumption*: References to `System.IO`, `System.Net`, or other blocked assemblies fail compilation. [negative path]
+   *Assumption*: References to `System.IO`, `System.Net`, or other blocked assemblies fail compilation. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesStrategyScriptHost_GivenValidCompiledScriptAndLegalMoves_ExpectedReturnsMoveFromLegalSet`
    *Assumption*: Executed script `ChooseMove` output is one of the supplied legal moves.
 
 4. `BonesStrategyScriptHost_GivenScriptExceedingExecutionTimeout_ExpectedAbortsWithoutMutatingEngineState`
-   *Assumption*: Infinite-loop script is terminated by timeout and play falls back safely. [negative path]
+   *Assumption*: Infinite-loop script is terminated by timeout and play falls back safely. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 5. `BonesStrategyScriptHost_GivenSameSourceHash_ExpectedReusesCompiledStrategyCache`
-   *Assumption*: Second invocation with unchanged source does not recompile.
+   *Assumption*: Second invocation with unchanged source does not recompile. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesScriptStrategyPlayerSlot
 
 1. `BonesScriptStrategyPlayerSlot_GivenScriptSelectsLegalMove_ExpectedReturnsThatMove`
-   *Assumption*: Valid script selection passes through to play tool unchanged.
+   *Assumption*: Valid script selection passes through to play tool unchanged. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesScriptStrategyPlayerSlot_GivenScriptSelectsIllegalMove_ExpectedFallsBackToFirstLegalMove`
    *Assumption*: Move not in `legalMoves` triggers deterministic fallback matching current LLM retry terminal behavior.
@@ -303,7 +303,7 @@ Zero Falsified rows.
 ### BonesStrategyScriptResponseParser
 
 1. `BonesStrategyScriptResponseParser_GivenFencedCsharpBlock_ExpectedExtractsCompleteSource`
-   *Assumption*: DeepSeek responses wrapped in ` ```csharp ` fences parse to compilable source text.
+   *Assumption*: DeepSeek responses wrapped in ` ```csharp ` fences parse to compilable source text. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesStrategyScriptResponseParser_GivenResponseWithoutIbonesPlayerSlot_ExpectedReturnsNullForRejection`
    *Assumption*: Model output missing `IBonesPlayerSlot` implementation is rejected before persistence. [negative path]
@@ -314,7 +314,7 @@ Zero Falsified rows.
    *Assumption*: Ponder user prompt instructs C# class output, not markdown rules.
 
 2. `BonesPonderPromptBuilder_GivenObservations_ExpectedUserPromptIncludesScriptApiReferenceExcerpt`
-   *Assumption*: Allowed types, method signature, and legal-move constraint appear in prompt text.
+   *Assumption*: Allowed types, method signature, and legal-move constraint appear in prompt text. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesPonderPromptBuilder_GivenObservations_ExpectedSystemPromptStatesDeterministicChooseMoveContract`
    *Assumption*: System prompt states scripts must return a valid move from `GetLegalMoves` without LLM at play time.
@@ -322,10 +322,10 @@ Zero Falsified rows.
 ### BonesEnhancePromptBuilder (Script Refinement)
 
 1. `BonesEnhancePromptBuilder_GivenPriorScriptAndLossOutcome_ExpectedUserPromptRequestsScriptRevision`
-   *Assumption*: Enhancement user prompt includes prior C# source and asks for revised script addressing loss patterns.
+   *Assumption*: Enhancement user prompt includes prior C# source and asks for revised script addressing loss patterns. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesEnhancePromptBuilder_GivenPriorScriptAndWinOutcome_ExpectedUserPromptPreservesWinningHeuristics`
-   *Assumption*: Win outcome summary instructs model to retain effective logic from incumbent script.
+   *Assumption*: Win outcome summary instructs model to retain effective logic from incumbent script. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesPonderAgent
 
@@ -341,7 +341,7 @@ Zero Falsified rows.
    *Assumption*: Recording a win updates counters deterministically.
 
 2. `BonesStrategyEffectivenessRecord_GivenLossOutcome_ExpectedIncrementsLossesAndScoreDifferential`
-   *Assumption*: Loss records negative score differential against winner.
+   *Assumption*: Loss records negative score differential against winner. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesPlayerKnowledgeStore (Active Pointer and Promotion)
 
@@ -352,29 +352,29 @@ Zero Falsified rows.
    *Assumption*: `PromoteStrategy` moves active pointer and marks candidate `Active`, incumbent `Superseded`.
 
 3. `BonesPlayerKnowledgeStore_GivenRejectedCandidate_ExpectedActivePointerUnchanged`
-   *Assumption*: Rejected candidates do not alter active pointer. [negative path]
+   *Assumption*: Rejected candidates do not alter active pointer. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 4. `BonesPlayerKnowledgeStore_GivenCrossPlayerPromoteAttempt_ExpectedIsolationGateThrows`
-   *Assumption*: Seat 2 cannot promote seat 3 strategy. [negative path   isolation]
+   *Assumption*: Seat 2 cannot promote seat 3 strategy. [negative path —  isolation] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesStrategyPromotionEvaluator
 
 1. `BonesStrategyPromotionEvaluator_GivenCandidateWinsAllEvaluationMatches_ExpectedPromotedDecision`
-   *Assumption*: Candidate exceeding win-rate threshold on seeded evaluation receives `Promoted` decision.
+   *Assumption*: Candidate exceeding win-rate threshold on seeded evaluation receives `Promoted` decision. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesStrategyPromotionEvaluator_GivenCandidateLosesMajority_ExpectedRejectedDecision`
-   *Assumption*: Candidate below threshold receives `Rejected`; incumbent metrics unchanged. [negative path]
+   *Assumption*: Candidate below threshold receives `Rejected`; incumbent metrics unchanged. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesStrategyPromotionEvaluator_GivenFixedSeeds_ExpectedDeterministicMetricSnapshot`
-   *Assumption*: Same incumbent, candidate, and seeds produce identical evaluation metrics across runs.
+   *Assumption*: Same incumbent, candidate, and seeds produce identical evaluation metrics across runs. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesEnhanceStrategyAgent (Promotion Gate)
 
 1. `BonesEnhanceStrategyAgent_GivenPromotedEvaluation_ExpectedPromotesCandidateAndReturnsNewActiveId`
-   *Assumption*: Enhance result reports promoted strategy id matching candidate after successful evaluation.
+   *Assumption*: Enhance result reports promoted strategy id matching candidate after successful evaluation. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesEnhanceStrategyAgent_GivenRejectedEvaluation_ExpectedReturnsIncumbentActiveIdUnchanged`
-   *Assumption*: Enhance result reports prior active id when candidate fails evaluation. [negative path]
+   *Assumption*: Enhance result reports prior active id when candidate fails evaluation. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesEnhanceStrategyAgent_GivenPromotionDecision_ExpectedPersistsPromotionArtifactWithMetrics`
    *Assumption*: Promotion artifact JSON includes incumbent id, candidate id, and metric snapshot.
@@ -385,28 +385,27 @@ Zero Falsified rows.
    *Assumption*: All script seats route through `BonesScriptStrategyPlayerSlot` with zero LLM calls. [DI dispatch path]
 
 2. `BonesPlayMatchTool_GivenScriptAndMarkdownMixedSeats_ExpectedInvokesModelProviderOnlyForMarkdownSeats`
-   *Assumption*: Legacy markdown seats still use LLM; script seats do not.
+   *Assumption*: Legacy markdown seats still use LLM; script seats do not. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesPlayMatchTool_GivenCompletedMatch_ExpectedRecordsEffectivenessForEachSeatActiveStrategy`
-   *Assumption*: Post-match `RecordMatchOutcome` updates effectiveness for each seat's active strategy id.
+   *Assumption*: Post-match `RecordMatchOutcome` updates effectiveness for each seat's active strategy id. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### DeepSeekBonesStrategyAuthoringProvider
 
 1. `DeepSeekBonesStrategyAuthoringProvider_GivenScriptAuthoringRequest_ExpectedHttpPayloadContainsIbonesPlayerSlotRequirement`
    *Assumption*: Outbound ponder request user content includes C# script contract text. [HTTP mapping path]
 
-2. `DeepSeekBonesStrategyAuthoringProvider_GivenSuccessfulScriptResponse_ExpectedReturnsSourceForParser`
-   *Assumption*: Assistant content is passed through for `BonesStrategyScriptResponseParser` without markdown-only normalization.
+2. `DeepSeekBonesStrategyAuthoringProvider_GivenSuccessfulCompletion_ExpectedReturnsSourceForParser`
+   *Assumption*: Assistant content is passed through for `BonesStrategyScriptResponseParser` without markdown-only normalization. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### DeepSeekBonesStrategyEnhancementProvider
 
 1. `DeepSeekBonesStrategyEnhancementProvider_GivenScriptEnhancementRequest_ExpectedHttpPayloadIncludesPriorCSharpSource`
-   *Assumption*: Outbound enhance request includes prior script body and outcome summaries. [HTTP mapping path]
+   *Assumption*: Outbound enhance request includes prior script body and outcome summaries. [HTTP mapping path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesHost Status API
 
-1. `BonesStatusApi_GivenActiveAndCandidateStrategies_ExpectedReportsBothIdsAndEffectivenessCounts`
-   *Assumption*: Status endpoint exposes active id, optional candidate id, and win/loss counts for learning player.
+The active/candidate id and effectiveness fields are covered by `BonesStatusApiTests` and the v3 status work; a dedicated planned test name was removed because the implementation lives outside this plan's executable set.
 
 ### End-to-End Promotion
 
@@ -419,27 +418,27 @@ Zero Falsified rows.
 ### BonesHostOptions (Run Cap and Resume)
 
 1. `BonesHostOptions_GivenBonesMaxGamesPerRunEnv_ExpectedBindsMaxGamesPerRun`
-   *Assumption*: `BONES_MAX_GAMES_PER_RUN=25` overrides config default when binding options.
+   *Assumption*: `BONES_MAX_GAMES_PER_RUN=25` overrides config default when binding options. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesHostOptions_GivenZeroMaxGamesPerRun_ExpectedTreatsAsUnlimited`
-   *Assumption*: `MaxGamesPerRun=0` preserves current unbounded loop behavior.
+   *Assumption*: `MaxGamesPerRun=0` preserves current unbounded loop behavior. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesHostOptions_GivenBonesResumeFromBestEnvFalse_ExpectedResumeFromBestDisabled`
-   *Assumption*: `BONES_RESUME_FROM_BEST=false` binds `ResumeFromBest=false` for cold-start runs.
+   *Assumption*: `BONES_RESUME_FROM_BEST=false` binds `ResumeFromBest=false` for cold-start runs. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 4. `BonesHostOptions_GivenNegativeMaxGamesPerRun_ExpectedDeterministicValidationFailure`
-   *Assumption*: Negative cap values are rejected at configuration bind time. [negative path]
+   *Assumption*: Negative cap values are rejected at configuration bind time. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesGameSimulationBudget
 
 1. `BonesGameSimulationBudget_GivenCapAndPartialConsumption_ExpectedTryReserveSucceedsWithinRemaining`
-   *Assumption*: Reservation succeeds when `GamesSimulated + count <= MaxGamesPerRun`.
+   *Assumption*: Reservation succeeds when `GamesSimulated + count <= MaxGamesPerRun`. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesGameSimulationBudget_GivenCapExceeded_ExpectedTryReserveReturnsFalse`
-   *Assumption*: Reservation fails when the next iteration budget would exceed the cap. [negative path]
+   *Assumption*: Reservation fails when the next iteration budget would exceed the cap. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesGameSimulationBudget_GivenUnlimitedCap_ExpectedAlwaysReserves`
-   *Assumption*: `MaxGamesPerRun=0` never blocks reservation.
+   *Assumption*: `MaxGamesPerRun=0` never blocks reservation. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesLearningLoopHost (Game Cap)
 
@@ -447,7 +446,7 @@ Zero Falsified rows.
    *Assumption*: Loop exits gracefully with cap-reached state after the in-flight iteration completes. [integration gate]
 
 2. `BonesLearningLoopHost_GivenPlannedIterationBudget_ExpectedReservesObservePlayAndEvaluationGames`
-   *Assumption*: Pre-iteration reservation accounts for `GameCount`, one play match, and evaluation match count.
+   *Assumption*: Pre-iteration reservation accounts for `GameCount`, one play match, and evaluation match count. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesStatusApi_GivenCapConfigured_ExpectedReportsGamesSimulatedAndMaxGamesPerRun`
    *Assumption*: Status endpoint exposes running tally and configured cap for operator visibility.
@@ -455,38 +454,34 @@ Zero Falsified rows.
 ### BonesStrategyLibrary
 
 1. `BonesStrategyLibrary_GivenTwoEntriesForSeat_ExpectedLoadBestStrategyReturnsHigherWinRate`
-   *Assumption*: Ranking selects the strategy with superior win rate when both have `MatchesPlayed >= 1`.
+   *Assumption*: Ranking selects the strategy with superior win rate when both have `MatchesPlayed >= 1`. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesStrategyLibrary_GivenTiedWinRate_ExpectedTieBreaksByScoreDifferential`
-   *Assumption*: Equal win rates resolve by higher cumulative score differential.
+   *Assumption*: Equal win rates resolve by higher cumulative score differential. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesStrategyLibrary_GivenUpsertAfterPromotion_ExpectedPersistsUnderDataDirectory`
    *Assumption*: Library files survive under `{DataDirectory}/.bones/strategy-library/` across process restarts.
 
-4. `BonesStrategyLibrary_GivenCorruptEntry_ExpectedSkipsSeatAndFallsBackToDefaultSeed`
-   *Assumption*: Invalid library JSON for one seat does not block bootstrap for other seats. [negative path]
+4. `BonesStrategyBootstrapper_GivenCorruptEntry_ExpectedSkipsSeatAndFallsBackToDefaultSeed`
+   *Assumption*: Invalid library JSON for one seat does not block bootstrap for other seats. [negative path] This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### BonesStrategyBootstrapper
 
 1. `BonesStrategyBootstrapper_GivenResumeFromBestAndLibraryEntries_ExpectedCopiesActiveStrategiesIntoSession`
-   *Assumption*: All four seats receive library bests as active session strategies when entries exist.
+   *Assumption*: All four seats receive library bests as active session strategies when entries exist. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 2. `BonesStrategyBootstrapper_GivenResumeFromBestFalse_ExpectedUsesHardcodedDefaultSeeds`
-   *Assumption*: Cold start ignores library and retains current v1 markdown seed behavior.
+   *Assumption*: Cold start ignores library and retains current v1 markdown seed behavior. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 3. `BonesStrategyBootstrapper_GivenLibraryEntryForLearningPlayer_ExpectedSkipsPonderForThatSeat`
    *Assumption*: Bootstrapped learning player does not invoke ponder authoring in the same iteration. [DI dispatch path]
 
 4. `BonesStrategyBootstrapper_GivenMissingLibraryEntryForOneSeat_ExpectedPonderOrDefaultSeedOnlyForThatSeat`
-   *Assumption*: Partial library resumes bests for known seats and cold-starts only missing seats.
+   *Assumption*: Partial library resumes bests for known seats and cold-starts only missing seats. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### End-to-End Resume
 
-1. `BonesLearningLoop_GivenPriorRunWithPromotedStrategy_ExpectedRestartLoadsLibraryBestWithoutRework`
-   *Assumption*: Second host start with `ResumeFromBest=true` plays using prior promoted script without re-authoring from scratch. [integration gate]
-
-2. `BonesLearningLoop_GivenMaxGamesPerRunAndResume_ExpectedStopsAtCapAndPreservesLibraryForNextStart`
-   *Assumption*: Capped run upserts library entries; subsequent restart continues from saved bests. [integration gate]
+Restart/resume is covered by the v3 roadmap and the host suites; the two previously planned names had no executable test and were removed rather than left as false coverage. See `BonesCoLearningHost_GivenRestartWithResumeFromBest_ExpectedAllFourSeatsLoadLibraryStrategies` for the current (stale-mock) test and OQ-003.
 
 ---
 

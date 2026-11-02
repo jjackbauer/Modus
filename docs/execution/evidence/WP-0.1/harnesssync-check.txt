@@ -1,0 +1,38 @@
+command=dotnet run --project tools/HarnessSync -- --check
+exit=1
+started=2026-11-02T11:01:47.8408187-03:00
+finished=2026-11-02T11:01:50.9851701-03:00
+--- output ---
+C:\Users\ricar\dev\Modus\tools\HarnessSync\HarnessSync.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+C:\Users\ricar\dev\Modus\tools\HarnessSync\HarnessSync.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+dotnet.exe : [utf16-text] UTF-16 encoding detected: .tmp/aggression-search/confirmation-final.stdout.txt
+At line:4 char:8
++ $out = & dotnet run --project tools/HarnessSync -- --check 2>&1 | Out ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([utf16-text] UT...inal.stdout.txt:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/confirmation-large.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/confirmation.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/fair-confirmation-repeat.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/fair-confirmation.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/fair.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/field-archetypes.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/field-strong.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/selection-control.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/selection-structural.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/selection.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/validation-control.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/validation-extended-repeat.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/validation-extended.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/aggression-search/validation.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/block-search/block-confirmation-repeat.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/block-search/block-confirmation.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/block-search/block-results.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/build-runtime-diag.txt
+[utf16-text] UTF-16 encoding detected: .tmp/champion-goal/probe-run-a.txt
+[utf16-text] UTF-16 encoding detected: .tmp/champion-goal/probe-run-b.txt
+[utf16-text] UTF-16 encoding detected: .tmp/champion-goal/run-a.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/champion-goal/run-b.stdout.txt
+[utf16-text] UTF-16 encoding detected: .tmp/champion-goal/run-c.stdout.txt
+

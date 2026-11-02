@@ -1077,7 +1077,7 @@ public sealed class BonesViewerDominoRenderingDomTests : IClassFixture<BonesPlay
 		BonesBoardVisualLayoutBuilder bonesBoardVisualLayoutBuilder = new BonesBoardVisualLayoutBuilder();
 		for (int i = 1; i <= 5000; i++)
 		{
-			BonesRoundConfig config = new BonesRoundConfig(new BonesGameId($"domino-script-probe-{i}"), HashCode.Combine(i, 1));
+			BonesRoundConfig config = new BonesRoundConfig(new BonesGameId($"domino-script-probe-{i}"), BonesSeedDerivation.Derive(i, 1));
 			BonesRoundState bonesRoundState = bonesGameEngine.StartRound(config);
 			List<BonesEvent> list = new List<BonesEvent>(steps.Count);
 			bool flag = true;
@@ -1176,7 +1176,7 @@ public sealed class BonesViewerDominoRenderingDomTests : IClassFixture<BonesPlay
 	private static BonesBoardVisualLayout ReplayRoundLayout(BonesGameId matchId, int seed, BonesMatchRoundRecord round, BonesBoardVisualLayoutBuilder layoutBuilder)
 	{
 		BonesGameEngine bonesGameEngine = new BonesGameEngine();
-		BonesRoundConfig bonesRoundConfig = new BonesRoundConfig(new BonesGameId($"{matchId.Value}-r{round.RoundNumber}"), HashCode.Combine(seed, round.RoundNumber));
+		BonesRoundConfig bonesRoundConfig = new BonesRoundConfig(new BonesGameId($"{matchId.Value}-r{round.RoundNumber}"), BonesSeedDerivation.Derive(seed, round.RoundNumber));
 		BonesRoundState bonesRoundState = bonesGameEngine.StartRound(bonesRoundConfig);
 		ImmutableArray<BonesEvent>.Enumerator enumerator = round.EventLog.GetEnumerator();
 		while (enumerator.MoveNext())

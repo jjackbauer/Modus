@@ -60,4 +60,23 @@ public sealed class BehaviorProofComplianceRegistryTests
             registrationErrors.Count == 0,
             $"Adversarial co-learning requirements registration must resolve to existing paths.{Environment.NewLine}{string.Join(Environment.NewLine, registrationErrors)}");
     }
+
+    [Fact]
+    [Trait("ChecklistItem", BonesHostRequirementsChecklistItems.ComplianceRegistry)]
+    public void BehaviorProofComplianceRegistry_GivenStatusApiFixesRequirements_ExpectedDocRegisteredWithOwningAssembly()
+    {
+        var repositoryRoot = BonesHostTestPaths.FindRepositoryRoot();
+        var document = BehaviorProofComplianceRegistry.RegisteredDocuments.Single(
+            static registration => registration.Kind == WipRequirementsDocumentKind.BonesStatusApiFixes);
+
+        Assert.Equal("BonesStatusApiFixes", document.DisplayName);
+        Assert.Equal("harness/requirements/Wip.Bones.StatusApiFixes.md", document.RelativePath);
+        Assert.Equal("WIP/Wip.Bones.Host.Tests", document.OwningTestProjectDirectory);
+        Assert.Equal("WIP/Wip.Bones.Host.Tests/Wip.Bones.Host.Tests.csproj", document.OwningTestProjectFile);
+
+        var registrationErrors = BehaviorProofComplianceRegistry.ValidateRegistrations(repositoryRoot, [document]);
+        Assert.True(
+            registrationErrors.Count == 0,
+            $"StatusApiFixes registration must resolve to existing paths.{Environment.NewLine}{string.Join(Environment.NewLine, registrationErrors)}");
+    }
 }

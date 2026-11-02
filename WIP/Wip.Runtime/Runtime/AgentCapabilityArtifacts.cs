@@ -19,7 +19,10 @@ public sealed record AgentRunStageResult(
     bool AppliedTransition,
     string RequestContractName,
     string ResultContractName,
-    string? MappedInputContractName);
+    string? MappedInputContractName,
+    string? ProducerCapabilityId = null,
+    string? CorrelationId = null,
+    string? StoragePath = null);
 
 public sealed record AgentRunResult(
     string WorkflowId,
@@ -38,7 +41,10 @@ public sealed record AgentRunResult(
                     AppliedTransition: stage.AppliedTransition,
                     RequestContractName: stage.Descriptor.RequestContractName,
                     ResultContractName: stage.Descriptor.ResultContractName,
-                    MappedInputContractName: stage.MappedInputContractName))
+                    MappedInputContractName: stage.MappedInputContractName,
+                    ProducerCapabilityId: stage.ProducerCapabilityId?.Value,
+                    CorrelationId: stage.CorrelationId,
+                    StoragePath: stage.ExecutionArtifact?.RelativePath))
                 .ToArray());
     }
 }

@@ -14,7 +14,7 @@ internal static class BonesEnhancePromptBuilder
     internal const string StrategyLineageHeader = "## Strategy lineage";
     internal const string RefinementGuidanceHeader = "## Refinement guidance";
     internal const string ScriptOutputFormatHeader = "## Required output format";
-    private const int OpponentSourceExcerptMaxLength = 500;
+    private const int DefaultOpponentSourceExcerptMaxLength = 4000;
 
     internal static BonesStrategyEnhancementRequest BuildEnhancementRequest(
         BonesPlayerId playerId,
@@ -22,14 +22,25 @@ internal static class BonesEnhancePromptBuilder
         IReadOnlyList<BonesMatchHistoryTranscript> matchHistories,
         IReadOnlyList<string> matchHistoryArtifactPaths,
         IReadOnlyDictionary<BonesPlayerId, BonesStrategyArtifact>? opponentStrategies = null,
-        IReadOnlyList<BonesStrategyLineageEntry>? strategyLineage = null)
+        IReadOnlyList<BonesStrategyLineageEntry>? strategyLineage = null,
+        int opponentSourceExcerptMaxLength = DefaultOpponentSourceExcerptMaxLength,
+        IReadOnlyDictionary<BonesPlayerId, BonesStrategyEffectivenessRecord>? opponentEffectiveness = null,
+        IReadOnlyDictionary<BonesPlayerId, BonesOpponentProfile>? opponentProfiles = null)
     {
         ArgumentNullException.ThrowIfNull(priorStrategy);
         ArgumentNullException.ThrowIfNull(matchHistories);
         ArgumentNullException.ThrowIfNull(matchHistoryArtifactPaths);
 
         var systemPrompt = BuildSystemPrompt(playerId, priorStrategy.StrategyId);
-        var userPrompt = BuildUserPrompt(playerId, priorStrategy, matchHistories, opponentStrategies, strategyLineage);
+        var userPrompt = BuildUserPrompt(
+            playerId,
+            priorStrategy,
+            matchHistories,
+            opponentStrategies,
+            strategyLineage,
+            opponentSourceExcerptMaxLength,
+            opponentEffectiveness,
+            opponentProfiles);
 
         return new BonesStrategyEnhancementRequest(
             Messages:
@@ -58,7 +69,10 @@ internal static class BonesEnhancePromptBuilder
         BonesStrategyDocument priorStrategy,
         IReadOnlyList<BonesMatchHistoryTranscript> matchHistories,
         IReadOnlyDictionary<BonesPlayerId, BonesStrategyArtifact>? opponentStrategies = null,
-        IReadOnlyList<BonesStrategyLineageEntry>? strategyLineage = null)
+        IReadOnlyList<BonesStrategyLineageEntry>? strategyLineage = null,
+        int opponentSourceExcerptMaxLength = DefaultOpponentSourceExcerptMaxLength,
+        IReadOnlyDictionary<BonesPlayerId, BonesStrategyEffectivenessRecord>? opponentEffectiveness = null,
+        IReadOnlyDictionary<BonesPlayerId, BonesOpponentProfile>? opponentProfiles = null)
     {
         var builder = new StringBuilder();
         builder.AppendLine("# Strategy script enhancement request");
@@ -133,7 +147,19 @@ internal static class BonesEnhancePromptBuilder
         if (opponentStrategies is { Count: > 0 })
         {
             builder.AppendLine();
-            AppendOpponentStrategySummaries(builder, opponentStrategies);
+            AppendOpponentStrategySummaries(builder, opponentStrategies, opponentSourceExcerptMaxLength);
+        }
+
+        if (opponentEffectiveness is { Count: > 0 })
+        {
+            builder.AppendLine();
+            AppendOpponentPerformanceSummary(builder, playerId, opponentEffectiveness);
+        }
+
+        if (opponentProfiles is { Count: > 0 })
+        {
+            builder.AppendLine();
+            AppendOpponentProfileSummary(builder, opponentProfiles);
         }
 
         builder.AppendLine();
@@ -238,7 +264,8 @@ internal static class BonesEnhancePromptBuilder
 
     private static void AppendOpponentStrategySummaries(
         StringBuilder builder,
-        IReadOnlyDictionary<BonesPlayerId, BonesStrategyArtifact> opponentStrategies)
+        IReadOnlyDictionary<BonesPlayerId, BonesStrategyArtifact> opponentStrategies,
+        int opponentSourceExcerptMaxLength)
     {
         builder.AppendLine(OpponentStrategySummaryHeader);
         builder.AppendLine();
@@ -246,9 +273,9 @@ internal static class BonesEnhancePromptBuilder
         foreach (var (opponentId, artifact) in opponentStrategies.OrderBy(kvp => kvp.Key.Seat))
         {
             var kindLabel = artifact.Kind == BonesStrategyKind.Script ? "Script" : "Markdown";
-            var excerpt = artifact.Source.Length <= OpponentSourceExcerptMaxLength
+            var excerpt = artifact.Source.Length <= opponentSourceExcerptMaxLength
                 ? artifact.Source
-                : artifact.Source[..OpponentSourceExcerptMaxLength] + "...";
+                : artifact.Source[..opponentSourceExcerptMaxLength] + "...";
 
             builder.AppendLine($"### Opponent seat {opponentId.Seat} ({kindLabel})");
             builder.AppendLine($"Strategy id: {artifact.StrategyId.Value}");
@@ -257,6 +284,49 @@ internal static class BonesEnhancePromptBuilder
             builder.AppendLine("```");
             builder.AppendLine(excerpt);
             builder.AppendLine("```");
+            builder.AppendLine();
+        }
+    }
+
+    internal const string OpponentPerformanceHeader = "## Opponent performance vs current strategy";
+
+    private static void AppendOpponentPerformanceSummary(
+        StringBuilder builder,
+        BonesPlayerId playerId,
+        IReadOnlyDictionary<BonesPlayerId, BonesStrategyEffectivenessRecord> opponentEffectiveness)
+    {
+        builder.AppendLine(OpponentPerformanceHeader);
+        builder.AppendLine();
+        builder.AppendLine("How each opponent has performed against your current candidate strategy:");
+        builder.AppendLine();
+
+        foreach (var (opponentId, record) in opponentEffectiveness.OrderBy(kvp => kvp.Key.Seat))
+        {
+            var winRate = record.MatchesPlayed > 0
+                ? (record.Wins / (double)record.MatchesPlayed).ToString("P1")
+                : "N/A";
+
+            builder.AppendLine($"- **Opponent seat {opponentId.Seat}**: {record.Wins}W / {record.Losses}L " +
+                $"({winRate} win rate, {record.MatchesPlayed} matches, cumulative score diff: {record.CumulativeScoreDifferential})");
+        }
+
+        builder.AppendLine();
+    }
+
+    internal const string OpponentProfileHeader = "## Opponent behavioural profiles";
+
+    private static void AppendOpponentProfileSummary(
+        StringBuilder builder,
+        IReadOnlyDictionary<BonesPlayerId, BonesOpponentProfile> opponentProfiles)
+    {
+        builder.AppendLine(OpponentProfileHeader);
+        builder.AppendLine();
+        builder.AppendLine("Behavioural tendencies of each opponent derived from match history:");
+        builder.AppendLine();
+
+        foreach (var (opponentId, profile) in opponentProfiles.OrderBy(kvp => kvp.Key.Seat))
+        {
+            builder.AppendLine(profile.ToPromptSummary(opponentId));
             builder.AppendLine();
         }
     }

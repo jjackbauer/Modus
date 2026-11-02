@@ -513,7 +513,7 @@ public sealed class BonesViewerLearningLoopStatusScriptTests : IClassFixture<Bon
             modelProvider: new
             {
                 provider = "DeepSeek",
-                model = "deepseek-chat",
+                model = "deepseek-flash",
                 baseUrl = "https://api.deepseek.com",
                 timeoutSeconds = 120,
                 apiKeySource = "sk-live-secret-key-do-not-leak",
@@ -534,8 +534,8 @@ public sealed class BonesViewerLearningLoopStatusScriptTests : IClassFixture<Bon
 
             var dom = await BonesViewerScriptTestDriver.ReadLearningLoopStatusDomAsync(page);
             Assert.Equal("DeepSeek", dom.Provider);
-            Assert.Equal("deepseek-chat", dom.Model);
-            Assert.Equal("DeepSeek / deepseek-chat", dom.ModelProviderText);
+            Assert.Equal("deepseek-flash", dom.Model);
+            Assert.Equal("DeepSeek / deepseek-flash", dom.ModelProviderText);
             Assert.DoesNotMatch(new Regex("sk-[A-Za-z0-9-]+", RegexOptions.CultureInvariant), dom.PageHtml);
             Assert.DoesNotContain("apiKeySource", dom.PageHtml, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("sk-live-secret-key-do-not-leak", dom.PageHtml, StringComparison.Ordinal);

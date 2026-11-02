@@ -138,6 +138,7 @@ internal sealed class BonesHostWebApplicationFactory : WebApplicationFactory<Bon
             ["BonesHost:ListenUrl"] = ListenUri.ToString(),
             ["BonesHost:IterationDelayMs"] = "0",
             ["BonesHost:ModelProvider"] = "stub",
+            ["BonesHost:AllowUnbounded"] = "true",
             ["BonesHost:DefaultParameters:GameCount"] = "1",
             ["BonesHost:DefaultParameters:Seed"] = "4242",
             ["BonesHost:DefaultParameters:TargetScore"] = "8",
@@ -266,14 +267,17 @@ internal sealed record BonesHostStatusEffectivenessResponse(
 internal sealed record BonesHostStatusResponse(
     bool IsRunning,
     long IterationCount,
-    string CurrentStage,
-    string? ViewerUrl,
-    string HostSessionId,
-    int GamesSimulated,
-    int MaxGamesPerRun,
-    bool ResumeFromBest,
-    bool CapReached,
-    BonesHostStatusLearningPlayerResponse? LearningPlayer,
+    long CompletedBatches = 0,
+    long CoLearningSessionsCompleted = 0,
+    string CurrentStage = "",
+    string? ViewerUrl = null,
+    string HostSessionId = "",
+    int GamesSimulated = 0,
+    int ActualGamesSimulated = 0,
+    int MaxGamesPerRun = 0,
+    bool ResumeFromBest = false,
+    bool CapReached = false,
+    BonesHostStatusLearningPlayerResponse? LearningPlayer = null,
     string? LearningPlayerStatus = null,
     string? LearningPlayerError = null,
     BonesHostStatusLastIterationErrorResponse? LastIterationError = null,
@@ -281,7 +285,10 @@ internal sealed record BonesHostStatusResponse(
     BonesHostStatusLibraryEffectivenessResponse? LibraryEffectiveness = null,
     bool AllSeatsLearning = false,
     IReadOnlyList<BonesHostStatusPerSeatStrategyResponse>? PerSeatStrategies = null,
+    IReadOnlyList<BonesHostStatusPerSeatPromotionOutcomeResponse>? PerSeatLastPromotionOutcome = null,
     long CoLearningIterationsCompleted = 0,
+    int StrategiesCompiled = 0,
+    int StrategiesPending = 0,
     int StrategiesPromoted = 0,
     int StrategiesRejected = 0);
 
@@ -291,6 +298,11 @@ internal sealed record BonesHostStatusPerSeatStrategyResponse(
     string Kind,
     double WinRate,
     int MatchesPlayed);
+
+internal sealed record BonesHostStatusPerSeatPromotionOutcomeResponse(
+    int Seat,
+    string? Outcome,
+    string TimestampUtc);
 
 internal sealed record BonesHostStatusLastIterationErrorResponse(
     string Message,

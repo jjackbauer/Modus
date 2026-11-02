@@ -1,0 +1,5 @@
+command=powershell -NoProfile -ExecutionPolicy Bypass -File tools/encoding/Test-StagedTextFileEncoding.ps1
+exit=0
+captured=2026-11-02T11:08:49.5519743-03:00
+--- output ---
+

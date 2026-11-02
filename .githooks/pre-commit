@@ -1,0 +1,4 @@
+#!/bin/sh
+# Reject staged text files that look like UTF-16 (common on Windows when Cursor Write is used).
+powershell -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/tools/encoding/Test-StagedTextFileEncoding.ps1"
+exit $?

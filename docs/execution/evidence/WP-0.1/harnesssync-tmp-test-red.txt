@@ -1,0 +1,58 @@
+command=dotnet test tools/HarnessSync.Tests/HarnessSync.Tests.csproj -c Release --filter FullyQualifiedName~FindUtf16TextFiles_GivenUtf16InsideTmpScratch
+exit=1
+started=2026-11-02T11:02:16.6406375-03:00
+finished=2026-11-02T11:03:28.3750251-03:00
+--- output ---
+  Determining projects to restore...
+C:\Users\ricar\dev\Modus\tools\HarnessSync\HarnessSync.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json. [C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\HarnessSync.Tests.csproj]
+  Restored C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\HarnessSync.Tests.csproj (in 44 sec).
+  1 of 2 projects are up-to-date for restore.
+C:\Users\ricar\dev\Modus\tools\HarnessSync\HarnessSync.csproj : warning NU1900: Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json.
+  HarnessSync -> C:\Users\ricar\dev\Modus\tools\HarnessSync\bin\Release\net10.0\HarnessSync.dll
+  HarnessSync.Tests -> C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\bin\Release\net10.0\HarnessSync.Tests.dll
+Test run for C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\bin\Release\net10.0\HarnessSync.Tests.dll (.NETCoreApp,Version=v10.0)
+VSTest version 18.0.1 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+Unhandled exception. System.ComponentModel.Win32Exception (5): Access is denied.
+   at System.Diagnostics.ProcessManager.OpenProcess(Int32 processId, Int32 access, Boolean throwIfExited)
+   at System.Diagnostics.Process.GetProcessHandle(Int32 access, Boolean throwIfExited)
+   at System.Diagnostics.Process.GetOrOpenProcessHandle()
+   at System.Diagnostics.Process.EnsureWatchingForExit()
+   at System.Diagnostics.Process.set_EnableRaisingEvents(Boolean value)
+   at Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.ProcessHelper.SetExitCallback(Int32 processId, Action`1 callbackAction) in /_/src/Microsoft.TestPlatform.PlatformAbstractions/common/System/ProcessHelper.cs:line 281
+   at Microsoft.VisualStudio.TestPlatform.TestHost.DefaultEngineInvoker.SetParentProcessExitCallback(IDictionary`2 argsDictionary) in /_/src/testhost.x86/DefaultEngineInvoker.cs:line 242
+   at Microsoft.VisualStudio.TestPlatform.TestHost.DefaultEngineInvoker.Invoke(IDictionary`2 argsDictionary) in /_/src/testhost.x86/DefaultEngineInvoker.cs:line 138
+   at Microsoft.VisualStudio.TestPlatform.TestHost.Program.Run(String[] args, UiLanguageOverride uiLanguageOverride) in /_/src/testhost.x86/Program.cs:line 65
+   at Microsoft.VisualStudio.TestPlatform.TestHost.Program.Run(String[] args) in /_/src/testhost.x86/Program.cs:line 54
+   at Microsoft.VisualStudio.TestPlatform.TestHost.Program.Main(String[] args) in /_/src/testhost.x86/Program.cs:line 37
+dotnet.exe : Testhost process for source(s) 
+'C:\Users\ricar\dev\Modus\tools\HarnessSync.Tests\bin\Release\net10.0\HarnessSync.Tests.dll' exited with error: 
+Unhandled exception. System.ComponentModel.Win32Exception (5): Access is denied.
+At line:4 char:8
++ $out = & dotnet test tools/HarnessSync.Tests/HarnessSync.Tests.csproj ...
++        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Testhost proces...cess is denied.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   at System.Diagnostics.ProcessManager.OpenProcess(Int32 processId, Int32 access, Boolean throwIfExited)
+   at System.Diagnostics.Process.GetProcessHandle(Int32 access, Boolean throwIfExited)
+   at System.Diagnostics.Process.GetOrOpenProcessHandle()
+   at System.Diagnostics.Process.EnsureWatchingForExit()
+   at System.Diagnostics.Process.set_EnableRaisingEvents(Boolean value)
+   at Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.ProcessHelper.SetExitCallback(Int32 processId, Action`1 
+callbackAction) in /_/src/Microsoft.TestPlatform.PlatformAbstractions/common/System/ProcessHelper.cs:line 281
+   at Microsoft.VisualStudio.TestPlatform.TestHost.DefaultEngineInvoker.SetParentProcessExitCallback(IDictionary`2 
+argsDictionary) in /_/src/testhost.x86/DefaultEngineInvoker.cs:line 242
+   at Microsoft.VisualStudio.TestPlatform.TestHost.DefaultEngineInvoker.Invoke(IDictionary`2 argsDictionary) in 
+/_/src/testhost.x86/DefaultEngineInvoker.cs:line 138
+   at Microsoft.VisualStudio.TestPlatform.TestHost.Program.Run(String[] args, UiLanguageOverride uiLanguageOverride) 
+in /_/src/testhost.x86/Program.cs:line 65
+   at Microsoft.VisualStudio.TestPlatform.TestHost.Program.Run(String[] args) in /_/src/testhost.x86/Program.cs:line 54
+   at Microsoft.VisualStudio.TestPlatform.TestHost.Program.Main(String[] args) in /_/src/testhost.x86/Program.cs:line 
+37
+. Please check the diagnostic logs for more information.
+
+Test Run Aborted.
+

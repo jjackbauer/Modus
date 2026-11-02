@@ -1,0 +1,46 @@
+# Pre-flight evidence - WIP-IMPL-001 / WP-0.1
+# Captured: 2026-11-02T10:41:40-03:00
+# Working directory: C:\Users\ricar\dev\Modus
+
+## Command outputs (captured before docs/execution evidence was created)
+CMD: git branch --show-current
+EXIT: 0
+WIP
+CMD: git log -1 --oneline
+EXIT: 0
+d6b895f feat(bones): implement learning-loop enhancements (T1.1-T3.5, M1)
+CMD: git rev-parse HEAD
+EXIT: 0
+d6b895f56af6f633dc3c009cbf93a862a0e920c1
+CMD: git log -1 --format=%cI
+EXIT: 0
+2026-06-30T22:18:15-03:00
+CMD: git status --porcelain
+EXIT: 0
+lines=308 modified=148 untracked=160
+CMD: git status --porcelain -uall
+EXIT: 0
+lines=670 (untracked files expanded)
+CMD: git diff --stat
+EXIT: 0
+ 148 files changed, 6758 insertions(+), 1427 deletions(-)
+CMD: git diff --name-only
+EXIT: 0
+count=148
+CMD: git ls-files -o --exclude-standard
+EXIT: 0
+count=522 bytes=18178919 .tmp_entries=291
+CMD: dotnet --version
+EXIT: 0
+10.0.103
+CMD: Test-Path docs/WIP-Implementation-Plan.md; docs/WIP-Requirements-and-Architecture-Report.md; docs/WIP-Execution-Prompt.md
+EXIT: 0
+plan=True report=True prompt=True
+CMD: Test-Path docs/execution/state.json
+EXIT: 0
+exists=False (fresh start; pre-flight required)
+
+## Notes
+- No git commit, stash, tag, reset, clean, or checkout was executed.
+- No tracked file was modified by the executor; only docs/execution evidence was created.
+- The counts above are the pre-evidence snapshot; docs/execution files are additional untracked evidence after this point.

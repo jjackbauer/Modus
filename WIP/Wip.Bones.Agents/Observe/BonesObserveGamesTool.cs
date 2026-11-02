@@ -45,6 +45,40 @@ public sealed class BonesObserveGamesTool : ITool<BonesObserveGamesRequest, Bone
         if (request.GameCount <= 0)
             throw new ArgumentOutOfRangeException(nameof(request.GameCount), "Game count must be positive.");
 
+        var reservationHeld = false;
+        if (_gameBudget is not null)
+        {
+            if (!_gameBudget.TryReserve(request.GameCount))
+            {
+                throw new BonesGameSimulationBudgetExhaustedException(
+                    $"Game budget exhausted before observe: {_gameBudget.GamesSimulated}/{_gameBudget.MaxGamesPerRun} games used, {_gameBudget.ReservedGames} reserved.");
+            }
+
+            reservationHeld = true;
+        }
+
+        try
+        {
+            var result = await ExecuteCoreAsync(request, context, cancellationToken);
+            _gameBudget?.RecordGames(request.GameCount);
+            reservationHeld = false;
+            return result;
+        }
+        finally
+        {
+            if (reservationHeld)
+                _gameBudget?.ReleaseReservation(request.GameCount);
+        }
+    }
+
+    private async ValueTask<BonesObserveGamesResult> ExecuteCoreAsync(
+        BonesObserveGamesRequest request,
+        CapabilityContext context,
+        CancellationToken cancellationToken)
+    {
+        if (request.GameCount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(request.GameCount), "Game count must be positive.");
+
         if (string.IsNullOrWhiteSpace(request.RepositoryPath))
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(request.RepositoryPath));
 
@@ -69,11 +103,14 @@ public sealed class BonesObserveGamesTool : ITool<BonesObserveGamesRequest, Bone
             .Distinct()
             .ToDictionary(observerId => observerId, _ => 0);
 
+        var observedGameIds = new List<BonesGameId>();
+
         for (var gameIndex = 0; gameIndex < request.GameCount; gameIndex++)
         {
             var gameNumber = gameIndex + 1;
             var gameId = new BonesGameId($"observe-{request.Seed}-g{gameNumber}");
-            var gameSeed = HashCode.Combine(request.Seed, gameNumber);
+            observedGameIds.Add(gameId);
+            var gameSeed = BonesSeedDerivation.Derive(request.Seed, gameNumber);
             var matchConfig = new BonesMatchConfig(
                 gameId,
                 gameSeed,
@@ -112,12 +149,11 @@ public sealed class BonesObserveGamesTool : ITool<BonesObserveGamesRequest, Bone
             observationsPerPlayer,
             cancellationToken);
 
-        _gameBudget?.RecordGames(request.GameCount);
-
         return new BonesObserveGamesResult(
             request.GameCount,
             transcriptsPersisted,
             observationsPerPlayer.ToImmutableDictionary(),
+            observedGameIds,
             executionArtifact);
     }
 

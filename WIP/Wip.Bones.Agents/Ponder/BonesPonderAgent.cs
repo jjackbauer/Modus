@@ -19,18 +19,18 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
     private readonly IArtifactStore _artifactStore;
     private readonly IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult> _modelProvider;
     private readonly BonesStrategyScriptHost _scriptHost;
-    private readonly BonesPonderCompileRetryOptions _compileRetryOptions;
+    private readonly BonesCompileRetryOptions _compileRetryOptions;
 
     public BonesPonderAgent(
         IArtifactStore artifactStore,
         IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult> modelProvider,
         BonesStrategyScriptHost? scriptHost = null,
-        BonesPonderCompileRetryOptions? compileRetryOptions = null)
+        BonesCompileRetryOptions? compileRetryOptions = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _modelProvider = modelProvider ?? throw new ArgumentNullException(nameof(modelProvider));
         _scriptHost = scriptHost ?? new BonesStrategyScriptHost();
-        _compileRetryOptions = compileRetryOptions ?? new BonesPonderCompileRetryOptions();
+        _compileRetryOptions = compileRetryOptions ?? new BonesCompileRetryOptions();
     }
 
     public async ValueTask<BonesPonderResult> ExecuteAsync(

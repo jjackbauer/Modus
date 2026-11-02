@@ -20,4 +20,5 @@ public sealed record BonesObserveGamesResult(
     int GamesObserved,
     int TranscriptsPersisted,
     IReadOnlyDictionary<BonesPlayerId, int> ObservationsPerPlayer,
+    IReadOnlyList<BonesGameId> ObservedGameIds,
     ArtifactDescriptor ExecutionArtifact);

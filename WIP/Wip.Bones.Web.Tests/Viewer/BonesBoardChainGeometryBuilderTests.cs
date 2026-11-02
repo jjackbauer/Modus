@@ -260,7 +260,7 @@ public sealed class BonesBoardChainGeometryBuilderTests
         var engine = new BonesGameEngine();
         var roundConfig = new BonesRoundConfig(
             new BonesGameId($"{matchId.Value}-r{lastRound.RoundNumber}"),
-            HashCode.Combine(seed, lastRound.RoundNumber));
+            BonesSeedDerivation.Derive(seed, lastRound.RoundNumber));
         var state = engine.StartRound(roundConfig);
 
         foreach (var roundEvent in lastRound.EventLog)
@@ -295,7 +295,7 @@ public sealed class BonesBoardChainGeometryBuilderTests
         {
             var roundConfig = new BonesRoundConfig(
                 new BonesGameId($"both-arms-{seed}"),
-                HashCode.Combine(seed, 1));
+                BonesSeedDerivation.Derive(seed, 1));
             var state = engine.StartRound(roundConfig);
             var events = new List<BonesEvent>(3);
             var sides = new BonesBoardSide?[] { null, BonesBoardSide.Right, BonesBoardSide.Left };

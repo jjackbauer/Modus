@@ -82,7 +82,7 @@ public sealed class AddBonesDeepSeekModelProvidersTests
     private static BonesDeepSeekProviderOptions CreateTestOptions() =>
         BonesDeepSeekProviderOptions.Create(
             baseUrl: "https://api.deepseek.com/v1/",
-            model: "deepseek-chat",
+            model: "deepseek-flash",
             timeout: TimeSpan.FromSeconds(30),
             apiKeySource: "env:DEEPSEEK_API_KEY");
 }

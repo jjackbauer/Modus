@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Wip.Bones.Agents.Enhance;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Observe;

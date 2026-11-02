@@ -1,0 +1,436 @@
+﻿/* Strategy Pool Dashboard Styles */
+
+:root {
+  --pool-card-bg: #1e293b;
+  --pool-card-bg-expanded: #0f172a;
+  --pool-card-border: #334155;
+  --pool-card-hover-border: #475569;
+  --pool-elite-border: #f59e0b;
+  --pool-elite-bg: rgba(245, 158, 11, 0.08);
+  --pool-kind-script: #3b82f6;
+  --pool-kind-markdown: #8b5cf6;
+  --pool-winrate-green: #22c55e;
+  --pool-winrate-yellow: #eab308;
+  --pool-winrate-red: #ef4444;
+  --pool-seat-1: #e63946;
+  --pool-seat-2: #457b9d;
+  --pool-seat-3: #2a9d8f;
+  --pool-seat-4: #e9c46a;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+.pool-dashboard {
+  margin: 0 auto;
+  padding: 1.5rem;
+  max-width: 1400px;
+  min-height: 100vh;
+}
+
+.pool-header {
+  padding: 1rem 0;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 1.5rem;
+}
+
+.pool-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  color: #f1f5f9;
+}
+
+.pool-header p {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.pool-nav {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.pool-nav a {
+  color: #60a5fa;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+
+.pool-nav a:hover {
+  text-decoration: underline;
+}
+
+.pool-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.pool-summary .stat-box {
+  flex: 1 1 8rem;
+  padding: 0.85rem 1rem;
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  min-width: 7rem;
+}
+
+.pool-summary .stat-box .stat-label {
+  display: block;
+  font-size: 0.7rem;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: #94a3b8;
+}
+
+.pool-summary .stat-box .stat-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-top: 0.25rem;
+}
+
+.pool-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.pool-card {
+  background: var(--pool-card-bg);
+  border: 1px solid var(--pool-card-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.pool-card:hover {
+  border-color: var(--pool-card-hover-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pool-card.elite {
+  border-color: var(--pool-elite-border);
+  background: var(--pool-elite-bg);
+}
+
+.pool-card.expanded {
+  background: var(--pool-card-bg-expanded);
+}
+
+.pool-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pool-card-header:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.pool-card-rank {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.pool-card-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.pool-card-id {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pool-card-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-seat {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.badge-seat-1 { border-left: 2px solid var(--pool-seat-1); }
+.badge-seat-2 { border-left: 2px solid var(--pool-seat-2); }
+.badge-seat-3 { border-left: 2px solid var(--pool-seat-3); }
+.badge-seat-4 { border-left: 2px solid var(--pool-seat-4); }
+
+.badge-kind {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+}
+
+.badge-kind.badge-kind-markdown {
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+}
+
+.badge-elite {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+}
+
+.badge-iteration {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+.pool-card-stats {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 1rem 1rem;
+  flex-wrap: wrap;
+}
+
+.pool-card-stats .stat {
+  flex: 1 1 4rem;
+  min-width: 3.5rem;
+}
+
+.pool-card-stats .stat-label {
+  display: block;
+  font-size: 0.65rem;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.pool-card-stats .stat-value {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-top: 0.15rem;
+}
+
+.stat-elo { color: #38bdf8 !important; }
+.stat-winrate-green { color: var(--pool-winrate-green) !important; }
+.stat-winrate-yellow { color: var(--pool-winrate-yellow) !important; }
+.stat-winrate-red { color: var(--pool-winrate-red) !important; }
+
+.pool-card-detail {
+  display: none;
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--pool-card-border);
+}
+
+.pool-card.expanded .pool-card-detail {
+  display: block;
+}
+
+.pool-card-detail h3 {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.8rem;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.pool-card-source {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.pool-card-source pre {
+  margin: 0;
+  font-family: "Cascadia Code", "Fira Code", ui-monospace, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pool-card-source code {
+  font-family: inherit;
+}
+
+.pool-card-lineage {
+  margin: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  background: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.pool-card-lineage .lineage-entry {
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.pool-card-lineage .lineage-role {
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  min-width: 5rem;
+}
+
+.pool-card-lineage .lineage-value {
+  color: #e2e8f0;
+}
+
+.pool-card-match-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.pool-card-match-links a {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.35rem;
+  color: #60a5fa;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: background 0.15s;
+}
+
+.pool-card-match-links a:hover {
+  background: #334155;
+}
+
+.pool-card-opponents {
+  margin: 0.5rem 0;
+  font-size: 0.8rem;
+}
+
+.pool-card-opponents table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.pool-card-opponents th,
+.pool-card-opponents td {
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #1e293b;
+}
+
+.pool-card-opponents th {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #94a3b8;
+}
+
+.pool-card-opponents td {
+  color: #cbd5e1;
+}
+
+.pool-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  background: #111827;
+  font-size: 0.875rem;
+}
+
+.pool-status-bar.hidden,
+.pool-status-bar[aria-hidden="true"] {
+  display: none;
+}
+
+.pool-status-bar .status-label {
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 0.7rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.pool-status-bar .status-value {
+  color: #e2e8f0;
+  margin-left: 0.25rem;
+}
+
+.pool-uninitialized {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.pool-uninitialized h1 {
+  font-size: 1.5rem;
+  color: #f1f5f9;
+  margin: 0 0 0.5rem;
+}
+
+.pool-uninitialized p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+}
+
+.pool-uninitialized a {
+  color: #60a5fa;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .pool-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pool-summary {
+    flex-direction: column;
+  }
+}

@@ -37,7 +37,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
                 capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
 
                 return CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: CreateFencedScriptResponse(),
                     promptTokens: 10,
                     completionTokens: 20);
@@ -51,7 +51,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
         Assert.NotNull(capturedBody);
         using var payloadDocument = JsonDocument.Parse(capturedBody!);
         var root = payloadDocument.RootElement;
-        Assert.Equal("deepseek-chat", root.GetProperty("model").GetString());
+        Assert.Equal("deepseek-flash", root.GetProperty("model").GetString());
 
         var messages = root.GetProperty("messages");
         Assert.Equal(2, messages.GetArrayLength());
@@ -96,7 +96,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
         var provider = CreateProvider(
             handler: (_, _) => Task.FromResult(
                 CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: scriptResponse,
                     promptTokens: 55,
                     completionTokens: 33)));
@@ -107,7 +107,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
             CancellationToken.None);
 
         Assert.Equal("deepseek", response.ProviderId);
-        Assert.Equal("deepseek-chat", response.ModelId);
+        Assert.Equal("deepseek-flash", response.ModelId);
         Assert.Equal(scriptResponse, response.Payload.Markdown);
         Assert.Contains("IBonesPlayerSlot", response.Payload.Markdown, StringComparison.Ordinal);
         Assert.NotNull(response.Usage);
@@ -122,7 +122,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
         var provider = CreateProvider(
             handler: (_, _) => Task.FromResult(
                 CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: CreateFencedScriptResponse(),
                     promptTokens: 8,
                     completionTokens: 12)));
@@ -154,7 +154,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
                     httpCalls++;
                     return Task.FromResult(
                         CreateSuccessResponse(
-                            model: "deepseek-chat",
+                            model: "deepseek-flash",
                             content: "should not run",
                             promptTokens: 1,
                             completionTokens: 1));
@@ -224,7 +224,7 @@ public sealed class DeepSeekBonesStrategyAuthoringProviderTests
     private static DeepSeekBonesStrategyAuthoringProvider CreateProvider(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler,
         string? apiKeySource = null,
-        string model = "deepseek-chat",
+        string model = "deepseek-flash",
         bool configureApiKey = true)
     {
         var resolvedApiKeySource = apiKeySource ?? $"env:{TestApiKeyEnvVar}";

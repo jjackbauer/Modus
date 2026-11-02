@@ -1,4 +1,5 @@
 using Wip.Bones.ModelProviders.DeepSeek;
+using Wip.Runtime.Runtime;
 using Xunit;
 
 namespace Wip.Bones.ModelProviders.DeepSeek.Tests.Configuration;
@@ -9,8 +10,10 @@ public sealed class BonesDeepSeekProviderOptionsTests
     private const string NegativePathChecklistItem = BonesDeepSeekRequirementsChecklistItems.NegativePathIsolationTests;
 
     [Theory]
-    [InlineData("deepseek-chat")]
-    [InlineData("deepseek-reasoner")]
+    [InlineData("deepseek-flash")]
+    [InlineData("deepseek-v4-pro")]
+    [InlineData("deepseek-v4-flash")]
+    [InlineData("deepseek-v4-flash-vision-exp")]
     [Trait("ChecklistItem", ChecklistItem)]
     public void BonesDeepSeekProviderOptions_GivenValidDeepSeekChatModel_ConstructsWithNormalizedDefaults(string model)
     {
@@ -26,6 +29,21 @@ public sealed class BonesDeepSeekProviderOptionsTests
         Assert.Equal(BonesDeepSeekApiKeySourceKind.EnvironmentVariable, options.ApiKeySourceKind);
         Assert.Equal("DEEPSEEK_API_KEY", options.ApiKeySourceReference);
         Assert.Equal("env:DEEPSEEK_API_KEY", options.ApiKeySource);
+        Assert.Equal(DeepSeekThinkingMode.Disabled, options.Thinking);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
+    public void BonesDeepSeekProviderOptions_GivenThinkingEnabled_ExpectedPreservedForRequestMapping()
+    {
+        var options = BonesDeepSeekProviderOptions.Create(
+            baseUrl: "https://api.deepseek.com",
+            model: "deepseek-v4-pro",
+            timeout: TimeSpan.FromSeconds(30),
+            apiKeySource: "env:DEEPSEEK_API_KEY",
+            thinking: DeepSeekThinkingMode.Enabled);
+
+        Assert.Equal(DeepSeekThinkingMode.Enabled, options.Thinking);
     }
 
     [Fact]
@@ -35,7 +53,7 @@ public sealed class BonesDeepSeekProviderOptionsTests
         var error = Assert.Throws<InvalidOperationException>(() =>
             BonesDeepSeekProviderOptions.Create(
                 baseUrl: "api.deepseek.com",
-                model: "deepseek-chat",
+                model: "deepseek-flash",
                 timeout: TimeSpan.FromSeconds(30),
                 apiKeySource: "env:DEEPSEEK_API_KEY"));
 
@@ -57,7 +75,7 @@ public sealed class BonesDeepSeekProviderOptionsTests
                 apiKeySource: "env:DEEPSEEK_API_KEY"));
 
         Assert.Equal(
-            "DeepSeek provider configuration is invalid: Model 'deepseek-unsupported' is not supported. Supported models: deepseek-chat, deepseek-reasoner.",
+            "DeepSeek provider configuration is invalid: Model 'deepseek-unsupported' is not supported. Supported models: deepseek-flash, deepseek-v4-pro, deepseek-v4-flash, deepseek-v4-flash-vision-exp.",
             error.Message);
     }
 
@@ -72,7 +90,7 @@ public sealed class BonesDeepSeekProviderOptionsTests
         var error = Assert.Throws<InvalidOperationException>(() =>
             BonesDeepSeekProviderOptions.Create(
                 baseUrl: "https://api.deepseek.com",
-                model: "deepseek-chat",
+                model: "deepseek-flash",
                 timeout: TimeSpan.FromSeconds(30),
                 apiKeySource: apiKeySource));
 

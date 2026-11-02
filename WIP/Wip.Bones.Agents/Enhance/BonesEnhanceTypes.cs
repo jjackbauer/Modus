@@ -28,7 +28,9 @@ public sealed record BonesEnhanceStrategyResult(
     ArtifactDescriptor ExecutionArtifact,
     BonesPromotionDecisionOutcome PromotionOutcome,
     BonesStrategyId ActiveStrategyId,
-    ArtifactDescriptor PromotionDecisionArtifact);
+    ArtifactDescriptor PromotionDecisionArtifact,
+    int StagnationDetected = 0,
+    int EnhanceIterationsCompleted = 1);
 
 public sealed record BonesStrategyEnhancementMessage(string Role, string Content);
 

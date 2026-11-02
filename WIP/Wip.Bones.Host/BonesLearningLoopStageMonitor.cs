@@ -17,7 +17,7 @@ internal static class BonesLearningLoopStageMonitor
         ILogger? logger = null)
     {
         var observedStages = new HashSet<string>(StringComparer.Ordinal);
-        var stageOrder = new[] { "Ponder", "Play", "Enhance" };
+        var stageOrder = new[] { "Ponder", "Play", "Evaluate", "Promote", "Enhance" };
 
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -55,7 +55,7 @@ internal static class BonesLearningLoopStageMonitor
         }
     }
 
-    private static string? ResolveStageFromArtifacts(
+    internal static string? ResolveStageFromArtifacts(
         IReadOnlyList<ArtifactDescriptor> descriptors,
         HashSet<string> observedStages,
         IReadOnlyList<string> stageOrder)
@@ -66,9 +66,16 @@ internal static class BonesLearningLoopStageMonitor
             descriptor.RelativePath.Contains("bones-play-match-execution", StringComparison.Ordinal));
         var hasEnhance = descriptors.Any(descriptor =>
             descriptor.RelativePath.Contains("bones-enhance-strategy-execution", StringComparison.Ordinal));
+        var hasPromotion = descriptors.Any(descriptor =>
+            descriptor.RelativePath.Contains("bones-strategy-promotion", StringComparison.Ordinal));
 
         if (hasEnhance)
             observedStages.Add("Enhance");
+        else if (hasPromotion)
+            observedStages.Add("Promote");
+        else if (hasPlay)
+            observedStages.Add("Evaluate");
+
         if (hasPlay)
             observedStages.Add("Play");
         if (hasPonder)
@@ -98,8 +105,14 @@ internal static class BonesLearningLoopStageMonitor
         if (!hasPlay)
             return "Play";
 
+        var hasPromotion = descriptors.Any(descriptor =>
+            descriptor.RelativePath.Contains("bones-strategy-promotion", StringComparison.Ordinal));
+
+        if (!hasPromotion)
+            return "Evaluate";
+
         if (!hasEnhance)
-            return "Enhance";
+            return "Promote";
 
         return "Workflow";
     }

@@ -1,11 +1,14 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Wip.Abstractions.Artifacts;
+using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
 using Wip.Abstractions.Workflows;
 using Wip.Builder;
 using Wip.Runtime.Runtime;
+using Wip.Shell.CommandSemantics;
 using Xunit;
 
 namespace Wip.Runtime.Tests.Runtime;
@@ -13,6 +16,47 @@ namespace Wip.Runtime.Tests.Runtime;
 public sealed class RuntimeReadmeLifecycleContractsTests
 {
     private const string ChecklistItem = "Document Runtime orchestrator lifecycle including state transitions, persisted session snapshots, attach/detach flows, and workflow-stage progression [depends on Builder registration documentation]";
+    private const string CommandSemanticsChecklistItem =
+        "Publish authoritative shell command semantics contract documenting `plan`, `run`, `validate`, `review`, `approve`, `merge`, and `transition` boundaries so `run` is not described as completing governance lifecycle [foundation for execution and governance remediation]";
+
+    [Fact]
+    [Trait("ChecklistItem", CommandSemanticsChecklistItem)]
+    public void RuntimeReadme_GivenWorkflowExecutionSection_ExpectedRunSemanticsMatchShellHelpAndOrchestratorBehavior()
+    {
+        var repositoryRoot = LocateRepositoryRoot();
+        var readmePath = Path.Combine(repositoryRoot, "WIP", "Wip.Runtime", "README.md");
+        var readme = File.ReadAllText(readmePath);
+        var help = WipShellCommandSemantics.RenderHelpText();
+
+        var executionSectionStart = readme.IndexOf("## Workflow Execution Boundary", StringComparison.Ordinal);
+        Assert.True(executionSectionStart >= 0, "Expected Workflow Execution Boundary section in runtime README.");
+        var executionSection = readme[executionSectionStart..];
+
+        Assert.Contains(WipShellCommandSemantics.RunExecutionBoundaryPhrase, help, StringComparison.Ordinal);
+        Assert.Contains("execution-only", executionSection, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(WipShellCommandSemantics.RunDoesNotReplaceGovernancePhrase, executionSection, StringComparison.Ordinal);
+        Assert.Contains("validate", executionSection, StringComparison.Ordinal);
+        Assert.Contains("review", executionSection, StringComparison.Ordinal);
+        Assert.Contains("approve", executionSection, StringComparison.Ordinal);
+        Assert.Contains("merge", executionSection, StringComparison.Ordinal);
+        Assert.Contains("RunWorkflowAsync", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("run completes governance", executionSection, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("run completes merge", executionSection, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string LocateRepositoryRoot()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current is not null)
+        {
+            if (Directory.Exists(Path.Combine(current.FullName, "WIP", "Wip.Runtime")))
+                return current.FullName;
+
+            current = current.Parent;
+        }
+
+        throw new InvalidOperationException("Could not locate repository root containing WIP/Wip.Runtime.");
+    }
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
@@ -94,11 +138,13 @@ public sealed class RuntimeReadmeLifecycleContractsTests
             worktreePath: "C:/repo/.wip/worktrees/pipeline",
             cancellationToken: CancellationToken.None);
 
+        var artifactStore = new ReadmeInMemoryArtifactStore();
         var result = await orchestrator.RunWorkflowAsync(
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
-            cancellationToken: CancellationToken.None);
+            cancellationToken: CancellationToken.None,
+            artifactStore: artifactStore);
 
         Assert.Collection(
             result.Stages,
@@ -117,30 +163,32 @@ public sealed class RuntimeReadmeLifecycleContractsTests
             stage =>
             {
                 Assert.Equal(WorkflowStageKind.Validate, stage.Descriptor.Stage);
-                Assert.Equal(SessionState.Validating, stage.StateAfterStage);
-                Assert.True(stage.AppliedTransition);
+                Assert.Equal(SessionState.Editing, stage.StateAfterStage);
+                Assert.False(stage.AppliedTransition);
             },
             stage =>
             {
                 Assert.Equal(WorkflowStageKind.Review, stage.Descriptor.Stage);
-                Assert.Equal(SessionState.AwaitingApproval, stage.StateAfterStage);
-                Assert.True(stage.AppliedTransition);
+                Assert.Equal(SessionState.Editing, stage.StateAfterStage);
+                Assert.False(stage.AppliedTransition);
             },
             stage =>
             {
                 Assert.Equal(WorkflowStageKind.RequireApproval, stage.Descriptor.Stage);
-                Assert.Equal(SessionState.Approved, stage.StateAfterStage);
-                Assert.True(stage.AppliedTransition);
+                Assert.Equal(SessionState.Editing, stage.StateAfterStage);
+                Assert.False(stage.AppliedTransition);
             },
             stage =>
             {
                 Assert.Equal(WorkflowStageKind.Merge, stage.Descriptor.Stage);
-                Assert.Equal(SessionState.Merged, stage.StateAfterStage);
-                Assert.True(stage.AppliedTransition);
+                Assert.Equal(SessionState.Editing, stage.StateAfterStage);
+                Assert.False(stage.AppliedTransition);
             });
 
-        var merged = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
-        Assert.Equal(SessionState.Merged, merged!.State);
+        var afterRun = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+        Assert.Equal(SessionState.Editing, afterRun!.State);
+        Assert.Equal(SessionApprovalStatus.NotRequested, afterRun.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, afterRun.ValidationStatus);
     }
 
     [Fact]
@@ -197,6 +245,12 @@ public sealed class RuntimeReadmeLifecycleContractsTests
         builder.AddWorkflow<LinearWorkflow, WorkflowRequest, WorkflowResult>(
             workflowId: new WorkflowId("workflow.linear"),
             displayName: "Linear workflow");
+        builder.AddAgent<ReadmePlanStageAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Workflow plan stage agent");
+        builder.AddTool<ReadmeRunTool, WorkflowRequest, WorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Workflow run tool");
 
         return builder;
     }
@@ -235,11 +289,43 @@ public sealed class RuntimeReadmeLifecycleContractsTests
 
     private sealed record WorkflowResult(string Outcome);
 
+    private sealed class ReadmeRunTool : ITool<WorkflowRequest, WorkflowResult>
+    {
+        public ValueTask<WorkflowResult> ExecuteAsync(WorkflowRequest request, CapabilityContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new WorkflowResult(request.Task));
+    }
+
+    private sealed class ReadmePlanStageAgent : IAgent<PlanStageRequest, PlanStageResult>
+    {
+        public ValueTask<PlanStageResult> ExecuteAsync(PlanStageRequest request, CapabilityContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new PlanStageResult(true));
+    }
+
     private sealed class LinearWorkflow : IWorkflow<WorkflowRequest, WorkflowResult>
     {
         public WorkflowId WorkflowId => new("workflow.linear");
 
         public ValueTask<WorkflowResult> ExecuteAsync(WorkflowRequest request, WorkflowContext context, CancellationToken cancellationToken)
             => ValueTask.FromResult(new WorkflowResult(request.Task));
+    }
+
+    private sealed class ReadmeInMemoryArtifactStore : IArtifactStore
+    {
+        public ValueTask<ArtifactDescriptor> SaveAsync(SessionId sessionId, ArtifactContent artifact, CancellationToken cancellationToken)
+        {
+            var descriptor = new ArtifactDescriptor(
+                artifact.ArtifactId,
+                sessionId,
+                artifact.Kind,
+                $"artifacts/{sessionId.Value}/{artifact.FileName}-{artifact.ArtifactId.Value}",
+                artifact.ProducerType,
+                artifact.ProducerVersion,
+                artifact.ProducedAtUtc);
+
+            return ValueTask.FromResult(descriptor);
+        }
+
+        public ValueTask<IReadOnlyList<ArtifactDescriptor>> ListAsync(SessionId sessionId, CancellationToken cancellationToken)
+            => ValueTask.FromResult<IReadOnlyList<ArtifactDescriptor>>([]);
     }
 }

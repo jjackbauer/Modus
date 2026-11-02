@@ -10,6 +10,7 @@ using Wip.Abstractions.Workflows;
 using Wip.Builder;
 using Wip.Modus.Hosting;
 using Wip.Runtime.Runtime;
+using Wip.Shell.CommandSemantics;
 using Wip.Shell.Interactive;
 using Xunit;
 
@@ -24,6 +25,176 @@ public sealed class WipShellCommandLoopTests
     private const string ApprovalChecklistItem = "Add explicit approval confirmation and stale-state rejection UX so `approve` prompts the user, `merge` rejects stale diff or target drift with actionable messages, and `review`/`validation` staleness is visible before merge is attempted [depends on review generator, approval token factory, and merge preview primitives]";
     private const string ModelProviderChecklistItem = "Wire PlanOnlyAgent execution path to call a registered model provider when available, while preserving deterministic fallback behavior when no provider is configured [depends on model-provider registration and DeepSeek implementation]";
     private const string DotNetDeveloperFlowChecklistItem = "Extend shell command surface with a first-class .NET developer flow command contract (restore/build/test/validate sequence with deterministic usage guidance) [depends on workspace bootstrap]";
+
+    private const string CommandSemanticsChecklistItem =
+        "Publish authoritative shell command semantics contract documenting `plan`, `run`, `validate`, `review`, `approve`, `merge`, and `transition` boundaries so `run` is not described as completing governance lifecycle [foundation for execution and governance remediation]";
+
+    private const string StatusEvidenceGapChecklistItem =
+        "Extend `status` output to surface governance evidence gaps when session state and artifact inventory diverge (missing validation report, approval token, or review summary) [depends on governance restriction]";
+
+    [Fact]
+    [Trait("ChecklistItem", CommandSemanticsChecklistItem)]
+    public async Task ShellHelp_GivenRunCommand_ExpectedDescriptionSeparatesRunFromGovernanceLifecycle()
+    {
+        var help = WipShellCommandSemantics.RenderHelpText();
+
+        Assert.Contains(WipShellCommandSemantics.RunExecutionBoundaryPhrase, help, StringComparison.Ordinal);
+        Assert.Contains(WipShellCommandSemantics.RunDoesNotReplaceGovernancePhrase, help, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(WipShellCommandSemantics.GovernanceExplicitCommandsPhrase, help, StringComparison.Ordinal);
+        Assert.DoesNotContain("run completes governance", help, StringComparison.OrdinalIgnoreCase);
+
+        var orchestrator = BuildOrchestrator();
+        using var reader = new StringReader("help\nexit\n");
+        using var writer = new StringWriter();
+        var loop = new WipShellCommandLoop(orchestrator, reader, writer);
+
+        var exitCode = await loop.RunAsync(CancellationToken.None);
+
+        var output = writer.ToString();
+        Assert.Equal(0, exitCode);
+        Assert.Contains(WipShellCommandSemantics.RunExecutionBoundaryPhrase, output, StringComparison.Ordinal);
+        Assert.Contains(WipShellCommandSemantics.RunDoesNotReplaceGovernancePhrase, output, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Command semantics (authoritative):", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", CommandSemanticsChecklistItem)]
+    public async Task StatusCommand_GivenPostRunSession_ExpectedLifecycleGuidancePointsToExplicitGovernanceCommands()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var builder = CreateBuilderWithWorkflows();
+            var orchestrator = BuildOrchestrator();
+            using var reader = new StringReader("init\n"
+                + "use workflow workflow.linear\n"
+                + "session start \"Post-run governance guidance\"\n"
+                + "plan\n"
+                + "run\n"
+                + "status\n"
+                + "exit\n");
+            using var writer = new StringWriter();
+            var loop = new WipShellCommandLoop(orchestrator, reader, writer, builder, repositoryPath);
+
+            var exitCode = await loop.RunAsync(CancellationToken.None);
+
+            var output = writer.ToString();
+            Assert.Equal(0, exitCode);
+            Assert.Contains("Workflow executed:", output, StringComparison.Ordinal);
+            Assert.Contains("Session status:", output, StringComparison.Ordinal);
+            Assert.Contains(WipShellCommandSemantics.GovernanceExplicitCommandsPhrase, output, StringComparison.Ordinal);
+            Assert.Contains("next: run 'validate'", output, StringComparison.Ordinal);
+            Assert.Contains("next: run 'review'", output, StringComparison.Ordinal);
+            Assert.Contains("next: run 'approve'", output, StringComparison.Ordinal);
+            Assert.DoesNotContain("governance complete", output, StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", StatusEvidenceGapChecklistItem)]
+    public async Task StatusCommand_GivenStateMergedWithoutMergeArtifact_ExpectedSurfacesGovernanceEvidenceGap()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var builder = CreateBuilderWithWorkflows();
+            var orchestrator = BuildOrchestrator();
+
+            using (var startReader = new StringReader("init\nsession start \"Merged state without merge artifact\"\nexit\n"))
+            using (var startWriter = new StringWriter())
+            {
+                var startLoop = new WipShellCommandLoop(orchestrator, startReader, startWriter, builder, repositoryPath);
+                Assert.Equal(0, await startLoop.RunAsync(CancellationToken.None));
+
+                var sessionId = ExtractSessionId(startWriter.ToString());
+                var statePath = Path.Combine(repositoryPath, ".wip", "sessions", sessionId, "session-state.json");
+                using var stateDocument = JsonDocument.Parse(await File.ReadAllTextAsync(statePath));
+                var artifactDirectory = stateDocument.RootElement.GetProperty("ArtifactDirectory").GetString()
+                    ?? throw new InvalidOperationException("Persisted session state did not contain an artifact directory.");
+                await OverwritePersistedSessionFieldsAsync(statePath, state: SessionState.Merged);
+
+                var attachOrchestrator = BuildOrchestrator();
+                using var attachReader = new StringReader($"session attach {sessionId}\nstatus\nexit\n");
+                using var attachWriter = new StringWriter();
+                var attachLoop = new WipShellCommandLoop(attachOrchestrator, attachReader, attachWriter, builder, repositoryPath);
+
+                var exitCode = await attachLoop.RunAsync(CancellationToken.None);
+                var output = attachWriter.ToString();
+
+                Assert.Equal(0, exitCode);
+                Assert.Contains("Session status:", output, StringComparison.Ordinal);
+                Assert.Contains("- state: Merged", output, StringComparison.Ordinal);
+                Assert.Contains(WipShellCommandSemantics.GovernanceEvidenceGapPhrase, output, StringComparison.Ordinal);
+                Assert.Contains("state=Merged but merge-result artifact is missing", output, StringComparison.Ordinal);
+                Assert.Contains("recovery: run 'merge'", output, StringComparison.Ordinal);
+                Assert.Empty(Directory.GetFiles(artifactDirectory, "merge-result-*", SearchOption.AllDirectories));
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", StatusEvidenceGapChecklistItem)]
+    public async Task StatusCommand_GivenApprovedStatusWithoutApprovalToken_ExpectedDeterministicRecoveryGuidance()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var builder = CreateBuilderWithWorkflows();
+            var orchestrator = BuildOrchestrator();
+
+            using (var startReader = new StringReader("init\nsession start \"Approved status without approval token\"\nexit\n"))
+            using (var startWriter = new StringWriter())
+            {
+                var startLoop = new WipShellCommandLoop(orchestrator, startReader, startWriter, builder, repositoryPath);
+                Assert.Equal(0, await startLoop.RunAsync(CancellationToken.None));
+
+                var sessionId = ExtractSessionId(startWriter.ToString());
+                var statePath = Path.Combine(repositoryPath, ".wip", "sessions", sessionId, "session-state.json");
+                using var stateDocument = JsonDocument.Parse(await File.ReadAllTextAsync(statePath));
+                var artifactDirectory = stateDocument.RootElement.GetProperty("ArtifactDirectory").GetString()
+                    ?? throw new InvalidOperationException("Persisted session state did not contain an artifact directory.");
+                await OverwritePersistedSessionFieldsAsync(
+                    statePath,
+                    approvalStatus: SessionApprovalStatus.Approved);
+
+                var attachOrchestrator = BuildOrchestrator();
+                using var attachReader = new StringReader($"session attach {sessionId}\nstatus\nexit\n");
+                using var attachWriter = new StringWriter();
+                var attachLoop = new WipShellCommandLoop(attachOrchestrator, attachReader, attachWriter, builder, repositoryPath);
+
+                var exitCode = await attachLoop.RunAsync(CancellationToken.None);
+                var output = attachWriter.ToString();
+
+                Assert.Equal(0, exitCode);
+                Assert.Contains("- approvalStatus: Approved", output, StringComparison.Ordinal);
+                Assert.Contains(WipShellCommandSemantics.GovernanceEvidenceGapPhrase, output, StringComparison.Ordinal);
+                Assert.Contains("approvalStatus=Approved but approval-token artifact is missing", output, StringComparison.Ordinal);
+                Assert.Contains("recovery: run 'approve' to create an approval token", output, StringComparison.Ordinal);
+                Assert.Empty(Directory.GetFiles(artifactDirectory, "approval-token-*", SearchOption.AllDirectories));
+            }
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
@@ -59,7 +230,7 @@ public sealed class WipShellCommandLoopTests
         Assert.Contains("archive", output, StringComparison.Ordinal);
         Assert.Contains("abort", output, StringComparison.Ordinal);
         Assert.Contains("exit", output, StringComparison.Ordinal);
-        Assert.DoesNotContain("transition", output, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("- transition: Runtime-only state transition API", output, StringComparison.Ordinal);
         Assert.DoesNotContain("start <workflow-id>", output, StringComparison.Ordinal);
         Assert.DoesNotContain("attach <repository-path>", output, StringComparison.Ordinal);
     }
@@ -738,11 +909,14 @@ public sealed class WipShellCommandLoopTests
             Assert.Contains("Workflow artifact:", output, StringComparison.Ordinal);
             Assert.Contains("- Plan state=Editing transition=applied", output, StringComparison.Ordinal);
             Assert.Contains($"mappedInput={typeof(SafeChangeWorkflowRequest).FullName}", output, StringComparison.Ordinal);
-            Assert.Contains("- Merge state=Merged transition=applied", output, StringComparison.Ordinal);
-            Assert.Contains("Active session state: Merged", output, StringComparison.Ordinal);
+            Assert.Contains("- Validate state=Editing transition=skipped", output, StringComparison.Ordinal);
+            Assert.Contains("- Merge state=Editing transition=skipped", output, StringComparison.Ordinal);
+            Assert.Contains("Active session state: Editing", output, StringComparison.Ordinal);
             Assert.Contains("workflow-execution-", output, StringComparison.Ordinal);
             Assert.Equal("workflow.safe-change", stateDocument.RootElement.GetProperty("WorkflowId").GetString());
-            Assert.Equal("Merged", stateDocument.RootElement.GetProperty("State").GetString());
+            Assert.Equal("Editing", stateDocument.RootElement.GetProperty("State").GetString());
+            Assert.Equal("NotRequested", stateDocument.RootElement.GetProperty("ApprovalStatus").GetString());
+            Assert.Equal("NotStarted", stateDocument.RootElement.GetProperty("ValidationStatus").GetString());
         }
         finally
         {
@@ -1210,6 +1384,15 @@ public sealed class WipShellCommandLoopTests
         builder.AddValidator<DeterministicShellValidator, ShellValidationRequest, ShellValidationResult>(
             capabilityId: new CapabilityId("validator.shell.tests"),
             displayName: "Deterministic shell validator");
+        builder.AddAgent<ShellPlanStageAgent, PlanStageRequest, PlanStageResult>(
+            capabilityId: new CapabilityId("agent.shell.plan"),
+            displayName: "Shell plan stage agent");
+        builder.AddTool<ShellWorkflowRunTool, WorkflowRequest, WorkflowResult>(
+            capabilityId: new CapabilityId("tool.shell.workflow.run"),
+            displayName: "Shell workflow run tool");
+        builder.AddTool<ShellSafeChangeRunTool, SafeChangeWorkflowRequest, SafeChangeWorkflowResult>(
+            capabilityId: new CapabilityId("tool.shell.safe-change.run"),
+            displayName: "Shell safe-change run tool");
         builder.AddWorkflow<LinearWorkflow, WorkflowRequest, WorkflowResult>(
             workflowId: new WorkflowId("workflow.linear"),
             displayName: "Linear workflow");
@@ -1269,6 +1452,36 @@ public sealed class WipShellCommandLoopTests
         payload["TargetCommit"] = targetCommit;
 
         await File.WriteAllTextAsync(statePath, JsonSerializer.Serialize(payload));
+    }
+
+    private static async Task OverwritePersistedSessionFieldsAsync(
+        string statePath,
+        SessionState? state = null,
+        SessionValidationStatus? validationStatus = null,
+        SessionApprovalStatus? approvalStatus = null)
+    {
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(statePath));
+        var root = document.RootElement;
+        var payload = new Dictionary<string, object?>();
+
+        foreach (var property in root.EnumerateObject())
+            payload[property.Name] = property.Value.Deserialize<object>();
+
+        if (state is not null)
+            payload["State"] = state.Value;
+
+        if (validationStatus is not null)
+            payload["ValidationStatus"] = validationStatus.Value;
+
+        if (approvalStatus is not null)
+            payload["ApprovalStatus"] = approvalStatus.Value;
+
+        await File.WriteAllTextAsync(
+            statePath,
+            JsonSerializer.Serialize(payload, new JsonSerializerOptions
+            {
+                Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+            }));
     }
 
     private static int CountOccurrences(string source, string value)
@@ -1366,6 +1579,33 @@ public sealed class WipShellCommandLoopTests
             CapabilityContext context,
             CancellationToken cancellationToken)
             => ValueTask.FromResult(new ShellValidationResult(IsValid: true));
+    }
+
+    private sealed class ShellPlanStageAgent : IAgent<PlanStageRequest, PlanStageResult>
+    {
+        public ValueTask<PlanStageResult> ExecuteAsync(
+            PlanStageRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult(new PlanStageResult(true));
+    }
+
+    private sealed class ShellWorkflowRunTool : ITool<WorkflowRequest, WorkflowResult>
+    {
+        public ValueTask<WorkflowResult> ExecuteAsync(
+            WorkflowRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult(new WorkflowResult(request.Task));
+    }
+
+    private sealed class ShellSafeChangeRunTool : ITool<SafeChangeWorkflowRequest, SafeChangeWorkflowResult>
+    {
+        public ValueTask<SafeChangeWorkflowResult> ExecuteAsync(
+            SafeChangeWorkflowRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult(new SafeChangeWorkflowResult($"safe:{request.Task}"));
     }
 
     private sealed class LinearWorkflow : IWorkflow<WorkflowRequest, WorkflowResult>

@@ -5,6 +5,7 @@ BonesWebHost.AddBonesViewerServices(builder.Services);
 
 var app = builder.Build();
 BonesWebHost.MapMatchRoutes(app);
+BonesWebHost.MapPoolRoutes(app);
 BonesWebHost.MapStaticViewer(app);
 
 app.Run();

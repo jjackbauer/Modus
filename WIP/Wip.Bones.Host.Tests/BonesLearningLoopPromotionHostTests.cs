@@ -97,9 +97,13 @@ public sealed class SeatStrategy : IBonesPlayerSlot
             {
                 var promotionOptions = new BonesStrategyPromotionOptions
                 {
-                    EvaluationMatchCount = 3,
+                    // This host test proves promotion wiring, not the gate rule; use the legacy
+                    // rule so a seeded superior candidate reliably promotes. The confidence gate is
+                    // covered by BonesStrategyPromotionEvaluatorTests.
+                    EvaluationMatchCount = 8,
                     MinimumWinRateImprovement = 0.05,
                     MinimumScoreDifferentialImprovement = 0,
+                    GateMode = BonesPromotionGateMode.LegacyOr,
                 };
 
                 services.RemoveAll<BonesStrategyPromotionOptions>();
@@ -136,8 +140,7 @@ public sealed class SeatStrategy : IBonesPlayerSlot
             {
                 var current = loopHost.CurrentState.CurrentIteration;
                 if (!stopRequested
-                    && (string.Equals(current.StageName, "Running", StringComparison.Ordinal)
-                        || string.Equals(current.StageName, "Complete", StringComparison.Ordinal))
+                    && current.IsComplete
                     && !string.IsNullOrWhiteSpace(current.SessionId))
                 {
                     capturedSessionId = current.SessionId;
@@ -185,9 +188,10 @@ public sealed class SeatStrategy : IBonesPlayerSlot
                     opponents,
                     new BonesStrategyPromotionOptions
                     {
-                        EvaluationMatchCount = 3,
+                        EvaluationMatchCount = 8,
                         MinimumWinRateImprovement = 0.05,
                         MinimumScoreDifferentialImprovement = 0,
+                        GateMode = BonesPromotionGateMode.LegacyOr,
                     },
                     seed,
                     TargetScore: 8),

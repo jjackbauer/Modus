@@ -1,3 +1,5 @@
+using System.Reflection;
+using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
 using Wip.Builder;
@@ -52,6 +54,13 @@ public sealed record LinearWorkflowStageCompilation(
 {
     public string? ResolveMappedInputContractName(WorkflowStageKind stage)
         => MapAdapters.FirstOrDefault(adapter => adapter.ToStage == stage)?.TargetContractName;
+
+    public string? ResolveMappedInputContractName(WorkflowStageDescriptor stageDescriptor)
+    {
+        ArgumentNullException.ThrowIfNull(stageDescriptor);
+
+        return MapAdapters.FirstOrDefault(adapter => adapter.TargetType == stageDescriptor.RequestType)?.TargetContractName;
+    }
 }
 
 public sealed record WorkflowStageExecution(
@@ -60,6 +69,12 @@ public sealed record WorkflowStageExecution(
     bool AppliedTransition)
 {
     public string? MappedInputContractName { get; init; }
+
+    public CapabilityId? ProducerCapabilityId { get; init; }
+
+    public string? CorrelationId { get; init; }
+
+    public ArtifactDescriptor? ExecutionArtifact { get; init; }
 }
 
 public sealed record WorkflowExecutionResult(
@@ -92,9 +107,16 @@ public static class WorkflowStageDescriptorMapper
 
 public static class WorkflowBuilderStageCompiler
 {
+    private const BindingFlags WorkflowCompileMethodFlags =
+        BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+
     public static LinearWorkflowStageCompilation CompileLinear(WorkflowRegistration workflow)
     {
         ArgumentNullException.ThrowIfNull(workflow);
+
+        var customCompilation = TryInvokeCustomCompileMethod(workflow.WorkflowType);
+        if (customCompilation is not null)
+            return customCompilation;
 
         return TypedLinearWorkflowBuilder
             .StartWith(WorkflowStageKind.Plan, typeof(PlanStageRequest), typeof(PlanStageResult))
@@ -109,6 +131,17 @@ public static class WorkflowBuilderStageCompiler
             .Then(WorkflowStageKind.Merge, typeof(MergeStageRequest), typeof(MergeStageResult))
             .Map(typeof(RequireApprovalStageResult), typeof(MergeStageRequest))
             .Build();
+    }
+
+    private static LinearWorkflowStageCompilation? TryInvokeCustomCompileMethod(Type workflowType)
+    {
+        ArgumentNullException.ThrowIfNull(workflowType);
+
+        var compileMethod = workflowType.GetMethod("CompileLinearStages", WorkflowCompileMethodFlags);
+        if (compileMethod is null || !typeof(LinearWorkflowStageCompilation).IsAssignableFrom(compileMethod.ReturnType))
+            return null;
+
+        return compileMethod.Invoke(obj: null, parameters: null) as LinearWorkflowStageCompilation;
     }
 
     private static WorkflowStageMapAdapterDescriptor CreateMapAdapter(
@@ -279,6 +312,15 @@ public static class WorkflowStageStateMapper
             WorkflowStageKind.Merge => SessionState.Merged,
             _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, "Unsupported workflow stage.")
         };
+
+    public static bool IsRunPermittedSessionState(SessionState state)
+        => state is SessionState.Editing or SessionState.Checkpointed;
+
+    public static SessionState? ResolveRunAdvancementTarget(WorkflowStageKind stage)
+    {
+        var mapped = ToSessionState(stage);
+        return IsRunPermittedSessionState(mapped) ? mapped : null;
+    }
 }
 
 public sealed record PlanStageRequest(string SessionId);

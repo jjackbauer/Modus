@@ -16,7 +16,8 @@ public sealed record BonesPlayMatchRequest(
     string RepositoryPath,
     BonesGameId? GameId = null,
     string ModelId = "bones-play-turn",
-    bool AllSeatsLearning = false);
+    bool AllSeatsLearning = false,
+    int ConcurrentGameCount = 1);
 
 public sealed record BonesPlayMatchResult(
     BonesGameId GameId,

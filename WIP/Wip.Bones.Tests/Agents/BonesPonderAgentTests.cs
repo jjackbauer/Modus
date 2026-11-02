@@ -168,7 +168,7 @@ public sealed class BonesPonderAgentTests
         var agent = new BonesPonderAgent(
             fixture.ArtifactStore,
             stubProvider,
-            compileRetryOptions: new BonesPonderCompileRetryOptions { MaxCompileRetries = 2 });
+            compileRetryOptions: new BonesCompileRetryOptions { MaxCompileRetries = 2 });
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             agent.ExecuteAsync(

@@ -9,6 +9,9 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Wip.Bones.Tests" />
+    <InternalsVisibleTo Include="Wip.Bones.Web.Tests" />
+    <InternalsVisibleTo Include="Wip.Bones.Host.Tests" />
+    <InternalsVisibleTo Include="Wip.Bones.Host" />
     <InternalsVisibleTo Include="Wip.Bones.ModelProviders.DeepSeek.Tests" />
   </ItemGroup>
 

@@ -9,7 +9,7 @@ internal static class BonesDeepSeekHostRequirementsChecklistItems
         "Update `BonesHostServiceCollectionExtensions` to register DeepSeek adapters when `ModelProvider=DeepSeek` and stub providers only when `ModelProvider=Stub`; production default must be DeepSeek [depends on host options and registration extension] [mandatory - production default]";
 
     public const string BonesHostWorkflowModelIdPassthrough =
-        "Pass configured DeepSeek model identifier into workflow stage requests (ponder/play/enhance) so HTTP payloads use `deepseek-chat` or `deepseek-reasoner` rather than bones-local default model names when DeepSeek is active [depends on host DI wiring]";
+        "Pass configured DeepSeek model identifier into workflow stage requests (ponder/play/enhance) so HTTP payloads use `deepseek-flash` or `deepseek-v4-pro` rather than bones-local default model names when DeepSeek is active [depends on host DI wiring]";
 
     public const string BonesHostModelProviderDiagnostics =
         "Expose startup and `GET /api/bones/status` diagnostics proving active model provider (`deepseek` vs `stub`), configured model name, base URL, timeout, and key source reference without leaking secret values [depends on host wiring] [mandatory - observability]";

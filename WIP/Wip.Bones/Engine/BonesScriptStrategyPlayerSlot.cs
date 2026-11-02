@@ -3,30 +3,40 @@ using Wip.Bones.Identifiers;
 
 namespace Wip.Bones.Engine;
 
+public enum BonesScriptExecutionMode
+{
+    TimeoutGuarded = 0,
+    Direct = 1,
+}
+
 public sealed class BonesScriptStrategyPlayerSlot : IBonesPlayerSlot
 {
     private readonly BonesStrategyScriptHost _host;
     private readonly BonesStrategyId _strategyId;
     private readonly string _source;
     private readonly IBonesScriptStrategyExecutionWarningSink? _warningSink;
+    private readonly BonesScriptExecutionMode _executionMode;
     private BonesCompiledStrategy? _compiled;
 
     public BonesScriptStrategyPlayerSlot(
         BonesStrategyScriptHost host,
         BonesStrategyId strategyId,
         string source,
-        IBonesScriptStrategyExecutionWarningSink? warningSink = null)
+        IBonesScriptStrategyExecutionWarningSink? warningSink = null,
+        BonesScriptExecutionMode executionMode = BonesScriptExecutionMode.TimeoutGuarded)
     {
         _host = host ?? throw new ArgumentNullException(nameof(host));
         _strategyId = strategyId;
         _source = source ?? throw new ArgumentNullException(nameof(source));
         _warningSink = warningSink;
+        _executionMode = executionMode;
     }
 
     public BonesScriptStrategyPlayerSlot(
         BonesStrategyScriptHost host,
         BonesCompiledStrategy compiled,
-        IBonesScriptStrategyExecutionWarningSink? warningSink = null)
+        IBonesScriptStrategyExecutionWarningSink? warningSink = null,
+        BonesScriptExecutionMode executionMode = BonesScriptExecutionMode.TimeoutGuarded)
     {
         _host = host ?? throw new ArgumentNullException(nameof(host));
         ArgumentNullException.ThrowIfNull(compiled);
@@ -34,6 +44,7 @@ public sealed class BonesScriptStrategyPlayerSlot : IBonesPlayerSlot
         _strategyId = compiled.StrategyId;
         _source = string.Empty;
         _warningSink = warningSink;
+        _executionMode = executionMode;
         _compiled = compiled;
     }
 
@@ -46,7 +57,9 @@ public sealed class BonesScriptStrategyPlayerSlot : IBonesPlayerSlot
             throw new InvalidOperationException("No legal moves are available for the active player.");
 
         var compiled = EnsureCompiled();
-        var selectedMove = _host.ExecuteChooseMove(compiled, state, legalMoves);
+        var selectedMove = _executionMode == BonesScriptExecutionMode.Direct
+            ? _host.ExecuteChooseMoveDirect(compiled, state, legalMoves)
+            : _host.ExecuteChooseMove(compiled, state, legalMoves);
 
         if (IsContainedInLegalMoves(selectedMove, legalMoves))
             return selectedMove;

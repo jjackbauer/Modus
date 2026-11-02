@@ -9,5 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
   </ItemGroup>
 </Project>

@@ -37,21 +37,21 @@ public sealed class BonesDeepSeekHttpMappingProofTests
                 (request, _) =>
                 {
                     capturedRequests.Add(CaptureRequest("ponder", request));
-                    return Task.FromResult(CreateSuccessResponse("deepseek-chat", CreateFencedScriptResponse(), 10, 5));
+                    return Task.FromResult(CreateSuccessResponse("deepseek-flash", CreateFencedScriptResponse(), 10, 5));
                 });
 
             var playProvider = CreatePlayProvider(
                 (request, _) =>
                 {
                     capturedRequests.Add(CaptureRequest("play", request));
-                    return Task.FromResult(CreateSuccessResponse("deepseek-chat", "move-play-left", 12, 2));
+                    return Task.FromResult(CreateSuccessResponse("deepseek-flash", "move-play-left", 12, 2));
                 });
 
             var enhancementProvider = CreateEnhancementProvider(
                 (request, _) =>
                 {
                     capturedRequests.Add(CaptureRequest("enhance", request));
-                    return Task.FromResult(CreateSuccessResponse("deepseek-chat", CreateEnhancedScriptResponse(), 14, 6));
+                    return Task.FromResult(CreateSuccessResponse("deepseek-flash", CreateEnhancedScriptResponse(), 14, 6));
                 });
 
             var ponderResponse = await authoringProvider.ExecuteAsync(
@@ -76,7 +76,8 @@ public sealed class BonesDeepSeekHttpMappingProofTests
                 Assert.NotNull(captured.Authorization);
                 Assert.Equal("Bearer", captured.Authorization!.Scheme);
                 Assert.Equal(TestApiKeyValue, captured.Authorization.Parameter);
-                Assert.Equal("deepseek-chat", captured.Model);
+                Assert.Equal("deepseek-flash", captured.Model);
+                Assert.Equal("disabled", captured.ThinkingType);
             }
 
             var ponderCapture = Assert.Single(capturedRequests, request => request.Stage == "ponder");
@@ -108,6 +109,7 @@ public sealed class BonesDeepSeekHttpMappingProofTests
         string Stage,
         AuthenticationHeaderValue? Authorization,
         string Model,
+        string? ThinkingType,
         string UserContent);
 
     private static CapturedRequest CaptureRequest(string stage, HttpRequestMessage request)
@@ -118,10 +120,15 @@ public sealed class BonesDeepSeekHttpMappingProofTests
         var messages = root.GetProperty("messages");
         var userContent = messages[1].GetProperty("content").GetString() ?? string.Empty;
 
+        var thinkingType = root.TryGetProperty("thinking", out var thinking)
+            ? thinking.GetProperty("type").GetString()
+            : null;
+
         return new CapturedRequest(
             stage,
             request.Headers.Authorization,
             root.GetProperty("model").GetString() ?? string.Empty,
+            thinkingType,
             userContent);
     }
 
@@ -135,7 +142,7 @@ public sealed class BonesDeepSeekHttpMappingProofTests
 
         return new ModelProviderRequest<BonesStrategyAuthoringRequest>(
             payload: payload,
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             correlationId: correlationId);
     }
 
@@ -154,7 +161,7 @@ public sealed class BonesDeepSeekHttpMappingProofTests
                 ],
                 ActiveSeat: new BonesPlayerId(2),
                 StrategyId: new BonesStrategyId("strategy-1")),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             correlationId: correlationId);
 
     private static ModelProviderRequest<BonesStrategyEnhancementRequest> CreateEnhancementRequest(string correlationId)
@@ -189,7 +196,7 @@ public sealed class BonesDeepSeekHttpMappingProofTests
 
         return new ModelProviderRequest<BonesStrategyEnhancementRequest>(
             payload: payload,
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             correlationId: correlationId);
     }
 
@@ -261,7 +268,7 @@ public sealed class BonesDeepSeekHttpMappingProofTests
     private static BonesDeepSeekProviderOptions CreateOptions()
         => BonesDeepSeekProviderOptions.Create(
             baseUrl: "https://api.deepseek.com/v1/",
-            model: "deepseek-chat",
+            model: "deepseek-flash",
             timeout: TimeSpan.FromSeconds(30),
             apiKeySource: $"env:{TestApiKeyEnvVar}");
 

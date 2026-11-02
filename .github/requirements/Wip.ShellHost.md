@@ -122,7 +122,7 @@ classDiagram
 - Completed item: Enforce absolute behavior-proof verification for every planned integration test [mandatory - behavior-proof policy]
 - Transition proof artifact: [.github/requirements/transition-proofs/checklist-item-wip-shellhost-behavior-proof-policy-transition-proof-2026-05-25.md](transition-proofs/checklist-item-wip-shellhost-behavior-proof-policy-transition-proof-2026-05-25.md) with verbatim unchecked baseline text, exact checked checklist line, direct links to checklist-bound proving tests, and direct links to `BehaviorProofPolicy` gate members.
 - Runtime proof tests:
-   - `IntegrationPlan_GivenAnyChecklistItem_ExpectedAtLeastOneExecutableBehaviorProofTest`
+   - `BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEachItem`
    - `IntegrationPlan_GivenMetadataOnlyAssertions_ExpectedComplianceGateRejectsPlan`
    - `IntegrationPlan_GivenPlannedBehaviorProofTestWithoutExecutableMapping_ExpectedComplianceGateRejectsPlan`
 - Remaining unchecked checklist items: 0
@@ -194,7 +194,7 @@ classDiagram
 2. `RunAsync_GivenCancellationAfterExplicitLoad_ExpectedStopPluginsInvokedExactlyOnce`
    *Assumption*: When cancellation occurs after explicit load, host exit path invokes runtime stop once and prevents lingering schedule execution.
 
-3. `IntegrationPlan_GivenAnyChecklistItem_ExpectedAtLeastOneExecutableBehaviorProofTest`
+3. `BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEachItem`
    *Assumption*: Checklist completion is accepted only if at least one test executes runtime behavior assertions for the item.
 
 4. `IntegrationPlan_GivenMetadataOnlyAssertions_ExpectedComplianceGateRejectsPlan`

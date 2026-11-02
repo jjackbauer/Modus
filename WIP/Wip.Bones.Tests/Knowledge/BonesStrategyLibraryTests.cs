@@ -326,6 +326,59 @@ public sealed class BonesStrategyLibraryTests
         }
     }
 
+    [Fact]
+    [Trait("ChecklistItem", StrategyLibraryItem)]
+    [Trait("ChecklistItem", UpsertBestStrategyItem)]
+    public void BonesStrategyLibrary_GivenUpsertWithEffectiveness_PersistsAndReturnsSameMetrics()
+    {
+        var dataDirectory = Path.Combine(Path.GetTempPath(), $"bones-library-effect-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dataDirectory);
+
+        try
+        {
+            var library = new BonesStrategyLibrary(dataDirectory);
+            var playerId = new BonesPlayerId(2);
+            var strategyId = new BonesStrategyId("test-strategy-v1");
+            var artifact = new BonesStrategyArtifact(
+                strategyId,
+                playerId,
+                BonesStrategyKind.Script,
+                "public sealed class Test : IBonesPlayerSlot { }",
+                BonesPromotionStatus.Active);
+            var metrics = new BonesStrategyEffectivenessRecord(
+                strategyId,
+                playerId,
+                matchesPlayed: 15,
+                wins: 10,
+                losses: 5,
+                cumulativeScoreDifferential: 42);
+
+            Assert.True(library.UpsertBestStrategy(playerId, artifact, metrics));
+
+            var ranking = library.GetRanking(playerId);
+            Assert.Single(ranking);
+            Assert.Equal(strategyId, ranking[0].StrategyId);
+            Assert.Equal(15, ranking[0].Effectiveness.MatchesPlayed);
+            Assert.Equal(10, ranking[0].Effectiveness.Wins);
+            Assert.Equal(5, ranking[0].Effectiveness.Losses);
+            Assert.Equal(42, ranking[0].Effectiveness.CumulativeScoreDifferential);
+
+            // Prove persistence: reload library and verify unchanged.
+            var reloadedLibrary = new BonesStrategyLibrary(dataDirectory);
+            var reloadedRanking = reloadedLibrary.GetRanking(playerId);
+            Assert.Single(reloadedRanking);
+            Assert.Equal(15, reloadedRanking[0].Effectiveness.MatchesPlayed);
+            Assert.Equal(10, reloadedRanking[0].Effectiveness.Wins);
+            Assert.Equal(5, reloadedRanking[0].Effectiveness.Losses);
+            Assert.Equal(42, reloadedRanking[0].Effectiveness.CumulativeScoreDifferential);
+        }
+        finally
+        {
+            if (Directory.Exists(dataDirectory))
+                Directory.Delete(dataDirectory, recursive: true);
+        }
+    }
+
     private static BonesStrategyLibraryEntry CreateEntry(
         BonesStrategyId strategyId,
         BonesPlayerId playerId,

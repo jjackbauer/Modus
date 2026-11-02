@@ -1,0 +1,13 @@
+# Evidence — bones-aggression-search
+
+| ID | Fact | Source (`file:line` / command) | Method (how you checked) | Confidence | Round | Related |
+|---|---|---|---|---|---|---|| EVD-001 | The aggression search harness builds and smoke-tests baseline + a3 | `.tmp/aggression-search/Search.csproj`; `Search.exe smoke` | Built exit 0; smoke printed `smoke baseline v9=31/100 a3=20/100 v9-in-a3-field=23/100` and `smoke PASS` | High | 1 | D1 |
+| EVD-002 | The aggressive ladder is monotonically worse than v9 | `.tmp/aggression-search/selection-results.json`; `selection-control.stdout.txt` | Ran 12-level selection; a1 27.700%, a2 27.375%, a3 27.050%, a4 26.650%, a5 26.250%; all below v9 in the same field | High | 2 | OBS-002, D2 |
+| EVD-003 | c5's 8,000-game validation is +0.975pp but CI includes zero | `.tmp/aggression-search/validation-results.json` | Parsed JSON: 2,342/8,000 vs v9 2,264/8,000; diff +0.975pp, CI [−0.428, 2.378] | High | 3 | D3 |
+| EVD-004 | c5's 24,000-game extended validation is +0.867pp with lower bound 0.058 | `.tmp/aggression-search/validation-extended.json` | Parsed JSON: 6,962/24,000 vs v9 6,754/24,000; CI [0.058, 1.675] | High | 3 | D3 |
+| EVD-005 | c5's 8,000-game fresh confirmation is +0.550pp but CI includes zero | `.tmp/aggression-search/confirmation-910019.json` | Parsed JSON: 2,361/8,000 vs v9 2,317/8,000; CI [−0.860, 1.960] | High | 4 | D3 |
+| EVD-006 | c5's 24,000-game large confirmation is +0.425pp but CI includes zero | `.tmp/aggression-search/confirmation-910023.json` | Parsed JSON: 6,802/24,000 vs v9 6,700/24,000; CI [−0.379, 1.229] | High | 4 | D3 |
+| EVD-007 | c5's pre-registered 96,000-game final confirmation is +0.405pp, CI [−0.001, 0.811] — no supported improvement | `.tmp/aggression-search/confirmation-910035.json` | Parsed JSON: 27,987/96,000 vs v9 27,598/96,000; lower bound −0.001; verdict `NoStatisticallySupportedImprovement` | High | 4 | VAL-001, D4 |
+| EVD-008 | The live `bones-data` library hashes are unchanged | `Get-FileHash WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-*.json` | Re-hashed all four; values match the baseline | High | 4 | D6 |
+| EVD-009 | The c5 candidate was persisted to a temp library and reloads | `.tmp/aggression-search/library-extended/.bones/strategy-library/seat-1.json`; `verify-library` | `VerifyLibrary.exe` printed `control-c5` / source length 13087, exit 0 | High | 4 | D5 |
+| EVD-010 | The extended validation is deterministic | `validation-extended-first.json` vs `validation-extended.json` | Compared best variant, v9 wins, and all row wins/lower bounds: identical | High | 4 | D6 |

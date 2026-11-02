@@ -52,6 +52,9 @@ public static class BonesViewerPageRenderer
         builder.AppendLine("    <div class=\"viewer-shell\">");
         builder.AppendLine("      <aside class=\"viewer-sidebar\" aria-label=\"Match sidebar\">");
         BonesViewerLearningLoopStatusMarkup.Append(builder, "        ");
+        builder.AppendLine("        <nav class=\"viewer-nav\" aria-label=\"Viewer navigation\">");
+        builder.AppendLine($"          <a href=\"/bones/pool/view\" class=\"nav-pool-link\">Strategy Pool Dashboard</a>");
+        builder.AppendLine("        </nav>");
         builder.AppendLine("        <section class=\"hands\" aria-label=\"Player hands\">");
 
         for (var seat = BonesPlayerId.MinSeat; seat <= BonesPlayerId.MaxSeat; seat++)

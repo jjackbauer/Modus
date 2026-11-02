@@ -1,0 +1,12 @@
+# Repository identity - baseline context
+
+captured=2026-11-02T10:57:21-03:00
+toplevel=C:/Users/ricar/dev/Modus
+remote:
+  origin	git@github.com:jjackbauer/Modus.git (fetch)
+  origin	git@github.com:jjackbauer/Modus.git (push)
+branches:
+  * WIP  d6b895f [origin/WIP] feat(bones): implement learning-loop enhancements (T1.1-T3.5, M1)
+    main 03fdd41 [origin/main] test(ci): add migration regression workflow gates and compliance inventory coverage
+gh: NOT INSTALLED
+network_note=The execution contract forbids network access except package restore; no fetch/push/ls-remote was attempted.

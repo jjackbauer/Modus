@@ -350,7 +350,7 @@ Zero Falsified rows.
    *Assumption*: `BONES_PONDER_MODEL=deepseek-v4-pro` binds `PonderModelId` and leaves others null.
 
 8. `BonesHostOptions_GivenBonesPlayModelEnv_ExpectedBindsPlayModelId`
-   *Assumption*: `BONES_PLAY_MODEL=deepseek-v4-flash` binds `PlayModelId`.
+   *Assumption*: `BONES_PLAY_MODEL=deepseek-flash` binds `PlayModelId`.
 
 9. `BonesHostOptions_GivenBonesEnhanceModelEnv_ExpectedBindsEnhanceModelId`
    *Assumption*: `BONES_ENHANCE_MODEL=deepseek-v4-pro` binds `EnhanceModelId`.

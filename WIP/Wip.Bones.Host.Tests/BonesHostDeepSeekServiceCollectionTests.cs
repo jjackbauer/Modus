@@ -59,7 +59,7 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
     [Trait("ChecklistItem", WorkflowModelIdItem)]
     public async Task BonesHostServiceCollection_GivenDeepSeekConfig_ExpectedWorkflowUsesConfiguredModelIdInProviderRequests()
     {
-        const string configuredModel = "deepseek-reasoner";
+        const string configuredModel = "deepseek-v4-pro";
         ClearBonesHostEnvironment();
         var dataDirectory = BonesHostTestPaths.CreateTempDataDirectory();
         var options = CreateHostOptions(BonesModelProviderKind.DeepSeek, configuredModel, dataDirectory);
@@ -96,7 +96,7 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
                         {
                           "id": "chatcmpl-test",
                           "object": "chat.completion",
-                          "model": "deepseek-reasoner",
+                          "model": "deepseek-v4-pro",
                           "choices": [
                             {
                               "index": 0,
@@ -138,6 +138,9 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
             Assert.NotNull(handler.LastRequestBody);
             using var payload = JsonDocument.Parse(handler.LastRequestBody!);
             Assert.Equal(configuredModel, payload.RootElement.GetProperty("model").GetString());
+            Assert.Equal(
+                "disabled",
+                payload.RootElement.GetProperty("thinking").GetProperty("type").GetString());
         }
         finally
         {
@@ -160,7 +163,7 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
         try
         {
             var services = new ServiceCollection();
-            services.AddBonesHostServices(CreateHostOptions(modelProvider, "deepseek-chat", dataDirectory));
+            services.AddBonesHostServices(CreateHostOptions(modelProvider, "deepseek-flash", dataDirectory));
             services.AddSingleton(_ => new HttpClient(new CapturingHttpMessageHandler(static _ =>
                 new HttpResponseMessage(HttpStatusCode.OK)
                 {

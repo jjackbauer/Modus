@@ -31,7 +31,8 @@ public sealed record BonesLearningWorkflowParameters(
     bool AllSeatsLearning = false,
     string? PonderModelId = null,
     string? PlayModelId = null,
-    string? EnhanceModelId = null)
+    string? EnhanceModelId = null,
+    int? EvaluationTargetScore = null)
 {
     public const string TaskDescriptionPrefix = "bones-learning";
 
@@ -44,7 +45,8 @@ public sealed record BonesLearningWorkflowParameters(
         bool allSeatsLearning = false,
         string? ponderModelId = null,
         string? playModelId = null,
-        string? enhanceModelId = null)
+        string? enhanceModelId = null,
+        int? evaluationTargetScore = null)
     {
         var description =
             $"{TaskDescriptionPrefix};gameCount={gameCount};seed={seed};targetScore={targetScore};learningPlayerId={learningPlayerId.Seat}";
@@ -63,6 +65,9 @@ public sealed record BonesLearningWorkflowParameters(
 
         if (!string.IsNullOrWhiteSpace(enhanceModelId))
             description += $";enhanceModelId={enhanceModelId.Trim()}";
+
+        if (evaluationTargetScore is > 0)
+            description += $";evaluationTargetScore={evaluationTargetScore.Value}";
 
         return description;
     }
@@ -124,6 +129,14 @@ public sealed record BonesLearningWorkflowParameters(
         values.TryGetValue("enhanceModelId", out var enhanceModelIdValue);
         var enhanceModelId = string.IsNullOrWhiteSpace(enhanceModelIdValue) ? null : enhanceModelIdValue.Trim();
 
+        int? evaluationTargetScore = null;
+        if (values.TryGetValue("evaluationTargetScore", out var evaluationTargetScoreValue)
+            && int.TryParse(evaluationTargetScoreValue, out var parsedEvaluationTargetScore)
+            && parsedEvaluationTargetScore > 0)
+        {
+            evaluationTargetScore = parsedEvaluationTargetScore;
+        }
+
         parameters = new BonesLearningWorkflowParameters(
             gameCount,
             seed,
@@ -133,7 +146,8 @@ public sealed record BonesLearningWorkflowParameters(
             allSeatsLearning,
             ponderModelId,
             playModelId,
-            enhanceModelId);
+            enhanceModelId,
+            evaluationTargetScore);
         return true;
     }
 }

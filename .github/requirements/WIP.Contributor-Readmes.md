@@ -19,9 +19,9 @@
 |---|---|---|---|
 | Contributor architecture map | Root WIP README documents module boundaries and primary contracts for Abstractions, Builder, Runtime, Shell, ShellHost, and Modus bridge | [foundation for all project READMEs] | Done |
 | Contract-level interface documentation | Each Wip.* project README includes public interface and record contract table with request/result semantics | [depends on contributor architecture map] | Done |
-| Executable onboarding flow | README quickstart shows start, attach, transition, and diagnostics commands with reproducible local run flow | [depends on contract-level interface documentation] | Pending |
-| Policy and safety behavior docs | README explains local-safe policy allow/deny gates with verifiable examples tied to operation names | [depends on executable onboarding flow] | Pending |
-| Plugin/workflow diagnostics docs | README explains manifest and diagnostics behavior from Modus bridge and shell commands plugins/workflows/config | [depends on contract-level interface documentation] | Pending |
+| Executable onboarding flow | README quickstart shows start, attach, transition, and diagnostics commands with reproducible local run flow | [depends on contract-level interface documentation] | Done |
+| Policy and safety behavior docs | README explains local-safe policy allow/deny gates with verifiable examples tied to operation names | [depends on executable onboarding flow] | Done |
+| Plugin/workflow diagnostics docs | README explains manifest and diagnostics behavior from Modus bridge and shell commands plugins/workflows/config | [depends on contract-level interface documentation] | Done |
 | Contribution validation workflow docs | README defines contributor PR workflow with build/test/approval evidence and deterministic failure expectations | [depends on executable onboarding flow and policy docs] | Done |
 | Enforce absolute behavior-proof verification for every planned integration test | Every item and test group proves runtime execution paths, DI resolution, command dispatch, and deterministic negative outcomes | [mandatory - behavior-proof policy] | Done |
 
@@ -94,13 +94,13 @@ classDiagram
 
 | # | Claim | Evidence (file:line) | Status | Reason |
 |---|---|---|---|---|
-| 1 | WIP interfaces are defined in Wip.Abstractions and include workflow, capability, policy, and session contracts | src/Wip.Abstractions/Workflows/WorkflowContracts.cs:1; src/Wip.Abstractions/Capabilities/CapabilityContracts.cs:1; src/Wip.Abstractions/Policies/PolicyContracts.cs:1; src/Wip.Abstractions/Sessions/SessionContracts.cs:1 | Supported | Contract types and methods are present with typed identifiers and async execution signatures |
-| 2 | WipBuilder registers agents/tools/validators/policies/workflows and can enforce or relax duplicate capability IDs | src/Wip.Builder/WipBuilder.cs:15 | Supported | Registration methods exist and duplicate handling is guarded by EnableCapabilityReplacement |
-| 3 | Runtime orchestrator enforces linear state transitions and persists session state to repository storage | src/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs:12 | Supported | Transition map and PersistSessionStateAsync confirm deterministic progression and snapshot persistence |
-| 4 | Shell command loop exposes start/attach/detach/status/transition/plugins/workflows commands with usage and error paths | src/Wip.Shell/Interactive/WipShellCommandLoop.cs:10 | Supported | Dispatch switch and handlers include usage checks and explicit failure messages |
-| 5 | ShellHost config is resolved from defaults, .wip/config.json, and explicit args with precedence | src/Wip.ShellHost/Hosting/WipShellHostOptions.cs:10 | Supported | FromArgs applies default values, file overrides, then explicit plugin path override |
-| 6 | ModusWipBridge exposes runtime diagnostics and manifest metadata for plugins and workflows | src/Wip.Modus/Hosting/ModusWipBridge.cs:26 | Supported | Interface and implementation provide load, stop, diagnostics, and manifest methods |
-| 7 | LocalSafePolicy denies dangerous commands and out-of-worktree execution and enforces validation/approval gates by operation semantics | src/Wip.Policy.LocalSafe/LocalSafePolicy.cs:11 | Supported | EvaluateAsync includes deterministic deny reasons and operation-name gates |
+| 1 | WIP interfaces are defined in Wip.Abstractions and include workflow, capability, policy, and session contracts | WIP/Wip.Abstractions/Workflows/WorkflowContracts.cs:1; WIP/Wip.Abstractions/Capabilities/CapabilityContracts.cs:1; WIP/Wip.Abstractions/Policies/PolicyContracts.cs:1; WIP/Wip.Abstractions/Sessions/SessionContracts.cs:1 | Supported | Contract types and methods are present with typed identifiers and async execution signatures |
+| 2 | WipBuilder registers agents/tools/validators/policies/workflows and can enforce or relax duplicate capability IDs | WIP/Wip.Builder/WipBuilder.cs:15 | Supported | Registration methods exist and duplicate handling is guarded by EnableCapabilityReplacement |
+| 3 | Runtime orchestrator enforces linear state transitions and persists session state to repository storage | WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs:12 | Supported | Transition map and PersistSessionStateAsync confirm deterministic progression and snapshot persistence |
+| 4 | Shell command loop exposes start/attach/detach/status/transition/plugins/workflows commands with usage and error paths | WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs:10 | Supported | Dispatch switch and handlers include usage checks and explicit failure messages |
+| 5 | ShellHost config is resolved from defaults, .wip/config.json, and explicit args with precedence | WIP/Wip.ShellHost/Hosting/WipShellHostOptions.cs:10 | Supported | FromArgs applies default values, file overrides, then explicit plugin path override |
+| 6 | ModusWipBridge exposes runtime diagnostics and manifest metadata for plugins and workflows | WIP/Wip.Modus/Hosting/ModusWipBridge.cs:26 | Supported | Interface and implementation provide load, stop, diagnostics, and manifest methods |
+| 7 | LocalSafePolicy denies dangerous commands and out-of-worktree execution and enforces validation/approval gates by operation semantics | WIP/Wip.Policy.LocalSafe/LocalSafePolicy.cs:11 | Supported | EvaluateAsync includes deterministic deny reasons and operation-name gates |
 
 Zero Falsified rows.
 

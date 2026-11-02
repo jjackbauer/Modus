@@ -14,7 +14,8 @@ public sealed record BonesPonderRequest(
     BonesPlayerId PlayerId,
     string RepositoryPath,
     string ModelId = "bones-strategy-author",
-    bool AllSeatsLearning = false);
+    bool AllSeatsLearning = false,
+    IReadOnlyList<BonesGameId>? ObservedGameIds = null);
 
 public sealed record BonesPonderResult(
     BonesStrategyId StrategyId,

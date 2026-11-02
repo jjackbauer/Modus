@@ -20,7 +20,7 @@ public sealed class BonesLearningLoopReliabilityAgentTests
 {
     [Fact]
     [Trait("ChecklistItem", BonesLearningLoopReliabilityRequirementsChecklistItems.TargetScoreParity)]
-    public void BonesLearningWorkflowMapRuntime_GivenSessionTargetScoreTen_ExpectedEnhanceRequestEvaluationTargetScoreTen()
+    public void BonesLearningWorkflowMapRuntime_GivenExplicitEvaluationTargetScore_ExpectedEnhanceRequestUsesIt()
     {
         WorkflowStageMapAdapterRuntime.ResetRegisteredBindingsForTests();
         BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
@@ -35,8 +35,9 @@ public sealed class BonesLearningLoopReliabilityAgentTests
         var taskDescription = BonesLearningWorkflowParameters.FormatTaskDescription(
             gameCount: 1,
             seed: 4242,
-            targetScore: 10,
-            new BonesPlayerId(1));
+            targetScore: 120,
+            new BonesPlayerId(1),
+            evaluationTargetScore: 12);
 
         var session = new SessionSnapshot(
             SessionId: sessionId,
@@ -56,7 +57,46 @@ public sealed class BonesLearningLoopReliabilityAgentTests
             playResult);
 
         var enhanceRequest = Assert.IsType<BonesEnhanceStrategyRequest>(mapped.MappedInputPayload);
-        Assert.Equal(10, enhanceRequest.EvaluationTargetScore);
+        Assert.Equal(12, enhanceRequest.EvaluationTargetScore);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", BonesLearningLoopReliabilityRequirementsChecklistItems.TargetScoreParity)]
+    public void BonesLearningWorkflowMapRuntime_GivenMissingEvaluationTargetScore_ExpectedEnhanceRequestUsesNullForAgentDefault()
+    {
+        WorkflowStageMapAdapterRuntime.ResetRegisteredBindingsForTests();
+        BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
+        BonesLearningWorkflowMapRuntime.Register();
+
+        var compilation = BonesLearningWorkflow.CompileLinearStages();
+        var enhanceDescriptor = compilation.StageDescriptors.Single(
+            stage => stage.RequestType == typeof(BonesEnhanceStrategyRequest));
+
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"bones-map-{Guid.NewGuid():N}");
+        var sessionId = new SessionId($"bones-map-{Guid.NewGuid():N}");
+        var taskDescription = BonesLearningWorkflowParameters.FormatTaskDescription(
+            gameCount: 1,
+            seed: 4242,
+            targetScore: 120,
+            new BonesPlayerId(1));
+
+        var session = new SessionSnapshot(
+            SessionId: sessionId,
+            WorkflowId: BonesLearningWorkflowIds.WorkflowId,
+            State: SessionState.Created,
+            RepositoryPath: repositoryPath,
+            WorktreePath: Path.Combine(repositoryPath, ".wip", "worktrees", "bones-map"),
+            UpdatedAtUtc: DateTimeOffset.UtcNow,
+            TaskDescription: taskDescription);
+
+        var mapped = WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
+            enhanceDescriptor,
+            compilation,
+            session,
+            CreateMinimalPlayResult());
+
+        var enhanceRequest = Assert.IsType<BonesEnhanceStrategyRequest>(mapped.MappedInputPayload);
+        Assert.Null(enhanceRequest.EvaluationTargetScore);
     }
 
     [Fact]

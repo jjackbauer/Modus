@@ -533,7 +533,7 @@ public sealed class BonesGameEngineTests
         var slot = new BonesFirstLegalMovePlayerSlot();
         var roundConfig = new BonesRoundConfig(
             new BonesGameId("greedy-round-edge-invariant"),
-            HashCode.Combine(seed, 1));
+            BonesSeedDerivation.Derive(seed, 1));
         var state = _engine.StartRound(roundConfig);
 
         while (!_engine.IsRoundComplete(state))

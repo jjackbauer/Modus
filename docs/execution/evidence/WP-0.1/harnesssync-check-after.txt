@@ -1,0 +1,6 @@
+command=dotnet run --project tools/HarnessSync -- --check
+exit=0
+started=2026-11-02T11:05:35.0086652-03:00
+finished=2026-11-02T11:05:37.7293385-03:00
+--- output ---
+

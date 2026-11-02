@@ -12,7 +12,7 @@ internal static class BonesLearningLoopReliabilityRequirementsChecklistItems
         "Extend `bones-ponder-execution` artifact JSON with `CompileAttempts`, `FinalCompileSucceeded`, and optional `LastCompileFailureReason` for operator forensics [depends on compile retry]";
 
     public const string TargetScoreParity =
-        "Wire `BonesLearningWorkflowMapRuntime` enhance map to pass `parameters.TargetScore` as `BonesEnhanceStrategyRequest.EvaluationTargetScore` (remove silent fallback to `DefaultEvaluationTargetScore = 8` when session specifies `10`) [depends on workflow parameters] [mandatory - target score parity]";
+        "Wire `BonesLearningWorkflowMapRuntime` enhance map to pass `parameters.EvaluationTargetScore` as `BonesEnhanceStrategyRequest.EvaluationTargetScore` instead of reusing the learning `TargetScore`, so promotion evaluation matches use a short, separately configurable target [depends on workflow parameters] [mandatory - bounded evaluation targets]";
 
     public const string SharedPlayerSlotFactory =
         "Extract shared `BonesStrategyPlayerSlotFactory` (or equivalent) used by both `BonesPlayMatchTool` and `BonesStrategyPromotionEvaluator.CreatePlayerSlot` so markdown opponents dispatch through the same path in play and promotion evaluation [depends on play match tool] [mandatory - promotion opponent parity]";

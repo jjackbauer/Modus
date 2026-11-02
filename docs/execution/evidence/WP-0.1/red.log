@@ -1,0 +1,20 @@
+# WP-0.1 - red acceptance check
+# Captured: 2026-11-02T10:47:57-03:00
+# WP-0.1 acceptance: "Working tree clean except intentional untracked files; baseline tag exists; inventory reviewed."
+# No product test applies to a baseline-freeze work package; this is the equivalent executable check.
+
+CMD: git tag --list 'wip-baseline*'
+EXIT: 0
+OUTPUT: (empty)
+
+CMD: git status --porcelain | count
+EXIT: 0
+OUTPUT: 308 entries (expected 0 tracked changes + intentional untracked only)
+
+CMD: git ls-files -o --exclude-standard | count
+EXIT: 0
+OUTPUT: 539 untracked non-ignored files (pre-evidence snapshot was 522)
+
+RESULT: RED - acceptance is not met: no baseline tag and 308 dirty porcelain entries.
+NEXT: after explicit approval, perform the curated baseline commit + annotated tag, then write verify.log with
+      post-change git status/tag, build/test inventory, and encoding-check results.

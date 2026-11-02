@@ -1,7 +1,10 @@
+using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Ponder;
 using Wip.Bones.Agents.Workflow;
+using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
 using Wip.Bones.ModelProviders.DeepSeek;
+using Wip.Runtime.Runtime;
 
 namespace Wip.Bones.Host;
 
@@ -15,11 +18,13 @@ public sealed class BonesHostDeepSeekConfiguration
 {
     public string BaseUrl { get; set; } = "https://api.deepseek.com";
 
-    public string Model { get; set; } = "deepseek-chat";
+    public string Model { get; set; } = BonesDeepSeekModelIdentifier.Flash;
 
     public int TimeoutSeconds { get; set; } = 30;
 
     public string ApiKeySource { get; set; } = "env:DEEPSEEK_API_KEY";
+
+    public string Thinking { get; set; } = "disabled";
 }
 
 public sealed class BonesHostModelProviderDiagnostics
@@ -33,6 +38,8 @@ public sealed class BonesHostModelProviderDiagnostics
     public int? TimeoutSeconds { get; init; }
 
     public string? ApiKeySource { get; init; }
+
+    public string? Thinking { get; init; }
 }
 
 public sealed class BonesHostOptions
@@ -43,9 +50,17 @@ public sealed class BonesHostOptions
 
     public Uri ListenUrl { get; set; } = new("http://127.0.0.1:8080");
 
-    public int IterationDelayMs { get; set; } = 1000;
+    public int IterationDelayMs { get; set; } = 100;
 
     public int MaxGamesPerRun { get; set; }
+
+    public bool AllowUnbounded { get; set; }
+
+    public int MaxConsecutiveIterationFailures { get; set; } = 5;
+
+    public int FailureBackoffBaseMs { get; set; } = 1000;
+
+    public int FailureBackoffMaxMs { get; set; } = 60000;
 
     public bool ResumeFromBest { get; set; } = true;
 
@@ -56,16 +71,17 @@ public sealed class BonesHostOptions
     public BonesHostDeepSeekConfiguration DeepSeek { get; set; } = new();
 
     public BonesLearningWorkflowParameters DefaultParameters { get; set; } = new(
-        GameCount: 1,
+        GameCount: 8,
         Seed: 4242,
-        TargetScore: 10,
-        LearningPlayerId: new BonesPlayerId(1));
+        TargetScore: 120,
+        LearningPlayerId: new BonesPlayerId(1),
+        EvaluationTargetScore: 12);
 
-    public int ParallelSessionCount { get; set; } = 4;
+    public int ParallelSessionCount { get; set; } = 8;
 
     public bool RequireLibraryBootstrap { get; set; } = false;
 
-    public BonesPonderCompileRetryOptions Ponder { get; set; } = new();
+    public BonesCompileRetryOptions Ponder { get; set; } = new();
 
     public string? PonderModelId { get; set; }
 
@@ -73,7 +89,19 @@ public sealed class BonesHostOptions
 
     public string? EnhanceModelId { get; set; }
 
+    public int? EvaluationTargetScore { get; set; } = 12;
+
+    public BonesStrategyPromotionOptions Promotion { get; set; } = new();
+
+    public BonesStrategyScriptHostOptions ScriptHost { get; set; } = new();
+
+    public BonesAggressiveIterationOptions AggressiveIteration { get; set; } = new();
+
+    public PopulationPoolOptions Population { get; set; } = PopulationPoolOptions.Default;
+
     public BonesDeepSeekProviderOptions? DeepSeekProviderOptions { get; private set; }
+
+    public BonesDeepSeekResilienceOptions Resilience { get; set; } = new();
 
     public static BonesHostOptions Bind(IConfiguration configuration)
     {
@@ -101,6 +129,22 @@ public sealed class BonesHostOptions
         }
 
         options.MaxGamesPerRun = ResolveMaxGamesPerRun(configuration, options.MaxGamesPerRun);
+        options.AllowUnbounded = ResolveAllowUnbounded(configuration, options.AllowUnbounded);
+        options.MaxConsecutiveIterationFailures = ResolvePositiveInt(
+            configuration,
+            $"{SectionName}:MaxConsecutiveIterationFailures",
+            "BonesHost__MaxConsecutiveIterationFailures",
+            options.MaxConsecutiveIterationFailures);
+        options.FailureBackoffBaseMs = ResolvePositiveInt(
+            configuration,
+            $"{SectionName}:FailureBackoffBaseMs",
+            "BonesHost__FailureBackoffBaseMs",
+            options.FailureBackoffBaseMs);
+        options.FailureBackoffMaxMs = ResolvePositiveInt(
+            configuration,
+            $"{SectionName}:FailureBackoffMaxMs",
+            "BonesHost__FailureBackoffMaxMs",
+            options.FailureBackoffMaxMs);
         options.ResumeFromBest = ResolveResumeFromBest(configuration, options.ResumeFromBest);
         options.AllSeatsLearning = ResolveAllSeatsLearning(configuration, options.AllSeatsLearning);
 
@@ -126,7 +170,13 @@ public sealed class BonesHostOptions
         }
 
         options.ApplyModelProviderConfiguration(configuration);
-        options.Ponder = ResolvePonderCompileRetryOptions(configuration, options.Ponder);
+        options.EvaluationTargetScore = ResolveEvaluationTargetScore(configuration, options.EvaluationTargetScore);
+        ResolveResilienceOptions(configuration, options.Resilience);
+        options.Ponder = ResolveCompileRetryOptions(configuration, options.Ponder);
+        options.Promotion = ResolvePromotionOptions(configuration, options.Promotion);
+        options.ScriptHost = ResolveScriptHostOptions(configuration, options.ScriptHost);
+        options.AggressiveIteration = ResolveAggressiveIterationOptions(configuration, options.AggressiveIteration);
+        options.Population = ResolvePopulationOptions(configuration, options.Population);
         options.ParallelSessionCount = ResolveParallelSessionCount(configuration, options.ParallelSessionCount);
         options.RequireLibraryBootstrap = ResolveRequireLibraryBootstrap(configuration, options.RequireLibraryBootstrap);
 
@@ -148,6 +198,7 @@ public sealed class BonesHostOptions
             PonderModelId = string.IsNullOrWhiteSpace(options.PonderModelId) ? null : options.PonderModelId,
             PlayModelId = string.IsNullOrWhiteSpace(options.PlayModelId) ? null : options.PlayModelId,
             EnhanceModelId = string.IsNullOrWhiteSpace(options.EnhanceModelId) ? null : options.EnhanceModelId,
+            EvaluationTargetScore = options.EvaluationTargetScore,
         };
 
         return options;
@@ -161,6 +212,7 @@ public sealed class BonesHostOptions
             $"listenUrl={ListenUrl}",
             $"iterationDelayMs={IterationDelayMs}",
             $"maxGamesPerRun={MaxGamesPerRun}",
+            $"allowUnbounded={AllowUnbounded.ToString().ToLowerInvariant()}",
             $"resumeFromBest={ResumeFromBest.ToString().ToLowerInvariant()}",
             $"allSeatsLearning={AllSeatsLearning.ToString().ToLowerInvariant()}",
             $"parallelSessionCount={ParallelSessionCount}",
@@ -173,7 +225,11 @@ public sealed class BonesHostOptions
             diagnostics.Add($"modelProvider.deepseek.model={deepSeek.Model.Value}");
             diagnostics.Add($"modelProvider.deepseek.timeoutSeconds={(int)deepSeek.Timeout.TotalSeconds}");
             diagnostics.Add($"modelProvider.deepseek.apiKeySource=environment:{deepSeek.ApiKeySourceReference}");
+            diagnostics.Add($"modelProvider.deepseek.thinking={deepSeek.Thinking.ToString().ToLowerInvariant()}");
         }
+
+        if (EvaluationTargetScore is > 0)
+            diagnostics.Add($"evaluationTargetScore={EvaluationTargetScore.Value}");
 
         if (!string.IsNullOrWhiteSpace(PonderModelId))
             diagnostics.Add($"ponderModel={PonderModelId}");
@@ -208,6 +264,7 @@ public sealed class BonesHostOptions
             BaseUrl = deepSeek.BaseUrl.ToString(),
             TimeoutSeconds = (int)deepSeek.Timeout.TotalSeconds,
             ApiKeySource = $"environment:{deepSeek.ApiKeySourceReference}",
+            Thinking = deepSeek.Thinking.ToString().ToLowerInvariant(),
         };
     }
 
@@ -231,11 +288,16 @@ public sealed class BonesHostOptions
                 $"Bones host configuration is invalid: DeepSeek TimeoutSeconds '{DeepSeek.TimeoutSeconds}' must be between 1 and 600.");
         }
 
+        var temperature = ResolveDeepSeekTemperature(configuration);
+        var thinking = ParseDeepSeekThinkingMode(DeepSeek.Thinking);
+
         DeepSeekProviderOptions = BonesDeepSeekProviderOptions.Create(
             DeepSeek.BaseUrl,
             DeepSeek.Model,
             TimeSpan.FromSeconds(DeepSeek.TimeoutSeconds),
-            DeepSeek.ApiKeySource);
+            DeepSeek.ApiKeySource,
+            temperature,
+            thinking);
 
         DefaultParameters = DefaultParameters with
         {
@@ -265,20 +327,54 @@ public sealed class BonesHostOptions
             ?? deepSeekSection["ApiKeySource"]
             ?? DeepSeek.ApiKeySource;
 
+        var thinking = Environment.GetEnvironmentVariable("BonesHost__DeepSeek__Thinking")
+            ?? deepSeekSection["Thinking"]
+            ?? DeepSeek.Thinking;
+
         DeepSeek = new BonesHostDeepSeekConfiguration
         {
             BaseUrl = baseUrl,
             Model = model,
             TimeoutSeconds = timeoutSeconds,
             ApiKeySource = apiKeySource,
+            Thinking = thinking,
         };
+    }
+
+    private static DeepSeekThinkingMode ParseDeepSeekThinkingMode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return DeepSeekThinkingMode.Disabled;
+
+        if (Enum.TryParse<DeepSeekThinkingMode>(value.Trim(), ignoreCase: true, out var thinking)
+            && Enum.IsDefined(thinking))
+        {
+            return thinking;
+        }
+
+        throw new InvalidOperationException(
+            $"Bones host configuration is invalid: DeepSeek Thinking '{value}' must be 'default', 'enabled', or 'disabled'.");
+    }
+
+    private static double? ResolveDeepSeekTemperature(IConfiguration configuration)
+    {
+        var deepSeekSection = configuration.GetSection($"{SectionName}:DeepSeek");
+        var temperatureRaw = Environment.GetEnvironmentVariable("BonesHost__DeepSeek__Temperature")
+            ?? deepSeekSection["Temperature"];
+
+        if (double.TryParse(temperatureRaw, out var temperature))
+            return temperature;
+
+        return null;
     }
 
     private bool HasDeepSeekEnvironmentOverrides()
         => !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__BaseUrl"))
             || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__Model"))
             || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__TimeoutSeconds"))
-            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__ApiKeySource"));
+            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__ApiKeySource"))
+            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__Temperature"))
+            || !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BonesHost__DeepSeek__Thinking"));
 
     private static BonesModelProviderKind ParseModelProvider(string? value, BonesModelProviderKind fallback)
     {
@@ -292,6 +388,46 @@ public sealed class BonesHostOptions
             _ => throw new InvalidOperationException(
                 "Bones host configuration is invalid: ModelProvider must be 'deepseek' or 'stub'."),
         };
+    }
+
+    private static int ResolvePositiveInt(
+        IConfiguration configuration,
+        string configurationKey,
+        string environmentKey,
+        int fallback)
+    {
+        var raw = Environment.GetEnvironmentVariable(environmentKey)
+            ?? configuration[configurationKey];
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return fallback;
+
+        if (!int.TryParse(raw, out var value) || value < 1)
+        {
+            throw new InvalidOperationException(
+                $"Bones host configuration is invalid: '{configurationKey}' must be a positive integer.");
+        }
+
+        return value;
+    }
+
+    private static int? ResolveEvaluationTargetScore(IConfiguration configuration, int? fallback)
+    {
+        var raw = Environment.GetEnvironmentVariable("BONES_EVALUATION_TARGET_SCORE")
+            ?? Environment.GetEnvironmentVariable("BonesHost__EvaluationTargetScore")
+            ?? configuration[$"{SectionName}:EvaluationTargetScore"]
+            ?? configuration[$"{SectionName}:DefaultParameters:EvaluationTargetScore"];
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return fallback;
+
+        if (!int.TryParse(raw, out var value) || value < 1)
+        {
+            throw new InvalidOperationException(
+                $"Bones host configuration is invalid: EvaluationTargetScore '{raw}' must be a positive integer.");
+        }
+
+        return value;
     }
 
     private static int ResolveMaxGamesPerRun(IConfiguration configuration, int fallback)
@@ -309,6 +445,25 @@ public sealed class BonesHostOptions
             return ValidateMaxGamesPerRun(configValue.Value);
 
         return ValidateMaxGamesPerRun(fallback);
+    }
+
+    private static bool ResolveAllowUnbounded(IConfiguration configuration, bool fallback)
+    {
+        var dedicatedEnv = Environment.GetEnvironmentVariable("BONES_ALLOW_UNBOUNDED");
+        if (!string.IsNullOrWhiteSpace(dedicatedEnv)
+            && bool.TryParse(dedicatedEnv, out var dedicatedValue))
+        {
+            return dedicatedValue;
+        }
+
+        var doubleUnderscoreEnv = Environment.GetEnvironmentVariable("BonesHost__AllowUnbounded");
+        if (!string.IsNullOrWhiteSpace(doubleUnderscoreEnv)
+            && bool.TryParse(doubleUnderscoreEnv, out var envValue))
+        {
+            return envValue;
+        }
+
+        return configuration.GetValue<bool?>($"{SectionName}:AllowUnbounded") ?? fallback;
     }
 
     private static bool ResolveResumeFromBest(IConfiguration configuration, bool fallback)
@@ -360,9 +515,9 @@ public sealed class BonesHostOptions
         return value;
     }
 
-    private static BonesPonderCompileRetryOptions ResolvePonderCompileRetryOptions(
+    private static BonesCompileRetryOptions ResolveCompileRetryOptions(
         IConfiguration configuration,
-        BonesPonderCompileRetryOptions fallback)
+        BonesCompileRetryOptions fallback)
     {
         var ponderSection = configuration.GetSection($"{SectionName}:Ponder");
         var maxCompileRetries = fallback.MaxCompileRetries;
@@ -370,7 +525,7 @@ public sealed class BonesHostOptions
         if (int.TryParse(
                 Environment.GetEnvironmentVariable("BonesHost__Ponder__MaxCompileRetries"),
                 out var envRetries)
-            || int.TryParse(ponderSection[BonesPonderCompileRetryOptions.MaxCompileRetriesConfigurationKey], out envRetries))
+            || int.TryParse(ponderSection[BonesCompileRetryOptions.MaxCompileRetriesConfigurationKey], out envRetries))
         {
             maxCompileRetries = envRetries;
         }
@@ -378,13 +533,131 @@ public sealed class BonesHostOptions
         if (maxCompileRetries < 1)
         {
             throw new InvalidOperationException(
-                $"Bones host configuration is invalid: Ponder MaxCompileRetries '{maxCompileRetries}' must be at least 1.");
+                $"Bones host configuration is invalid: Compile MaxCompileRetries '{maxCompileRetries}' must be at least 1.");
         }
 
-        return new BonesPonderCompileRetryOptions
+        return new BonesCompileRetryOptions
         {
             MaxCompileRetries = maxCompileRetries,
         };
+    }
+
+    private static BonesStrategyPromotionOptions ResolvePromotionOptions(
+        IConfiguration configuration,
+        BonesStrategyPromotionOptions fallback)
+    {
+        var section = configuration.GetSection($"{SectionName}:Promotion");
+        var result = new BonesStrategyPromotionOptions
+        {
+            EvaluationMatchCount = section.GetValue<int?>("EvaluationMatchCount")
+                ?? fallback.EvaluationMatchCount,
+            MaxConcurrentMatches = section.GetValue<int?>("MaxConcurrentMatches")
+                ?? fallback.MaxConcurrentMatches,
+            MinimumWinRateImprovement = section.GetValue<double?>("MinimumWinRateImprovement")
+                ?? fallback.MinimumWinRateImprovement,
+            MinimumScoreDifferentialImprovement = section.GetValue<int?>("MinimumScoreDifferentialImprovement")
+                ?? fallback.MinimumScoreDifferentialImprovement,
+            MinimumCrossSeatCount = section.GetValue<int?>("MinimumCrossSeatCount")
+                ?? fallback.MinimumCrossSeatCount,
+            UsePairedEvaluationSeeds = section.GetValue<bool?>("UsePairedEvaluationSeeds")
+                ?? fallback.UsePairedEvaluationSeeds,
+            ConfidenceZThreshold = section.GetValue<double?>("ConfidenceZThreshold")
+                ?? fallback.ConfidenceZThreshold,
+            WinRateHardFloor = section.GetValue<double?>("WinRateHardFloor")
+                ?? fallback.WinRateHardFloor,
+            ScoreDifferentialHardFloor = section.GetValue<double?>("ScoreDifferentialHardFloor")
+                ?? fallback.ScoreDifferentialHardFloor,
+        };
+
+        if (Enum.TryParse<BonesPromotionGateMode>(section["GateMode"], ignoreCase: true, out var gateMode))
+            result.GateMode = gateMode;
+
+        if (result.EvaluationMatchCount < 1)
+        {
+            throw new InvalidOperationException(
+                $"Bones host configuration is invalid: Promotion EvaluationMatchCount '{result.EvaluationMatchCount}' must be at least 1.");
+        }
+
+        if (result.MaxConcurrentMatches < 1)
+        {
+            throw new InvalidOperationException(
+                $"Bones host configuration is invalid: Promotion MaxConcurrentMatches '{result.MaxConcurrentMatches}' must be at least 1.");
+        }
+
+        return result;
+    }
+
+    private static BonesStrategyScriptHostOptions ResolveScriptHostOptions(
+        IConfiguration configuration,
+        BonesStrategyScriptHostOptions fallback)
+    {
+        var section = configuration.GetSection($"{SectionName}:ScriptHost");
+        var result = new BonesStrategyScriptHostOptions
+        {
+            CompilationTimeout = TimeSpan.TryParse(section["CompilationTimeout"], out var compileTimeout)
+                ? compileTimeout
+                : fallback.CompilationTimeout,
+            ExecutionTimeout = TimeSpan.TryParse(section["ExecutionTimeout"], out var execTimeout)
+                ? execTimeout
+                : fallback.ExecutionTimeout,
+            MaxCompiledScripts = section.GetValue<int?>("MaxCompiledScripts")
+                ?? fallback.MaxCompiledScripts,
+            EnableDirectExecutionTimeout = section.GetValue<bool?>("EnableDirectExecutionTimeout")
+                ?? fallback.EnableDirectExecutionTimeout,
+        };
+
+        return result;
+    }
+
+    private static BonesAggressiveIterationOptions ResolveAggressiveIterationOptions(
+        IConfiguration configuration,
+        BonesAggressiveIterationOptions fallback)
+    {
+        var section = configuration.GetSection($"{SectionName}:AggressiveIteration");
+        var result = new BonesAggressiveIterationOptions
+        {
+            GameCountMultiplier = section.GetValue<double?>("GameCountMultiplier")
+                ?? fallback.GameCountMultiplier,
+            TargetScoreMultiplier = section.GetValue<double?>("TargetScoreMultiplier")
+                ?? fallback.TargetScoreMultiplier,
+            ExplorationTemperature = section.GetValue<double?>("ExplorationTemperature")
+                ?? fallback.ExplorationTemperature,
+            EnableCrossSeatTesting = section.GetValue<bool?>("EnableCrossSeatTesting")
+                ?? fallback.EnableCrossSeatTesting,
+            EnableSeatRotation = section.GetValue<bool?>("EnableSeatRotation")
+                ?? fallback.EnableSeatRotation,
+            ConcurrentGamesPerSession = section.GetValue<int?>("ConcurrentGamesPerSession")
+                ?? fallback.ConcurrentGamesPerSession,
+            EnhanceIterationsPerMatch = section.GetValue<int?>("EnhanceIterationsPerMatch")
+                ?? fallback.EnhanceIterationsPerMatch,
+            MinimumDistinctStrategiesPerSeat = section.GetValue<int?>("MinimumDistinctStrategiesPerSeat")
+                ?? fallback.MinimumDistinctStrategiesPerSeat,
+            CrossSeatRotation = section.GetValue<bool?>("CrossSeatRotation")
+                ?? fallback.CrossSeatRotation,
+            OpponentSourceExcerptMaxLength = section.GetValue<int?>("OpponentSourceExcerptMaxLength")
+                ?? fallback.OpponentSourceExcerptMaxLength,
+            PerSessionBudget = section.GetValue<bool?>("PerSessionBudget")
+                ?? fallback.PerSessionBudget,
+        };
+
+        return result;
+    }
+
+    private static PopulationPoolOptions ResolvePopulationOptions(
+        IConfiguration configuration,
+        PopulationPoolOptions fallback)
+    {
+        var section = configuration.GetSection($"{SectionName}:Population");
+        var poolSize = section.GetValue<int?>("PoolSize")
+            ?? fallback.PoolSize;
+        var maxPopulation = section.GetValue<int?>("MaxPopulation")
+            ?? fallback.MaxPopulation;
+
+        // Validate via constructor (it validates poolSize >= 4 and maxPopulation >= poolSize)
+        if (poolSize >= 4 && maxPopulation >= poolSize)
+            return new PopulationPoolOptions(poolSize, maxPopulation);
+
+        return fallback;
     }
 
     private static int ResolveParallelSessionCount(IConfiguration configuration, int fallback)
@@ -418,5 +691,20 @@ public sealed class BonesHostOptions
             return envValue;
 
         return configuration.GetValue<bool?>($"{SectionName}:RequireLibraryBootstrap") ?? fallback;
+    }
+
+    private static void ResolveResilienceOptions(IConfiguration configuration, BonesDeepSeekResilienceOptions options)
+    {
+        var section = configuration.GetSection($"{SectionName}:Resilience");
+        if (!section.Exists())
+            return;
+
+        options.MaxRetries = section.GetValue<int?>("MaxRetries") ?? options.MaxRetries;
+        options.ExponentialBackoffBaseMs = section.GetValue<int?>("ExponentialBackoffBaseMs") ?? options.ExponentialBackoffBaseMs;
+        options.CircuitBreakThreshold = section.GetValue<int?>("CircuitBreakThreshold") ?? options.CircuitBreakThreshold;
+        options.CircuitBreakDurationSeconds = section.GetValue<int?>("CircuitBreakDurationSeconds") ?? options.CircuitBreakDurationSeconds;
+        options.MaxConcurrentCalls = section.GetValue<int?>("MaxConcurrentCalls") ?? options.MaxConcurrentCalls;
+        options.MaxQueueDepth = section.GetValue<int?>("MaxQueueDepth") ?? options.MaxQueueDepth;
+        options.PreemptiveThrottleThreshold = section.GetValue<int?>("PreemptiveThrottleThreshold") ?? options.PreemptiveThrottleThreshold;
     }
 }

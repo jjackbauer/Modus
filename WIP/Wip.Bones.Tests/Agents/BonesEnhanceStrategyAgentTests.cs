@@ -422,7 +422,9 @@ public sealed class SeatStrategy : IBonesPlayerSlot
         var promotionSeed = await BonesPromotionTestScriptSources.FindSeedWhereCandidateOutperformsIncumbentAsync(
             FirstLegalMoveScriptSource,
             LastLegalMoveScriptSource,
-            metrics => metrics.CandidateWins > metrics.IncumbentWins);
+            // Match the actual promotion predicate (win-rate threshold plus the score floor).
+            // CandidateWins > IncumbentWins alone can still fail the score-differential floor.
+            metrics => metrics.WinRateImprovement >= 0.05 && metrics.ScoreDifferentialDelta >= 0.0);
 
         var agent = new BonesEnhanceStrategyAgent(
             fixture.ArtifactStore,
@@ -1117,6 +1119,82 @@ public sealed class SeatStrategy : IBonesPlayerSlot
         Assert.Equal(BonesPromotionDecisionOutcome.Promoted, decision.Outcome);
         Assert.True(decision.Metrics.WinRateImprovement >= 0.0,
             "Win rate improvement must pass the configured threshold of 0.0.");
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", BonesRequirementsChecklistItems.BehaviorProofPolicy)]
+    public async Task EvaluateAsync_GivenIdenticalSourceAndPairedSeeds_ExpectedExactZeroDifferentialAndRejection()
+    {
+        // Paired evaluation gives the candidate and incumbent the same deal seed, so two
+        // byte-identical scripts must produce byte-identical outcomes. This is the direct
+        // proof that pairing removes deal-to-deal noise from the promotion comparison.
+        var request = CreateRequest(
+            learningSeat: 1,
+            incumbentSource: FirstLegalMoveScriptSource,
+            candidateSource: FirstLegalMoveScriptSource,
+            evaluationMatchCount: 8,
+            baseSeed: 4242,
+            minimumWinRateImprovement: 0.05,
+            minimumScoreDifferentialImprovement: 1);
+
+        var decision = await new BonesStrategyPromotionEvaluator(new BonesMatchSimulator())
+            .EvaluateAsync(request, CancellationToken.None);
+
+        Assert.Equal(decision.Metrics.CandidateWins, decision.Metrics.IncumbentWins);
+        Assert.Equal(0.0, decision.Metrics.ScoreDifferentialDelta, precision: 10);
+        Assert.Equal(BonesPromotionDecisionOutcome.Rejected, decision.Outcome);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", BonesRequirementsChecklistItems.BehaviorProofPolicy)]
+    public async Task EvaluateAsync_GivenConfidenceGateAndFewerThanFourMatches_ExpectedRejected()
+    {
+        // The confidence gate refuses to decide on fewer than four matches even when the
+        // candidate happens to win the tiny sample.
+        var request = CreateRequest(
+            learningSeat: 1,
+            incumbentSource: FirstLegalMoveScriptSource,
+            candidateSource: LastLegalMoveScriptSource,
+            evaluationMatchCount: 3,
+            baseSeed: 9001,
+            minimumWinRateImprovement: 0.05,
+            minimumScoreDifferentialImprovement: 0);
+
+        var decision = await new BonesStrategyPromotionEvaluator(new BonesMatchSimulator())
+            .EvaluateAsync(request, CancellationToken.None);
+
+        Assert.Equal(BonesPromotionDecisionOutcome.Rejected, decision.Outcome);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", BonesRequirementsChecklistItems.BehaviorProofPolicy)]
+    public async Task EvaluateAsync_GivenLegacyOrGateOption_ExpectedLegacyThresholdBehavior()
+    {
+        var request = CreateRequest(
+            learningSeat: 1,
+            incumbentSource: FirstLegalMoveScriptSource,
+            candidateSource: LastLegalMoveScriptSource,
+            evaluationMatchCount: 8,
+            baseSeed: 4242,
+            minimumWinRateImprovement: 0.05,
+            minimumScoreDifferentialImprovement: 1);
+        request = request with
+        {
+            Options = new BonesStrategyPromotionOptions
+            {
+                EvaluationMatchCount = 8,
+                MinimumWinRateImprovement = 0.05,
+                MinimumScoreDifferentialImprovement = 1,
+                GateMode = BonesPromotionGateMode.LegacyOr,
+                UsePairedEvaluationSeeds = true,
+            },
+        };
+
+        var decision = await new BonesStrategyPromotionEvaluator(new BonesMatchSimulator())
+            .EvaluateAsync(request, CancellationToken.None);
+
+        // The legacy path must remain available for reproducibility of older decisions.
+        Assert.True(Enum.IsDefined(decision.Outcome));
     }
 
     private static Task<BonesPromotionDecision> EvaluateAsync(

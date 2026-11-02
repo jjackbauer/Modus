@@ -1,0 +1,797 @@
+# WP-0.1 staged baseline diff
+captured=2026-11-02T11:08:18.5419319-03:00
+--- diff --stat ---
+ .../audit-host-di-before-adding-services.md        |    1 +
+ ...ck-json-serialization-options-before-testing.md |    1 +
+ .claude/commands/di-factory-override.md            |    1 +
+ .../isolate-static-state-in-parallel-tests.md      |    1 +
+ .claude/commands/protect-user-workspace-data.md    |    1 +
+ .claude/commands/retrospective-harness-encoding.md |    1 +
+ .claude/commands/runtime-verify-cross-boundary.md  |    1 +
+ .claude/commands/static-singleton-di-fallback.md   |    1 +
+ .../commands/trace-all-callers-before-mirroring.md |    1 +
+ .claude/commands/trace-runtime-path.md             |    1 +
+ .../verify-renderer-output-before-dom-tests.md     |    1 +
+ .../audit-host-di-before-adding-services.md        |    1 +
+ ...ck-json-serialization-options-before-testing.md |    1 +
+ .cursor/commands/di-factory-override.md            |    1 +
+ .../isolate-static-state-in-parallel-tests.md      |    1 +
+ .cursor/commands/protect-user-workspace-data.md    |    1 +
+ .cursor/commands/retrospective-harness-encoding.md |    1 +
+ .cursor/commands/runtime-verify-cross-boundary.md  |    1 +
+ .cursor/commands/static-singleton-di-fallback.md   |    1 +
+ .../commands/trace-all-callers-before-mirroring.md |    1 +
+ .cursor/commands/trace-runtime-path.md             |    1 +
+ .../verify-renderer-output-before-dom-tests.md     |    1 +
+ .cursor/encoding-proof-utf8-only.txt               |    3 +
+ .cursor/rules/utf8-file-encoding.mdc               |   38 +
+ .editorconfig                                      |    2 +
+ .githooks/pre-commit                               |    4 +
+ .../audit-host-di-before-adding-services.prompt.md |    6 +
+ ...-serialization-options-before-testing.prompt.md |    6 +
+ .github/prompts/di-factory-override.prompt.md      |    6 +
+ ...solate-static-state-in-parallel-tests.prompt.md |    6 +
+ .../prompts/protect-user-workspace-data.prompt.md  |    6 +
+ .github/prompts/requirements-gathering.prompt.md   |    2 +-
+ .../retrospective-harness-encoding.prompt.md       |    6 +
+ .../runtime-verify-cross-boundary.prompt.md        |    6 +
+ .../prompts/static-singleton-di-fallback.prompt.md |    6 +
+ .../trace-all-callers-before-mirroring.prompt.md   |    6 +
+ .github/prompts/trace-runtime-path.prompt.md       |    6 +
+ ...rify-renderer-output-before-dom-tests.prompt.md |    6 +
+ .../requirements/DotNet-App-Development-Flows.md   |    2 +-
+ .github/requirements/WIP.Contributor-Readmes.md    |   20 +-
+ .../requirements/Wip.DotNet-Development-Flows.md   |    2 +-
+ .github/requirements/Wip.Next-Steps.md             |    4 +-
+ .github/requirements/Wip.ShellHost.md              |    4 +-
+ .../Wip.Src-WIP-Project-Layout-Refactoring.md      |   13 +-
+ .gitignore                                         |   19 +
+ .vscode/settings.json                              |    4 +-
+ AGENTS.md                                          |   17 +
+ Makefile                                           |  192 +-
+ Modus.slnx                                         |   10 +
+ ...342\200\224 Live Evaluation and v2 Proposal.md" |  554 +++++
+ ...p \342\200\224 Post-Fix Critical Evaluation.md" |  234 +++
+ ...342\200\224 Strategy Pool Adversarial Audit.md" |  258 +++
+ ...earning Loop \342\200\224 v2 P0 Remediation.md" |  152 ++
+ ...p \342\200\224 v3 Learning Improvement Plan.md" |  434 ++++
+ .../BonesLibraryRecovery.csproj                    |   10 +
+ WIP/BonesLibraryRecovery/Program.cs                |  257 +++
+ .../Artifacts/ArtifactContracts.cs                 |  119 ++
+ .../Artifacts/WipArtifactStoreLocalTests.cs        |  268 +++
+ .../Artifacts/WipArtifactStoreLocal.cs             |  379 ++++
+ WIP/Wip.Artifacts.Local/Wip.Artifacts.Local.csproj |    1 +
+ .../Budget/BonesGameSimulationBudget.cs            |  101 +-
+ .../Champions/BonesChampionAggregation.cs          |   47 +
+ .../Champions/BonesChampionSelection.cs            |  210 ++
+ .../Enhance/BonesCoLearningEnhanceAgent.cs         |   68 +-
+ .../Enhance/BonesEnhancePromptBuilder.cs           |   86 +-
+ .../Enhance/BonesEnhanceStrategyAgent.cs           |  473 +++--
+ WIP/Wip.Bones.Agents/Enhance/BonesEnhanceTypes.cs  |    4 +-
+ .../Enhance/BonesStagnationException.cs            |   33 +
+ .../Knowledge/BonesCrossSeatMatchConfig.cs         |  108 +
+ .../Knowledge/BonesEloCalculator.cs                |   70 +
+ .../Knowledge/BonesKnowledgeTypes.cs               |   55 +-
+ .../Knowledge/BonesOpponentProfile.cs              |  136 ++
+ .../Knowledge/BonesPlayerKnowledgeStore.cs         |   19 +-
+ .../Knowledge/BonesStrategyDiversityGate.cs        |  362 ++++
+ .../Knowledge/BonesStrategyGraveyard.cs            |  170 ++
+ .../Knowledge/BonesStrategyLibrary.cs              |   97 +-
+ .../Knowledge/BonesStrategyLibraryRanking.cs       |   53 +-
+ .../Knowledge/BonesStrategyPool.cs                 |  978 +++++++++
+ .../Knowledge/BonesStrategyPromotionEvaluator.cs   |  525 ++++-
+ .../Knowledge/CrossBreedPromptBuilder.cs           |   56 +
+ .../Knowledge/EvaluationCycleManager.cs            |  109 +
+ .../Knowledge/ExplorationInjector.cs               |  182 ++
+ .../Knowledge/PoolLineageRecord.cs                 |   34 +
+ .../Knowledge/PoolPersistenceTypes.cs              |  192 ++
+ .../Knowledge/PopulationMatchComposer.cs           |  102 +
+ .../Knowledge/PopulationPoolOptions.cs             |   57 +
+ .../Knowledge/TournamentSelector.cs                |  190 ++
+ .../Observe/BonesObserveGamesTool.cs               |   42 +-
+ .../Observe/BonesObserveGamesTypes.cs              |    1 +
+ WIP/Wip.Bones.Agents/Play/BonesPlayMatchTool.cs    |  193 +-
+ WIP/Wip.Bones.Agents/Play/BonesPlayMatchTypes.cs   |    3 +-
+ .../Play/BonesStrategyPlayerSlotFactory.cs         |    3 +-
+ .../Ponder/BonesAggressiveIterationOptions.cs      |   52 +
+ WIP/Wip.Bones.Agents/Ponder/BonesPonderAgent.cs    |    6 +-
+ .../Ponder/BonesPonderCompileRetryOptions.cs       |    2 +-
+ WIP/Wip.Bones.Agents/Ponder/BonesPonderTypes.cs    |    3 +-
+ WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj       |    3 +
+ .../Workflow/BonesCoLearningOrchestrator.cs        |   58 +-
+ .../Workflow/BonesCoLearningStageTools.cs          |   16 +-
+ .../Workflow/BonesLearningWorkflowMapRuntime.cs    |   10 +-
+ .../Workflow/BonesLearningWorkflowRegistration.cs  |    1 +
+ .../Workflow/BonesLearningWorkflowTypes.cs         |   20 +-
+ WIP/Wip.Bones.Benchmark/Arena.cs                   |  181 ++
+ WIP/Wip.Bones.Benchmark/ChainStep.cs               |   11 +
+ WIP/Wip.Bones.Benchmark/ChampionRunner.cs          |  196 ++
+ WIP/Wip.Bones.Benchmark/DeterministicOpponents.cs  |  136 ++
+ WIP/Wip.Bones.Benchmark/GateStudy.cs               |  427 ++++
+ WIP/Wip.Bones.Benchmark/HistoryScanner.cs          |  273 +++
+ WIP/Wip.Bones.Benchmark/Model.cs                   |   77 +
+ WIP/Wip.Bones.Benchmark/Program.cs                 |  293 +++
+ WIP/Wip.Bones.Benchmark/README.md                  |   71 +
+ WIP/Wip.Bones.Benchmark/Stats.cs                   |   52 +
+ WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj |   15 +
+ .../BehaviorProofComplianceRegistryTests.cs        |   19 +
+ .../BonesCoLearningHostTests.cs                    |   31 +-
+ .../BonesCoLearningMetricsTests.cs                 |  258 +++
+ .../BonesDeepSeekHostRequirementsChecklistItems.cs |    2 +-
+ .../BonesGameSimulationBudgetTests.cs              |  181 ++
+ .../BonesHostAllowUnboundedOptionsTests.cs         |  116 ++
+ .../BonesHostDeepSeekIntegrationTests.cs           |    4 +-
+ .../BonesHostDeepSeekOperatorDocumentationTests.cs |    2 +
+ .../BonesHostDeepSeekServiceCollectionTests.cs     |    9 +-
+ .../BonesHostDeepSeekStatusApiTests.cs             |   12 +-
+ .../BonesHostOptionsDeepSeekTests.cs               |  101 +-
+ .../BonesHostOptionsPerStageModelTests.cs          |    8 +-
+ WIP/Wip.Bones.Host.Tests/BonesHostTestFactory.cs   |   28 +-
+ .../BonesHostUnboundedStartupTests.cs              |   67 +
+ .../BonesLearningLoopHostCapTests.cs               |   21 +-
+ .../BonesLearningLoopHostTests.cs                  |   29 +-
+ .../BonesLearningLoopPromotionHostTests.cs         |   12 +-
+ .../BonesLearningLoopStageMonitorTests.cs          |   87 +
+ .../BonesLoopStateSessionTests.cs                  |  170 ++
+ .../BonesPerStageModelRoutingStatusApiTests.cs     |    4 +-
+ .../BonesPoolPersistenceTests.cs                   |  684 ++++++
+ .../BonesPoolResumeAndIntegrityTests.cs            |  643 ++++++
+ WIP/Wip.Bones.Host.Tests/BonesPoolWiringTests.cs   |  314 +++
+ WIP/Wip.Bones.Host.Tests/BonesStartupPlanTests.cs  |  155 ++
+ WIP/Wip.Bones.Host.Tests/BonesStatusApiTests.cs    |  270 ++-
+ WIP/Wip.Bones.Host.Tests/BonesStrategyPoolTests.cs | 2172 ++++++++++++++++++++
+ .../WipBonesStatusApiFixesBehaviorProofVerifier.cs |   92 +
+ .../PopulationMatchComposerTests.cs                |  139 ++
+ ...atusApiFixesBehaviorProofComplianceGateTests.cs |  194 ++
+ WIP/Wip.Bones.Host/BonesCoLearningMetrics.cs       |  119 +-
+ WIP/Wip.Bones.Host/BonesHostApplication.cs         |  136 +-
+ WIP/Wip.Bones.Host/BonesHostOptions.cs             |  318 ++-
+ .../BonesHostServiceCollectionExtensions.cs        |  125 +-
+ WIP/Wip.Bones.Host/BonesHostSessionStore.cs        |    6 +-
+ WIP/Wip.Bones.Host/BonesLearningLoopHost.cs        |  215 +-
+ .../BonesLearningLoopStageMonitor.cs               |   19 +-
+ WIP/Wip.Bones.Host/BonesLoopState.cs               |   15 +
+ WIP/Wip.Bones.Host/BonesStartupPlan.cs             |   94 +
+ WIP/Wip.Bones.Host/README.md                       |  157 +-
+ WIP/Wip.Bones.Host/appsettings.json                |   80 +-
+ .../bones-data/.bones/strategy-library/seat-1.json |   14 +-
+ .../bones-data/.bones/strategy-library/seat-2.json |   16 +-
+ .../bones-data/.bones/strategy-library/seat-3.json |   16 +-
+ .../bones-data/.bones/strategy-library/seat-4.json |   16 +-
+ .../DeepSeekBonesStrategyAuthoringProviderTests.cs |   14 +-
+ .../BonesDeepSeekRequirementsChecklistItems.cs     |    4 +-
+ .../BonesDeepSeekResiliencePipelineTests.cs        |  317 +++
+ .../BonesDeepSeekProviderOptionsTests.cs           |   28 +-
+ ...eepSeekBonesStrategyEnhancementProviderTests.cs |   12 +-
+ .../BonesDeepSeekHttpMappingProofTests.cs          |   23 +-
+ .../Play/DeepSeekBonesPlayTurnProviderTests.cs     |   46 +-
+ .../AddBonesDeepSeekModelProvidersTests.cs         |    2 +-
+ .../BonesDeepSeekProviderOptions.cs                |   57 +-
+ .../BonesDeepSeekResilienceOptions.cs              |   43 +
+ .../BonesDeepSeekResiliencePipeline.cs             |  205 ++
+ .../BonesDeepSeekServiceCollectionExtensions.cs    |   96 +-
+ .../DeepSeekBonesPlayTurnProvider.cs               |    4 +-
+ .../DeepSeekBonesStrategyAuthoringProvider.cs      |    4 +-
+ .../DeepSeekBonesStrategyEnhancementProvider.cs    |    4 +-
+ .../RateLimitAwareDelegatingHandler.cs             |  132 ++
+ .../Wip.Bones.ModelProviders.DeepSeek.csproj       |    1 +
+ .../Agents/BonesCoLearningLibraryViabilityTests.cs |    2 +
+ .../Agents/BonesEnhanceAggressiveFeaturesTests.cs  |  561 +++++
+ .../Agents/BonesEnhancePromptBuilderTests.cs       |  283 +++
+ .../Agents/BonesEnhanceStrategyAgentTests.cs       |   80 +-
+ .../BonesLearningLoopReliabilityAgentTests.cs      |   48 +-
+ .../Agents/BonesPlayMatchToolTests.cs              |   68 +-
+ .../Agents/BonesPlayerKnowledgeStoreTests.cs       |    2 +-
+ .../Agents/BonesPonderAgentTests.cs                |    2 +-
+ .../Agents/BonesPonderCompileRetryOptionsTests.cs  |   20 +
+ ...ingLoopReliabilityRequirementsChecklistItems.cs |    2 +-
+ ...LearningWorkflowMapRuntimePerStageModelTests.cs |   20 +-
+ ...LearningWorkflowParametersPerStageModelTests.cs |   14 +-
+ .../BonesGameSimulationBudgetConcurrencyTests.cs   |  124 +-
+ .../Champions/BonesChampionAggregatorTests.cs      |   59 +
+ .../Champions/BonesChampionSelectorTests.cs        |  232 +++
+ WIP/Wip.Bones.Tests/Engine/BonesGameEngineTests.cs |    2 +-
+ .../Engine/BonesSeedDerivationTests.cs             |   63 +
+ .../BonesStrategyScriptHostDirectTimeoutTests.cs   |  160 ++
+ .../Knowledge/BonesCrossSeatMatchConfigTests.cs    |  148 ++
+ .../Knowledge/BonesOpponentProfileTests.cs         |  158 ++
+ .../Knowledge/BonesStrategyLibraryTests.cs         |   53 +
+ .../BonesPoolRequirementsChecklistItems.cs         |   11 +
+ .../Viewer/BonesBoardChainGeometryBuilderTests.cs  |    4 +-
+ ...BoardChainScaleCalculatorTransformScaleTests.cs |    2 +-
+ .../Viewer/BonesBoardVisualLayoutExtentTests.cs    |    2 +-
+ .../Viewer/BonesMatchViewerTests.cs                |    4 +-
+ .../Viewer/BonesPoolApiEndpointTests.cs            |  310 +++
+ .../Viewer/BonesPoolClientJsTests.cs               |   96 +
+ .../Viewer/BonesPoolPageRenderTests.cs             |  199 ++
+ .../Viewer/BonesPoolTestCollection.cs              |   10 +
+ .../Viewer/BonesPoolTestHelper.cs                  |   44 +
+ .../BonesViewerBoardChainGeometryDomTests.cs       |    2 +-
+ .../BonesViewerBoardChainLayoutPlannedTests.cs     |    2 +-
+ .../BonesViewerDominoRenderingChecklistTests.cs    |    2 +-
+ .../Viewer/BonesViewerDominoRenderingDomTests.cs   |    4 +-
+ .../BonesViewerEngineReplayedLongChainDomTests.cs  |    2 +-
+ .../BonesViewerLearningLoopStatusScriptTests.cs    |    6 +-
+ .../Viewer/BonesViewerTransformCssDomTests.cs      |    2 +-
+ .../Viewer/BonesViewerVisualizationTests.cs        |    4 +-
+ .../Viewer/BonesViewerWorkflowTests.cs             |    2 +-
+ .../Viewer/StrategyPoolJsonServiceTests.cs         |  277 +++
+ WIP/Wip.Bones.Web/BonesWebHost.cs                  |   90 +
+ WIP/Wip.Bones.Web/Program.cs                       |    1 +
+ .../Viewer/BonesMatchViewerService.cs              |    2 +-
+ .../Viewer/BonesViewerPageRenderer.cs              |    3 +
+ .../Viewer/StrategyDetailPageRenderer.cs           |  164 ++
+ .../Viewer/StrategyPoolJsonService.cs              |  342 +++
+ .../Viewer/StrategyPoolPageRenderer.cs             |  145 ++
+ WIP/Wip.Bones.Web/Viewer/StrategyPoolViewModels.cs |  114 +
+ WIP/Wip.Bones.Web/wwwroot/viewer/pool.css          |  436 ++++
+ WIP/Wip.Bones.Web/wwwroot/viewer/pool.js           |  164 ++
+ WIP/Wip.Bones/Domain/BonesStrategyPoolTypes.cs     |  193 ++
+ WIP/Wip.Bones/Engine/BonesMatchSimulator.cs        |    2 +-
+ .../Engine/BonesScriptStrategyPlayerSlot.cs        |   19 +-
+ WIP/Wip.Bones/Engine/BonesSeedDerivation.cs        |   95 +
+ WIP/Wip.Bones/Engine/BonesStrategyScriptHost.cs    |   63 +
+ .../Engine/BonesStrategyScriptHostOptions.cs       |    8 +
+ .../Builder/BuilderTestInMemoryArtifactStore.cs    |   45 +
+ .../WipBuilderPortabilityRuntimeProofTests.cs      |   36 +-
+ .../WipBuilderTypedWorkflowMapRuntimeProofTests.cs |   32 +-
+ .../ContributorReadmeRequirementsTests.cs          |  153 ++
+ .../Documentation/RepositoryLayoutTests.cs         |  131 ++
+ .../WipContributorArchitectureReadmeTests.cs       |   83 +-
+ .../Runtime/DeepSeekModelProviderTests.cs          |   63 +-
+ .../RuntimeReadmeLifecycleContractsTests.cs        |  108 +-
+ .../Runtime/WipRuntimeOrchestratorTests.cs         |  583 +++++-
+ .../WorkflowStageCapabilityDispatcherTests.cs      |  163 ++
+ WIP/Wip.Runtime/README.md                          |   42 +-
+ .../Runtime/AgentCapabilityArtifacts.cs            |   10 +-
+ WIP/Wip.Runtime/Runtime/DeepSeekModelProvider.cs   |   71 +-
+ WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs  |   74 +-
+ .../Runtime/WorkflowExecutionPipeline.cs           |   42 +
+ .../Runtime/WorkflowStageCapabilityDispatcher.cs   |  337 +++
+ .../Runtime/WorkflowStageDispatchScope.cs          |   51 +
+ .../Runtime/WorkflowStageMapAdapterRuntime.cs      |  224 ++
+ WIP/Wip.Runtime/Wip.Runtime.csproj                 |    1 +
+ .../ShellHostDocumentationTestDriver.cs            |   98 +
+ .../WipContributorDiagnosticsReadmeTests.cs        |   67 +
+ .../WipContributorOnboardingReadmeTests.cs         |  129 ++
+ .../E2E/BehaviorProofComplianceGateTests.cs        |  483 ++---
+ .../E2E/BehaviorProofComplianceRegistryTests.cs    |  237 +++
+ .../E2E/E2EComplianceSequentialCollection.cs       |    9 +
+ .../E2E/E2EMatrixComplianceGateTests.cs            |  108 +
+ .../E2E/ShellHostE2EHarnessTests.cs                |  259 ++-
+ .../E2E/WipTestBaselineGateTests.cs                |  153 ++
+ WIP/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj |    5 +
+ WIP/Wip.Shell.E2E.Tests/xunit.runner.json          |    6 +
+ .../Compliance/BehaviorProofComplianceRegistry.cs  |  560 +++++
+ .../Compliance/E2EMatrixComplianceRegistry.cs      |  312 +++
+ .../IntegrityRemediationBehaviorProofVerifier.cs   |  328 +++
+ .../Compliance/WipBonesBehaviorProofVerifier.cs    |   87 +
+ WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj             |   13 +
+ .../Interactive/WipShellCommandLoopTests.cs        |  248 ++-
+ WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs   |   51 +-
+ .../Interactive/WipShellCommandSemantics.cs        |  143 ++
+ WIP/Wip.Shell/README.md                            |   30 +-
+ .../Hosting/BehaviorProofComplianceGateTests.cs    |    4 +-
+ WIP/Wip.ShellHost/Hosting/WipShellHostFactory.cs   |  149 ++
+ WIP/Wip.ShellHost/README.md                        |   12 +-
+ WIP/Wip.ShellHost/Wip.ShellHost.csproj             |    3 +
+ .../DotNet/BehaviorProofComplianceGateTests.cs     |    2 +-
+ WIP/requirements/strategy-pool-persistence.md      |  226 ++
+ WIP/requirements/strategy-pool-visualization.md    |  333 +++
+ bones.ps1                                          |  116 ++
+ docs/WIP-Execution-Prompt.md                       |  434 ++++
+ docs/WIP-Implementation-Plan.md                    | 1366 ++++++++++++
+ docs/WIP-Implementation-Plan.pdf                   |  Bin 0 -> 1824542 bytes
+ docs/WIP-Requirements-and-Architecture-Report.md   | 1359 ++++++++++++
+ docs/WIP-Requirements-and-Architecture-Report.pdf  |  Bin 0 -> 2327696 bytes
+ docs/execution/blockers/BLK-NUGET-PUBLISH.md       |   27 +
+ docs/execution/blockers/BLK-TESTHOST-ENV.md        |   29 +
+ docs/execution/deviations/DEV-001-nuget-release.md |   44 +
+ docs/execution/evidence/G0/decision-2026-11-02.md  |   19 +
+ docs/execution/evidence/G0/gate-packet.md          |  131 ++
+ docs/execution/evidence/WP-0.1/baseline-facts.md   |  100 +
+ .../evidence/WP-0.1/baseline-manifest.txt          |  389 ++++
+ .../evidence/WP-0.1/command-exit-codes.txt         |   37 +
+ docs/execution/evidence/WP-0.1/dirty-tree.md       |   97 +
+ docs/execution/evidence/WP-0.1/encoding-check.txt  |   19 +
+ docs/execution/evidence/WP-0.1/fail-1-testhost.md  |   16 +
+ docs/execution/evidence/WP-0.1/git-diff-stat.txt   |  149 ++
+ .../evidence/WP-0.1/git-status-porcelain-uall.txt  |  670 ++++++
+ .../evidence/WP-0.1/git-status-porcelain.txt       |  308 +++
+ .../evidence/WP-0.1/harnesssync-check-after.txt    |    6 +
+ .../evidence/WP-0.1/harnesssync-check.txt          |   38 +
+ .../evidence/WP-0.1/harnesssync-tmp-test-red.txt   |   58 +
+ docs/execution/evidence/WP-0.1/modified-paths.txt  |  148 ++
+ docs/execution/evidence/WP-0.1/notes.md            |   38 +
+ docs/execution/evidence/WP-0.1/preflight.txt       |   46 +
+ docs/execution/evidence/WP-0.1/red.log             |   20 +
+ docs/execution/evidence/WP-0.1/repo-identity.txt   |   12 +
+ docs/execution/evidence/WP-0.1/secret-scan.md      |   42 +
+ .../evidence/WP-0.1/solution-coverage.txt          |   25 +
+ docs/execution/evidence/WP-0.1/untracked-paths.txt |  522 +++++
+ docs/execution/journal.md                          |   27 +
+ docs/execution/state.json                          |   39 +
+ docs/goal-bones-actual-champion/deliverables.md    |    7 +
+ docs/goal-bones-actual-champion/evidence.md        |   12 +
+ docs/goal-bones-actual-champion/goal.md            |   30 +
+ docs/goal-bones-actual-champion/journal.md         |   56 +
+ docs/goal-bones-actual-champion/state.md           |   52 +
+ docs/goal-bones-aggression-search/deliverables.md  |    8 +
+ docs/goal-bones-aggression-search/evidence.md      |   13 +
+ docs/goal-bones-aggression-search/goal.md          |   31 +
+ docs/goal-bones-aggression-search/journal.md       |  127 ++
+ docs/goal-bones-aggression-search/state.md         |   45 +
+ docs/goal-bones-champion-promotion/deliverables.md |   11 +
+ docs/goal-bones-champion-promotion/evidence.md     |   34 +
+ docs/goal-bones-champion-promotion/goal.md         |   30 +
+ docs/goal-bones-champion-promotion/journal.md      |  396 ++++
+ .../round-1/observation.md                         |  108 +
+ .../round-1/verdicts.md                            |   20 +
+ .../round-2/implementation.md                      |  103 +
+ .../round-4/orchestrator-verdicts.md               |   16 +
+ docs/goal-bones-champion-promotion/state.md        |   48 +
+ docs/goal-bones-fair-block-v2/deliverables.md      |   74 +
+ docs/goal-bones-fair-block-v2/evidence.md          |   26 +
+ docs/goal-bones-fair-block-v2/goal.md              |   52 +
+ docs/goal-bones-fair-block-v2/journal.md           |  264 +++
+ docs/goal-bones-fair-block-v2/state.md             |   62 +
+ docs/goal-bones-fair-block-v3/deliverables.md      |   73 +
+ docs/goal-bones-fair-block-v3/evidence.md          |   24 +
+ docs/goal-bones-fair-block-v3/goal.md              |  201 ++
+ docs/goal-bones-fair-block-v3/journal.md           |  257 +++
+ docs/goal-bones-fair-block-v3/state.md             |   74 +
+ docs/goal-bones-fair-block/deliverables.md         |    7 +
+ docs/goal-bones-fair-block/evidence.md             |   12 +
+ docs/goal-bones-fair-block/goal.md                 |   30 +
+ docs/goal-bones-fair-block/journal.md              |   56 +
+ docs/goal-bones-fair-block/state.md                |   53 +
+ docs/goal-bones-v3-learning/deliverables.md        |   10 +
+ docs/goal-bones-v3-learning/evidence.md            |   21 +
+ docs/goal-bones-v3-learning/goal.md                |   31 +
+ docs/goal-bones-v3-learning/journal.md             |  267 +++
+ docs/goal-bones-v3-learning/round-1/falsify-a.md   |   13 +
+ docs/goal-bones-v3-learning/round-1/falsify-b.md   |   46 +
+ docs/goal-bones-v3-learning/round-1/verdicts.md    |   19 +
+ .../round-2/implementation.md                      |  248 +++
+ docs/goal-bones-v3-learning/round-2/verdicts.md    |   21 +
+ .../round-3/implementation.md                      |  155 ++
+ docs/goal-bones-v3-learning/round-3/verdicts.md    |   17 +
+ docs/goal-bones-v3-learning/state.md               |   39 +
+ .../requirements/Wip.Bones.AggressiveEvaluation.md |  151 ++
+ .../requirements/Wip.Bones.AggressiveIteration.md  |  484 +++++
+ harness/requirements/Wip.Bones.BoardOrientation.md |  Bin 28448 -> 15988 bytes
+ .../requirements/Wip.Bones.ChampionPromotion.md    |  332 +++
+ .../Wip.Bones.CoLearningRemediation.md             |  168 ++
+ harness/requirements/Wip.Bones.DeepSeek.md         |   20 +-
+ harness/requirements/Wip.Bones.Host.md             |    2 +-
+ .../Wip.Bones.LearningLoopReliability.md           |  100 +-
+ .../Wip.Bones.LibraryPersistenceFix.md             |  212 ++
+ .../requirements/Wip.Bones.PerStageModelRouting.md |   14 +-
+ harness/requirements/Wip.Bones.ScriptStrategies.md |  103 +-
+ harness/requirements/Wip.Bones.StatusApiFixes.md   |  253 +++
+ ...egyPool-Runtime-Loop-Integration-Remediation.md |  158 ++
+ ....Bones.StrategyPool-Runtime-Loop-Integration.md |  393 ++++
+ .../Wip.Bones.StrategyPoolArchitecture.md          |  328 +++
+ harness/requirements/Wip.Integrity-Remediation.md  |  356 ++++
+ harness/requirements/Wip.Test-Performance.md       |  303 +++
+ harness/requirements/bones-pool-view.md            |  140 ++
+ .../rules/audit-host-di-before-adding-services.md  |   56 +
+ ...ck-json-serialization-options-before-testing.md |   57 +
+ harness/rules/di-factory-override.md               |   43 +
+ .../isolate-static-state-in-parallel-tests.md      |   74 +
+ harness/rules/protect-user-workspace-data.md       |   48 +
+ harness/rules/runtime-verify-cross-boundary.md     |   57 +
+ harness/rules/static-singleton-di-fallback.md      |   57 +
+ .../rules/trace-all-callers-before-mirroring.md    |   51 +
+ .../verify-renderer-output-before-dom-tests.md     |   54 +
+ .../iterative-implementation-orchestrator.md       |   21 +
+ harness/skills/retrospective-harness-encoding.md   |  121 ++
+ harness/skills/trace-runtime-path.md               |   59 +
+ harness/workflows/iterative-implementation.md      |    3 +
+ harness/workflows/requirements-gathering.md        |  128 +-
+ src/WIP.Contributor-Architecture.README.md         |   71 +
+ .../TextFileEncodingValidatorTests.cs              |   69 +
+ tools/HarnessSync/Program.cs                       |    8 +-
+ tools/HarnessSync/TextFileEncodingValidator.cs     |   87 +
+ tools/encoding/Repair-TextFileUtf8.ps1             |   22 +
+ tools/encoding/Test-StagedTextFileEncoding.ps1     |   48 +
+ tools/encoding/WriteUtf8.ps1                       |   39 +
+ 395 files changed, 42038 insertions(+), 1427 deletions(-)
+
+--- diff --name-status ---
+A	.claude/commands/audit-host-di-before-adding-services.md
+A	.claude/commands/check-json-serialization-options-before-testing.md
+A	.claude/commands/di-factory-override.md
+A	.claude/commands/isolate-static-state-in-parallel-tests.md
+A	.claude/commands/protect-user-workspace-data.md
+A	.claude/commands/retrospective-harness-encoding.md
+A	.claude/commands/runtime-verify-cross-boundary.md
+A	.claude/commands/static-singleton-di-fallback.md
+A	.claude/commands/trace-all-callers-before-mirroring.md
+A	.claude/commands/trace-runtime-path.md
+A	.claude/commands/verify-renderer-output-before-dom-tests.md
+A	.cursor/commands/audit-host-di-before-adding-services.md
+A	.cursor/commands/check-json-serialization-options-before-testing.md
+A	.cursor/commands/di-factory-override.md
+A	.cursor/commands/isolate-static-state-in-parallel-tests.md
+A	.cursor/commands/protect-user-workspace-data.md
+A	.cursor/commands/retrospective-harness-encoding.md
+A	.cursor/commands/runtime-verify-cross-boundary.md
+A	.cursor/commands/static-singleton-di-fallback.md
+A	.cursor/commands/trace-all-callers-before-mirroring.md
+A	.cursor/commands/trace-runtime-path.md
+A	.cursor/commands/verify-renderer-output-before-dom-tests.md
+A	.cursor/encoding-proof-utf8-only.txt
+A	.cursor/rules/utf8-file-encoding.mdc
+A	.editorconfig
+A	.githooks/pre-commit
+A	.github/prompts/audit-host-di-before-adding-services.prompt.md
+A	.github/prompts/check-json-serialization-options-before-testing.prompt.md
+A	.github/prompts/di-factory-override.prompt.md
+A	.github/prompts/isolate-static-state-in-parallel-tests.prompt.md
+A	.github/prompts/protect-user-workspace-data.prompt.md
+M	.github/prompts/requirements-gathering.prompt.md
+A	.github/prompts/retrospective-harness-encoding.prompt.md
+A	.github/prompts/runtime-verify-cross-boundary.prompt.md
+A	.github/prompts/static-singleton-di-fallback.prompt.md
+A	.github/prompts/trace-all-callers-before-mirroring.prompt.md
+A	.github/prompts/trace-runtime-path.prompt.md
+A	.github/prompts/verify-renderer-output-before-dom-tests.prompt.md
+M	.github/requirements/DotNet-App-Development-Flows.md
+M	.github/requirements/WIP.Contributor-Readmes.md
+M	.github/requirements/Wip.DotNet-Development-Flows.md
+M	.github/requirements/Wip.Next-Steps.md
+M	.github/requirements/Wip.ShellHost.md
+M	.github/requirements/Wip.Src-WIP-Project-Layout-Refactoring.md
+M	.gitignore
+M	.vscode/settings.json
+M	AGENTS.md
+M	Makefile
+M	Modus.slnx
+A	"WIP/Bones Learning Loop \342\200\224 Live Evaluation and v2 Proposal.md"
+A	"WIP/Bones Learning Loop \342\200\224 Post-Fix Critical Evaluation.md"
+A	"WIP/Bones Learning Loop \342\200\224 Strategy Pool Adversarial Audit.md"
+A	"WIP/Bones Learning Loop \342\200\224 v2 P0 Remediation.md"
+A	"WIP/Bones Learning Loop \342\200\224 v3 Learning Improvement Plan.md"
+A	WIP/BonesLibraryRecovery/BonesLibraryRecovery.csproj
+A	WIP/BonesLibraryRecovery/Program.cs
+A	WIP/Wip.Abstractions/Artifacts/ArtifactContracts.cs
+A	WIP/Wip.Artifacts.Local.Tests/Artifacts/WipArtifactStoreLocalTests.cs
+A	WIP/Wip.Artifacts.Local/Artifacts/WipArtifactStoreLocal.cs
+M	WIP/Wip.Artifacts.Local/Wip.Artifacts.Local.csproj
+M	WIP/Wip.Bones.Agents/Budget/BonesGameSimulationBudget.cs
+A	WIP/Wip.Bones.Agents/Champions/BonesChampionAggregation.cs
+A	WIP/Wip.Bones.Agents/Champions/BonesChampionSelection.cs
+M	WIP/Wip.Bones.Agents/Enhance/BonesCoLearningEnhanceAgent.cs
+M	WIP/Wip.Bones.Agents/Enhance/BonesEnhancePromptBuilder.cs
+M	WIP/Wip.Bones.Agents/Enhance/BonesEnhanceStrategyAgent.cs
+M	WIP/Wip.Bones.Agents/Enhance/BonesEnhanceTypes.cs
+A	WIP/Wip.Bones.Agents/Enhance/BonesStagnationException.cs
+A	WIP/Wip.Bones.Agents/Knowledge/BonesCrossSeatMatchConfig.cs
+A	WIP/Wip.Bones.Agents/Knowledge/BonesEloCalculator.cs
+M	WIP/Wip.Bones.Agents/Knowledge/BonesKnowledgeTypes.cs
+A	WIP/Wip.Bones.Agents/Knowledge/BonesOpponentProfile.cs
+M	WIP/Wip.Bones.Agents/Knowledge/BonesPlayerKnowledgeStore.cs
+A	WIP/Wip.Bones.Agents/Knowledge/BonesStrategyDiversityGate.cs
+A	WIP/Wip.Bones.Agents/Knowledge/BonesStrategyGraveyard.cs
+M	WIP/Wip.Bones.Agents/Knowledge/BonesStrategyLibrary.cs
+M	WIP/Wip.Bones.Agents/Knowledge/BonesStrategyLibraryRanking.cs
+A	WIP/Wip.Bones.Agents/Knowledge/BonesStrategyPool.cs
+M	WIP/Wip.Bones.Agents/Knowledge/BonesStrategyPromotionEvaluator.cs
+A	WIP/Wip.Bones.Agents/Knowledge/CrossBreedPromptBuilder.cs
+A	WIP/Wip.Bones.Agents/Knowledge/EvaluationCycleManager.cs
+A	WIP/Wip.Bones.Agents/Knowledge/ExplorationInjector.cs
+A	WIP/Wip.Bones.Agents/Knowledge/PoolLineageRecord.cs
+A	WIP/Wip.Bones.Agents/Knowledge/PoolPersistenceTypes.cs
+A	WIP/Wip.Bones.Agents/Knowledge/PopulationMatchComposer.cs
+A	WIP/Wip.Bones.Agents/Knowledge/PopulationPoolOptions.cs
+A	WIP/Wip.Bones.Agents/Knowledge/TournamentSelector.cs
+M	WIP/Wip.Bones.Agents/Observe/BonesObserveGamesTool.cs
+M	WIP/Wip.Bones.Agents/Observe/BonesObserveGamesTypes.cs
+M	WIP/Wip.Bones.Agents/Play/BonesPlayMatchTool.cs
+M	WIP/Wip.Bones.Agents/Play/BonesPlayMatchTypes.cs
+M	WIP/Wip.Bones.Agents/Play/BonesStrategyPlayerSlotFactory.cs
+A	WIP/Wip.Bones.Agents/Ponder/BonesAggressiveIterationOptions.cs
+M	WIP/Wip.Bones.Agents/Ponder/BonesPonderAgent.cs
+M	WIP/Wip.Bones.Agents/Ponder/BonesPonderCompileRetryOptions.cs
+M	WIP/Wip.Bones.Agents/Ponder/BonesPonderTypes.cs
+M	WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj
+M	WIP/Wip.Bones.Agents/Workflow/BonesCoLearningOrchestrator.cs
+M	WIP/Wip.Bones.Agents/Workflow/BonesCoLearningStageTools.cs
+M	WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflowMapRuntime.cs
+M	WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflowRegistration.cs
+M	WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflowTypes.cs
+A	WIP/Wip.Bones.Benchmark/Arena.cs
+A	WIP/Wip.Bones.Benchmark/ChainStep.cs
+A	WIP/Wip.Bones.Benchmark/ChampionRunner.cs
+A	WIP/Wip.Bones.Benchmark/DeterministicOpponents.cs
+A	WIP/Wip.Bones.Benchmark/GateStudy.cs
+A	WIP/Wip.Bones.Benchmark/HistoryScanner.cs
+A	WIP/Wip.Bones.Benchmark/Model.cs
+A	WIP/Wip.Bones.Benchmark/Program.cs
+A	WIP/Wip.Bones.Benchmark/README.md
+A	WIP/Wip.Bones.Benchmark/Stats.cs
+A	WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj
+M	WIP/Wip.Bones.Host.Tests/BehaviorProofComplianceRegistryTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesCoLearningHostTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesCoLearningMetricsTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesDeepSeekHostRequirementsChecklistItems.cs
+M	WIP/Wip.Bones.Host.Tests/BonesGameSimulationBudgetTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesHostAllowUnboundedOptionsTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekIntegrationTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekOperatorDocumentationTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekServiceCollectionTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekStatusApiTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostOptionsDeepSeekTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostOptionsPerStageModelTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesHostTestFactory.cs
+A	WIP/Wip.Bones.Host.Tests/BonesHostUnboundedStartupTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesLearningLoopHostCapTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesLearningLoopHostTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesLearningLoopPromotionHostTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesLearningLoopStageMonitorTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesLoopStateSessionTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesPerStageModelRoutingStatusApiTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesPoolPersistenceTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesPoolResumeAndIntegrityTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesPoolWiringTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesStartupPlanTests.cs
+M	WIP/Wip.Bones.Host.Tests/BonesStatusApiTests.cs
+A	WIP/Wip.Bones.Host.Tests/BonesStrategyPoolTests.cs
+A	WIP/Wip.Bones.Host.Tests/Compliance/WipBonesStatusApiFixesBehaviorProofVerifier.cs
+A	WIP/Wip.Bones.Host.Tests/PopulationMatchComposerTests.cs
+A	WIP/Wip.Bones.Host.Tests/StatusApiFixesBehaviorProofComplianceGateTests.cs
+M	WIP/Wip.Bones.Host/BonesCoLearningMetrics.cs
+M	WIP/Wip.Bones.Host/BonesHostApplication.cs
+M	WIP/Wip.Bones.Host/BonesHostOptions.cs
+M	WIP/Wip.Bones.Host/BonesHostServiceCollectionExtensions.cs
+M	WIP/Wip.Bones.Host/BonesHostSessionStore.cs
+M	WIP/Wip.Bones.Host/BonesLearningLoopHost.cs
+M	WIP/Wip.Bones.Host/BonesLearningLoopStageMonitor.cs
+M	WIP/Wip.Bones.Host/BonesLoopState.cs
+A	WIP/Wip.Bones.Host/BonesStartupPlan.cs
+M	WIP/Wip.Bones.Host/README.md
+M	WIP/Wip.Bones.Host/appsettings.json
+M	WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-1.json
+M	WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-2.json
+M	WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-3.json
+M	WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-4.json
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Authoring/DeepSeekBonesStrategyAuthoringProviderTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/BonesDeepSeekRequirementsChecklistItems.cs
+A	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/BonesDeepSeekResiliencePipelineTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Configuration/BonesDeepSeekProviderOptionsTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Enhancement/DeepSeekBonesStrategyEnhancementProviderTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/HttpMapping/BonesDeepSeekHttpMappingProofTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Play/DeepSeekBonesPlayTurnProviderTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Registration/AddBonesDeepSeekModelProvidersTests.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekProviderOptions.cs
+A	WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekResilienceOptions.cs
+A	WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekResiliencePipeline.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekServiceCollectionExtensions.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek/DeepSeekBonesPlayTurnProvider.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek/DeepSeekBonesStrategyAuthoringProvider.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek/DeepSeekBonesStrategyEnhancementProvider.cs
+A	WIP/Wip.Bones.ModelProviders.DeepSeek/RateLimitAwareDelegatingHandler.cs
+M	WIP/Wip.Bones.ModelProviders.DeepSeek/Wip.Bones.ModelProviders.DeepSeek.csproj
+M	WIP/Wip.Bones.Tests/Agents/BonesCoLearningLibraryViabilityTests.cs
+A	WIP/Wip.Bones.Tests/Agents/BonesEnhanceAggressiveFeaturesTests.cs
+M	WIP/Wip.Bones.Tests/Agents/BonesEnhancePromptBuilderTests.cs
+M	WIP/Wip.Bones.Tests/Agents/BonesEnhanceStrategyAgentTests.cs
+M	WIP/Wip.Bones.Tests/Agents/BonesLearningLoopReliabilityAgentTests.cs
+M	WIP/Wip.Bones.Tests/Agents/BonesPlayMatchToolTests.cs
+M	WIP/Wip.Bones.Tests/Agents/BonesPlayerKnowledgeStoreTests.cs
+M	WIP/Wip.Bones.Tests/Agents/BonesPonderAgentTests.cs
+A	WIP/Wip.Bones.Tests/Agents/BonesPonderCompileRetryOptionsTests.cs
+M	WIP/Wip.Bones.Tests/BonesLearningLoopReliabilityRequirementsChecklistItems.cs
+M	WIP/Wip.Bones.Tests/BonesLearningWorkflowMapRuntimePerStageModelTests.cs
+M	WIP/Wip.Bones.Tests/BonesLearningWorkflowParametersPerStageModelTests.cs
+M	WIP/Wip.Bones.Tests/Budget/BonesGameSimulationBudgetConcurrencyTests.cs
+A	WIP/Wip.Bones.Tests/Champions/BonesChampionAggregatorTests.cs
+A	WIP/Wip.Bones.Tests/Champions/BonesChampionSelectorTests.cs
+M	WIP/Wip.Bones.Tests/Engine/BonesGameEngineTests.cs
+A	WIP/Wip.Bones.Tests/Engine/BonesSeedDerivationTests.cs
+A	WIP/Wip.Bones.Tests/Engine/BonesStrategyScriptHostDirectTimeoutTests.cs
+A	WIP/Wip.Bones.Tests/Knowledge/BonesCrossSeatMatchConfigTests.cs
+A	WIP/Wip.Bones.Tests/Knowledge/BonesOpponentProfileTests.cs
+M	WIP/Wip.Bones.Tests/Knowledge/BonesStrategyLibraryTests.cs
+A	WIP/Wip.Bones.Web.Tests/BonesPoolRequirementsChecklistItems.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesBoardChainGeometryBuilderTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesBoardChainScaleCalculatorTransformScaleTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesBoardVisualLayoutExtentTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesMatchViewerTests.cs
+A	WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolApiEndpointTests.cs
+A	WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolClientJsTests.cs
+A	WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolPageRenderTests.cs
+A	WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolTestCollection.cs
+A	WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolTestHelper.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerBoardChainGeometryDomTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerBoardChainLayoutPlannedTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerDominoRenderingChecklistTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerDominoRenderingDomTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerEngineReplayedLongChainDomTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerLearningLoopStatusScriptTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerTransformCssDomTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerVisualizationTests.cs
+M	WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerWorkflowTests.cs
+A	WIP/Wip.Bones.Web.Tests/Viewer/StrategyPoolJsonServiceTests.cs
+M	WIP/Wip.Bones.Web/BonesWebHost.cs
+M	WIP/Wip.Bones.Web/Program.cs
+M	WIP/Wip.Bones.Web/Viewer/BonesMatchViewerService.cs
+M	WIP/Wip.Bones.Web/Viewer/BonesViewerPageRenderer.cs
+A	WIP/Wip.Bones.Web/Viewer/StrategyDetailPageRenderer.cs
+A	WIP/Wip.Bones.Web/Viewer/StrategyPoolJsonService.cs
+A	WIP/Wip.Bones.Web/Viewer/StrategyPoolPageRenderer.cs
+A	WIP/Wip.Bones.Web/Viewer/StrategyPoolViewModels.cs
+A	WIP/Wip.Bones.Web/wwwroot/viewer/pool.css
+A	WIP/Wip.Bones.Web/wwwroot/viewer/pool.js
+A	WIP/Wip.Bones/Domain/BonesStrategyPoolTypes.cs
+M	WIP/Wip.Bones/Engine/BonesMatchSimulator.cs
+M	WIP/Wip.Bones/Engine/BonesScriptStrategyPlayerSlot.cs
+A	WIP/Wip.Bones/Engine/BonesSeedDerivation.cs
+M	WIP/Wip.Bones/Engine/BonesStrategyScriptHost.cs
+M	WIP/Wip.Bones/Engine/BonesStrategyScriptHostOptions.cs
+A	WIP/Wip.Builder.Tests/Builder/BuilderTestInMemoryArtifactStore.cs
+M	WIP/Wip.Builder.Tests/Builder/WipBuilderPortabilityRuntimeProofTests.cs
+M	WIP/Wip.Builder.Tests/Builder/WipBuilderTypedWorkflowMapRuntimeProofTests.cs
+A	WIP/Wip.Modus.Tests/Documentation/ContributorReadmeRequirementsTests.cs
+A	WIP/Wip.Modus.Tests/Documentation/RepositoryLayoutTests.cs
+M	WIP/Wip.Modus.Tests/Documentation/WipContributorArchitectureReadmeTests.cs
+M	WIP/Wip.Runtime.Tests/Runtime/DeepSeekModelProviderTests.cs
+M	WIP/Wip.Runtime.Tests/Runtime/RuntimeReadmeLifecycleContractsTests.cs
+M	WIP/Wip.Runtime.Tests/Runtime/WipRuntimeOrchestratorTests.cs
+A	WIP/Wip.Runtime.Tests/Runtime/WorkflowStageCapabilityDispatcherTests.cs
+M	WIP/Wip.Runtime/README.md
+M	WIP/Wip.Runtime/Runtime/AgentCapabilityArtifacts.cs
+M	WIP/Wip.Runtime/Runtime/DeepSeekModelProvider.cs
+M	WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs
+M	WIP/Wip.Runtime/Runtime/WorkflowExecutionPipeline.cs
+A	WIP/Wip.Runtime/Runtime/WorkflowStageCapabilityDispatcher.cs
+A	WIP/Wip.Runtime/Runtime/WorkflowStageDispatchScope.cs
+A	WIP/Wip.Runtime/Runtime/WorkflowStageMapAdapterRuntime.cs
+M	WIP/Wip.Runtime/Wip.Runtime.csproj
+A	WIP/Wip.Shell.E2E.Tests/Documentation/ShellHostDocumentationTestDriver.cs
+A	WIP/Wip.Shell.E2E.Tests/Documentation/WipContributorDiagnosticsReadmeTests.cs
+A	WIP/Wip.Shell.E2E.Tests/Documentation/WipContributorOnboardingReadmeTests.cs
+M	WIP/Wip.Shell.E2E.Tests/E2E/BehaviorProofComplianceGateTests.cs
+A	WIP/Wip.Shell.E2E.Tests/E2E/BehaviorProofComplianceRegistryTests.cs
+A	WIP/Wip.Shell.E2E.Tests/E2E/E2EComplianceSequentialCollection.cs
+A	WIP/Wip.Shell.E2E.Tests/E2E/E2EMatrixComplianceGateTests.cs
+M	WIP/Wip.Shell.E2E.Tests/E2E/ShellHostE2EHarnessTests.cs
+A	WIP/Wip.Shell.E2E.Tests/E2E/WipTestBaselineGateTests.cs
+M	WIP/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj
+A	WIP/Wip.Shell.E2E.Tests/xunit.runner.json
+A	WIP/Wip.Shell.E2E/Compliance/BehaviorProofComplianceRegistry.cs
+A	WIP/Wip.Shell.E2E/Compliance/E2EMatrixComplianceRegistry.cs
+A	WIP/Wip.Shell.E2E/Compliance/IntegrityRemediationBehaviorProofVerifier.cs
+A	WIP/Wip.Shell.E2E/Compliance/WipBonesBehaviorProofVerifier.cs
+A	WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj
+M	WIP/Wip.Shell.Tests/Interactive/WipShellCommandLoopTests.cs
+M	WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs
+A	WIP/Wip.Shell/Interactive/WipShellCommandSemantics.cs
+M	WIP/Wip.Shell/README.md
+M	WIP/Wip.ShellHost.Tests/Hosting/BehaviorProofComplianceGateTests.cs
+M	WIP/Wip.ShellHost/Hosting/WipShellHostFactory.cs
+M	WIP/Wip.ShellHost/README.md
+M	WIP/Wip.ShellHost/Wip.ShellHost.csproj
+M	WIP/Wip.Validation.DotNet.Tests/DotNet/BehaviorProofComplianceGateTests.cs
+A	WIP/requirements/strategy-pool-persistence.md
+A	WIP/requirements/strategy-pool-visualization.md
+A	bones.ps1
+A	docs/WIP-Execution-Prompt.md
+A	docs/WIP-Implementation-Plan.md
+A	docs/WIP-Implementation-Plan.pdf
+A	docs/WIP-Requirements-and-Architecture-Report.md
+A	docs/WIP-Requirements-and-Architecture-Report.pdf
+A	docs/execution/blockers/BLK-NUGET-PUBLISH.md
+A	docs/execution/blockers/BLK-TESTHOST-ENV.md
+A	docs/execution/deviations/DEV-001-nuget-release.md
+A	docs/execution/evidence/G0/decision-2026-11-02.md
+A	docs/execution/evidence/G0/gate-packet.md
+A	docs/execution/evidence/WP-0.1/baseline-facts.md
+A	docs/execution/evidence/WP-0.1/baseline-manifest.txt
+A	docs/execution/evidence/WP-0.1/command-exit-codes.txt
+A	docs/execution/evidence/WP-0.1/dirty-tree.md
+A	docs/execution/evidence/WP-0.1/encoding-check.txt
+A	docs/execution/evidence/WP-0.1/fail-1-testhost.md
+A	docs/execution/evidence/WP-0.1/git-diff-stat.txt
+A	docs/execution/evidence/WP-0.1/git-status-porcelain-uall.txt
+A	docs/execution/evidence/WP-0.1/git-status-porcelain.txt
+A	docs/execution/evidence/WP-0.1/harnesssync-check-after.txt
+A	docs/execution/evidence/WP-0.1/harnesssync-check.txt
+A	docs/execution/evidence/WP-0.1/harnesssync-tmp-test-red.txt
+A	docs/execution/evidence/WP-0.1/modified-paths.txt
+A	docs/execution/evidence/WP-0.1/notes.md
+A	docs/execution/evidence/WP-0.1/preflight.txt
+A	docs/execution/evidence/WP-0.1/red.log
+A	docs/execution/evidence/WP-0.1/repo-identity.txt
+A	docs/execution/evidence/WP-0.1/secret-scan.md
+A	docs/execution/evidence/WP-0.1/solution-coverage.txt
+A	docs/execution/evidence/WP-0.1/untracked-paths.txt
+A	docs/execution/journal.md
+A	docs/execution/state.json
+A	docs/goal-bones-actual-champion/deliverables.md
+A	docs/goal-bones-actual-champion/evidence.md
+A	docs/goal-bones-actual-champion/goal.md
+A	docs/goal-bones-actual-champion/journal.md
+A	docs/goal-bones-actual-champion/state.md
+A	docs/goal-bones-aggression-search/deliverables.md
+A	docs/goal-bones-aggression-search/evidence.md
+A	docs/goal-bones-aggression-search/goal.md
+A	docs/goal-bones-aggression-search/journal.md
+A	docs/goal-bones-aggression-search/state.md
+A	docs/goal-bones-champion-promotion/deliverables.md
+A	docs/goal-bones-champion-promotion/evidence.md
+A	docs/goal-bones-champion-promotion/goal.md
+A	docs/goal-bones-champion-promotion/journal.md
+A	docs/goal-bones-champion-promotion/round-1/observation.md
+A	docs/goal-bones-champion-promotion/round-1/verdicts.md
+A	docs/goal-bones-champion-promotion/round-2/implementation.md
+A	docs/goal-bones-champion-promotion/round-4/orchestrator-verdicts.md
+A	docs/goal-bones-champion-promotion/state.md
+A	docs/goal-bones-fair-block-v2/deliverables.md
+A	docs/goal-bones-fair-block-v2/evidence.md
+A	docs/goal-bones-fair-block-v2/goal.md
+A	docs/goal-bones-fair-block-v2/journal.md
+A	docs/goal-bones-fair-block-v2/state.md
+A	docs/goal-bones-fair-block-v3/deliverables.md
+A	docs/goal-bones-fair-block-v3/evidence.md
+A	docs/goal-bones-fair-block-v3/goal.md
+A	docs/goal-bones-fair-block-v3/journal.md
+A	docs/goal-bones-fair-block-v3/state.md
+A	docs/goal-bones-fair-block/deliverables.md
+A	docs/goal-bones-fair-block/evidence.md
+A	docs/goal-bones-fair-block/goal.md
+A	docs/goal-bones-fair-block/journal.md
+A	docs/goal-bones-fair-block/state.md
+A	docs/goal-bones-v3-learning/deliverables.md
+A	docs/goal-bones-v3-learning/evidence.md
+A	docs/goal-bones-v3-learning/goal.md
+A	docs/goal-bones-v3-learning/journal.md
+A	docs/goal-bones-v3-learning/round-1/falsify-a.md
+A	docs/goal-bones-v3-learning/round-1/falsify-b.md
+A	docs/goal-bones-v3-learning/round-1/verdicts.md
+A	docs/goal-bones-v3-learning/round-2/implementation.md
+A	docs/goal-bones-v3-learning/round-2/verdicts.md
+A	docs/goal-bones-v3-learning/round-3/implementation.md
+A	docs/goal-bones-v3-learning/round-3/verdicts.md
+A	docs/goal-bones-v3-learning/state.md
+A	harness/requirements/Wip.Bones.AggressiveEvaluation.md
+A	harness/requirements/Wip.Bones.AggressiveIteration.md
+M	harness/requirements/Wip.Bones.BoardOrientation.md
+A	harness/requirements/Wip.Bones.ChampionPromotion.md
+A	harness/requirements/Wip.Bones.CoLearningRemediation.md
+M	harness/requirements/Wip.Bones.DeepSeek.md
+M	harness/requirements/Wip.Bones.Host.md
+M	harness/requirements/Wip.Bones.LearningLoopReliability.md
+A	harness/requirements/Wip.Bones.LibraryPersistenceFix.md
+M	harness/requirements/Wip.Bones.PerStageModelRouting.md
+M	harness/requirements/Wip.Bones.ScriptStrategies.md
+A	harness/requirements/Wip.Bones.StatusApiFixes.md
+A	harness/requirements/Wip.Bones.StrategyPool-Runtime-Loop-Integration-Remediation.md
+A	harness/requirements/Wip.Bones.StrategyPool-Runtime-Loop-Integration.md
+A	harness/requirements/Wip.Bones.StrategyPoolArchitecture.md
+A	harness/requirements/Wip.Integrity-Remediation.md
+A	harness/requirements/Wip.Test-Performance.md
+A	harness/requirements/bones-pool-view.md
+A	harness/rules/audit-host-di-before-adding-services.md
+A	harness/rules/check-json-serialization-options-before-testing.md
+A	harness/rules/di-factory-override.md
+A	harness/rules/isolate-static-state-in-parallel-tests.md
+A	harness/rules/protect-user-workspace-data.md
+A	harness/rules/runtime-verify-cross-boundary.md
+A	harness/rules/static-singleton-di-fallback.md
+A	harness/rules/trace-all-callers-before-mirroring.md
+A	harness/rules/verify-renderer-output-before-dom-tests.md
+M	harness/skills/iterative-implementation-orchestrator.md
+A	harness/skills/retrospective-harness-encoding.md
+A	harness/skills/trace-runtime-path.md
+M	harness/workflows/iterative-implementation.md
+M	harness/workflows/requirements-gathering.md
+M	src/WIP.Contributor-Architecture.README.md
+A	tools/HarnessSync.Tests/TextFileEncodingValidatorTests.cs
+M	tools/HarnessSync/Program.cs
+A	tools/HarnessSync/TextFileEncodingValidator.cs
+A	tools/encoding/Repair-TextFileUtf8.ps1
+A	tools/encoding/Test-StagedTextFileEncoding.ps1
+A	tools/encoding/WriteUtf8.ps1
+

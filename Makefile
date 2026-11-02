@@ -1,64 +1,128 @@
-.PHONY: run-host run-telemetry run-telemetry-live build test test-no-build pack publish publish-symbols release help
+# ── Bones Learning Loop ──
+# Usage: make <target>
+#
+# Prerequisites:
+#   - .NET 10 SDK
+#   - DeepSeek API key: set DEEPSEEK_API_KEY env var
+#
+# On Windows, run from Git Bash or WSL. For PowerShell, use .\bones.ps1 instead.
 
-SOLUTION=Modus.slnx
-HOST_PROJECT=src/Modus.Host/Modus.Host.csproj
-CORE_PROJECT=src/Modus.Core/Modus.Core.csproj
-TELEMETRY_PLUGIN_PROJECT=plugins/Plugin.Host.Telemetry.csproj
-MACHINE_TELEMETRY_PLUGIN_PROJECT=plugins/Plugin.Machine.Telemetry.csproj
-PLUGINS_PATH=$(CURDIR)/plugins
-ARTIFACTS_DIR=$(CURDIR)/artifacts/nuget
-ARTIFACTS_DIR_WIN=$(subst /,\,$(ARTIFACTS_DIR))
-NUGET_SOURCE=https://api.nuget.org/v3/index.json
-VERSION=
+PROJECT   := WIP/Wip.Bones.Host
+RECOVERY  := WIP/BonesLibraryRecovery
+DATA_DIR  := WIP/Wip.Bones.Host/bones-data
+LIBRARY   := $(DATA_DIR)/.bones/strategy-library
+URL       := http://127.0.0.1:8080
 
-help:
-	@echo "Available targets:"
-	@echo "  make run-host       # Run host with plugin directory"
-	@echo "  make run-telemetry  # Build telemetry plugin and run host"
-	@echo "  make run-telemetry-live  # Build telemetry plugins and run host continuously"
-	@echo "  make build          # Build full solution"
-	@echo "  make test           # Run full solution tests"
-	@echo "  make test-no-build  # Run tests without rebuilding"
-	@echo "  make pack           # Pack Modus.Core + Modus.Host into artifacts/nuget"
-	@echo "  make publish        # Push .nupkg to NuGet (requires NUGET_API_KEY)"
-	@echo "  make publish-symbols # Push .snupkg to NuGet (requires NUGET_API_KEY)"
-	@echo "  make release        # Pack + publish + publish-symbols"
-	@echo "  Optional: VERSION=1.2.3 to override PackageVersion when packing"
+# ── Defaults ──
+BONES_MAX_GAMES_PER_RUN  ?= 100
+BONES_RESUME_FROM_BEST   ?= true
+BONES_EVALUATION_MATCH_COUNT ?= 20
 
-pack:
-	dotnet pack $(CORE_PROJECT) -c Release -o $(ARTIFACTS_DIR) $(if $(VERSION),/p:PackageVersion=$(VERSION),)
-	dotnet pack $(HOST_PROJECT) -c Release -o $(ARTIFACTS_DIR) $(if $(VERSION),/p:PackageVersion=$(VERSION),)
+# ═══════════════════════════════════════════════════════════════════
+# Run
+# ═══════════════════════════════════════════════════════════════════
 
-publish:
-	@if "$(NUGET_API_KEY)"=="" (echo NUGET_API_KEY is required && exit /b 1)
-	@dir /b "$(ARTIFACTS_DIR_WIN)\*.nupkg" >nul 2>nul || (echo No .nupkg files found in $(ARTIFACTS_DIR_WIN) && exit /b 1)
-	@for %%F in ("$(ARTIFACTS_DIR_WIN)\*.nupkg") do dotnet nuget push "%%~fF" --source $(NUGET_SOURCE) --api-key $(NUGET_API_KEY) --skip-duplicate --no-symbols
+.PHONY: run
+run: ## Start the learning loop (resumes from library if present)
+	@echo "=== Starting Bones (resume=$(BONES_RESUME_FROM_BEST), max_games=$(BONES_MAX_GAMES_PER_RUN)) ==="
+	BONES_RESUME_FROM_BEST=$(BONES_RESUME_FROM_BEST) \
+	BONES_MAX_GAMES_PER_RUN=$(BONES_MAX_GAMES_PER_RUN) \
+	dotnet run --project $(PROJECT)
 
-publish-symbols:
-	@if "$(NUGET_API_KEY)"=="" (echo NUGET_API_KEY is required && exit /b 1)
-	@dir /b "$(ARTIFACTS_DIR_WIN)\*.snupkg" >nul 2>nul || (echo No .snupkg files found in $(ARTIFACTS_DIR_WIN) && exit /b 1)
-	@for %%F in ("$(ARTIFACTS_DIR_WIN)\*.snupkg") do dotnet nuget push "%%~fF" --source $(NUGET_SOURCE) --api-key $(NUGET_API_KEY) --skip-duplicate
+.PHONY: resume
+resume: ## Resume with library strategies (100 games per run)
+	@$(MAKE) run BONES_RESUME_FROM_BEST=true BONES_MAX_GAMES_PER_RUN=100
 
-release: pack publish publish-symbols
+.PHONY: cold
+cold: ## Cold start — ignore library, re-ponder from scratch
+	@$(MAKE) run BONES_RESUME_FROM_BEST=false BONES_MAX_GAMES_PER_RUN=100
 
-run-host:
-	dotnet run --project $(HOST_PROJECT) -- $(PLUGINS_PATH)
+.PHONY: quick
+quick: ## Quick run with low game cap for testing
+	@$(MAKE) run BONES_RESUME_FROM_BEST=true BONES_MAX_GAMES_PER_RUN=20
 
-run-telemetry:
-	dotnet build $(TELEMETRY_PLUGIN_PROJECT)
-	dotnet build $(MACHINE_TELEMETRY_PLUGIN_PROJECT)
-	dotnet run --project $(HOST_PROJECT) -- --run-once $(PLUGINS_PATH)
+.PHONY: stub
+stub: ## Offline stub mode (no API key needed)
+	@echo "=== Starting Bones in stub mode ==="
+	BonesHost__ModelProvider=stub \
+	BONES_MAX_GAMES_PER_RUN=10 \
+	dotnet run --project $(PROJECT)
 
-run-telemetry-live:
-	dotnet build $(TELEMETRY_PLUGIN_PROJECT)
-	dotnet build $(MACHINE_TELEMETRY_PLUGIN_PROJECT)
-	dotnet run --project $(HOST_PROJECT) -- $(PLUGINS_PATH)
+# ═══════════════════════════════════════════════════════════════════
+# Status & control
+# ═══════════════════════════════════════════════════════════════════
 
-build:
-	dotnet build $(SOLUTION)
+.PHONY: status
+status: ## Show current loop status
+	@curl -s $(URL)/api/bones/status | python3 -m json.tool 2>/dev/null || curl -s $(URL)/api/bones/status
 
-test:
-	dotnet test $(SOLUTION)
+.PHONY: stop
+stop: ## Graceful stop after current iteration
+	@curl -s -X POST $(URL)/api/bones/stop
 
-test-no-build:
-	dotnet test $(SOLUTION) --no-build
+.PHONY: start
+start: ## Resume a stopped loop
+	@curl -s -X POST $(URL)/api/bones/start
+
+.PHONY: health
+health: ## Liveness probe
+	@curl -s $(URL)/health
+
+# ═══════════════════════════════════════════════════════════════════
+# Library management
+# ═══════════════════════════════════════════════════════════════════
+
+.PHONY: library
+library: ## Show library contents
+	@echo "=== Strategy Library ==="
+	@for f in $(LIBRARY)/seat-*.json; do \
+		echo "--- $$(basename $$f) ---"; \
+		python3 -c "import json; d=json.load(open('$$f')); print(f\"  {d['strategyId']} ({d['kind']}) W:{d['wins']}/{d['matchesPlayed']} diff:{d['cumulativeScoreDifferential']}\")" 2>/dev/null || cat $$f; \
+	done
+
+.PHONY: recover
+recover: ## Re-scan sessions and rebuild library from promoted strategies
+	@echo "=== Recovering library from session artifacts ==="
+	dotnet run --project $(RECOVERY)
+
+.PHONY: reset-library
+reset-library: ## Wipe library (next run will re-ponder from scratch)
+	@echo "=== Wiping library ==="
+	rm -rf $(LIBRARY)
+	@echo "Library wiped. Use 'make cold' to start fresh."
+
+# ═══════════════════════════════════════════════════════════════════
+# Dev
+# ═══════════════════════════════════════════════════════════════════
+
+.PHONY: build
+build: ## Build all bones projects
+	dotnet build WIP/Wip.Bones.Agents
+	dotnet build WIP/Wip.Bones.Host
+	dotnet build $(RECOVERY)
+
+.PHONY: test
+test: ## Run agent tests
+	dotnet test WIP/Wip.Bones.Tests --verbosity quiet
+
+.PHONY: test-host
+test-host: ## Run host integration tests
+	dotnet test WIP/Wip.Bones.Host.Tests --verbosity quiet
+
+.PHONY: test-all
+test-all: test test-host ## Run all tests
+
+.PHONY: clean
+clean: ## Remove build artifacts
+	dotnet clean WIP/Wip.Bones.Agents
+	dotnet clean WIP/Wip.Bones.Host
+	dotnet clean $(RECOVERY)
+
+# ═══════════════════════════════════════════════════════════════════
+
+.PHONY: help
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
+
+.DEFAULT_GOAL := help

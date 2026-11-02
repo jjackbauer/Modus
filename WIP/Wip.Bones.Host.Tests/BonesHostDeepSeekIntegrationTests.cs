@@ -127,7 +127,7 @@ public sealed class BonesHostDeepSeekIntegrationTests
             {
                 settings["BonesHost:ModelProvider"] = "deepseek";
                 settings["BonesHost:DeepSeek:BaseUrl"] = "https://api.deepseek.com";
-                settings["BonesHost:DeepSeek:Model"] = "deepseek-chat";
+                settings["BonesHost:DeepSeek:Model"] = "deepseek-flash";
                 settings["BonesHost:DeepSeek:TimeoutSeconds"] = "30";
                 settings["BonesHost:DeepSeek:ApiKeySource"] = "env:WIP_BONES_HOST_TEST_API_KEY";
                 settings["BonesHost:DefaultParameters:GameCount"] = "1";
@@ -196,7 +196,7 @@ public sealed class BonesHostDeepSeekIntegrationTests
             {
                 id = "chatcmpl-bones-host-integration",
                 @object = "chat.completion",
-                model = "deepseek-chat",
+                model = "deepseek-flash",
                 choices = new[]
                 {
                     new

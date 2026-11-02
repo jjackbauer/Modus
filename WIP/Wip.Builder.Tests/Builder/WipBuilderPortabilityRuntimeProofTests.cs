@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
+using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
 using Wip.Abstractions.Workflows;
@@ -23,6 +24,12 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
         builder.AddWorkflow<PortableWorkflow, PortableWorkflowRequest, PortableWorkflowResult>(
             workflowId: new WorkflowId("workflow.portable.capabilities"),
             displayName: "Portable capabilities workflow");
+        builder.AddAgent<PortablePlanAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Portable plan agent");
+        builder.AddTool<PortableRunTool, PortableWorkflowRequest, PortableWorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Portable run tool");
 
         var orchestrator = new WipRuntimeOrchestrator(new InMemorySessionStore(), new CollectingSessionEventPublisher());
         var root = Path.Combine(Path.GetTempPath(), "wip-builder-portable-capabilities-" + Guid.NewGuid().ToString("N"));
@@ -39,11 +46,13 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
                     ArtifactDirectory: Path.Combine(root, "artifacts")),
                 CancellationToken.None);
 
+            var artifactStore = new BuilderTestInMemoryArtifactStore();
             var result = await orchestrator.RunWorkflowAsync(
                 started.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("workflow.portable.capabilities"),
-                cancellationToken: CancellationToken.None);
+                cancellationToken: CancellationToken.None,
+                artifactStore: artifactStore);
 
             var runStage = Assert.Single(result.Stages, static stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
             Assert.Equal("workflow.portable.capabilities", result.WorkflowId.Value);
@@ -70,6 +79,12 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
         builder.AddWorkflow<PortableWorkflow, PortableWorkflowRequest, PortableWorkflowResult>(
             workflowId: new WorkflowId("workflow.portable.runtime"),
             displayName: "Portable runtime workflow");
+        builder.AddAgent<PortablePlanAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Portable plan agent");
+        builder.AddTool<PortableRunTool, PortableWorkflowRequest, PortableWorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Portable run tool");
 
         using var provider = services.BuildServiceProvider();
         var orchestrator = provider.GetRequiredService<WipRuntimeOrchestrator>();
@@ -87,11 +102,13 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
                     ArtifactDirectory: Path.Combine(root, "artifacts")),
                 CancellationToken.None);
 
+            var artifactStore = new BuilderTestInMemoryArtifactStore();
             var result = await orchestrator.RunWorkflowAsync(
                 started.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("workflow.portable.runtime"),
-                cancellationToken: CancellationToken.None);
+                cancellationToken: CancellationToken.None,
+                artifactStore: artifactStore);
 
             var runStage = Assert.Single(result.Stages, static stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
             Assert.Equal("workflow.portable.runtime", result.WorkflowId.Value);
@@ -130,6 +147,21 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
             WorkflowContext context,
             CancellationToken cancellationToken)
             => ValueTask.FromResult(new PortableWorkflowResult($"processed:{request.Goal}"));
+    }
+
+    private sealed class PortableRunTool : ITool<PortableWorkflowRequest, PortableWorkflowResult>
+    {
+        public ValueTask<PortableWorkflowResult> ExecuteAsync(
+            PortableWorkflowRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult(new PortableWorkflowResult($"processed:{request.Goal}"));
+    }
+
+    private sealed class PortablePlanAgent : IAgent<PlanStageRequest, PlanStageResult>
+    {
+        public ValueTask<PlanStageResult> ExecuteAsync(PlanStageRequest request, CapabilityContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new PlanStageResult(true));
     }
 
     private sealed class InMemorySessionStore : ISessionStore

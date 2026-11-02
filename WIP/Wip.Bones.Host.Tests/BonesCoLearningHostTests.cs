@@ -226,11 +226,12 @@ public sealed class BonesCoLearningHostTests
 
             // Verify library has entries for all 4 seats after first run.
             var library = new Wip.Bones.Agents.Knowledge.BonesStrategyLibrary(dataDirectory);
-            var integrity = library.VerifyIntegrity();
-            var presentSeats = integrity.Count(i => i.Status == Wip.Bones.Agents.Knowledge.BonesLibrarySeatIntegrityStatus.Present);
+            var allEntries = library.AllEntries;
+            var entriesWithMatches = allEntries.Count(e => e.Effectiveness.MatchesPlayed >= 1);
             Assert.True(
-                presentSeats >= 1,
-                $"Expected at least 1 seat with library entry after first run; got {presentSeats}.");
+                entriesWithMatches >= 1,
+                $"Expected at least 1 seat with library entry and MatchesPlayed>=1 after first run; " +
+                $"got {allEntries.Count} total entries, {entriesWithMatches} with matches.");
 
             // --- Second run: restart with ResumeFromBest=true ---
             await using (var factory2 = new BonesHostWebApplicationFactory(
@@ -259,11 +260,23 @@ public sealed class BonesCoLearningHostTests
                 Assert.NotNull(status.PerSeatStrategies);
                 Assert.NotEmpty(status.PerSeatStrategies);
 
-                // At least one seat should have a strategy loaded from the library.
-                var seatsWithStrategies = status.PerSeatStrategies.Count(s => !string.IsNullOrWhiteSpace(s.StrategyId));
+                // All 4 seats should have a strategy loaded from the library after restart.
+                var seatsWithStrategies = status.PerSeatStrategies
+                    .Where(s => !string.IsNullOrWhiteSpace(s.StrategyId))
+                    .ToList();
                 Assert.True(
-                    seatsWithStrategies >= 1,
-                    $"Expected at least 1 seat with a library-loaded strategy after restart; got {seatsWithStrategies}.");
+                    seatsWithStrategies.Count >= 2,
+                    $"Expected at least 2 seats with a library-loaded strategy after restart; got {seatsWithStrategies.Count}. " +
+                    $"Strategies: [{string.Join(", ", status.PerSeatStrategies.Select(s => $"Seat{s.Seat}:{(string.IsNullOrWhiteSpace(s.StrategyId) ? "none" : s.StrategyId)}"))}].");
+
+                // Strategies should have distinct IDs (not placeholder or shared).
+                var strategyIds = seatsWithStrategies.Select(s => s.StrategyId).Distinct().ToList();
+                Assert.True(
+                    strategyIds.Count >= 2,
+                    $"Expected at least 2 distinct strategy IDs; got {strategyIds.Count}: [{string.Join(", ", strategyIds)}].");
+
+                // No placeholder strategies should be present.
+                Assert.DoesNotContain(seatsWithStrategies, s => (s.StrategyId ?? "").Contains("placeholder", StringComparison.OrdinalIgnoreCase));
 
                 await BonesHostStatusClient.StopAsync(client);
                 await BonesHostStatusPolling.WaitForStatusAsync(
@@ -457,7 +470,7 @@ public sealed class SeatStrategy : IBonesPlayerSlot
             {
                 id = "chatcmpl-bones-colearning-host",
                 @object = "chat.completion",
-                model = "deepseek-chat",
+                model = "deepseek-flash",
                 choices = new[]
                 {
                     new

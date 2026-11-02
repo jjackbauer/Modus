@@ -49,7 +49,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProviderTests
                 capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
 
                 return CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: CreateEnhancedScriptResponse(),
                     promptTokens: 120,
                     completionTokens: 80);
@@ -63,7 +63,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProviderTests
         Assert.NotNull(capturedBody);
         using var payloadDocument = JsonDocument.Parse(capturedBody!);
         var root = payloadDocument.RootElement;
-        Assert.Equal("deepseek-chat", root.GetProperty("model").GetString());
+        Assert.Equal("deepseek-flash", root.GetProperty("model").GetString());
 
         var messages = root.GetProperty("messages");
         Assert.Equal(2, messages.GetArrayLength());
@@ -109,7 +109,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProviderTests
         var provider = CreateProvider(
             handler: (_, _) => Task.FromResult(
                 CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: enhancedScript,
                     promptTokens: 140,
                     completionTokens: 60)));
@@ -120,7 +120,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProviderTests
             CancellationToken.None);
 
         Assert.Equal("deepseek", response.ProviderId);
-        Assert.Equal("deepseek-chat", response.ModelId);
+        Assert.Equal("deepseek-flash", response.ModelId);
         Assert.Equal(enhancedScript, response.Payload.Markdown);
         Assert.Contains("IBonesPlayerSlot", response.Payload.Markdown, StringComparison.Ordinal);
         Assert.NotNull(response.Usage);
@@ -203,7 +203,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProviderTests
     private static DeepSeekBonesStrategyEnhancementProvider CreateProvider(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler,
         string? apiKeySource = null,
-        string model = "deepseek-chat",
+        string model = "deepseek-flash",
         bool configureApiKey = true)
     {
         var resolvedApiKeySource = apiKeySource ?? $"env:{TestApiKeyEnvVar}";
@@ -282,7 +282,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProviderTests
         {
             id = "chatcmpl-bones-enhance-empty",
             @object = "chat.completion",
-            model = "deepseek-chat",
+            model = "deepseek-flash",
             choices = Array.Empty<object>(),
             usage = new
             {

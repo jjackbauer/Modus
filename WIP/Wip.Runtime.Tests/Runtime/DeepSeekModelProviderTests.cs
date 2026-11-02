@@ -27,7 +27,7 @@ public sealed class DeepSeekModelProviderTests
                 capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
 
                 return CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: "ok",
                     promptTokens: 3,
                     completionTokens: 5);
@@ -41,7 +41,7 @@ public sealed class DeepSeekModelProviderTests
                         new DeepSeekChatMessage("system", "You are deterministic."),
                         new DeepSeekChatMessage("user", "Generate a short plan.")
                     ]),
-                modelId: "deepseek-chat",
+                modelId: "deepseek-flash",
                 correlationId: "corr-map-1"),
             new CapabilityContext(new SessionId("session-deepseek-map"), "C:/repo/.wip/worktrees/s1"),
             CancellationToken.None);
@@ -56,7 +56,8 @@ public sealed class DeepSeekModelProviderTests
         Assert.NotNull(capturedBody);
         using var payloadDocument = JsonDocument.Parse(capturedBody!);
         var root = payloadDocument.RootElement;
-        Assert.Equal("deepseek-chat", root.GetProperty("model").GetString());
+        Assert.Equal("deepseek-flash", root.GetProperty("model").GetString());
+        Assert.False(root.TryGetProperty("thinking", out _));
 
         var messages = root.GetProperty("messages");
         Assert.Equal(2, messages.GetArrayLength());
@@ -70,12 +71,56 @@ public sealed class DeepSeekModelProviderTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
+    public async Task DeepSeekProvider_GivenThinkingMode_ExpectedMapsThinkingPayload()
+    {
+        var observedThinkingTypes = new List<string?>();
+
+        var provider = CreateProvider(
+            handler: async (request, cancellationToken) =>
+            {
+                var body = await request.Content!.ReadAsStringAsync(cancellationToken);
+                using var document = JsonDocument.Parse(body);
+                observedThinkingTypes.Add(
+                    document.RootElement.TryGetProperty("thinking", out var thinking)
+                        ? thinking.GetProperty("type").GetString()
+                        : null);
+
+                return CreateSuccessResponse(
+                    model: "deepseek-flash",
+                    content: "ok",
+                    promptTokens: 1,
+                    completionTokens: 1);
+            });
+
+        foreach (var thinking in new[]
+                 {
+                     DeepSeekThinkingMode.Enabled,
+                     DeepSeekThinkingMode.Disabled,
+                     DeepSeekThinkingMode.Default,
+                 })
+        {
+            await provider.ExecuteAsync(
+                new ModelProviderRequest<DeepSeekChatCompletionRequest>(
+                    payload: new DeepSeekChatCompletionRequest(
+                        Messages: [new DeepSeekChatMessage("user", "thinking mode")],
+                        Thinking: thinking),
+                    modelId: "deepseek-flash",
+                    correlationId: $"corr-thinking-{thinking}"),
+                new CapabilityContext(new SessionId("session-deepseek-thinking"), "C:/repo/.wip/worktrees/s1"),
+                CancellationToken.None);
+        }
+
+        Assert.Equal(["enabled", "disabled", null], observedThinkingTypes);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
     public async Task DeepSeekProvider_GivenSuccessfulResponse_ExpectedTypedCompletionPayloadAndUsageSemantics()
     {
         var provider = CreateProvider(
             handler: (request, cancellationToken) => Task.FromResult(
                 CreateSuccessResponse(
-                    model: "deepseek-reasoner",
+                    model: "deepseek-v4-pro",
                     content: "1. Inspect\n2. Change\n3. Validate",
                     promptTokens: 42,
                     completionTokens: 15,
@@ -85,13 +130,13 @@ public sealed class DeepSeekModelProviderTests
             new ModelProviderRequest<DeepSeekChatCompletionRequest>(
                 payload: new DeepSeekChatCompletionRequest(
                     Messages: [new DeepSeekChatMessage("user", "Build a plan")]),
-                modelId: "deepseek-reasoner",
+                modelId: "deepseek-v4-pro",
                 correlationId: "corr-success-1"),
             new CapabilityContext(new SessionId("session-deepseek-success"), "C:/repo/.wip/worktrees/s2"),
             CancellationToken.None);
 
         Assert.Equal("deepseek", response.ProviderId);
-        Assert.Equal("deepseek-reasoner", response.ModelId);
+        Assert.Equal("deepseek-v4-pro", response.ModelId);
         Assert.Equal("corr-success-1", response.CorrelationId);
         Assert.NotNull(response.Usage);
         Assert.Equal(42, response.Usage!.InputTokens);
@@ -122,7 +167,7 @@ public sealed class DeepSeekModelProviderTests
                 new ModelProviderRequest<DeepSeekChatCompletionRequest>(
                     payload: new DeepSeekChatCompletionRequest(
                         Messages: [new DeepSeekChatMessage("user", "retry me")]),
-                    modelId: "deepseek-chat",
+                    modelId: "deepseek-flash",
                     correlationId: "corr-retry-1"),
                 new CapabilityContext(new SessionId("session-deepseek-retry"), "C:/repo/.wip/worktrees/s3"),
                 CancellationToken.None)
@@ -148,7 +193,7 @@ public sealed class DeepSeekModelProviderTests
             Interlocked.Increment(ref completed);
 
             return CreateSuccessResponse(
-                model: "deepseek-chat",
+                model: "deepseek-flash",
                 content: "should not complete",
                 promptTokens: 1,
                 completionTokens: 1);
@@ -162,7 +207,7 @@ public sealed class DeepSeekModelProviderTests
                 new ModelProviderRequest<DeepSeekChatCompletionRequest>(
                     payload: new DeepSeekChatCompletionRequest(
                         Messages: [new DeepSeekChatMessage("user", "cancel")]),
-                    modelId: "deepseek-chat",
+                    modelId: "deepseek-flash",
                     correlationId: "corr-cancel-1"),
                 new CapabilityContext(new SessionId("session-deepseek-cancel"), "C:/repo/.wip/worktrees/s4"),
                 cts.Token)

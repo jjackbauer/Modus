@@ -10,6 +10,15 @@ composes:
   - falsify-claims.md
   - test-standards.md
   - impl-completeness.md
+  - retrospective-harness-encoding.md
+  - ../rules/runtime-verify-cross-boundary.md
+  - ../rules/protect-user-workspace-data.md
+  - ../rules/di-factory-override.md
+  - ../rules/trace-all-callers-before-mirroring.md
+  - ../rules/audit-host-di-before-adding-services.md
+  - ../rules/isolate-static-state-in-parallel-tests.md
+  - ../rules/verify-renderer-output-before-dom-tests.md
+  - ../rules/check-json-serialization-options-before-testing.md
 ---
 
 # Skill: Iterative Implementation Orchestrator
@@ -110,6 +119,18 @@ dotnet test <TestProject> --no-build
 ```
 
 3. Return final readiness decision: `COMPLETE` or `BLOCKED`.
+
+### Step 4 - Retrospective harness encoding
+
+After the task completes (whether COMPLETE or BLOCKED), invoke `retrospective-harness-encoding.md`:
+
+1. Collect every distinct failure mode or friction encountered during the orchestration.
+2. For each, determine whether it's a process gap, framework knowledge gap, or safety gap.
+3. Create or update harness rules/skills to prevent recurrence.
+4. Wire new rules into the `composes:` chains of the skills/workflows that need them.
+5. Report what was created and where it's wired.
+
+This step ensures every hard-won lesson becomes a permanent guardrail for future agents.
 
 ## Output Summary Template
 

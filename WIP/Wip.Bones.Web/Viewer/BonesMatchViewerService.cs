@@ -240,7 +240,7 @@ public sealed class BonesMatchViewerService
 
     private BonesRoundConfig CreateRoundConfig(BonesRegisteredMatch registeredMatch, int roundNumber)
     {
-        var roundSeed = HashCode.Combine(registeredMatch.MatchSeed, roundNumber);
+        var roundSeed = BonesSeedDerivation.Derive(registeredMatch.MatchSeed, roundNumber);
         var roundGameId = new BonesGameId($"{registeredMatch.MatchId.Value}-r{roundNumber}");
         return new BonesRoundConfig(roundGameId, roundSeed);
     }

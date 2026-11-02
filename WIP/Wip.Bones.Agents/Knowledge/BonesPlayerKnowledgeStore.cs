@@ -544,7 +544,24 @@ public sealed class BonesPlayerKnowledgeStore
                 $"Artifact content is missing at '{descriptor.RelativePath}'.");
         }
 
-        return await File.ReadAllTextAsync(artifactPath, cancellationToken);
+        return await ReadAllTextSharedAsync(artifactPath, cancellationToken);
+    }
+
+    /// <summary>
+    /// Opens artifact content with FileShare.ReadWrite | FileShare.Delete so status/list
+    /// readers never block an atomic replace or promotion write.
+    /// </summary>
+    private static async Task<string> ReadAllTextSharedAsync(string path, CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete,
+            bufferSize: 4096,
+            FileOptions.Asynchronous);
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync(cancellationToken);
     }
 
     private static void EnsurePlayerScopedObservationDescriptor(

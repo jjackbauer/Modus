@@ -4,6 +4,11 @@
 out/
 artifacts/
 
+# C# source folders named "Artifacts" hold source, not build output — keep them tracked.
+!WIP/Wip.Abstractions/Artifacts/
+!WIP/Wip.Artifacts.Local/Artifacts/
+!WIP/Wip.Artifacts.Local.Tests/Artifacts/
+
 # User-specific files
 *.user
 *.rsuser
@@ -31,6 +36,20 @@ packages/
 
 # Logs
 *.log
+
+# Execution evidence logs are contractual artifacts (red.log, verify.log)
+!docs/execution/**/*.log
+
+# Local scratch and generated runtime state (kept on disk, not committed)
+.tmp/
+host-stdout.txt
+host-stderr.txt
+test_status_simple.cs
+tmp-facing-repro.csx
+WIP/_*.csx
+WIP/BonesLibraryRecovery/debug.csx
+tools/_write_bones_e2e_files.py
+WIP/Wip.Bones.Host/bones-data/.bones/pool/
 
 # Local WIP shell runtime state
 .wip/

@@ -39,7 +39,7 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
             seed: 42,
             targetScore: 10,
             learningPlayerId: new BonesPlayerId(1),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             allSeatsLearning: false,
             ponderModelId: "deepseek-v4-pro",
             playModelId: null,
@@ -59,7 +59,7 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
         // Verify per-stage model ID is set on parameters
         Assert.Equal("deepseek-v4-pro", parameters.PonderModelId);
         // Global ModelId is still set for fallback
-        Assert.Equal("deepseek-chat", parameters.ModelId);
+        Assert.Equal("deepseek-flash", parameters.ModelId);
         // Other stage models are null
         Assert.Null(parameters.PlayModelId);
         Assert.Null(parameters.EnhanceModelId);
@@ -74,7 +74,7 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
             seed: 42,
             targetScore: 10,
             learningPlayerId: new BonesPlayerId(1),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             allSeatsLearning: false);
 
         var session = new SessionSnapshot(
@@ -92,7 +92,7 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
         Assert.Null(parameters.PonderModelId);
         Assert.Null(parameters.PlayModelId);
         Assert.Null(parameters.EnhanceModelId);
-        Assert.Equal("deepseek-chat", parameters.ModelId);
+        Assert.Equal("deepseek-flash", parameters.ModelId);
     }
 
     [Fact]
@@ -131,10 +131,10 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
             seed: 42,
             targetScore: 10,
             learningPlayerId: new BonesPlayerId(1),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             allSeatsLearning: false,
             ponderModelId: null,
-            playModelId: "deepseek-v4-flash",
+            playModelId: "deepseek-flash",
             enhanceModelId: null);
 
         var session = new SessionSnapshot(
@@ -149,9 +149,9 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
         Assert.True(BonesLearningWorkflowParameters.TryParse(session, out var parameters));
 
         Assert.Null(parameters.PonderModelId);
-        Assert.Equal("deepseek-v4-flash", parameters.PlayModelId);
+        Assert.Equal("deepseek-flash", parameters.PlayModelId);
         Assert.Null(parameters.EnhanceModelId);
-        Assert.Equal("deepseek-chat", parameters.ModelId);
+        Assert.Equal("deepseek-flash", parameters.ModelId);
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
             seed: 42,
             targetScore: 10,
             learningPlayerId: new BonesPlayerId(1),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             allSeatsLearning: false,
             ponderModelId: null,
             playModelId: null,
@@ -183,6 +183,6 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
         Assert.Null(parameters.PonderModelId);
         Assert.Null(parameters.PlayModelId);
         Assert.Equal("deepseek-v4-pro", parameters.EnhanceModelId);
-        Assert.Equal("deepseek-chat", parameters.ModelId);
+        Assert.Equal("deepseek-flash", parameters.ModelId);
     }
 }

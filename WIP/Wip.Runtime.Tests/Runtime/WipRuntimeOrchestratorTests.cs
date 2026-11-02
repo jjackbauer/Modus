@@ -17,6 +17,14 @@ namespace Wip.Runtime.Tests.Runtime;
 public sealed class WipRuntimeOrchestratorTests
 {
     private const string SessionPersistenceChecklistItem = "Complete session persistence and attach/restore behavior under .wip/sessions/{sessionId}/session-state.json with deterministic session event journaling [depends on runtime governance baseline]";
+    private const string GovernanceRestrictionChecklistItem =
+        "Restrict `RunWorkflowAsync` and shell `run` so they cannot advance session state beyond `Editing` or `Checkpointed` and cannot set `ApprovalStatus`/`ValidationStatus` to approved or passed without corresponding governance operations [depends on command semantics contract] [mandatory - governance truth]";
+    private const string StageCapabilityDispatcherChecklistItem =
+        "Introduce `WorkflowStageCapabilityDispatcher` that resolves and invokes registered agent, tool, and validator capabilities for each compiled workflow stage using typed descriptors from `WorkflowBuilderStageCompiler` [depends on command semantics contract]";
+    private const string StageMapAdapterChecklistItem =
+        "Wire stage map adapters at runtime so outputs from Plan/Run stages feed Validate stage inputs through compiled `MapAdapters` without object-payload collapse [depends on stage capability dispatcher]";
+    private const string ApprovalValidationTransitionAlignmentChecklistItem =
+        "Align `ResolveApprovalStatusForTransition` and `ResolveValidationStatusForTransition` so state transitions never imply approval or validation success without artifact-backed operations [depends on governance restriction] [mandatory - no phantom governance]";
 
     [Fact]
     public async Task StartSessionAsync_GivenValidRepository_CreatesCreatedStateAndEmitsStartEvent()
@@ -788,6 +796,381 @@ public sealed class WipRuntimeOrchestratorTests
     }
 
     [Fact]
+    [Trait("ChecklistItem", GovernanceRestrictionChecklistItem)]
+    public async Task RunWorkflowAsync_GivenSelectedWorkflow_ExpectedStateStopsAtCheckpointedWithoutGovernanceArtifacts()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/governance-cap",
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        Assert.Equal("workflow.linear", result.WorkflowId.Value);
+        Assert.All(
+            result.Stages,
+            stage => Assert.True(
+                stage.StateAfterStage is SessionState.Editing or SessionState.Checkpointed,
+                $"Stage {stage.Descriptor.Stage} left session in {stage.StateAfterStage}."));
+        Assert.All(
+            result.Stages.Where(stage => stage.Descriptor.Stage is WorkflowStageKind.Validate or WorkflowStageKind.Review or WorkflowStageKind.RequireApproval or WorkflowStageKind.Merge),
+            stage => Assert.False(stage.AppliedTransition));
+
+        var persisted = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+        Assert.NotNull(persisted);
+        Assert.Equal(SessionState.Editing, persisted!.State);
+        Assert.Equal(SessionApprovalStatus.NotRequested, persisted.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, persisted.ValidationStatus);
+        Assert.DoesNotContain(
+            publisher.Events,
+            e => e.CurrentState is SessionState.Validating or SessionState.AwaitingApproval or SessionState.Approved or SessionState.Merged);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", GovernanceRestrictionChecklistItem)]
+    public async Task RunWorkflowAsync_GivenCheckpointedSession_ExpectedStateRemainsCheckpointedWithoutGovernanceAdvancement()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/checkpointed-run",
+            cancellationToken: CancellationToken.None);
+
+        await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
+        await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Checkpointed, CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        Assert.All(result.Stages, stage => Assert.Equal(SessionState.Checkpointed, stage.StateAfterStage));
+        Assert.All(result.Stages, stage => Assert.False(stage.AppliedTransition));
+
+        var persisted = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+        Assert.NotNull(persisted);
+        Assert.Equal(SessionState.Checkpointed, persisted!.State);
+        Assert.Equal(SessionApprovalStatus.NotRequested, persisted.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, persisted.ValidationStatus);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", GovernanceRestrictionChecklistItem)]
+    public async Task ResolveApprovalStatusForTransition_GivenRunInducedStateAdvancement_ExpectedNeverSetsApprovedWithoutTokenArtifact()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/approval-guard",
+            cancellationToken: CancellationToken.None);
+
+        await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        var persisted = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+        Assert.NotNull(persisted);
+        Assert.NotEqual(SessionApprovalStatus.Approved, persisted!.ApprovalStatus);
+        Assert.NotEqual(SessionValidationStatus.Passed, persisted.ValidationStatus);
+        Assert.NotEqual(SessionValidationStatus.InProgress, persisted.ValidationStatus);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ApprovalValidationTransitionAlignmentChecklistItem)]
+    public async Task ApplyTransitionUnderAuthorityAsync_GivenGovernanceTargetStates_ExpectedApprovalStatusUnchangedUntilApproveCommand()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/governance-transition",
+            cancellationToken: CancellationToken.None);
+
+        Assert.Equal(SessionApprovalStatus.NotRequested, snapshot.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, snapshot.ValidationStatus);
+
+        var editing = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
+        Assert.Equal(SessionApprovalStatus.NotRequested, editing.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, editing.ValidationStatus);
+
+        var checkpointed = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Checkpointed, CancellationToken.None);
+        Assert.Equal(SessionApprovalStatus.NotRequested, checkpointed.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, checkpointed.ValidationStatus);
+
+        var validating = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Validating, CancellationToken.None);
+        Assert.Equal(SessionApprovalStatus.NotRequested, validating.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, validating.ValidationStatus);
+        Assert.NotEqual(SessionValidationStatus.Passed, validating.ValidationStatus);
+        Assert.NotEqual(SessionValidationStatus.InProgress, validating.ValidationStatus);
+
+        var awaitingApproval = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.AwaitingApproval, CancellationToken.None);
+        Assert.Equal(SessionApprovalStatus.NotRequested, awaitingApproval.ApprovalStatus);
+        Assert.NotEqual(SessionApprovalStatus.Approved, awaitingApproval.ApprovalStatus);
+        Assert.NotEqual(SessionApprovalStatus.AwaitingApproval, awaitingApproval.ApprovalStatus);
+
+        var approved = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Approved, CancellationToken.None);
+        Assert.Equal(SessionApprovalStatus.NotRequested, approved.ApprovalStatus);
+        Assert.NotEqual(SessionApprovalStatus.Approved, approved.ApprovalStatus);
+
+        var merged = await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Merged, CancellationToken.None);
+        Assert.Equal(SessionApprovalStatus.NotRequested, merged.ApprovalStatus);
+        Assert.NotEqual(SessionApprovalStatus.Approved, merged.ApprovalStatus);
+        Assert.NotEqual(SessionValidationStatus.Passed, merged.ValidationStatus);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ApprovalValidationTransitionAlignmentChecklistItem)]
+    public async Task ValidateAsync_GivenPassingBuildAndTest_ExpectedValidationStatusAndArtifactUpdatedDeterministically()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-runtime-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var store = new InMemorySessionStore();
+            var publisher = new CollectingSessionEventPublisher();
+            var artifactStore = new InMemoryArtifactStore();
+            var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+
+            var snapshot = await orchestrator.StartSessionAsync(
+                workflowId: new WorkflowId("workflow.linear"),
+                repositoryPath: repositoryPath,
+                worktreePath: Path.Combine(repositoryPath, ".wip", "worktrees", "validate-pass"),
+                cancellationToken: CancellationToken.None);
+
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
+
+            var beforeValidation = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+            Assert.NotNull(beforeValidation);
+            Assert.Equal(SessionValidationStatus.NotStarted, beforeValidation!.ValidationStatus);
+            Assert.True(string.IsNullOrWhiteSpace(beforeValidation.ValidationArtifactId));
+
+            var validation = await orchestrator.ValidateAsync(
+                sessionId: snapshot.SessionId,
+                request: new SessionValidationRequest(
+                    BuildSucceeded: true,
+                    TestSucceeded: true,
+                    DiffHash: "diff-validate-pass",
+                    Summary: "dotnet build/test passed"),
+                artifactStore: artifactStore,
+                cancellationToken: CancellationToken.None);
+
+            Assert.Equal(SessionValidationStatus.Passed, validation.Session.ValidationStatus);
+            Assert.Equal(SessionState.Validating, validation.Session.State);
+            Assert.False(string.IsNullOrWhiteSpace(validation.Session.ValidationArtifactId));
+            Assert.False(string.IsNullOrWhiteSpace(validation.Session.ValidationArtifactPath));
+            Assert.False(string.IsNullOrWhiteSpace(validation.Session.ValidationCorrelationId));
+            Assert.Equal(validation.ValidationArtifact.ArtifactId.Value, validation.Session.ValidationArtifactId);
+            Assert.Equal(validation.ValidationArtifact.RelativePath, validation.Session.ValidationArtifactPath);
+
+            var persistedArtifact = Assert.Single(
+                artifactStore.ListForSession(snapshot.SessionId),
+                artifact => artifact.ArtifactId == validation.ValidationArtifact.ArtifactId);
+            Assert.Equal(ArtifactKind.Json, persistedArtifact.Kind);
+            Assert.Contains("validation-report", persistedArtifact.RelativePath, StringComparison.Ordinal);
+
+            var persisted = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+            Assert.NotNull(persisted);
+            Assert.Equal(SessionValidationStatus.Passed, persisted!.ValidationStatus);
+            Assert.Equal(validation.ValidationArtifact.ArtifactId.Value, persisted.ValidationArtifactId);
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ApprovalValidationTransitionAlignmentChecklistItem)]
+    public async Task CreateApprovalTokenAsync_GivenExplicitConfirmation_ExpectedApprovalStatusAndTokenArtifactAligned()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-runtime-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var store = new InMemorySessionStore();
+            var publisher = new CollectingSessionEventPublisher();
+            var artifactStore = new InMemoryArtifactStore();
+            var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+
+            var snapshot = await orchestrator.StartSessionAsync(
+                workflowId: new WorkflowId("workflow.linear"),
+                repositoryPath: repositoryPath,
+                worktreePath: Path.Combine(repositoryPath, ".wip", "worktrees", "approve-token"),
+                cancellationToken: CancellationToken.None);
+
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Editing, CancellationToken.None);
+            await orchestrator.TransitionAsync(snapshot.SessionId, SessionState.Checkpointed, CancellationToken.None);
+
+            var validation = await orchestrator.ValidateAsync(
+                sessionId: snapshot.SessionId,
+                request: new SessionValidationRequest(
+                    BuildSucceeded: true,
+                    TestSucceeded: true,
+                    DiffHash: "diff-approve",
+                    Summary: "dotnet build/test passed"),
+                artifactStore: artifactStore,
+                cancellationToken: CancellationToken.None);
+
+            var review = await orchestrator.ReviewAsync(
+                sessionId: snapshot.SessionId,
+                request: new ReviewRequest(
+                    SessionId: snapshot.SessionId,
+                    CurrentDiffHash: "diff-approve",
+                    ChangedFiles: ["WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs"],
+                    Validation: new ReviewValidationStatus(true, true, "diff-approve")),
+                reviewGenerator: new WipRuntimeReviewGenerator(artifactStore),
+                cancellationToken: CancellationToken.None);
+
+            var beforeApproval = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+            Assert.NotNull(beforeApproval);
+            Assert.Equal(SessionState.AwaitingApproval, beforeApproval!.State);
+            Assert.Equal(SessionApprovalStatus.AwaitingApproval, beforeApproval.ApprovalStatus);
+            Assert.NotEqual(SessionApprovalStatus.Approved, beforeApproval.ApprovalStatus);
+
+            var approval = await orchestrator.CreateApprovalTokenAsync(
+                sessionId: snapshot.SessionId,
+                request: new ApprovalTokenRequest(
+                    SessionId: snapshot.SessionId,
+                    WorkflowId: snapshot.WorkflowId,
+                    DiffHash: "diff-approve",
+                    TargetBranch: "main",
+                    TargetCommit: "abc123",
+                    ReviewReport: new ApprovalReviewReport(review.Review.ReportArtifact.ArtifactId, "diff-approve", false),
+                    ValidationReport: new ApprovalValidationReport(validation.ValidationArtifact.ArtifactId, true, true, "diff-approve")),
+                approvalTokenFactory: new WipRuntimeApprovalTokenFactory(),
+                artifactStore: artifactStore,
+                cancellationToken: CancellationToken.None);
+
+            Assert.Equal(SessionApprovalStatus.Approved, approval.Session.ApprovalStatus);
+            Assert.Equal(SessionState.Approved, approval.Session.State);
+
+            var tokenArtifact = Assert.Single(
+                artifactStore.ListForSession(snapshot.SessionId),
+                artifact => artifact.RelativePath.Contains("approval-token", StringComparison.Ordinal));
+            Assert.Equal(approval.ApprovalArtifact.ArtifactId, tokenArtifact.ArtifactId);
+
+            var persisted = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
+            Assert.NotNull(persisted);
+            Assert.Equal(SessionApprovalStatus.Approved, persisted!.ApprovalStatus);
+            Assert.Equal(SessionState.Approved, persisted.State);
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", StageCapabilityDispatcherChecklistItem)]
+    public async Task RunWorkflowAsync_GivenToolStage_ExpectedStageExecutionArtifactReferencesProducerCapabilityId()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var artifactStore = new InMemoryArtifactStore();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows(artifactStore);
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/stage-artifact",
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        var runStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
+        Assert.Equal(new CapabilityId("tool.workflow.run"), runStage.ProducerCapabilityId);
+        Assert.NotNull(runStage.ExecutionArtifact);
+        Assert.Equal("tool.workflow.run", runStage.ExecutionArtifact!.ProducerType);
+
+        var persistedArtifact = Assert.Single(
+            artifactStore.ListForSession(snapshot.SessionId),
+            artifact => artifact.ProducerType == "tool.workflow.run");
+        using var payload = JsonDocument.Parse(artifactStore.ReadContent(persistedArtifact.ArtifactId));
+        Assert.Equal("tool.workflow.run", payload.RootElement.GetProperty("producerCapabilityId").GetString());
+        Assert.Equal(typeof(WorkflowRequest).FullName, payload.RootElement.GetProperty("requestContractName").GetString());
+        Assert.Equal(typeof(WorkflowResult).FullName, payload.RootElement.GetProperty("resultContractName").GetString());
+        Assert.Equal(runStage.CorrelationId, payload.RootElement.GetProperty("correlationId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(payload.RootElement.GetProperty("storagePath").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(runStage.ExecutionArtifact!.RelativePath));
+
+        var workflowEvent = Assert.Single(publisher.Events, e => e.Kind == SessionEventKind.WorkflowExecuted);
+        Assert.Contains(
+            workflowEvent.ArtifactReferences ?? [],
+            reference => reference.Role == "stage-execution" && reference.ArtifactId == persistedArtifact.ArtifactId.Value);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", StageCapabilityDispatcherChecklistItem)]
+    public async Task RunWorkflowAsync_GivenAgentPlanStage_ExpectedPlanOnlyAgentOrRegisteredAgentExecutesBeforeRunStage()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var artifactStore = new InMemoryArtifactStore();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithPlanOnlyAgentWorkflow(artifactStore);
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/plan-before-run",
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        var planStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Plan);
+        var runStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
+        Assert.Equal(new CapabilityId("agent.plan-only"), planStage.ProducerCapabilityId);
+        Assert.Equal(new CapabilityId("tool.workflow.run"), runStage.ProducerCapabilityId);
+
+        var artifacts = artifactStore.ListForSession(snapshot.SessionId).OrderBy(artifact => artifact.ProducedAtUtc).ToArray();
+        var planMarkdownArtifact = Assert.Single(artifacts, artifact => artifact.Kind == ArtifactKind.Markdown);
+        var planExecutionArtifact = Assert.Single(artifacts, artifact => artifact.ProducerType == "agent.plan-only");
+        var runExecutionArtifact = Assert.Single(artifacts, artifact => artifact.ProducerType == "tool.workflow.run");
+
+        Assert.True(planMarkdownArtifact.ProducedAtUtc <= runExecutionArtifact.ProducedAtUtc);
+        Assert.True(planExecutionArtifact.ProducedAtUtc <= runExecutionArtifact.ProducedAtUtc);
+    }
+
+    [Fact]
     public async Task RunWorkflowAsync_GivenSelectedWorkflow_ExecutesLinearStagesAndProducesStageDescriptorsInOrder()
     {
         var store = new InMemorySessionStore();
@@ -823,7 +1206,9 @@ public sealed class WipRuntimeOrchestratorTests
             stage => Assert.Equal(WorkflowStageKind.Merge, stage.Descriptor.Stage));
 
         var merged = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
-        Assert.Equal(SessionState.Merged, merged!.State);
+        Assert.Equal(SessionState.Editing, merged!.State);
+        Assert.Equal(SessionApprovalStatus.NotRequested, merged.ApprovalStatus);
+        Assert.Equal(SessionValidationStatus.NotStarted, merged.ValidationStatus);
         Assert.Contains(publisher.Events, e => e.Kind == SessionEventKind.WorkflowExecuted && e.SessionId == snapshot.SessionId);
     }
 
@@ -965,6 +1350,98 @@ public sealed class WipRuntimeOrchestratorTests
     }
 
     [Fact]
+    [Trait("ChecklistItem", StageMapAdapterChecklistItem)]
+    public async Task RunWorkflowAsync_GivenCompiledMapAdapters_ExpectedValidateStageInputDerivedFromRunStageOutput()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var artifactStore = new InMemoryArtifactStore();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithMapAdapterWorkflow(artifactStore);
+
+        MapTrackingValidateValidator.Reset();
+        WorkflowRunTool.Reset();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            new SessionStartRequest(
+                WorkflowId: new WorkflowId("workflow.linear"),
+                TaskDescription: "map-adapter-proof",
+                RepositoryPath: "C:/repo",
+                WorktreePath: "C:/repo/.wip/worktrees/map-adapters"),
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            cancellationToken: CancellationToken.None);
+
+        var runStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
+        var validateStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Validate);
+        Assert.Equal(new CapabilityId("tool.workflow.run"), runStage.ProducerCapabilityId);
+        Assert.Equal(new CapabilityId("validator.workflow.validate"), validateStage.ProducerCapabilityId);
+        Assert.Equal(typeof(ValidateStageRequest).FullName, validateStage.MappedInputContractName);
+
+        var runArtifact = Assert.Single(
+            artifactStore.ListForSession(snapshot.SessionId),
+            artifact => artifact.ProducerType == "tool.workflow.run");
+        using var runPayload = JsonDocument.Parse(artifactStore.ReadContent(runArtifact.ArtifactId));
+        var runOutcome = runPayload.RootElement.GetProperty("mappedInputPayload").GetProperty("task").GetString();
+        Assert.Equal("map-adapter-proof", runOutcome);
+
+        var validateArtifact = Assert.Single(
+            artifactStore.ListForSession(snapshot.SessionId),
+            artifact => artifact.ProducerType == "validator.workflow.validate");
+        using var validatePayload = JsonDocument.Parse(artifactStore.ReadContent(validateArtifact.ArtifactId));
+        Assert.Equal(typeof(WorkflowResult).FullName, validatePayload.RootElement.GetProperty("mappedSourceContractName").GetString());
+        Assert.Equal(
+            "run:map-adapter-proof",
+            validatePayload.RootElement.GetProperty("mappedSourcePayload").GetProperty("outcome").GetString());
+        Assert.Equal(typeof(ValidateStageRequest).FullName, validatePayload.RootElement.GetProperty("mappedInputContractName").GetString());
+        Assert.Equal(
+            snapshot.SessionId.Value,
+            validatePayload.RootElement.GetProperty("mappedInputPayload").GetProperty("sessionId").GetString());
+
+        Assert.Equal(snapshot.SessionId.Value, MapTrackingValidateValidator.LastRequest?.SessionId);
+        Assert.Equal("run:map-adapter-proof", WorkflowRunTool.LastOutcome);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", StageMapAdapterChecklistItem)]
+    public async Task RunWorkflowAsync_GivenMismatchedMapContracts_ExpectedDeterministicDispatchFailureWithNoPartialArtifacts()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var artifactStore = new InMemoryArtifactStore();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithMapAdapterWorkflow(artifactStore, includeRunTool: false);
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: "C:/repo",
+            worktreePath: "C:/repo/.wip/worktrees/map-mismatch",
+            cancellationToken: CancellationToken.None);
+
+        using (WorkflowStageDispatchScope.Exclude(WorkflowStageKind.Run))
+        {
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+                async () => await orchestrator.RunWorkflowAsync(
+                    sessionId: snapshot.SessionId,
+                    builder: builder,
+                    selectedWorkflowId: new WorkflowId("workflow.linear"),
+                    cancellationToken: CancellationToken.None));
+
+            Assert.Contains(typeof(WorkflowResult).FullName!, exception.Message, StringComparison.Ordinal);
+            Assert.Contains(typeof(PlanStageResult).FullName!, exception.Message, StringComparison.Ordinal);
+        }
+
+        Assert.DoesNotContain(
+            artifactStore.ListForSession(snapshot.SessionId),
+            artifact => artifact.ProducerType == "validator.workflow.validate");
+        Assert.DoesNotContain(publisher.Events, e => e.Kind == SessionEventKind.WorkflowExecuted);
+    }
+
+    [Fact]
     public async Task RunWorkflowAsync_GivenNoSelectedWorkflowAndMultipleCandidates_RequestsExplicitSelection()
     {
         var store = new InMemorySessionStore();
@@ -1054,9 +1531,12 @@ public sealed class WipRuntimeOrchestratorTests
     private sealed class InMemoryArtifactStore : IArtifactStore
     {
         private readonly ConcurrentDictionary<SessionId, List<ArtifactDescriptor>> _artifacts = new();
+        private readonly ConcurrentDictionary<ArtifactId, string> _contents = new();
 
         public ValueTask<ArtifactDescriptor> SaveAsync(SessionId sessionId, ArtifactContent artifact, CancellationToken cancellationToken)
         {
+            _contents[artifact.ArtifactId] = artifact.Content;
+
             var descriptor = new ArtifactDescriptor(
                 artifact.ArtifactId,
                 sessionId,
@@ -1074,6 +1554,9 @@ public sealed class WipRuntimeOrchestratorTests
 
             return ValueTask.FromResult(descriptor);
         }
+
+        public string ReadContent(ArtifactId artifactId)
+            => _contents[artifactId];
 
         public ValueTask<IReadOnlyList<ArtifactDescriptor>> ListAsync(SessionId sessionId, CancellationToken cancellationToken)
             => ValueTask.FromResult<IReadOnlyList<ArtifactDescriptor>>(ListForSession(sessionId));
@@ -1114,9 +1597,43 @@ public sealed class WipRuntimeOrchestratorTests
             => ValueTask.FromResult<SessionSnapshot?>(null);
     }
 
-    private static WipBuilder CreateBuilderWithWorkflows()
+    private static WipBuilder CreateBuilderWithMapAdapterWorkflow(
+        InMemoryArtifactStore artifactStore,
+        bool includeRunTool = true)
     {
         var services = new ServiceCollection();
+        services.AddSingleton<IArtifactStore>(artifactStore);
+
+        var builder = new WipBuilder(services);
+
+        builder.AddWorkflow<LinearWorkflow, WorkflowRequest, WorkflowResult>(
+            workflowId: new WorkflowId("workflow.linear"),
+            displayName: "Linear workflow");
+
+        builder.AddAgent<WorkflowPlanStageAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Workflow plan stage agent");
+
+        if (includeRunTool)
+        {
+            builder.AddTool<WorkflowRunTool, WorkflowRequest, WorkflowResult>(
+                new CapabilityId("tool.workflow.run"),
+                displayName: "Workflow run tool");
+        }
+
+        builder.AddValidator<MapTrackingValidateValidator, ValidateStageRequest, ValidateStageResult>(
+            new CapabilityId("validator.workflow.validate"),
+            displayName: "Workflow validate stage validator");
+
+        return builder;
+    }
+
+    private static WipBuilder CreateBuilderWithWorkflows(InMemoryArtifactStore? artifactStore = null)
+    {
+        artifactStore ??= new InMemoryArtifactStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IArtifactStore>(artifactStore);
+
         var builder = new WipBuilder(services);
 
         builder.AddWorkflow<LinearWorkflow, WorkflowRequest, WorkflowResult>(
@@ -1126,6 +1643,32 @@ public sealed class WipRuntimeOrchestratorTests
         builder.AddWorkflow<SecondaryWorkflow, SecondaryWorkflowRequest, SecondaryWorkflowResult>(
             workflowId: new WorkflowId("workflow.secondary"),
             displayName: "Secondary workflow");
+
+        builder.AddAgent<WorkflowPlanStageAgent, PlanStageRequest, PlanStageResult>(
+            new CapabilityId("agent.workflow.plan"),
+            displayName: "Workflow plan stage agent");
+        builder.AddTool<WorkflowRunTool, WorkflowRequest, WorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Workflow run tool");
+
+        return builder;
+    }
+
+    private static WipBuilder CreateBuilderWithPlanOnlyAgentWorkflow(InMemoryArtifactStore artifactStore)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<IArtifactStore>(artifactStore);
+        services.AddSingleton<PlanOnlyAgent>();
+
+        var builder = new WipBuilder(services);
+
+        builder.AddWorkflow<LinearWorkflow, WorkflowRequest, WorkflowResult>(
+            workflowId: new WorkflowId("workflow.linear"),
+            displayName: "Linear workflow");
+        builder.AddTool<WorkflowRunTool, WorkflowRequest, WorkflowResult>(
+            new CapabilityId("tool.workflow.run"),
+            displayName: "Workflow run tool");
+        builder.AddPolicy<AllowAllPolicy, PlanOnlyAgentRequest>(new PolicyId("policy.safe"));
 
         return builder;
     }
@@ -1187,6 +1730,42 @@ public sealed class WipRuntimeOrchestratorTests
     {
         public ValueTask<TestValidatorResult> ExecuteAsync(TestValidatorRequest request, CapabilityContext context, CancellationToken cancellationToken)
             => ValueTask.FromResult(new TestValidatorResult(true));
+    }
+
+    private sealed class WorkflowRunTool : ITool<WorkflowRequest, WorkflowResult>
+    {
+        public static string? LastOutcome { get; private set; }
+
+        public static void Reset() => LastOutcome = null;
+
+        public ValueTask<WorkflowResult> ExecuteAsync(WorkflowRequest request, CapabilityContext context, CancellationToken cancellationToken)
+        {
+            var outcome = $"run:{request.Task}";
+            LastOutcome = outcome;
+            return ValueTask.FromResult(new WorkflowResult(outcome));
+        }
+    }
+
+    private sealed class MapTrackingValidateValidator : IValidator<ValidateStageRequest, ValidateStageResult>
+    {
+        public static ValidateStageRequest? LastRequest { get; private set; }
+
+        public static void Reset() => LastRequest = null;
+
+        public ValueTask<ValidateStageResult> ExecuteAsync(
+            ValidateStageRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return ValueTask.FromResult(new ValidateStageResult(true));
+        }
+    }
+
+    private sealed class WorkflowPlanStageAgent : IAgent<PlanStageRequest, PlanStageResult>
+    {
+        public ValueTask<PlanStageResult> ExecuteAsync(PlanStageRequest request, CapabilityContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new PlanStageResult(true));
     }
 
     private sealed class AllowAllPolicy : IPolicy<PlanOnlyAgentRequest>

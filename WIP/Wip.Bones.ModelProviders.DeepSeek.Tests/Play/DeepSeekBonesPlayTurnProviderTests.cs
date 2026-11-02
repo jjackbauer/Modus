@@ -31,7 +31,7 @@ public sealed class DeepSeekBonesPlayTurnProviderTests
             {
                 capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
                 return CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: "move-play-left",
                     promptTokens: 12,
                     completionTokens: 2);
@@ -45,7 +45,8 @@ public sealed class DeepSeekBonesPlayTurnProviderTests
         Assert.NotNull(capturedBody);
         using var payloadDocument = JsonDocument.Parse(capturedBody!);
         var root = payloadDocument.RootElement;
-        Assert.Equal("deepseek-chat", root.GetProperty("model").GetString());
+        Assert.Equal("deepseek-flash", root.GetProperty("model").GetString());
+        Assert.Equal("disabled", root.GetProperty("thinking").GetProperty("type").GetString());
 
         var messages = root.GetProperty("messages");
         Assert.Equal(2, messages.GetArrayLength());
@@ -59,12 +60,45 @@ public sealed class DeepSeekBonesPlayTurnProviderTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
+    public async Task DeepSeekBonesPlayTurnProvider_GivenSupportedPerStageModel_ExpectedPayloadUsesRequestedModel()
+    {
+        string? capturedBody = null;
+        var provider = CreateProvider(
+            handler: async (request, cancellationToken) =>
+            {
+                capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
+                return CreateSuccessResponse(
+                    model: "deepseek-v4-pro",
+                    content: "move-play-left",
+                    promptTokens: 12,
+                    completionTokens: 2);
+            });
+
+        var baseRequest = CreatePlayTurnRequest(correlationId: "corr-per-stage-model");
+        var perStageRequest = new ModelProviderRequest<BonesPlayTurnRequest>(
+            baseRequest.Payload,
+            modelId: "deepseek-v4-pro",
+            correlationId: baseRequest.CorrelationId);
+
+        var response = await provider.ExecuteAsync(
+            perStageRequest,
+            CreateContext(),
+            CancellationToken.None);
+
+        Assert.NotNull(capturedBody);
+        using var payloadDocument = JsonDocument.Parse(capturedBody!);
+        Assert.Equal("deepseek-v4-pro", payloadDocument.RootElement.GetProperty("model").GetString());
+        Assert.Equal("deepseek-v4-pro", response.ModelId);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
     public async Task DeepSeekBonesPlayTurnProvider_GivenModelSelectsLegalMove_ExpectedReturnsBonesPlayTurnResultWithThatMoveId()
     {
         var provider = CreateProvider(
             handler: (_, _) => Task.FromResult(
                 CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: "move-play-left",
                     promptTokens: 18,
                     completionTokens: 3)));
@@ -75,7 +109,7 @@ public sealed class DeepSeekBonesPlayTurnProviderTests
             CancellationToken.None);
 
         Assert.Equal("deepseek", response.ProviderId);
-        Assert.Equal("deepseek-chat", response.ModelId);
+        Assert.Equal("deepseek-flash", response.ModelId);
         Assert.Equal("move-play-left", response.Payload.SelectedMoveId);
         Assert.NotNull(response.Usage);
         Assert.Equal(18, response.Usage!.InputTokens);
@@ -90,7 +124,7 @@ public sealed class DeepSeekBonesPlayTurnProviderTests
         var provider = CreateProvider(
             handler: (_, _) => Task.FromResult(
                 CreateSuccessResponse(
-                    model: "deepseek-chat",
+                    model: "deepseek-flash",
                     content: "move-illegal",
                     promptTokens: 20,
                     completionTokens: 4)));
@@ -179,7 +213,7 @@ public sealed class DeepSeekBonesPlayTurnProviderTests
 
     private static DeepSeekBonesPlayTurnProvider CreateProvider(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler,
-        string model = "deepseek-chat",
+        string model = "deepseek-flash",
         int maxTransientRetries = 2)
     {
         Environment.SetEnvironmentVariable(TestApiKeyEnvVar, "test-api-key");

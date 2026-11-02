@@ -17,15 +17,18 @@ public sealed class BonesCoLearningPonderTool : ITool<BonesCoLearningPonderReque
     private readonly IArtifactStore _artifactStore;
     private readonly BonesStrategyLibrary _strategyLibrary;
     private readonly BonesPonderAgent _ponderAgent;
+    private readonly StrategyPool? _pool;
 
     public BonesCoLearningPonderTool(
         IArtifactStore artifactStore,
         BonesStrategyLibrary strategyLibrary,
-        BonesPonderAgent ponderAgent)
+        BonesPonderAgent ponderAgent,
+        StrategyPool? pool = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _strategyLibrary = strategyLibrary ?? throw new ArgumentNullException(nameof(strategyLibrary));
         _ponderAgent = ponderAgent ?? throw new ArgumentNullException(nameof(ponderAgent));
+        _pool = pool;
     }
 
     public async ValueTask<BonesCoLearningPonderResult> ExecuteAsync(
@@ -36,7 +39,8 @@ public sealed class BonesCoLearningPonderTool : ITool<BonesCoLearningPonderReque
         var orchestrator = new BonesCoLearningOrchestrator(
             _artifactStore,
             _strategyLibrary,
-            ponderAgent: _ponderAgent);
+            ponderAgent: _ponderAgent,
+            pool: _pool);
 
         return await orchestrator.RunPonderStageAsync(request, context, cancellationToken);
     }
@@ -51,15 +55,18 @@ public sealed class BonesCoLearningEnhanceTool : ITool<BonesCoLearningEnhanceReq
     private readonly IArtifactStore _artifactStore;
     private readonly BonesStrategyLibrary _strategyLibrary;
     private readonly BonesEnhanceStrategyAgent _enhanceAgent;
+    private readonly StrategyPool? _pool;
 
     public BonesCoLearningEnhanceTool(
         IArtifactStore artifactStore,
         BonesStrategyLibrary strategyLibrary,
-        BonesEnhanceStrategyAgent enhanceAgent)
+        BonesEnhanceStrategyAgent enhanceAgent,
+        StrategyPool? pool = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _strategyLibrary = strategyLibrary ?? throw new ArgumentNullException(nameof(strategyLibrary));
         _enhanceAgent = enhanceAgent ?? throw new ArgumentNullException(nameof(enhanceAgent));
+        _pool = pool;
     }
 
     public async ValueTask<BonesCoLearningEnhanceResult> ExecuteAsync(
@@ -70,7 +77,8 @@ public sealed class BonesCoLearningEnhanceTool : ITool<BonesCoLearningEnhanceReq
         var orchestrator = new BonesCoLearningOrchestrator(
             _artifactStore,
             _strategyLibrary,
-            enhanceAgent: _enhanceAgent);
+            enhanceAgent: _enhanceAgent,
+            pool: _pool);
 
         return await orchestrator.RunEnhanceStageAsync(request, context, cancellationToken);
     }

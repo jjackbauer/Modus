@@ -11,7 +11,7 @@ public sealed class BehaviorProofComplianceGateTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
-    public void IntegrationPlan_GivenAnyChecklistItem_ExpectedAtLeastOneExecutableBehaviorProofTest()
+    public void BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEachItem()
     {
         var requirements = File.ReadAllText(GetRequirementsPath());
         var result = BehaviorProofPolicy.VerifyAbsoluteBehaviorProofCompliance(
@@ -40,7 +40,7 @@ public sealed class BehaviorProofComplianceGateTests
 
 ### Lifecycle safety and policy compliance
 
-1. `IntegrationPlan_GivenAnyChecklistItem_ExpectedAtLeastOneExecutableBehaviorProofTest`
+1. `BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEachItem`
    *Assumption*: Checklist completion is accepted only if at least one test executes runtime behavior assertions for the item.
 
 2. `IntegrationPlan_GivenImaginaryBehaviorProofTest_ExpectedExecutableMapping`

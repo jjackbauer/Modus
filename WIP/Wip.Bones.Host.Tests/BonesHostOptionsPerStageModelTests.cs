@@ -74,7 +74,7 @@ public sealed class BonesHostOptionsPerStageModelTests
         ClearBonesHostEnvironment();
         try
         {
-            Environment.SetEnvironmentVariable("BONES_PLAY_MODEL", "deepseek-v4-flash");
+            Environment.SetEnvironmentVariable("BONES_PLAY_MODEL", "deepseek-flash");
 
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -85,7 +85,7 @@ public sealed class BonesHostOptionsPerStageModelTests
 
             var options = BonesHostOptions.Bind(configuration);
 
-            Assert.Equal("deepseek-v4-flash", options.PlayModelId);
+            Assert.Equal("deepseek-flash", options.PlayModelId);
         }
         finally
         {
@@ -164,7 +164,7 @@ public sealed class BonesHostOptionsPerStageModelTests
         try
         {
             Environment.SetEnvironmentVariable("BONES_PONDER_MODEL", "deepseek-v4-pro");
-            Environment.SetEnvironmentVariable("BONES_PLAY_MODEL", "deepseek-v4-flash");
+            Environment.SetEnvironmentVariable("BONES_PLAY_MODEL", "deepseek-flash");
 
             var configuration = new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?>
@@ -177,7 +177,7 @@ public sealed class BonesHostOptionsPerStageModelTests
             var options = BonesHostOptions.Bind(configuration);
 
             Assert.Equal("deepseek-v4-pro", options.DefaultParameters.PonderModelId);
-            Assert.Equal("deepseek-v4-flash", options.DefaultParameters.PlayModelId);
+            Assert.Equal("deepseek-flash", options.DefaultParameters.PlayModelId);
             Assert.Equal("deepseek-v4-pro", options.DefaultParameters.EnhanceModelId);
         }
         finally

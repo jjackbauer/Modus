@@ -27,7 +27,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProvider
         ArgumentNullException.ThrowIfNull(request.Payload);
 
         var messages = BonesDeepSeekMessageMapper.MapEnhancementMessages(request.Payload.Messages);
-        var chatRequest = new DeepSeekChatCompletionRequest(messages);
+        var chatRequest = new DeepSeekChatCompletionRequest(messages, _options.Thinking);
 
         var deepSeekResponse = await _deepSeekModelProvider.ExecuteAsync(
             new ModelProviderRequest<DeepSeekChatCompletionRequest>(
@@ -51,7 +51,7 @@ public sealed class DeepSeekBonesStrategyEnhancementProvider
             return _options.Model.Value;
 
         var trimmed = requestModelId.Trim();
-        return trimmed is "deepseek-chat" or "deepseek-reasoner"
+        return BonesDeepSeekModelIdentifier.IsSupported(trimmed)
             ? trimmed
             : _options.Model.Value;
     }

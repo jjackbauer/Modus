@@ -1,53 +1,72 @@
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace Wip.Modus.Tests.Documentation;
 
 public sealed class WipContributorArchitectureReadmeTests
 {
-    private const string ChecklistItem = "Publish root WIP contributor architecture README that maps each Wip.* project to its ownership, runtime role, and extension seams [prerequisite for many others]";
+    private const string PathFixChecklistItem =
+        "Fix WipContributorArchitectureReadmeTests to resolve WIP/Wip.* project paths and discover all Wip.* projects under WIP/ (not src/) [foundation for documentation alignment]";
+
+    private const string MapUpdateChecklistItem =
+        "Update src/WIP.Contributor-Architecture.README.md project map to include every WIP/Wip.* project with correct ownership, runtime role, and extension seams [depends on readme path test fix]";
     private const string ReadmePath = "src/WIP.Contributor-Architecture.README.md";
+    private const string WipProjectsRoot = "WIP";
 
     [Fact]
-    [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("ChecklistItem", PathFixChecklistItem)]
+    [Trait("ChecklistItem", MapUpdateChecklistItem)]
     public void WipContributorArchitectureReadme_GivenRepositoryStructure_MapsEveryWipProjectToRuntimeRole()
     {
         var repositoryRoot = FindRepositoryRoot();
+        var projectNames = DiscoverWipProjectNames(repositoryRoot);
         var readme = ReadRepositoryFile(ReadmePath);
         var rows = ParseProjectMapRows(readme);
-
-        var projectNames = Directory.GetDirectories(Path.Combine(repositoryRoot, "src"), "Wip.*", SearchOption.TopDirectoryOnly)
-            .Select(Path.GetFileName)
-            .Where(static name => !string.IsNullOrWhiteSpace(name))
-            .Cast<string>()
-            .OrderBy(static name => name, StringComparer.Ordinal)
-            .ToArray();
+        var rowsByProject = rows.ToDictionary(static row => row.Project, StringComparer.Ordinal);
 
         Assert.NotEmpty(projectNames);
 
         foreach (var projectName in projectNames)
         {
-            var row = Assert.Single(rows, row => string.Equals(row.Project, projectName, StringComparison.Ordinal));
-            Assert.False(string.IsNullOrWhiteSpace(row.Ownership));
-            Assert.False(string.IsNullOrWhiteSpace(row.RuntimeRole));
-            Assert.False(string.IsNullOrWhiteSpace(row.ExtensionSeams));
+            var projectPath = ResolveWipProjectPath(repositoryRoot, projectName);
+            Assert.True(File.Exists(projectPath), $"Discovered WIP project '{projectName}', but '{projectPath}' does not exist.");
+
+            Assert.True(rowsByProject.TryGetValue(projectName, out var row), $"README project map is missing '{projectName}'.");
+            Assert.False(string.IsNullOrWhiteSpace(row.Ownership), $"README ownership is empty for '{projectName}'.");
+            Assert.False(string.IsNullOrWhiteSpace(row.RuntimeRole), $"README runtime role is empty for '{projectName}'.");
+            Assert.False(string.IsNullOrWhiteSpace(row.ExtensionSeams), $"README extension seams are empty for '{projectName}'.");
+        }
+
+        var staleSrcWipProjects = Directory.Exists(Path.Combine(repositoryRoot, "src"))
+            ? Directory.GetDirectories(Path.Combine(repositoryRoot, "src"), "Wip.*", SearchOption.TopDirectoryOnly)
+            : [];
+
+        Assert.Empty(staleSrcWipProjects);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", PathFixChecklistItem)]
+    [Trait("ChecklistItem", MapUpdateChecklistItem)]
+    public void WipContributorArchitectureReadme_GivenArchitectureMap_ContributorsCanTraceSessionCommandToRuntimeComponents()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var readme = ReadRepositoryFile(ReadmePath);
+
+        Assert.Contains("transition planning", readme, StringComparison.Ordinal);
+
+        var tracePaths = ExtractWipRepositoryPaths(readme);
+        Assert.NotEmpty(tracePaths);
+
+        foreach (var relativePath in tracePaths)
+        {
+            var fullPath = Path.Combine(repositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            Assert.True(File.Exists(fullPath), $"README references '{relativePath}', but '{fullPath}' does not exist.");
         }
     }
 
     [Fact]
-    [Trait("ChecklistItem", ChecklistItem)]
-    public void WipContributorArchitectureReadme_GivenArchitectureMap_ContributorsCanTraceSessionCommandToRuntimeComponents()
-    {
-        var readme = ReadRepositoryFile(ReadmePath);
-
-        Assert.Contains("transition planning", readme, StringComparison.Ordinal);
-        Assert.Contains("Wip.Shell/Interactive/WipShellCommandLoop.cs", readme, StringComparison.Ordinal);
-        Assert.Contains("Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs", readme, StringComparison.Ordinal);
-        Assert.Contains("Wip.Policy.LocalSafe/LocalSafePolicy.cs", readme, StringComparison.Ordinal);
-        Assert.Contains("Wip.Modus/Hosting/ModusWipBridge.cs", readme, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    [Trait("ChecklistItem", ChecklistItem)]
+    [Trait("ChecklistItem", PathFixChecklistItem)]
+    [Trait("ChecklistItem", MapUpdateChecklistItem)]
     public void WipContributorArchitectureReadme_GivenOutdatedMap_RuntimeVerificationTestFailsUntilReadmeUpdated()
     {
         var repositoryRoot = FindRepositoryRoot();
@@ -56,9 +75,33 @@ public sealed class WipContributorArchitectureReadmeTests
 
         foreach (var row in rows)
         {
-            var projectPath = Path.Combine(repositoryRoot, "src", row.Project, $"{row.Project}.csproj");
+            var projectPath = ResolveWipProjectPath(repositoryRoot, row.Project);
             Assert.True(File.Exists(projectPath), $"README maps '{row.Project}', but '{projectPath}' does not exist.");
         }
+    }
+
+    private static string[] DiscoverWipProjectNames(string repositoryRoot)
+    {
+        var wipRoot = Path.Combine(repositoryRoot, WipProjectsRoot);
+        return Directory.GetDirectories(wipRoot, "Wip.*", SearchOption.TopDirectoryOnly)
+            .Select(Path.GetFileName)
+            .Where(static name => !string.IsNullOrWhiteSpace(name) && !name.EndsWith(".Tests", StringComparison.Ordinal))
+            .Cast<string>()
+            .OrderBy(static name => name, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static string ResolveWipProjectPath(string repositoryRoot, string projectName) =>
+        Path.Combine(repositoryRoot, WipProjectsRoot, projectName, $"{projectName}.csproj");
+
+    private static string[] ExtractWipRepositoryPaths(string markdown)
+    {
+        var matches = Regex.Matches(markdown, @"WIP/Wip\.[^`\s]+", RegexOptions.CultureInvariant);
+        return matches
+            .Select(static match => match.Value)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(static path => path, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static IReadOnlyList<ProjectMapRow> ParseProjectMapRows(string markdown)

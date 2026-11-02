@@ -1,6 +1,6 @@
 # Per-Stage Model Routing for Co-Learning Workflow
 
-> Scope: add per-stage model overrides to `BonesHostOptions` so each workflow stage (Ponder, Play, Enhance) can target a different model provider model — e.g. `deepseek-v4-pro` for strategy authoring and `deepseek-v4-flash` for per-turn move selection — while preserving the existing single-model fallback. Extends `Wip.Bones.AdversarialCoLearning`.
+> Scope: add per-stage model overrides to `BonesHostOptions` so each workflow stage (Ponder, Play, Enhance) can target a different model provider model — e.g. `deepseek-v4-pro` for strategy authoring and `deepseek-flash` for per-turn move selection — while preserving the existing single-model fallback. Extends `Wip.Bones.AdversarialCoLearning`.
 
 ---
 
@@ -122,7 +122,7 @@ classDiagram
 | Checklist Item | Primary Runtime Proof Path | Minimum Evidence |
 |---|---|---|
 | PonderModelId property | Options binding test | `BONES_PONDER_MODEL=deepseek-v4-pro` → `options.PonderModelId == "deepseek-v4-pro"` |
-| PlayModelId property | Options binding test | `BONES_PLAY_MODEL=deepseek-v4-flash` → `options.PlayModelId == "deepseek-v4-flash"` |
+| PlayModelId property | Options binding test | `BONES_PLAY_MODEL=deepseek-flash` → `options.PlayModelId == "deepseek-flash"` |
 | EnhanceModelId property | Options binding test | `BONES_ENHANCE_MODEL=deepseek-v4-pro` → `options.EnhanceModelId == "deepseek-v4-pro"` |
 | Config path resolution | Options binding test | `BonesHost:PonderModelId` in JSON binds correctly |
 | DefaultParameters wiring | Options binding test | `options.DefaultParameters.PonderModelId` matches after `Bind()` |
@@ -160,7 +160,7 @@ Zero Falsified rows.
    *Assumption*: `BONES_PONDER_MODEL=deepseek-v4-pro` binds `PonderModelId = "deepseek-v4-pro"` and `PlayModelId`/`EnhanceModelId` remain `null`.
 
 2. `BonesHostOptions_GivenBonesPlayModelEnv_ExpectedBindsPlayModelId`
-   *Assumption*: `BONES_PLAY_MODEL=deepseek-v4-flash` binds `PlayModelId = "deepseek-v4-flash"`.
+   *Assumption*: `BONES_PLAY_MODEL=deepseek-flash` binds `PlayModelId = "deepseek-flash"`.
 
 3. `BonesHostOptions_GivenBonesEnhanceModelEnv_ExpectedBindsEnhanceModelId`
    *Assumption*: `BONES_ENHANCE_MODEL=deepseek-v4-pro` binds `EnhanceModelId = "deepseek-v4-pro"`.
@@ -180,7 +180,7 @@ Zero Falsified rows.
 ### `BonesLearningWorkflowParameters` — Per-Stage Model Round-Trip
 
 1. `BonesLearningWorkflowParameters_GivenPerStageModelsSet_ExpectedFormatTaskDescriptionIncludesThem`
-   *Assumption*: `FormatTaskDescription` includes `;ponderModelId=deepseek-v4-pro;playModelId=deepseek-v4-flash` when set.
+   *Assumption*: `FormatTaskDescription` includes `;ponderModelId=deepseek-v4-pro;playModelId=deepseek-flash` when set.
 
 2. `BonesLearningWorkflowParameters_GivenTaskDescriptionWithPerStageModels_ExpectedTryParseReconstructsThem`
    *Assumption*: `TryParse` correctly parses per-stage model IDs from the task description string.
@@ -194,13 +194,13 @@ Zero Falsified rows.
    *Assumption*: When `parameters.PonderModelId = "deepseek-v4-pro"`, the Observe→Ponder map binding produces a `BonesPonderRequest` with `ModelId = "deepseek-v4-pro"`.
 
 2. `BonesLearningWorkflowMapRuntime_GivenPonderModelIdNullButGlobalModelIdSet_ExpectedFallsBackToGlobal`
-   *Assumption*: When `PonderModelId` is null but `ModelId = "deepseek-chat"`, the Ponder request gets `"deepseek-chat"`.
+   *Assumption*: When `PonderModelId` is null but `ModelId = "deepseek-flash"`, the Ponder request gets `"deepseek-flash"`.
 
 3. `BonesLearningWorkflowMapRuntime_GivenAllModelsNull_ExpectedPonderRequestUsesNullModelId`
    *Assumption*: When all model IDs are null, the Ponder request gets `null` ModelId (agent uses its hardcoded default).
 
 4. `BonesLearningWorkflowMapRuntime_GivenPlayModelIdSet_ExpectedPlayRequestUsesPlayModel`
-   *Assumption*: When `parameters.PlayModelId = "deepseek-v4-flash"`, the Play request uses it.
+   *Assumption*: When `parameters.PlayModelId = "deepseek-flash"`, the Play request uses it.
 
 5. `BonesLearningWorkflowMapRuntime_GivenEnhanceModelIdSet_ExpectedEnhanceRequestUsesEnhanceModel`
    *Assumption*: When `parameters.EnhanceModelId = "deepseek-v4-pro"`, the Enhance request uses it.
@@ -208,7 +208,7 @@ Zero Falsified rows.
 ### Status API
 
 1. `BonesStatusApi_GivenPerStageModelsSet_ExpectedResponseIncludesPerStageModels`
-   *Assumption*: `/api/bones/status` response includes `perStageModels: { ponderModelId: "deepseek-v4-pro", playModelId: "deepseek-v4-flash", enhanceModelId: null }` when configured.
+   *Assumption*: `/api/bones/status` response includes `perStageModels: { ponderModelId: "deepseek-v4-pro", playModelId: "deepseek-flash", enhanceModelId: null }` when configured.
 
 ### Behavior-Proof Compliance
 

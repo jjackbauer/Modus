@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -14,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\WIP\Wip.Shell.E2E\Wip.Shell.E2E.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.ShellHost\Wip.ShellHost.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.Builder\Wip.Builder.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.Abstractions\Wip.Abstractions.csproj" />

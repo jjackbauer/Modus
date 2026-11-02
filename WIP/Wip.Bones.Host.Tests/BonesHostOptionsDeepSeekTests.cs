@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Wip.Bones.Host;
 using Wip.Bones.Identifiers;
+using Wip.Runtime.Runtime;
 using Xunit;
 
 namespace Wip.Bones.Host.Tests;
@@ -16,6 +17,10 @@ public sealed class BonesHostOptionsDeepSeekTests
         Environment.SetEnvironmentVariable("BonesHost__DeepSeek__Model", null);
         Environment.SetEnvironmentVariable("BonesHost__DeepSeek__TimeoutSeconds", null);
         Environment.SetEnvironmentVariable("BonesHost__DeepSeek__ApiKeySource", null);
+        Environment.SetEnvironmentVariable("BonesHost__DeepSeek__Temperature", null);
+        Environment.SetEnvironmentVariable("BonesHost__DeepSeek__Thinking", null);
+        Environment.SetEnvironmentVariable("BONES_EVALUATION_TARGET_SCORE", null);
+        Environment.SetEnvironmentVariable("BonesHost__EvaluationTargetScore", null);
         Environment.SetEnvironmentVariable("BONES_MAX_GAMES_PER_RUN", null);
         Environment.SetEnvironmentVariable("BonesHost__MaxGamesPerRun", null);
         Environment.SetEnvironmentVariable("BONES_RESUME_FROM_BEST", null);
@@ -34,7 +39,7 @@ public sealed class BonesHostOptionsDeepSeekTests
             {
                 ["BonesHost:ModelProvider"] = "deepseek",
                 ["BonesHost:DeepSeek:BaseUrl"] = "https://api.deepseek.com",
-                ["BonesHost:DeepSeek:Model"] = "deepseek-reasoner",
+                ["BonesHost:DeepSeek:Model"] = "deepseek-v4-pro",
                 ["BonesHost:DeepSeek:TimeoutSeconds"] = "45",
                 ["BonesHost:DeepSeek:ApiKeySource"] = "env:DEEPSEEK_API_KEY",
             })
@@ -45,10 +50,60 @@ public sealed class BonesHostOptionsDeepSeekTests
         Assert.Equal(BonesModelProviderKind.DeepSeek, options.ModelProvider);
         Assert.NotNull(options.DeepSeekProviderOptions);
         Assert.Equal("https://api.deepseek.com/", options.DeepSeekProviderOptions.BaseUrl.ToString());
-        Assert.Equal("deepseek-reasoner", options.DeepSeekProviderOptions.Model.Value);
+        Assert.Equal("deepseek-v4-pro", options.DeepSeekProviderOptions.Model.Value);
         Assert.Equal(TimeSpan.FromSeconds(45), options.DeepSeekProviderOptions.Timeout);
         Assert.Equal("DEEPSEEK_API_KEY", options.DeepSeekProviderOptions.ApiKeySourceReference);
-        Assert.Equal("deepseek-reasoner", options.DefaultParameters.ModelId);
+        Assert.Equal(DeepSeekThinkingMode.Disabled, options.DeepSeekProviderOptions.Thinking);
+        Assert.Equal("deepseek-v4-pro", options.DefaultParameters.ModelId);
+        Assert.Equal("deepseek-flash", new BonesHostDeepSeekConfiguration().Model);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", OptionsBindingItem)]
+    public void BonesHostOptions_GivenDeepSeekThinkingEnabled_ExpectedBindsThinkingMode()
+    {
+        ClearBonesHostEnvironment();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["BonesHost:ModelProvider"] = "deepseek",
+                ["BonesHost:DeepSeek:BaseUrl"] = "https://api.deepseek.com",
+                ["BonesHost:DeepSeek:Model"] = "deepseek-flash",
+                ["BonesHost:DeepSeek:TimeoutSeconds"] = "30",
+                ["BonesHost:DeepSeek:ApiKeySource"] = "env:DEEPSEEK_API_KEY",
+                ["BonesHost:DeepSeek:Thinking"] = "enabled",
+            })
+            .Build();
+
+        var options = BonesHostOptions.Bind(configuration);
+
+        Assert.NotNull(options.DeepSeekProviderOptions);
+        Assert.Equal(DeepSeekThinkingMode.Enabled, options.DeepSeekProviderOptions.Thinking);
+        Assert.Contains(
+            options.GetStartupDiagnostics(),
+            line => line == "modelProvider.deepseek.thinking=enabled");
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", OptionsBindingItem)]
+    public void BonesHostOptions_GivenInvalidDeepSeekThinking_ExpectedDeterministicStartupValidationFailure()
+    {
+        ClearBonesHostEnvironment();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["BonesHost:ModelProvider"] = "deepseek",
+                ["BonesHost:DeepSeek:BaseUrl"] = "https://api.deepseek.com",
+                ["BonesHost:DeepSeek:Model"] = "deepseek-flash",
+                ["BonesHost:DeepSeek:TimeoutSeconds"] = "30",
+                ["BonesHost:DeepSeek:ApiKeySource"] = "env:DEEPSEEK_API_KEY",
+                ["BonesHost:DeepSeek:Thinking"] = "sometimes",
+            })
+            .Build();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => BonesHostOptions.Bind(configuration));
+
+        Assert.Contains("Thinking 'sometimes'", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -175,5 +230,45 @@ public sealed class BonesHostOptionsDeepSeekTests
         {
             ClearBonesHostEnvironment();
         }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", OptionsBindingItem)]
+    public void BonesHostOptions_GivenEvaluationTargetScore_ExpectedWiredIntoDefaultParametersAndDiagnostics()
+    {
+        ClearBonesHostEnvironment();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["BonesHost:ModelProvider"] = "stub",
+                ["BonesHost:EvaluationTargetScore"] = "10",
+            })
+            .Build();
+
+        var options = BonesHostOptions.Bind(configuration);
+
+        Assert.Equal(10, options.EvaluationTargetScore);
+        Assert.Equal(10, options.DefaultParameters.EvaluationTargetScore);
+        Assert.Contains(
+            options.GetStartupDiagnostics(),
+            line => line == "evaluationTargetScore=10");
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", OptionsBindingItem)]
+    public void BonesHostOptions_GivenInvalidEvaluationTargetScore_ExpectedDeterministicValidationFailure()
+    {
+        ClearBonesHostEnvironment();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["BonesHost:ModelProvider"] = "stub",
+                ["BonesHost:EvaluationTargetScore"] = "0",
+            })
+            .Build();
+
+        var exception = Assert.Throws<InvalidOperationException>(() => BonesHostOptions.Bind(configuration));
+
+        Assert.Contains("EvaluationTargetScore", exception.Message, StringComparison.Ordinal);
     }
 }

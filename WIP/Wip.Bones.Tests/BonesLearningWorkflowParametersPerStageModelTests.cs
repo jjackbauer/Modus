@@ -29,11 +29,11 @@ public sealed class BonesLearningWorkflowParametersPerStageModelTests
             modelId: null,
             allSeatsLearning: false,
             ponderModelId: "deepseek-v4-pro",
-            playModelId: "deepseek-v4-flash",
+            playModelId: "deepseek-flash",
             enhanceModelId: null);
 
         Assert.Contains(";ponderModelId=deepseek-v4-pro", description, StringComparison.Ordinal);
-        Assert.Contains(";playModelId=deepseek-v4-flash", description, StringComparison.Ordinal);
+        Assert.Contains(";playModelId=deepseek-flash", description, StringComparison.Ordinal);
         Assert.DoesNotContain("enhanceModelId", description, StringComparison.Ordinal);
     }
 
@@ -46,10 +46,10 @@ public sealed class BonesLearningWorkflowParametersPerStageModelTests
             seed: 99,
             targetScore: 15,
             learningPlayerId: new BonesPlayerId(2),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             allSeatsLearning: true,
             ponderModelId: "deepseek-v4-pro",
-            playModelId: "deepseek-v4-flash",
+            playModelId: "deepseek-flash",
             enhanceModelId: "deepseek-v4-pro");
 
         var session = new SessionSnapshot(
@@ -66,10 +66,10 @@ public sealed class BonesLearningWorkflowParametersPerStageModelTests
         Assert.Equal(99, parameters.Seed);
         Assert.Equal(15, parameters.TargetScore);
         Assert.Equal(2, parameters.LearningPlayerId.Seat);
-        Assert.Equal("deepseek-chat", parameters.ModelId);
+        Assert.Equal("deepseek-flash", parameters.ModelId);
         Assert.True(parameters.AllSeatsLearning);
         Assert.Equal("deepseek-v4-pro", parameters.PonderModelId);
-        Assert.Equal("deepseek-v4-flash", parameters.PlayModelId);
+        Assert.Equal("deepseek-flash", parameters.PlayModelId);
         Assert.Equal("deepseek-v4-pro", parameters.EnhanceModelId);
     }
 
@@ -82,7 +82,7 @@ public sealed class BonesLearningWorkflowParametersPerStageModelTests
             seed: 1,
             targetScore: 10,
             learningPlayerId: new BonesPlayerId(1),
-            modelId: "deepseek-chat",
+            modelId: "deepseek-flash",
             allSeatsLearning: false);
 
         var session = new SessionSnapshot(

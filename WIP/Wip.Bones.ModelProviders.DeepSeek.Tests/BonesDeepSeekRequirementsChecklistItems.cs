@@ -1,4 +1,4 @@
-﻿namespace Wip.Bones.ModelProviders.DeepSeek.Tests;
+namespace Wip.Bones.ModelProviders.DeepSeek.Tests;
 
 internal static class BonesDeepSeekRequirementsChecklistItems
 {
@@ -6,7 +6,7 @@ internal static class BonesDeepSeekRequirementsChecklistItems
         "Introduce `Wip.Bones.ModelProviders.DeepSeek` class library referencing `Wip.Bones.Agents`, `Wip.Abstractions`, and `Wip.Runtime` (for `DeepSeekModelProvider` reuse) [foundation for DeepSeek adapters] [mandatory - adapter assembly]";
 
     public const string ProviderOptions =
-        "Implement `BonesDeepSeekProviderOptions` with validated `BaseUrl` (absolute HTTP/HTTPS), supported model identifier (`deepseek-chat`, `deepseek-reasoner`), positive `Timeout`, and `ApiKeySource` in `env:<VARIABLE_NAME>` format matching `DeepSeekModelProviderOptions` conventions [depends on adapter assembly] [mandatory - configuration contract]";
+        "Implement `BonesDeepSeekProviderOptions` with validated `BaseUrl` (absolute HTTP/HTTPS), supported model identifier (`deepseek-flash`, `deepseek-v4-pro`), positive `Timeout`, and `ApiKeySource` in `env:<VARIABLE_NAME>` format matching `DeepSeekModelProviderOptions` conventions [depends on adapter assembly] [mandatory - configuration contract]";
 
     public const string MessageMapper =
         "Implement shared message mapper translating `BonesStrategyAuthoringMessage`, `BonesPlayTurnMessage`, and `BonesStrategyEnhancementMessage` into `DeepSeekChatMessage` lists for outbound HTTP requests [depends on options contract]";

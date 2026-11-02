@@ -1,4 +1,6 @@
 {
   "chat.experimental.prompts.enabled": true,
-  "github.copilot.chat.agent.enabled": true
+  "github.copilot.chat.agent.enabled": true,
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false
 }

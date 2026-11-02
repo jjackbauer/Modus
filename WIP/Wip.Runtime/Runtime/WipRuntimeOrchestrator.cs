@@ -2,6 +2,7 @@ using System.Collections.Frozen;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Wip.Agent.Basic;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
@@ -232,7 +233,8 @@ public sealed class WipRuntimeOrchestrator
         SessionId sessionId,
         WipBuilder builder,
         WorkflowId? selectedWorkflowId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IArtifactStore? artifactStore = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
@@ -245,14 +247,61 @@ public sealed class WipRuntimeOrchestrator
 
             var workflow = ResolveWorkflowSelection(current.WorkflowId, selectedWorkflowId, builder.WorkflowRegistrations);
             var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflow);
+            await using var serviceScope = builder.Services.BuildServiceProvider().CreateAsyncScope();
+            var serviceProvider = serviceScope.ServiceProvider;
+            artifactStore ??= serviceProvider.GetService<IArtifactStore>();
+            var dispatcher = new WorkflowStageCapabilityDispatcher(serviceProvider, builder.CapabilityDescriptors);
+            dispatcher.EnsureDispatchCapabilitiesRegistered(compilation.StageDescriptors);
+
+            var dispatchContext = new WorkflowStageDispatchContext(
+                Session: current,
+                Builder: builder,
+                CorrelationId: correlationId,
+                ArtifactStore: artifactStore);
+
             var stageExecutions = new List<WorkflowStageExecution>(compilation.StageDescriptors.Count);
+            var stageArtifactReferences = new List<SessionEventArtifactReference>();
+            object? previousStageResult = null;
 
             foreach (var stageDescriptor in compilation.StageDescriptors)
             {
-                var targetState = WorkflowStageStateMapper.ToSessionState(stageDescriptor.Stage);
+                WorkflowStageDispatchResult? dispatchResult = null;
+
+                if (dispatcher.ShouldDispatchStage(stageDescriptor))
+                {
+                    if (artifactStore is null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Workflow stage '{stageDescriptor.Stage}' requires an artifact store to persist stage execution artifacts during run.");
+                    }
+
+                    var mappedInputEvidence = WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
+                        stageDescriptor,
+                        compilation,
+                        current,
+                        previousStageResult);
+
+                    dispatchResult = await dispatcher.ExecuteStageAsync(
+                        stageDescriptor,
+                        mappedInputEvidence.MappedInputPayload,
+                        dispatchContext,
+                        mappedInputEvidence,
+                        cancellationToken);
+
+                    previousStageResult = dispatchResult.Result;
+
+                    if (dispatchResult.ExecutionArtifact is ArtifactDescriptor executionArtifact)
+                    {
+                        stageArtifactReferences.Add(CreateArtifactReference("stage-execution", executionArtifact));
+                    }
+                }
+
+                var advancementTarget = WorkflowStageStateMapper.ResolveRunAdvancementTarget(stageDescriptor.Stage);
                 var appliedTransition = false;
 
-                if (current.State != targetState)
+                if (advancementTarget is SessionState targetState
+                    && current.State != targetState
+                    && !IsRunBackwardAdvancement(current.State, targetState))
                 {
                     current = await AdvanceToStateUnderAuthorityAsync(current, targetState, cancellationToken);
                     appliedTransition = true;
@@ -260,7 +309,10 @@ public sealed class WipRuntimeOrchestrator
 
                 stageExecutions.Add(new WorkflowStageExecution(stageDescriptor, current.State, appliedTransition)
                 {
-                    MappedInputContractName = compilation.ResolveMappedInputContractName(stageDescriptor.Stage)
+                    MappedInputContractName = compilation.ResolveMappedInputContractName(stageDescriptor),
+                    ProducerCapabilityId = dispatchResult?.ProducerCapabilityId,
+                    CorrelationId = dispatchResult is null ? null : correlationId,
+                    ExecutionArtifact = dispatchResult?.ExecutionArtifact
                 });
             }
 
@@ -274,7 +326,7 @@ public sealed class WipRuntimeOrchestrator
                     Message: $"Workflow '{workflow.WorkflowId.Value}' executed for session '{current.SessionId}'.",
                     CorrelationId: correlationId,
                     Diagnostics: BuildGovernanceDiagnostics("run", "succeeded", current),
-                    ArtifactReferences: []),
+                    ArtifactReferences: stageArtifactReferences),
                 current.RepositoryPath,
                 cancellationToken);
 
@@ -1577,20 +1629,18 @@ public sealed class WipRuntimeOrchestrator
         string TargetBranch,
         string TargetCommit);
 
+    private static bool IsRunBackwardAdvancement(SessionState currentState, SessionState targetState)
+        => currentState == SessionState.Checkpointed && targetState == SessionState.Editing;
+
     private static SessionValidationStatus ResolveValidationStatusForTransition(
         SessionValidationStatus currentStatus,
         SessionState targetState)
-        => targetState == SessionState.Validating ? SessionValidationStatus.InProgress : currentStatus;
+        => currentStatus;
 
     private static SessionApprovalStatus ResolveApprovalStatusForTransition(
         SessionApprovalStatus currentStatus,
         SessionState targetState)
-        => targetState switch
-        {
-            SessionState.AwaitingApproval => SessionApprovalStatus.AwaitingApproval,
-            SessionState.Approved or SessionState.Merged => SessionApprovalStatus.Approved,
-            _ => currentStatus
-        };
+        => currentStatus;
 
     private async ValueTask PublishAndJournalSessionEventAsync(
         SessionEvent sessionEvent,

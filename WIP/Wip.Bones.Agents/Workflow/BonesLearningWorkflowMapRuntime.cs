@@ -37,12 +37,14 @@ public static class BonesLearningWorkflowMapRuntime
                     ? new BonesPonderRequest(
                         parameters.LearningPlayerId,
                         session.RepositoryPath,
-                        AllSeatsLearning: parameters.AllSeatsLearning)
+                        AllSeatsLearning: parameters.AllSeatsLearning,
+                        ObservedGameIds: observe.ObservedGameIds)
                     : new BonesPonderRequest(
                         parameters.LearningPlayerId,
                         session.RepositoryPath,
                         modelId,
-                        parameters.AllSeatsLearning);
+                        parameters.AllSeatsLearning,
+                        observe.ObservedGameIds);
             });
 
         // Ponder -> PlayMatch
@@ -76,14 +78,14 @@ public static class BonesLearningWorkflowMapRuntime
                         parameters.LearningPlayerId,
                         session.RepositoryPath,
                         play.GameId,
-                        EvaluationTargetScore: parameters.TargetScore,
+                        EvaluationTargetScore: parameters.EvaluationTargetScore,
                         AllSeatsLearning: parameters.AllSeatsLearning)
                     : new BonesEnhanceStrategyRequest(
                         parameters.LearningPlayerId,
                         session.RepositoryPath,
                         play.GameId,
                         ModelId: modelId,
-                        EvaluationTargetScore: parameters.TargetScore,
+                        EvaluationTargetScore: parameters.EvaluationTargetScore,
                         AllSeatsLearning: parameters.AllSeatsLearning);
             });
     }

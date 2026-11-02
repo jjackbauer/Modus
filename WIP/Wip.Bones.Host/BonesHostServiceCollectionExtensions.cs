@@ -142,12 +142,93 @@ public static class BonesHostServiceCollectionExtensions
 
         services.AddSingleton(options);
         services.AddSingleton(options.Ponder);
+        services.AddSingleton(options.Promotion);
+        services.AddSingleton(options.ScriptHost);
         services.AddSingleton(new BonesGameSimulationBudget(options.MaxGamesPerRun));
-        services.AddSingleton(new BonesStrategyPromotionOptions());
         services.AddSingleton(new BonesMatchSimulator());
         services.AddSingleton(new BonesStrategyLibrary(options.DataDirectory));
+        services.AddSingleton(sp =>
+        {
+            var library = sp.GetRequiredService<BonesStrategyLibrary>();
+            var opts = sp.GetRequiredService<BonesHostOptions>();
+            var snapshotPath = StrategyPool.GetPoolSnapshotPath(opts.DataDirectory);
+            var logger = sp.GetService<ILogger<StrategyPool>>();
+
+            // A second service provider (host vs. workflow/agent container) must share the
+            // same pool. Creating a fresh instance per provider made status report poolSize=0
+            // while the co-learning agent mutated a different pool.
+            var existingPool = StrategyPool.Instance;
+            if (existingPool is not null
+                && string.Equals(existingPool.SnapshotPath, snapshotPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return existingPool;
+            }
+
+            // I2: Always attempt to load a snapshot when the file exists.
+            // ResumeFromBest no longer gates snapshot loading — it only controls
+            // whether library entries are used as fallback during bootstrapping.
+            var loaded = StrategyPool.TryLoadFromDisk(snapshotPath, logger);
+            if (loaded is not null)
+            {
+                // I3: Verify pool integrity after loading from disk.
+                var issues = loaded.VerifyIntegrity();
+                if (issues.Count == 0)
+                {
+                    loaded.SnapshotPath = snapshotPath;
+                    // R4: Explicitly unify the static Instance with the DI singleton.
+                    // TryLoad sets Instance via the constructor, but this assignment
+                    // guarantees the status API and Web pool routes read the same pool.
+                    StrategyPool.Instance = loaded;
+                    // Log success via a simple console/debug emit since we don't have ILogger<BonesHostServiceCollectionExtensions>
+                    System.Diagnostics.Debug.WriteLine(
+                        $"Loaded pool snapshot with {loaded.Count} entries from {snapshotPath}");
+
+                    // R5: Re-write snapshot at startup to ensure the pool/ directory
+                    // exists (might have been deleted) and snapshot is immediately current.
+                    SaveInitialPoolSnapshot(loaded, snapshotPath, logger);
+
+                    return loaded;
+                }
+
+                // Integrity check failed — log issues and fall back to library seeding.
+                if (logger is not null)
+                {
+                    foreach (var issue in issues)
+                    {
+                        System.Diagnostics.Debug.WriteLine(
+                            $"Pool snapshot integrity issue: {issue}");
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine(
+                    $"Pool snapshot integrity check failed ({issues.Count} issue(s)). Falling back to SeedFromLibrary.");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    "No pool snapshot found — seeding from library.");
+            }
+
+            // Fallback: seed pool from the strategy library.
+            var pool = StrategyPool.SeedFromLibrary(library, targetPoolSize: opts.Population.PoolSize);
+
+            // Configure auto-persist path for the freshly seeded pool.
+            pool.SnapshotPath = snapshotPath;
+
+            // R4: Explicitly unify the static Instance with the DI singleton.
+            // SeedFromLibrary sets Instance via the constructor, but this assignment
+            // guarantees the status API and Web pool routes read the same pool.
+            StrategyPool.Instance = pool;
+
+            // R5: Write the initial pool snapshot at startup so the pool/ directory
+            // is created immediately, decoupled from the periodic 10-iteration timer.
+            SaveInitialPoolSnapshot(pool, snapshotPath, logger);
+
+            return pool;
+        });
         services.AddSingleton(sp => new BonesStrategyBootstrapper(sp.GetRequiredService<BonesStrategyLibrary>()));
-        services.AddSingleton(new BonesStrategyScriptHost());
+        services.AddSingleton(sp => new BonesStrategyScriptHost(options.ScriptHost));
+        services.AddSingleton<PopulationMatchComposer>();
 
         RegisterModelProviders(services, options);
 
@@ -156,6 +237,7 @@ public static class BonesHostServiceCollectionExtensions
         services.AddSingleton<BonesGameEngine>();
         services.AddSingleton<BonesMatchViewerService>();
         services.AddSingleton<IBonesPublicMatchFeed>(new BonesCatalogPublicMatchFeed(matchCatalog));
+        services.AddSingleton<StrategyPoolJsonService>();
 
         services.AddSingleton<ISessionStore, InMemorySessionStore>();
         services.AddSingleton<ISessionEventPublisher, NoOpSessionEventPublisher>();
@@ -168,6 +250,42 @@ public static class BonesHostServiceCollectionExtensions
         return services.AddWipCapabilities().AddBonesLearningWorkflowWithViewer(options.ListenUrl);
     }
 
+    /// <summary>
+    /// Writes the initial pool snapshot at startup so the pool/ directory is created
+    /// immediately. This is decoupled from the periodic 10-iteration snapshot timer.
+    /// Failures are logged as warnings and do not prevent startup.
+    /// </summary>
+    private static void SaveInitialPoolSnapshot(
+        StrategyPool pool,
+        string snapshotPath,
+        ILogger<StrategyPool>? logger)
+    {
+        try
+        {
+            pool.PersistToDisk(snapshotPath);
+            if (logger is not null)
+            {
+                logger.LogInformation(
+                    "Initial pool snapshot saved: {EntryCount} entries to {SnapshotPath}",
+                    pool.Count,
+                    snapshotPath);
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"Initial pool snapshot saved: {pool.Count} entries to {snapshotPath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            if (logger is not null)
+                logger.LogWarning(ex, "Failed to save initial pool snapshot to {SnapshotPath}.", snapshotPath);
+            else
+                System.Diagnostics.Debug.WriteLine(
+                    $"Failed to save initial pool snapshot to {snapshotPath}: {ex.Message}");
+        }
+    }
+
     private static void RegisterModelProviders(IServiceCollection services, BonesHostOptions options)
     {
         switch (options.ModelProvider)
@@ -176,7 +294,8 @@ public static class BonesHostServiceCollectionExtensions
                 services.AddBonesDeepSeekModelProviders(
                     options.DeepSeekProviderOptions
                     ?? throw new InvalidOperationException(
-                        "Bones host configuration is invalid: DeepSeek provider options are unavailable."));
+                        "Bones host configuration is invalid: DeepSeek provider options are unavailable."),
+                    options.Resilience);
                 break;
             case BonesModelProviderKind.Stub:
                 BonesHostStubModelProviders.Register(services);

@@ -24,6 +24,7 @@ public sealed class BonesLoopState
     private long _iterationCount;
     private bool _stopRequested;
     private bool _capReached;
+    private string? _stopReason;
 
     public bool IsRunning
     {
@@ -49,11 +50,25 @@ public sealed class BonesLoopState
         internal set => Volatile.Write(ref _capReached, value);
     }
 
+    public string? StopReason
+    {
+        get { lock (_gate) return _stopReason; }
+        internal set { lock (_gate) _stopReason = value; }
+    }
+
     public string HostSessionId { get; internal set; } = string.Empty;
 
     public string? LastPromotionOutcome { get; internal set; }
 
     public BonesCoLearningMetrics CoLearningMetrics { get; } = new();
+
+    /// <summary>
+    /// Total number of individual co-learning sessions completed across all batches.
+    /// Delegates to <see cref="BonesCoLearningMetrics.CoLearningIterationsCompleted"/> which is
+    /// incremented once per session (not per batch) when a session records its promotion outcomes.
+    /// This is distinct from <see cref="IterationCount"/> which counts completed batches.
+    /// </summary>
+    public long SessionsCompleted => CoLearningMetrics.CoLearningIterationsCompleted;
 
     public BonesLoopIterationStatus CurrentIteration
     {

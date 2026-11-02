@@ -1,3 +1,4 @@
+using System.Linq;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Budget;
@@ -5,7 +6,9 @@ using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Viewer;
 using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
+using Wip.Bones.ModelProviders.DeepSeek;
 using Wip.Bones.Web;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 
 namespace Wip.Bones.Host;
@@ -26,6 +29,13 @@ public static class BonesHostApplication
             Console.Out.WriteLine($"startup-config: {diagnostic}");
         }
 
+        foreach (var planLine in BonesStartupPlanner.Describe(options))
+        {
+            Console.Out.WriteLine($"startup-plan: {planLine}");
+        }
+
+        BonesStartupPlanner.ValidateOrThrow(options);
+
         var listenUrls = builder.Configuration["ASPNETCORE_URLS"]
             ?? Environment.GetEnvironmentVariable("ASPNETCORE_URLS")
             ?? options.ListenUrl.ToString();
@@ -37,6 +47,7 @@ public static class BonesHostApplication
         var app = builder.Build();
 
         BonesWebHost.MapMatchRoutes(app);
+        BonesWebHost.MapPoolRoutes(app);
         BonesWebHost.MapStaticViewer(app);
 
         app.MapGet("/health", () => Results.Ok(new { status = "healthy" }));
@@ -49,6 +60,8 @@ public static class BonesHostApplication
             BonesStrategyLibrary strategyLibrary,
             BonesStrategyScriptHost scriptHost,
             IArtifactStore artifactStore,
+            [FromServices] BonesDeepSeekResiliencePipeline? resiliencePipeline,
+            StrategyPool strategyPool,
             CancellationToken cancellationToken) =>
         {
             var state = loopHost.CurrentState;
@@ -83,16 +96,46 @@ public static class BonesHostApplication
                         sessionId);
 
                     var learningPlayerId = hostOptions.DefaultParameters.LearningPlayerId;
+                    var libraryRanking = strategyLibrary.GetRanking(learningPlayerId);
+                    var libraryEntry = libraryRanking.Count > 0 ? libraryRanking[0] : null;
+
+                    if (libraryEntry is not null)
+                    {
+                        libraryEffectiveness = new
+                        {
+                            strategyId = libraryEntry.StrategyId.Value,
+                            matchesPlayed = libraryEntry.Effectiveness.MatchesPlayed,
+                            wins = libraryEntry.Effectiveness.Wins,
+                            losses = libraryEntry.Effectiveness.Losses,
+                            cumulativeScoreDifferential = libraryEntry.Effectiveness.CumulativeScoreDifferential,
+                        };
+                    }
+
                     var activeStrategy = await knowledgeStore.TryLoadActiveStrategy(learningPlayerId, cancellationToken);
                     if (activeStrategy is not null)
                     {
                         var candidateStrategyId = await knowledgeStore.TryLoadCandidateStrategyId(
                             learningPlayerId,
                             cancellationToken);
-                        var effectiveness = await knowledgeStore.GetEffectiveness(
-                            learningPlayerId,
-                            activeStrategy.StrategyId,
-                            cancellationToken);
+
+                        // Read effectiveness from the library (single source of truth).
+                        // When the active strategy ID matches a library entry for this seat,
+                        // use the library's effectiveness; otherwise fall back to the
+                        // session knowledge store for newly-promoted strategies not yet in the library.
+                        var libraryMatch = libraryRanking
+                            .FirstOrDefault(e => e.StrategyId == activeStrategy.StrategyId);
+                        BonesStrategyEffectivenessRecord effectiveness;
+                        if (libraryMatch is not null)
+                        {
+                            effectiveness = libraryMatch.Effectiveness;
+                        }
+                        else
+                        {
+                            effectiveness = await knowledgeStore.GetEffectiveness(
+                                learningPlayerId,
+                                activeStrategy.StrategyId,
+                                cancellationToken);
+                        }
 
                         learningPlayer = new
                         {
@@ -111,20 +154,6 @@ public static class BonesHostApplication
                     else if (IsPonderPendingStage(current.StageName))
                     {
                         learningPlayerStatus = "pending";
-                    }
-
-                    var libraryRanking = strategyLibrary.GetRanking(learningPlayerId);
-                    var libraryEntry = libraryRanking.Count > 0 ? libraryRanking[0] : null;
-                    if (libraryEntry is not null)
-                    {
-                        libraryEffectiveness = new
-                        {
-                            strategyId = libraryEntry.StrategyId.Value,
-                            matchesPlayed = libraryEntry.Effectiveness.MatchesPlayed,
-                            wins = libraryEntry.Effectiveness.Wins,
-                            losses = libraryEntry.Effectiveness.Losses,
-                            cumulativeScoreDifferential = libraryEntry.Effectiveness.CumulativeScoreDifferential,
-                        };
                     }
                 }
                 catch (Exception exception)
@@ -168,33 +197,54 @@ public static class BonesHostApplication
 
             var coLearningMetrics = state.CoLearningMetrics;
             var perSeatLastPromotionOutcome = coLearningMetrics.LastPromotionOutcomes
-                .Select(o => new { seat = o.Seat, outcome = o.Outcome })
+                .Select(o => new
+                {
+                    seat = o.Seat,
+                    outcome = o.Outcome,
+                    timestampUtc = o.TimestampUtc.ToString("O"),
+                })
+                .ToList();
+
+            var (cumulativePromoted, cumulativeRejected) = coLearningMetrics.CumulativePromotionCounts;
+            var perSeatPromotionCounts = coLearningMetrics.PerSeatPromotionCounts
+                .Select(kvp => new
+                {
+                    seat = kvp.Key,
+                    promoted = kvp.Value.Promoted,
+                    rejected = kvp.Value.Rejected,
+                })
                 .ToList();
 
             return Results.Json(new
             {
                 isRunning = state.IsRunning,
                 iterationCount = state.IterationCount,
+                completedBatches = state.IterationCount,
+                coLearningSessionsCompleted = state.SessionsCompleted,
                 currentStage = current.StageName,
                 failureStage = current.FailureStage,
                 viewerUrl,
                 hostSessionId = state.HostSessionId,
+                seed = hostOptions.DefaultParameters.Seed,
                 gamesSimulated = gameBudget.GamesSimulated,
+                actualGamesSimulated = gameBudget.GamesSimulated,
+                gamesReserved = gameBudget.ReservedGames,
+                gamesRemaining = gameBudget.RemainingGames == int.MaxValue ? (int?)null : gameBudget.RemainingGames,
                 maxGamesPerRun = gameBudget.MaxGamesPerRun,
                 resumeFromBest = hostOptions.ResumeFromBest,
                 capReached = state.CapReached,
+                stopReason = state.StopReason,
                 learningPlayer,
                 learningPlayerStatus,
                 learningPlayerError,
                 lastIterationError,
                 lastPromotionOutcome = state.LastPromotionOutcome,
                 libraryEffectiveness,
-                deepSeekRetriesUsed = 0,
-                strategiesCompiled = scriptHost.CompileInvocationCount,
-                strategiesPromoted = coLearningMetrics.LastPromotionOutcomes
-                    .Count(o => string.Equals(o.Outcome, "Promoted", StringComparison.OrdinalIgnoreCase)),
-                strategiesRejected = coLearningMetrics.LastPromotionOutcomes
-                    .Count(o => string.Equals(o.Outcome, "Rejected", StringComparison.OrdinalIgnoreCase)),
+                strategiesCompiled = BonesStrategyScriptHost.TotalCompileInvocations,
+                strategiesPending = Math.Max(0, BonesStrategyScriptHost.TotalCompileInvocations - cumulativePromoted - cumulativeRejected),
+                strategiesPromoted = cumulativePromoted,
+                strategiesRejected = cumulativeRejected,
+                perSeatPromotionCounts,
                 libraryEntryCount = strategyLibrary.AllEntries.Count,
                 parallelSessionCount = hostOptions.ParallelSessionCount,
                 compiledScriptsCached = scriptHost.CompiledScriptsCached,
@@ -218,13 +268,40 @@ public static class BonesHostApplication
                     baseUrl = modelProvider.BaseUrl,
                     timeoutSeconds = modelProvider.TimeoutSeconds,
                     apiKeySource = modelProvider.ApiKeySource,
+                    thinking = modelProvider.Thinking,
                 },
+                resilience = resiliencePipeline is null
+                    ? null
+                    : new
+                    {
+                        circuitState = resiliencePipeline.CircuitState,
+                        bulkheadActive = resiliencePipeline.BulkheadActive,
+                        bulkheadMax = resiliencePipeline.BulkheadMax,
+                        rateLimitRemaining = resiliencePipeline.RateLimitRemaining,
+                        rateLimitReset = resiliencePipeline.RateLimitReset?.ToString("O"),
+                        rollingFailureRate = resiliencePipeline.RollingFailureRate,
+                    },
                 perStageModels = new
                 {
                     ponderModelId = (string?)hostOptions.PonderModelId,
                     playModelId = (string?)hostOptions.PlayModelId,
                     enhanceModelId = (string?)hostOptions.EnhanceModelId,
+                    evaluationTargetScore = hostOptions.EvaluationTargetScore,
                 },
+                gamesPerHour = coLearningMetrics.GamesPerHour,
+                averageGameDurationMs = coLearningMetrics.AverageGameDurationMs,
+                concurrentUtilizationPercent = coLearningMetrics.ConcurrentUtilizationPercent,
+                concurrentGameCount = hostOptions.AggressiveIteration.ConcurrentGamesPerSession,
+                perSessionBudget = hostOptions.AggressiveIteration.PerSessionBudget,
+                // Pool model fields (P13/P14)
+                poolSize = strategyPool.Count,
+                poolMinRating = strategyPool.Count > 0 ? strategyPool.Pool.Values.Min(e => e.Rating) : 0.0,
+                poolMaxRating = strategyPool.Count > 0 ? strategyPool.Pool.Values.Max(e => e.Rating) : 0.0,
+                poolAverageWinRate = strategyPool.Count > 0
+                    ? strategyPool.Pool.Values.Average(e => e.MatchesPlayed > 0 ? (double)e.Wins / e.MatchesPlayed : 0.0)
+                    : 0.0,
+                eliteStrategyId = strategyPool.EliteStrategyId?.Value,
+                eliteWinRate = ComputeEliteWinRate(strategyPool),
             }, BonesWebHost.JsonOptions);
         });
 
@@ -321,5 +398,14 @@ public static class BonesHostApplication
         }
 
         lifetime.StopApplication();
+    }
+
+    private static double? ComputeEliteWinRate(StrategyPool pool)
+    {
+        if (pool.EliteStrategyId is not { } eliteId)
+            return null;
+        if (!pool.Pool.TryGetValue(eliteId, out var elite))
+            return null;
+        return elite.MatchesPlayed > 0 ? (double)elite.Wins / elite.MatchesPlayed : 0.0;
     }
 }

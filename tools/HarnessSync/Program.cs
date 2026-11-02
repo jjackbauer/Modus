@@ -26,7 +26,13 @@ foreach (var pointer in pointerIssues)
     Console.Error.WriteLine($"[pointer-integrity] Broken reference: {pointer}");
 }
 
-var hasFailures = issues.Count > 0 || pointerIssues.Count > 0;
+var utf16Files = TextFileEncodingValidator.FindUtf16TextFiles(repositoryRoot);
+foreach (var utf16File in utf16Files)
+{
+    Console.Error.WriteLine($"[utf16-text] UTF-16 encoding detected: {utf16File}");
+}
+
+var hasFailures = issues.Count > 0 || pointerIssues.Count > 0 || utf16Files.Count > 0;
 if (isCheck && hasFailures)
 {
     return 1;

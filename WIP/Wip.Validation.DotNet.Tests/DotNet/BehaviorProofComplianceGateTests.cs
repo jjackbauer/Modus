@@ -17,7 +17,7 @@ public sealed class BehaviorProofComplianceGateTests
 
     [Fact]
     [Trait("ChecklistItem", ChecklistItem)]
-    public async Task BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEveryItem()
+    public async Task BehaviorProofCompliance_GivenChecklistItems_RequiresExecutableRuntimeProofForEachItem()
     {
         var markdown = await File.ReadAllTextAsync(GetRequirementsPath(), CancellationToken.None);
         var plannedComplianceTests = ParsePlannedTestNames(markdown, "Absolute Behavior-Proof Compliance Gate");

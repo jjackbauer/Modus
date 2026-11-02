@@ -17,7 +17,7 @@ public sealed class BonesPerStageModelRoutingStatusApiTests
         {
             settings["BonesHost:ModelProvider"] = "stub";
             settings["BonesHost:PonderModelId"] = "deepseek-v4-pro";
-            settings["BonesHost:PlayModelId"] = "deepseek-v4-flash";
+            settings["BonesHost:PlayModelId"] = "deepseek-flash";
             // EnhanceModelId not set — should be null (omitted) in response
         });
 
@@ -43,7 +43,7 @@ public sealed class BonesPerStageModelRoutingStatusApiTests
         // playModelId should be present and set
         Assert.True(perStageModels.TryGetProperty("playModelId", out var playProp),
             "perStageModels.playModelId must be present when configured");
-        Assert.Equal("deepseek-v4-flash", playProp.GetString());
+        Assert.Equal("deepseek-flash", playProp.GetString());
 
         // enhanceModelId should be absent (omitted due to WhenWritingNull) when not configured
         Assert.False(perStageModels.TryGetProperty("enhanceModelId", out _),

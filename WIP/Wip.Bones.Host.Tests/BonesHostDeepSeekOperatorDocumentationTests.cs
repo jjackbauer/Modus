@@ -19,5 +19,7 @@ public sealed class BonesHostDeepSeekOperatorDocumentationTests
         Assert.Contains("provider=deepseek", readme, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ModelProvider=stub", readme, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("/api/bones/status", readme, StringComparison.Ordinal);
+        Assert.Contains("deepseek-flash", readme, StringComparison.Ordinal);
+        Assert.Contains("BonesHost:DeepSeek:Thinking", readme, StringComparison.Ordinal);
     }
 }

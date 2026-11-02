@@ -5,6 +5,7 @@ using Wip.Bones.Agents.Budget;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Viewer;
 using Wip.Bones.Agents.Workflow;
+using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
 using Wip.Builder;
 using Wip.Runtime.Runtime;
@@ -14,6 +15,12 @@ namespace Wip.Bones.Host;
 
 public sealed class BonesLearningLoopHost : BackgroundService
 {
+    /// <summary>
+    /// Number of completed iterations between periodic pool snapshot saves.
+    /// Default: every 10 iterations.
+    /// </summary>
+    internal const int SnapshotIntervalIterations = 10;
+
     private readonly BonesHostOptions _options;
     private readonly BonesHostSessionStore _sessionStore;
     private readonly BonesLoopState _state;
@@ -24,9 +31,14 @@ public sealed class BonesLearningLoopHost : BackgroundService
     private readonly WipRuntimeOrchestrator _orchestrator;
     private readonly WipBuilder _workflowBuilder;
     private readonly IArtifactStore _artifactStore;
+    private readonly StrategyPool _strategyPool;
     private readonly ILogger<BonesLearningLoopHost> _logger;
     private readonly SemaphoreSlim _resumeGate = new(0, 1);
     private long _nextIterationNumber;
+    private int _iterationsSinceLastSnapshot;
+    private int _gamesSinceLastEval;
+    private int _lastGamesSimulatedSnapshot;
+    private int _consecutiveFailures;
 
     public BonesLearningLoopHost(
         BonesHostOptions options,
@@ -39,6 +51,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
         WipRuntimeOrchestrator orchestrator,
         WipBuilder workflowBuilder,
         IArtifactStore artifactStore,
+        StrategyPool strategyPool,
         ILogger<BonesLearningLoopHost> logger)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -51,6 +64,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _workflowBuilder = workflowBuilder ?? throw new ArgumentNullException(nameof(workflowBuilder));
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
+        _strategyPool = strategyPool ?? throw new ArgumentNullException(nameof(strategyPool));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -96,10 +110,25 @@ public sealed class BonesLearningLoopHost : BackgroundService
         var maxConcurrency = Math.Min(_options.ParallelSessionCount, Environment.ProcessorCount);
         using var concurrencyThrottle = new SemaphoreSlim(maxConcurrency, maxConcurrency);
 
+        // Total game concurrency throttle: sessions * concurrent games per session.
+        var gameConcurrencyLimit = _options.ParallelSessionCount
+            * _options.AggressiveIteration.ConcurrentGamesPerSession;
+        using var gameConcurrencyThrottle = new SemaphoreSlim(gameConcurrencyLimit, gameConcurrencyLimit);
+        _gameBudget.GameConcurrencyThrottle = gameConcurrencyThrottle;
+        _gameBudget.IsPerSessionBudget = _options.AggressiveIteration.PerSessionBudget;
+        _gameBudget.SessionCount = _options.ParallelSessionCount;
+
         try
         {
             while (!stoppingToken.IsCancellationRequested)
             {
+                if (_state.CapReached || _gameBudget.IsExhausted)
+                {
+                    _state.CapReached = true;
+                    _state.StopReason ??= "GameBudgetExhausted";
+                    break;
+                }
+
                 if (_state.StopRequested)
                 {
                     _state.IsRunning = false;
@@ -111,26 +140,12 @@ public sealed class BonesLearningLoopHost : BackgroundService
                     continue;
                 }
 
-                var plannedGameBudget = ComputePlannedIterationGameBudget();
-                if (!_gameBudget.TryReserve(plannedGameBudget))
-                {
-                    _state.CapReached = true;
-                    _state.IsRunning = false;
-                    _state.UpdateCurrentIteration(new BonesLoopIterationStatus(
-                        _state.IterationCount,
-                        "CapReached",
-                        _state.CurrentIteration.SessionId,
-                        _state.CurrentIteration.MatchId,
-                        true));
-                    break;
-                }
-
                 var iterationNumber = Interlocked.Increment(ref _nextIterationNumber);
-                var baseSeed = HashCode.Combine(
-                    _options.DefaultParameters.Seed,
-                    _sessionStore.HostSessionId.GetHashCode());
+                // Reproducibility: derive from the configured seed only. HostSessionId is a
+                // per-process GUID; including it made every run use a different seed.
+                var baseSeed = BonesSeedDerivation.Derive(_options.DefaultParameters.Seed);
 
-                var sessionTasks = new Task[_options.ParallelSessionCount];
+                var sessionTasks = new Task<bool>[_options.ParallelSessionCount];
                 for (var sessionIndex = 0; sessionIndex < _options.ParallelSessionCount; sessionIndex++)
                 {
                     var capturedSessionIndex = sessionIndex;
@@ -139,7 +154,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
                         await concurrencyThrottle.WaitAsync(stoppingToken);
                         try
                         {
-                            await RunSingleSessionAsync(
+                            return await RunSingleSessionAsync(
                                 iterationNumber,
                                 capturedSessionIndex,
                                 baseSeed,
@@ -154,8 +169,51 @@ public sealed class BonesLearningLoopHost : BackgroundService
 
                 try
                 {
-                    await Task.WhenAll(sessionTasks);
+                    var sessionResults = await Task.WhenAll(sessionTasks);
                     _state.IterationCount = iterationNumber;
+
+                    var anyFailure = sessionResults.Any(static succeeded => !succeeded);
+                    if (_state.CapReached)
+                        break;
+
+                    if (anyFailure)
+                    {
+                        _consecutiveFailures++;
+                        if (_consecutiveFailures >= _options.MaxConsecutiveIterationFailures)
+                        {
+                            _state.StopReason = $"ConsecutiveIterationFailures({_consecutiveFailures})";
+                            _state.IsRunning = false;
+                            _logger.LogError(
+                                "Stopping Bones learning loop after {FailureCount} consecutive iteration failures. Last error: {LastError}",
+                                _consecutiveFailures,
+                                _state.LastIterationError?.Message ?? "(none)");
+                            break;
+                        }
+
+                        var backoffMs = Math.Min(
+                            _options.FailureBackoffBaseMs * Math.Pow(2, _consecutiveFailures - 1),
+                            _options.FailureBackoffMaxMs);
+                        _logger.LogWarning(
+                            "Bones iteration {IterationNumber} failed; backing off {BackoffMs:F0} ms before retry (consecutive failures: {FailureCount}).",
+                            iterationNumber,
+                            backoffMs,
+                            _consecutiveFailures);
+                        await Task.Delay(TimeSpan.FromMilliseconds(backoffMs), stoppingToken);
+                    }
+                    else
+                    {
+                        _consecutiveFailures = 0;
+                    }
+
+                    // I1: Periodic snapshot persistence — decoupled from EvaluateAndPromote.
+                    if (Interlocked.Increment(ref _iterationsSinceLastSnapshot) >= SnapshotIntervalIterations)
+                    {
+                        Interlocked.Exchange(ref _iterationsSinceLastSnapshot, 0);
+                        TrySavePoolSnapshot();
+                    }
+
+                    // I9: Trigger EvaluateAndPromote periodically based on games played.
+                    TryEvaluateAndPromote();
                 }
                 catch (Exception exception) when (exception is not OperationCanceledException)
                 {
@@ -178,6 +236,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
         finally
         {
             _state.IsRunning = false;
+            _state.StopReason ??= _state.CapReached ? "GameBudgetExhausted" : "Stopped";
             var stageName = _state.CapReached ? "CapReached" : "Stopped";
             _state.UpdateCurrentIteration(new BonesLoopIterationStatus(
                 _state.IterationCount,
@@ -192,6 +251,81 @@ public sealed class BonesLearningLoopHost : BackgroundService
         => _options.DefaultParameters.GameCount
             + 1
             + _promotionOptions.EvaluationMatchCount * 2;
+
+    /// <summary>
+    /// Persists the pool snapshot to disk if the pool is non-empty and a snapshot
+    /// path is configured. Logs success or warning. Does not throw on I/O errors.
+    /// </summary>
+    internal void TrySavePoolSnapshot()
+    {
+        try
+        {
+            if (_strategyPool.Count == 0)
+                return;
+
+            var snapshotPath = _strategyPool.SnapshotPath;
+            if (snapshotPath is null)
+                return;
+
+            _strategyPool.PersistToDisk(snapshotPath);
+            _logger.LogInformation(
+                "Periodic pool snapshot saved: {EntryCount} entries to {SnapshotPath}",
+                _strategyPool.Count,
+                snapshotPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to save periodic pool snapshot.");
+        }
+    }
+
+    /// <summary>
+    /// Checks whether enough games have been played since the last evaluation
+    /// cycle and triggers <see cref="StrategyPool.EvaluateAndPromote"/> if so.
+    /// Resets the counter and logs the outcome.
+    /// </summary>
+    internal void TryEvaluateAndPromote()
+    {
+        try
+        {
+            // Track games played since last evaluation using the game budget.
+            var currentGames = _gameBudget.GamesSimulated;
+            var delta = currentGames - _lastGamesSimulatedSnapshot;
+            _lastGamesSimulatedSnapshot = currentGames;
+            _gamesSinceLastEval += delta;
+
+            var threshold = _options.Population.EvaluationCycleGameCount;
+            if (_gamesSinceLastEval < threshold)
+                return;
+
+            _gamesSinceLastEval = 0;
+
+            if (_strategyPool.Count == 0)
+                return;
+
+            var results = _strategyPool.EvaluateAndPromote();
+
+            _logger.LogInformation(
+                "Evaluation cycle complete: {Promoted} survivors, {Rejected} rejected, " +
+                "new elite: {EliteId}",
+                results.Promoted,
+                results.Rejected,
+                _strategyPool.EliteStrategyId?.Value ?? "(none)");
+
+            // I10: Prune over-capacity pool after evaluation.
+            if (_strategyPool.Count > _options.Population.MaxPopulation)
+            {
+                _strategyPool.Prune(_options.Population.MaxPopulation);
+                _logger.LogInformation(
+                    "Pool pruned to {MaxPopulation} entries.",
+                    _options.Population.MaxPopulation);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to run evaluation cycle.");
+        }
+    }
 
     private async Task WaitForResumeOrStopAsync(CancellationToken stoppingToken)
     {
@@ -210,14 +344,14 @@ public sealed class BonesLearningLoopHost : BackgroundService
         }
     }
 
-    private async Task RunSingleSessionAsync(
+    private async Task<bool> RunSingleSessionAsync(
         long iterationNumber,
         int sessionIndex,
         int baseSeed,
         CancellationToken cancellationToken)
     {
         SessionId? workflowSessionId = null;
-        var sessionSeed = HashCode.Combine(baseSeed, (int)iterationNumber, sessionIndex);
+        var sessionSeed = BonesSeedDerivation.Derive(baseSeed, (int)iterationNumber, sessionIndex);
         var sessionLabel = _options.ParallelSessionCount > 1
             ? $"iter{iterationNumber}/s{sessionIndex}"
             : $"iter{iterationNumber}";
@@ -325,6 +459,25 @@ public sealed class BonesLearningLoopHost : BackgroundService
                 sessionId,
                 matchId,
                 true));
+            return true;
+        }
+        catch (BonesGameSimulationBudgetExhaustedException exception)
+        {
+            _state.CapReached = true;
+            _state.StopReason = "GameBudgetExhausted";
+            _state.SetLastIterationError(new BonesLoopIterationError(exception.Message, "Budget"));
+            _state.UpdateCurrentIteration(new BonesLoopIterationStatus(
+                iterationNumber,
+                $"{sessionLabel}: CapReached",
+                sessionId,
+                matchId,
+                true,
+                "Budget"));
+            _logger.LogWarning(
+                "Bones learning {SessionLabel} stopped at the configured game budget: {Message}",
+                sessionLabel,
+                exception.Message);
+            return false;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -367,7 +520,21 @@ public sealed class BonesLearningLoopHost : BackgroundService
                 matchId,
                 true,
                 failureStage));
+            return false;
         }
+    }
+
+    private static async Task<string> ReadAllTextSharedAsync(string path, CancellationToken cancellationToken)
+    {
+        await using var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete,
+            bufferSize: 4096,
+            FileOptions.Asynchronous);
+        using var reader = new StreamReader(stream);
+        return await reader.ReadToEndAsync(cancellationToken);
     }
 
     private async Task<string?> TryReadLastPromotionOutcomeAsync(
@@ -389,7 +556,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
 
         try
         {
-            var content = await File.ReadAllTextAsync(artifactPath, cancellationToken);
+            var content = await ReadAllTextSharedAsync(artifactPath, cancellationToken);
             using var document = System.Text.Json.JsonDocument.Parse(content);
             if (document.RootElement.TryGetProperty("Outcome", out var outcome))
                 return outcome.GetString();
@@ -426,7 +593,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
 
             try
             {
-                var content = await File.ReadAllTextAsync(artifactPath, cancellationToken);
+                var content = await ReadAllTextSharedAsync(artifactPath, cancellationToken);
                 using var document = System.Text.Json.JsonDocument.Parse(content);
 
                 var root = document.RootElement;

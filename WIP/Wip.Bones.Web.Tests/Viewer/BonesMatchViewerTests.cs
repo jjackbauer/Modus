@@ -114,7 +114,7 @@ public sealed class BonesMatchViewerServiceTests
         var engine = new BonesGameEngine();
         var round1Config = new BonesRoundConfig(
             new BonesGameId($"{matchId.Value}-r1"),
-            HashCode.Combine(seed, 1));
+            BonesSeedDerivation.Derive(seed, 1));
 
         var state = engine.StartRound(round1Config);
         while (!engine.IsRoundComplete(state))
@@ -144,7 +144,7 @@ public sealed class BonesMatchViewerServiceTests
 
         var round2Config = new BonesRoundConfig(
             new BonesGameId($"{matchId.Value}-r2"),
-            HashCode.Combine(seed, 2));
+            BonesSeedDerivation.Derive(seed, 2));
         state = engine.StartRound(round2Config);
         const int round2Moves = 5;
         for (var moveIndex = 0; moveIndex < round2Moves && !engine.IsRoundComplete(state); moveIndex++)

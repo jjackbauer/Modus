@@ -9,6 +9,7 @@ using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Viewer;
 using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
+using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Web.Viewer;
 
 namespace Wip.Bones.Web;
@@ -29,6 +30,7 @@ public static class BonesWebHost
         services.AddSingleton<BonesMatchViewerService>();
         services.AddSingleton<IBonesMatchCatalog, ImmutableBonesMatchCatalog>();
         services.AddSingleton<IBonesPublicMatchFeed, BonesCatalogPublicMatchFeed>();
+        services.AddSingleton<StrategyPoolJsonService>();
     }
 
     public static void MapMatchRoutes(IEndpointRouteBuilder app)
@@ -81,6 +83,94 @@ public static class BonesWebHost
                 }
 
                 var html = BonesViewerPageRenderer.Render(snapshot, frame, turnIndex);
+                return Results.Content(html, "text/html; charset=utf-8");
+            });
+    }
+
+    public static void MapPoolRoutes(IEndpointRouteBuilder app)
+    {
+        app.MapGet(
+            "/bones/pool",
+            (StrategyPoolJsonService service) =>
+            {
+                if (StrategyPool.Instance is null)
+                    return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
+
+                var snapshot = service.BuildPoolSnapshot();
+                return Results.Json(snapshot, JsonOptions);
+            });
+
+        app.MapGet(
+            "/bones/pool/{strategyId}",
+            (string strategyId, StrategyPoolJsonService service) =>
+            {
+                if (StrategyPool.Instance is null)
+                    return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
+
+                var detail = service.BuildStrategyDetail(new BonesStrategyId(strategyId));
+                if (detail is null)
+                    return Results.NotFound();
+
+                return Results.Json(detail, JsonOptions);
+            });
+
+        app.MapGet(
+            "/bones/pool/{strategyId}/lineage",
+            (string strategyId, StrategyPoolJsonService service) =>
+            {
+                if (StrategyPool.Instance is null)
+                    return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
+
+                var lineage = service.BuildLineageViewModel(new BonesStrategyId(strategyId));
+                if (lineage is null)
+                    return Results.NotFound();
+
+                return Results.Json(lineage, JsonOptions);
+            });
+
+        app.MapGet(
+            "/bones/pool/stats",
+            (StrategyPoolJsonService service) =>
+            {
+                if (StrategyPool.Instance is null)
+                    return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
+
+                var stats = service.BuildPoolStats();
+                return Results.Json(stats, JsonOptions);
+            });
+
+        app.MapGet(
+            "/bones/pool/{strategyId}/view",
+            (string strategyId, StrategyPoolJsonService service) =>
+            {
+                if (StrategyPool.Instance is null)
+                    return Results.Content(
+                        StrategyDetailPageRenderer.RenderNotFound(strategyId),
+                        "text/html; charset=utf-8",
+                        statusCode: 404);
+
+                var detail = service.BuildStrategyDetail(new BonesStrategyId(strategyId));
+                if (detail is null)
+                    return Results.Content(
+                        StrategyDetailPageRenderer.RenderNotFound(strategyId),
+                        "text/html; charset=utf-8",
+                        statusCode: 404);
+
+                var html = StrategyDetailPageRenderer.Render(detail);
+                return Results.Content(html, "text/html; charset=utf-8");
+            });
+
+        app.MapGet(
+            "/bones/pool/view",
+            (StrategyPoolJsonService service) =>
+            {
+                if (StrategyPool.Instance is null)
+                    return Results.Content(
+                        StrategyPoolPageRenderer.RenderUninitialized(),
+                        "text/html; charset=utf-8");
+
+                var snapshot = service.BuildPoolSnapshot();
+                var html = StrategyPoolPageRenderer.Render(snapshot);
                 return Results.Content(html, "text/html; charset=utf-8");
             });
     }

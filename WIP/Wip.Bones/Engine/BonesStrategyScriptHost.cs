@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -39,6 +40,7 @@ public sealed class BonesStrategyScriptHost
     private readonly BonesStrategyScriptHostOptions _options;
     private readonly ConcurrentDictionary<string, BonesCompiledStrategy> _compileCache = new(StringComparer.Ordinal);
     private readonly ConcurrentQueue<string> _lruOrder = new();
+    private static int _totalCompileInvocations;
     private int _compileInvocationCount;
 
     public BonesStrategyScriptHost()
@@ -60,6 +62,13 @@ public sealed class BonesStrategyScriptHost
     }
 
     public int CompileInvocationCount => _compileInvocationCount;
+
+    /// <summary>
+    /// Process-wide compile count. Status must use this rather than an instance counter:
+    /// agents and tool paths can hold different host instances, and an instance counter
+    /// made `strategiesCompiled` report 0 while strategies were being compiled.
+    /// </summary>
+    public static int TotalCompileInvocations => Volatile.Read(ref _totalCompileInvocations);
 
     public int CompiledScriptsCached => _compileCache.Count;
 
@@ -95,6 +104,59 @@ public sealed class BonesStrategyScriptHost
         {
             return BonesStrategyScriptCompileResult.Failure($"Strategy script compilation failed: {exception.Message}");
         }
+    }
+
+    /// <summary>
+    /// Executes a script move on the calling worker by default. Match execution uses
+    /// this path so we do not create a task and block on it for every move.
+    /// When <see cref="BonesStrategyScriptHostOptions.EnableDirectExecutionTimeout"/> is enabled,
+    /// the move runs on a dedicated background thread bounded by
+    /// <see cref="BonesStrategyScriptHostOptions.ExecutionTimeout"/> so a non-returning script
+    /// fails the caller instead of blocking the match worker indefinitely. Callers that need
+    /// the legacy timeout guard can use <see cref="ExecuteChooseMove"/>.
+    /// </summary>
+    public BonesMove ExecuteChooseMoveDirect(
+        BonesCompiledStrategy compiled,
+        BonesRoundState state,
+        IReadOnlyList<BonesMove> legalMoves)
+    {
+        ArgumentNullException.ThrowIfNull(compiled);
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(legalMoves);
+
+        if (!_options.EnableDirectExecutionTimeout)
+            return compiled.PlayerSlot.ChooseMove(state, legalMoves);
+
+        BonesMove? selectedMove = null;
+        Exception? moveFailure = null;
+
+        var moveThread = new Thread(() =>
+        {
+            try
+            {
+                selectedMove = compiled.PlayerSlot.ChooseMove(state, legalMoves);
+            }
+            catch (Exception exception)
+            {
+                moveFailure = exception;
+            }
+        })
+        {
+            IsBackground = true,
+            Name = "BonesStrategyScriptHost.ExecuteChooseMoveDirect",
+        };
+
+        moveThread.Start();
+
+        if (!moveThread.Join(_options.ExecutionTimeout))
+            throw new BonesStrategyScriptExecutionTimeoutException(_options.ExecutionTimeout);
+
+        if (moveFailure is not null)
+            ExceptionDispatchInfo.Capture(moveFailure).Throw();
+
+        // A null move is passed through exactly as the disabled direct path does;
+        // the player-slot contract handles it by falling back to the first legal move.
+        return selectedMove!;
     }
 
     public BonesMove ExecuteChooseMove(
@@ -144,6 +206,7 @@ public sealed class BonesStrategyScriptHost
     private BonesCompiledStrategy CompileSource(BonesStrategyId strategyId, string source, string sourceHash)
     {
         Interlocked.Increment(ref _compileInvocationCount);
+        Interlocked.Increment(ref _totalCompileInvocations);
 
         using var timeoutCts = new CancellationTokenSource(_options.CompilationTimeout);
         var cancellationToken = timeoutCts.Token;

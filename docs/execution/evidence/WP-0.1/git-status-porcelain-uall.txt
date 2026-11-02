@@ -1,0 +1,670 @@
+ M .github/prompts/requirements-gathering.prompt.md
+ M .github/requirements/DotNet-App-Development-Flows.md
+ M .github/requirements/WIP.Contributor-Readmes.md
+ M .github/requirements/Wip.DotNet-Development-Flows.md
+ M .github/requirements/Wip.Next-Steps.md
+ M .github/requirements/Wip.ShellHost.md
+ M .github/requirements/Wip.Src-WIP-Project-Layout-Refactoring.md
+ M .gitignore
+ M .vscode/settings.json
+ M AGENTS.md
+ M Makefile
+ M Modus.slnx
+ M WIP/Wip.Artifacts.Local/Wip.Artifacts.Local.csproj
+ M WIP/Wip.Bones.Agents/Budget/BonesGameSimulationBudget.cs
+ M WIP/Wip.Bones.Agents/Enhance/BonesCoLearningEnhanceAgent.cs
+ M WIP/Wip.Bones.Agents/Enhance/BonesEnhancePromptBuilder.cs
+ M WIP/Wip.Bones.Agents/Enhance/BonesEnhanceStrategyAgent.cs
+ M WIP/Wip.Bones.Agents/Enhance/BonesEnhanceTypes.cs
+ M WIP/Wip.Bones.Agents/Knowledge/BonesKnowledgeTypes.cs
+ M WIP/Wip.Bones.Agents/Knowledge/BonesPlayerKnowledgeStore.cs
+ M WIP/Wip.Bones.Agents/Knowledge/BonesStrategyLibrary.cs
+ M WIP/Wip.Bones.Agents/Knowledge/BonesStrategyLibraryRanking.cs
+ M WIP/Wip.Bones.Agents/Knowledge/BonesStrategyPromotionEvaluator.cs
+ M WIP/Wip.Bones.Agents/Observe/BonesObserveGamesTool.cs
+ M WIP/Wip.Bones.Agents/Observe/BonesObserveGamesTypes.cs
+ M WIP/Wip.Bones.Agents/Play/BonesPlayMatchTool.cs
+ M WIP/Wip.Bones.Agents/Play/BonesPlayMatchTypes.cs
+ M WIP/Wip.Bones.Agents/Play/BonesStrategyPlayerSlotFactory.cs
+ M WIP/Wip.Bones.Agents/Ponder/BonesPonderAgent.cs
+ M WIP/Wip.Bones.Agents/Ponder/BonesPonderCompileRetryOptions.cs
+ M WIP/Wip.Bones.Agents/Ponder/BonesPonderTypes.cs
+ M WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj
+ M WIP/Wip.Bones.Agents/Workflow/BonesCoLearningOrchestrator.cs
+ M WIP/Wip.Bones.Agents/Workflow/BonesCoLearningStageTools.cs
+ M WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflowMapRuntime.cs
+ M WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflowRegistration.cs
+ M WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflowTypes.cs
+ M WIP/Wip.Bones.Host.Tests/BehaviorProofComplianceRegistryTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesCoLearningHostTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesDeepSeekHostRequirementsChecklistItems.cs
+ M WIP/Wip.Bones.Host.Tests/BonesGameSimulationBudgetTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekIntegrationTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekOperatorDocumentationTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekServiceCollectionTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostDeepSeekStatusApiTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostOptionsDeepSeekTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostOptionsPerStageModelTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesHostTestFactory.cs
+ M WIP/Wip.Bones.Host.Tests/BonesLearningLoopHostCapTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesLearningLoopHostTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesLearningLoopPromotionHostTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesPerStageModelRoutingStatusApiTests.cs
+ M WIP/Wip.Bones.Host.Tests/BonesStatusApiTests.cs
+ M WIP/Wip.Bones.Host/BonesCoLearningMetrics.cs
+ M WIP/Wip.Bones.Host/BonesHostApplication.cs
+ M WIP/Wip.Bones.Host/BonesHostOptions.cs
+ M WIP/Wip.Bones.Host/BonesHostServiceCollectionExtensions.cs
+ M WIP/Wip.Bones.Host/BonesHostSessionStore.cs
+ M WIP/Wip.Bones.Host/BonesLearningLoopHost.cs
+ M WIP/Wip.Bones.Host/BonesLearningLoopStageMonitor.cs
+ M WIP/Wip.Bones.Host/BonesLoopState.cs
+ M WIP/Wip.Bones.Host/README.md
+ M WIP/Wip.Bones.Host/appsettings.json
+ M WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-1.json
+ M WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-2.json
+ M WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-3.json
+ M WIP/Wip.Bones.Host/bones-data/.bones/strategy-library/seat-4.json
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Authoring/DeepSeekBonesStrategyAuthoringProviderTests.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/BonesDeepSeekRequirementsChecklistItems.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Configuration/BonesDeepSeekProviderOptionsTests.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Enhancement/DeepSeekBonesStrategyEnhancementProviderTests.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/HttpMapping/BonesDeepSeekHttpMappingProofTests.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Play/DeepSeekBonesPlayTurnProviderTests.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Registration/AddBonesDeepSeekModelProvidersTests.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekProviderOptions.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekServiceCollectionExtensions.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek/DeepSeekBonesPlayTurnProvider.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek/DeepSeekBonesStrategyAuthoringProvider.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek/DeepSeekBonesStrategyEnhancementProvider.cs
+ M WIP/Wip.Bones.ModelProviders.DeepSeek/Wip.Bones.ModelProviders.DeepSeek.csproj
+ M WIP/Wip.Bones.Tests/Agents/BonesCoLearningLibraryViabilityTests.cs
+ M WIP/Wip.Bones.Tests/Agents/BonesEnhancePromptBuilderTests.cs
+ M WIP/Wip.Bones.Tests/Agents/BonesEnhanceStrategyAgentTests.cs
+ M WIP/Wip.Bones.Tests/Agents/BonesLearningLoopReliabilityAgentTests.cs
+ M WIP/Wip.Bones.Tests/Agents/BonesPlayMatchToolTests.cs
+ M WIP/Wip.Bones.Tests/Agents/BonesPlayerKnowledgeStoreTests.cs
+ M WIP/Wip.Bones.Tests/Agents/BonesPonderAgentTests.cs
+ M WIP/Wip.Bones.Tests/BonesLearningLoopReliabilityRequirementsChecklistItems.cs
+ M WIP/Wip.Bones.Tests/BonesLearningWorkflowMapRuntimePerStageModelTests.cs
+ M WIP/Wip.Bones.Tests/BonesLearningWorkflowParametersPerStageModelTests.cs
+ M WIP/Wip.Bones.Tests/Budget/BonesGameSimulationBudgetConcurrencyTests.cs
+ M WIP/Wip.Bones.Tests/Engine/BonesGameEngineTests.cs
+ M WIP/Wip.Bones.Tests/Knowledge/BonesStrategyLibraryTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesBoardChainGeometryBuilderTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesBoardChainScaleCalculatorTransformScaleTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesBoardVisualLayoutExtentTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesMatchViewerTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerBoardChainGeometryDomTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerBoardChainLayoutPlannedTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerDominoRenderingChecklistTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerDominoRenderingDomTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerEngineReplayedLongChainDomTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerLearningLoopStatusScriptTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerTransformCssDomTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerVisualizationTests.cs
+ M WIP/Wip.Bones.Web.Tests/Viewer/BonesViewerWorkflowTests.cs
+ M WIP/Wip.Bones.Web/BonesWebHost.cs
+ M WIP/Wip.Bones.Web/Program.cs
+ M WIP/Wip.Bones.Web/Viewer/BonesMatchViewerService.cs
+ M WIP/Wip.Bones.Web/Viewer/BonesViewerPageRenderer.cs
+ M WIP/Wip.Bones/Engine/BonesMatchSimulator.cs
+ M WIP/Wip.Bones/Engine/BonesScriptStrategyPlayerSlot.cs
+ M WIP/Wip.Bones/Engine/BonesStrategyScriptHost.cs
+ M WIP/Wip.Bones/Engine/BonesStrategyScriptHostOptions.cs
+ M WIP/Wip.Builder.Tests/Builder/WipBuilderPortabilityRuntimeProofTests.cs
+ M WIP/Wip.Builder.Tests/Builder/WipBuilderTypedWorkflowMapRuntimeProofTests.cs
+ M WIP/Wip.Modus.Tests/Documentation/WipContributorArchitectureReadmeTests.cs
+ M WIP/Wip.Runtime.Tests/Runtime/DeepSeekModelProviderTests.cs
+ M WIP/Wip.Runtime.Tests/Runtime/RuntimeReadmeLifecycleContractsTests.cs
+ M WIP/Wip.Runtime.Tests/Runtime/WipRuntimeOrchestratorTests.cs
+ M WIP/Wip.Runtime/README.md
+ M WIP/Wip.Runtime/Runtime/AgentCapabilityArtifacts.cs
+ M WIP/Wip.Runtime/Runtime/DeepSeekModelProvider.cs
+ M WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs
+ M WIP/Wip.Runtime/Runtime/WorkflowExecutionPipeline.cs
+ M WIP/Wip.Runtime/Wip.Runtime.csproj
+ M WIP/Wip.Shell.E2E.Tests/E2E/BehaviorProofComplianceGateTests.cs
+ M WIP/Wip.Shell.E2E.Tests/E2E/ShellHostE2EHarnessTests.cs
+ M WIP/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj
+ M WIP/Wip.Shell.Tests/Interactive/WipShellCommandLoopTests.cs
+ M WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs
+ M WIP/Wip.Shell/README.md
+ M WIP/Wip.ShellHost.Tests/Hosting/BehaviorProofComplianceGateTests.cs
+ M WIP/Wip.ShellHost/Hosting/WipShellHostFactory.cs
+ M WIP/Wip.ShellHost/README.md
+ M WIP/Wip.ShellHost/Wip.ShellHost.csproj
+ M WIP/Wip.Validation.DotNet.Tests/DotNet/BehaviorProofComplianceGateTests.cs
+ M harness/requirements/Wip.Bones.BoardOrientation.md
+ M harness/requirements/Wip.Bones.DeepSeek.md
+ M harness/requirements/Wip.Bones.Host.md
+ M harness/requirements/Wip.Bones.LearningLoopReliability.md
+ M harness/requirements/Wip.Bones.PerStageModelRouting.md
+ M harness/requirements/Wip.Bones.ScriptStrategies.md
+ M harness/skills/iterative-implementation-orchestrator.md
+ M harness/workflows/iterative-implementation.md
+ M harness/workflows/requirements-gathering.md
+ M src/WIP.Contributor-Architecture.README.md
+ M tools/HarnessSync/Program.cs
+?? .claude/commands/audit-host-di-before-adding-services.md
+?? .claude/commands/check-json-serialization-options-before-testing.md
+?? .claude/commands/di-factory-override.md
+?? .claude/commands/isolate-static-state-in-parallel-tests.md
+?? .claude/commands/protect-user-workspace-data.md
+?? .claude/commands/retrospective-harness-encoding.md
+?? .claude/commands/runtime-verify-cross-boundary.md
+?? .claude/commands/static-singleton-di-fallback.md
+?? .claude/commands/trace-all-callers-before-mirroring.md
+?? .claude/commands/trace-runtime-path.md
+?? .claude/commands/verify-renderer-output-before-dom-tests.md
+?? .cursor/commands/audit-host-di-before-adding-services.md
+?? .cursor/commands/check-json-serialization-options-before-testing.md
+?? .cursor/commands/di-factory-override.md
+?? .cursor/commands/isolate-static-state-in-parallel-tests.md
+?? .cursor/commands/protect-user-workspace-data.md
+?? .cursor/commands/retrospective-harness-encoding.md
+?? .cursor/commands/runtime-verify-cross-boundary.md
+?? .cursor/commands/static-singleton-di-fallback.md
+?? .cursor/commands/trace-all-callers-before-mirroring.md
+?? .cursor/commands/trace-runtime-path.md
+?? .cursor/commands/verify-renderer-output-before-dom-tests.md
+?? .cursor/encoding-proof-utf8-only.txt
+?? .cursor/rules/utf8-file-encoding.mdc
+?? .editorconfig
+?? .githooks/pre-commit
+?? .github/prompts/audit-host-di-before-adding-services.prompt.md
+?? .github/prompts/check-json-serialization-options-before-testing.prompt.md
+?? .github/prompts/di-factory-override.prompt.md
+?? .github/prompts/isolate-static-state-in-parallel-tests.prompt.md
+?? .github/prompts/protect-user-workspace-data.prompt.md
+?? .github/prompts/retrospective-harness-encoding.prompt.md
+?? .github/prompts/runtime-verify-cross-boundary.prompt.md
+?? .github/prompts/static-singleton-di-fallback.prompt.md
+?? .github/prompts/trace-all-callers-before-mirroring.prompt.md
+?? .github/prompts/trace-runtime-path.prompt.md
+?? .github/prompts/verify-renderer-output-before-dom-tests.prompt.md
+?? .tmp/aggression-search/Program.cs
+?? .tmp/aggression-search/Search.csproj
+?? .tmp/aggression-search/confirmation-910023.json
+?? .tmp/aggression-search/confirmation-910035.json
+?? .tmp/aggression-search/confirmation-final.stdout.txt
+?? .tmp/aggression-search/confirmation-large.stdout.txt
+?? .tmp/aggression-search/confirmation.json
+?? .tmp/aggression-search/confirmation.stdout.txt
+?? .tmp/aggression-search/fair-confirmation-first.json
+?? .tmp/aggression-search/fair-confirmation-repeat.stdout.txt
+?? .tmp/aggression-search/fair-confirmation.json
+?? .tmp/aggression-search/fair-confirmation.stdout.txt
+?? .tmp/aggression-search/fair-results.json
+?? .tmp/aggression-search/fair.stdout.txt
+?? .tmp/aggression-search/field-archetypes.json
+?? .tmp/aggression-search/field-archetypes.stdout.txt
+?? .tmp/aggression-search/field-strong.json
+?? .tmp/aggression-search/field-strong.stdout.txt
+?? .tmp/aggression-search/library-extended/.bones/strategy-library/seat-1.json
+?? .tmp/aggression-search/library-fair/.bones/strategy-library/seat-1.json
+?? .tmp/aggression-search/selection-control.stdout.txt
+?? .tmp/aggression-search/selection-results.json
+?? .tmp/aggression-search/selection-structural.stdout.txt
+?? .tmp/aggression-search/selection.stdout.txt
+?? .tmp/aggression-search/validation-control.stdout.txt
+?? .tmp/aggression-search/validation-extended-first.json
+?? .tmp/aggression-search/validation-extended-repeat.stdout.txt
+?? .tmp/aggression-search/validation-extended.json
+?? .tmp/aggression-search/validation-extended.stdout.txt
+?? .tmp/aggression-search/validation-results.json
+?? .tmp/aggression-search/validation.stdout.txt
+?? .tmp/bench/arch-a.json
+?? .tmp/bench/arch-b.json
+?? .tmp/bench/arena-control.json
+?? .tmp/bench/arena-dev-a.json
+?? .tmp/bench/arena-dev-b.json
+?? .tmp/bench/arena-dev-repeat.json
+?? .tmp/bench/arena-dev.json
+?? .tmp/bench/arena-heldout.json
+?? .tmp/bench/arena-patched.json
+?? .tmp/bench/arena-s1.json
+?? .tmp/bench/arena-s2.json
+?? .tmp/bench/content-dev-repeat.json
+?? .tmp/bench/content-dev.json
+?? .tmp/bench/content-heldout.json
+?? .tmp/bench/det-a.json
+?? .tmp/bench/det-b.json
+?? .tmp/bench/dev.json
+?? .tmp/bench/dev2000-repeat.json
+?? .tmp/bench/dev2000-round1.json
+?? .tmp/bench/dev2000.json
+?? .tmp/bench/gate-dev.json
+?? .tmp/bench/gate-h1.json
+?? .tmp/bench/gate-h2.json
+?? .tmp/bench/gate-heldout.json
+?? .tmp/bench/gate-repeat.json
+?? .tmp/bench/heldout2000.json
+?? .tmp/bench/history-patched.json
+?? .tmp/bench/history.json
+?? .tmp/bench/live-stub/.bones/pool/pool-snapshot.json
+?? .tmp/bench/live-stub/.bones/strategy-library/seat-1.json
+?? .tmp/bench/live-stub/.bones/strategy-library/seat-2.json
+?? .tmp/bench/live-stub/.bones/strategy-library/seat-3.json
+?? .tmp/bench/live-stub/.bones/strategy-library/seat-4.json
+?? .tmp/bench/live-stub2/.bones/pool/pool-snapshot.json
+?? .tmp/bench/live-stub2/.bones/strategy-library/seat-1.json
+?? .tmp/bench/live-stub2/.bones/strategy-library/seat-2.json
+?? .tmp/bench/live-stub2/.bones/strategy-library/seat-3.json
+?? .tmp/bench/live-stub2/.bones/strategy-library/seat-4.json
+?? .tmp/bench/live-stub3/.bones/pool/pool-snapshot.json
+?? .tmp/bench/live-stub3/.bones/strategy-library/seat-1.json
+?? .tmp/bench/live-stub3/.bones/strategy-library/seat-2.json
+?? .tmp/bench/live-stub3/.bones/strategy-library/seat-3.json
+?? .tmp/bench/live-stub3/.bones/strategy-library/seat-4.json
+?? .tmp/bench/unbounded-probe/.bones/pool/pool-snapshot.json
+?? .tmp/bench/unbounded-probe/.bones/strategy-library/seat-1.json
+?? .tmp/bench/unbounded-probe/.bones/strategy-library/seat-2.json
+?? .tmp/bench/unbounded-probe/.bones/strategy-library/seat-3.json
+?? .tmp/bench/unbounded-probe/.bones/strategy-library/seat-4.json
+?? .tmp/block-search/BlockSearch.csproj
+?? .tmp/block-search/Program.cs
+?? .tmp/block-search/block-confirmation-first.json
+?? .tmp/block-search/block-confirmation-repeat.stdout.txt
+?? .tmp/block-search/block-confirmation.json
+?? .tmp/block-search/block-confirmation.stdout.txt
+?? .tmp/block-search/block-results.json
+?? .tmp/block-search/block-results.stdout.txt
+?? .tmp/block-search/library-confirm/.bones/strategy-library/seat-1.json
+?? .tmp/block-search/library/.bones/strategy-library/seat-1.json
+?? .tmp/bones-eval-deepseek/.bones/pool/pool-snapshot.json
+?? .tmp/bones-eval-deepseek/.bones/strategy-library/seat-1.json
+?? .tmp/bones-eval-deepseek/.bones/strategy-library/seat-2.json
+?? .tmp/bones-eval-deepseek/.bones/strategy-library/seat-3.json
+?? .tmp/bones-eval-deepseek/.bones/strategy-library/seat-4.json
+?? .tmp/bones-strategy-analysis/bad-library-seat-1.cs
+?? .tmp/bones-strategy-analysis/initial-seat-1-v2_000e6e50.cs
+?? .tmp/bones-strategy-analysis/initial-seat-1-v2_004987b1.cs
+?? .tmp/bones-strategy-analysis/initial-seat-1-v2_004e6719.cs
+?? .tmp/bones-strategy-analysis/initial-seat-1-v2_018b5ea3.cs
+?? .tmp/bones-strategy-analysis/initial-seat-1-v2_a4391b12.cs
+?? .tmp/bones-strategy-analysis/initial-seat-2-v3_32543a2f.cs
+?? .tmp/bones-strategy-analysis/initial-seat-2-v4_66858261.cs
+?? .tmp/bones-strategy-analysis/initial-seat-2-v5_5ec0810f.cs
+?? .tmp/bones-strategy-analysis/initial-seat-2-v6_02b68c23.cs
+?? .tmp/bones-strategy-analysis/initial-seat-3-v6_00e3bfc8.cs
+?? .tmp/bones-strategy-analysis/initial-seat-3-v6_0150c9b6.cs
+?? .tmp/bones-strategy-analysis/initial-seat-3-v6_0182be26.cs
+?? .tmp/bones-strategy-analysis/initial-seat-3-v7_01fde379.cs
+?? .tmp/bones-strategy-analysis/initial-seat-4-v6_87055976.cs
+?? .tmp/bones-strategy-analysis/initial-seat-4-v7_002e82b4.cs
+?? .tmp/bones-strategy-analysis/initial-seat-4-v7_4a1bfae4.cs
+?? .tmp/bones-strategy-analysis/initial-seat-4-v9_00b1a655.cs
+?? .tmp/bones-strategy-analysis/library-seat-1.cs
+?? .tmp/bones-strategy-analysis/library-seat-2.cs
+?? .tmp/bones-strategy-analysis/library-seat-3.cs
+?? .tmp/bones-strategy-analysis/library-seat-4.cs
+?? .tmp/build-runtime-diag.txt
+?? .tmp/champion-goal/falsify-run/.bones/strategy-library/seat-1.json
+?? .tmp/champion-goal/falsify-run/champion-result.json
+?? .tmp/champion-goal/falsify-run/head-seat-1.json
+?? .tmp/champion-goal/falsify-run/head-seat-2.json
+?? .tmp/champion-goal/falsify-run/head-seat-3.json
+?? .tmp/champion-goal/falsify-run/head-seat-4.json
+?? .tmp/champion-goal/probe-run-a.txt
+?? .tmp/champion-goal/probe-run-b.txt
+?? .tmp/champion-goal/run-a.stdout.txt
+?? .tmp/champion-goal/run-a/.bones/strategy-library/seat-1.json
+?? .tmp/champion-goal/run-a/champion-result.json
+?? .tmp/champion-goal/run-b.stdout.txt
+?? .tmp/champion-goal/run-b/.bones/strategy-library/seat-1.json
+?? .tmp/champion-goal/run-b/champion-result.json
+?? .tmp/champion-goal/run-c.stdout.txt
+?? .tmp/champion-goal/run-c/.bones/strategy-library/seat-1.json
+?? .tmp/champion-goal/run-c/champion-result.json
+?? .tmp/champion-goal/trace-champion/Program.cs
+?? .tmp/champion-goal/trace-champion/TraceChampion.csproj
+?? .tmp/champion-goal/verify-aggregator/Program.cs
+?? .tmp/champion-goal/verify-aggregator/VerifyAggregator.csproj
+?? .tmp/champion-goal/verify-champion/Program.cs
+?? .tmp/champion-goal/verify-champion/VerifyChampion.csproj
+?? .tmp/champion-goal/verify-compile/Program.cs
+?? .tmp/champion-goal/verify-compile/VerifyCompile.csproj
+?? .tmp/champion-goal/verify-library/Program.cs
+?? .tmp/champion-goal/verify-library/VerifyLibrary.csproj
+?? .tmp/champion-goal/verify-selector/Program.cs
+?? .tmp/champion-goal/verify-selector/VerifySelector.csproj
+?? .tmp/champion-goal/verify-smoke/Program.cs
+?? .tmp/champion-goal/verify-smoke/VerifySmoke.csproj
+?? .tmp/clean-docs.ps1
+?? .tmp/fair-block-v2/Audit.cs
+?? .tmp/fair-block-v2/FairBlockV2.csproj
+?? .tmp/fair-block-v2/Program.cs
+?? .tmp/fair-block-v2/Variants.cs
+?? .tmp/fair-block-v2/generated/base.cs
+?? .tmp/fair-block-v2/generated/bothfew5=0.cs
+?? .tmp/fair-block-v2/generated/bothfew5=15.cs
+?? .tmp/fair-block-v2/generated/bothfew8=0.cs
+?? .tmp/fair-block-v2/generated/bothfew8=20.cs
+?? .tmp/fair-block-v2/generated/bothside=0.cs
+?? .tmp/fair-block-v2/generated/bothside=30.cs
+?? .tmp/fair-block-v2/generated/c5-bare.cs
+?? .tmp/fair-block-v2/generated/chain=0.cs
+?? .tmp/fair-block-v2/generated/chain=60.cs
+?? .tmp/fair-block-v2/generated/dbl=120.cs
+?? .tmp/fair-block-v2/generated/dbl=80.cs
+?? .tmp/fair-block-v2/generated/dblmax4=0.cs
+?? .tmp/fair-block-v2/generated/dblmax4=60.cs
+?? .tmp/fair-block-v2/generated/dblstuck=0.cs
+?? .tmp/fair-block-v2/generated/dblstuck=160.cs
+?? .tmp/fair-block-v2/generated/dblvuln=0.cs
+?? .tmp/fair-block-v2/generated/dblvuln=60.cs
+?? .tmp/fair-block-v2/generated/earlybal=0.cs
+?? .tmp/fair-block-v2/generated/earlybal=35.cs
+?? .tmp/fair-block-v2/generated/egflex=0.cs
+?? .tmp/fair-block-v2/generated/egflex=50.cs
+?? .tmp/fair-block-v2/generated/egpip=0.cs
+?? .tmp/fair-block-v2/generated/egpip=3.cs
+?? .tmp/fair-block-v2/generated/endpip=4.cs
+?? .tmp/fair-block-v2/generated/endpip=9.cs
+?? .tmp/fair-block-v2/generated/exact-gate200-t50.cs
+?? .tmp/fair-block-v2/generated/exact-gate200.cs
+?? .tmp/fair-block-v2/generated/exact-mlin20.cs
+?? .tmp/fair-block-v2/generated/exact-mlin8-silent48.cs
+?? .tmp/fair-block-v2/generated/exact-silent48.cs
+?? .tmp/fair-block-v2/generated/hold=3.cs
+?? .tmp/fair-block-v2/generated/hold=8.cs
+?? .tmp/fair-block-v2/generated/match=100.cs
+?? .tmp/fair-block-v2/generated/multi80.cs
+?? .tmp/fair-block-v2/generated/pip3pen=0.cs
+?? .tmp/fair-block-v2/generated/pip3pen=40.cs
+?? .tmp/fair-block-v2/generated/pips=3.cs
+?? .tmp/fair-block-v2/generated/repro-next80.cs
+?? .tmp/fair-block-v2/generated/samepip=0.cs
+?? .tmp/fair-block-v2/generated/samepip=80.cs
+?? .tmp/fair-block-v2/generated/side=0.cs
+?? .tmp/fair-block-v2/generated/side=30.cs
+?? .tmp/fair-block-v2/generated/sideplayed=0.cs
+?? .tmp/fair-block-v2/generated/sideplayed=25.cs
+?? .tmp/fair-block-v2/generated/singleend=0.cs
+?? .tmp/fair-block-v2/generated/singleend=25.cs
+?? .tmp/fair-block-v2/generated/spinner=0.cs
+?? .tmp/fair-block-v2/generated/spinner=70.cs
+?? .tmp/fair-block-v2/generated/v2-basetuned.cs
+?? .tmp/fair-block-v2/generated/v2-cur.cs
+?? .tmp/fair-block-v2/generated/v2-cur2.cs
+?? .tmp/fair-block-v2/library-source.cs
+?? .tmp/fair-block-v2/library-verify/.bones/strategy-library/seat-1.json
+?? .tmp/fair-block-v2/library/.bones/strategy-library/seat-1.json
+?? .tmp/fair-block-v2/policies/c5-newend.cs
+?? .tmp/fair-block-v2/policies/candidates/v2-cur2-reloaded.cs
+?? .tmp/fair-block-v2/policies/candidates/v2-cur2.cs
+?? .tmp/fair-block-v2/policies/fair-block.cs
+?? .tmp/fair-block-v2/result-diagnostic.json
+?? .tmp/fair-block-v2/result-paired-910235.json
+?? .tmp/fair-block-v2/result-paired-910275.json
+?? .tmp/fair-block-v2/result-probe-910235.json
+?? .tmp/fair-block-v2/result-sweep-910235.json
+?? .tmp/fair-block-v2/result-sweep-910335.json
+?? .tmp/fair-block-v2/result-sweep-910435.json
+?? .tmp/fair-block-v2/specs/approaches.json
+?? .tmp/fair-block-v2/specs/cur.json
+?? .tmp/fair-block-v2/specs/dbl.json
+?? .tmp/fair-block-v2/specs/decomp.json
+?? .tmp/fair-block-v2/specs/probe.json
+?? .tmp/fair-block-v2/specs/stageA.json
+?? .tmp/fair-block-v2/specs/stageB.json
+?? .tmp/fair-block-v2/specs/stageC.json
+?? .tmp/fair-block-v2/specs/stageD.json
+?? .tmp/fair-block-v2/specs/stageE.json
+?? .tmp/fair-block-v2/specs/stageF.json
+?? .tmp/fair-block-v2/specs/stageG.json
+?? .tmp/fair-block-v2/specs/stageH.json
+?? .tmp/fair-block-v3/Audit.cs
+?? .tmp/fair-block-v3/FairBlockV3.csproj
+?? .tmp/fair-block-v3/Program.cs
+?? .tmp/fair-block-v3/Variants.cs
+?? .tmp/fair-block-v3/generated/champ-clone.cs
+?? .tmp/fair-block-v3/generated/oracle-truth-dist.cs
+?? .tmp/fair-block-v3/library/.bones/strategy-library/seat-1.json
+?? .tmp/fair-block-v3/policies/c5-newend.cs
+?? .tmp/fair-block-v3/policies/candidates/planner-low16.cs
+?? .tmp/fair-block-v3/policies/candidates/planner-mc.cs
+?? .tmp/fair-block-v3/policies/candidates/planner-mc16.cs
+?? .tmp/fair-block-v3/policies/candidates/v2-cur2.cs
+?? .tmp/fair-block-v3/policies/diagnostic/oracle-greedy.cs
+?? .tmp/fair-block-v3/policies/fair-block.cs
+?? .tmp/fair-block-v3/result-paired-910535.json
+?? .tmp/fair-block-v3/result-probe-910535.json
+?? .tmp/fair-block-v3/result-sweep-910235.json
+?? .tmp/fair-block-v3/result-sweep-910535.json
+?? .tmp/fair-block-v3/result-sweep-910635.json
+?? .tmp/fair-block-v3/result-sweep-910735.json
+?? .tmp/fair-block-v3/result-sweep-910835.json
+?? .tmp/fair-block-v3/specs/a1.json
+?? .tmp/fair-block-v3/specs/a1b.json
+?? .tmp/fair-block-v3/specs/a3.json
+?? .tmp/fair-block-v3/specs/a4.json
+?? .tmp/fair-block-v3/specs/ceiling.json
+?? .tmp/fair-block-v3/specs/d0-repro.json
+?? .tmp/falsify-a/arena-910001-a.json
+?? .tmp/falsify-a/arena-910001-b.json
+?? .tmp/falsify-a/gate-700001.json
+?? .tmp/falsify-a/infinite-snapshot.json
+?? .tmp/falsify-b/bench/arena-dev-a.json
+?? .tmp/falsify-b/bench/arena-dev-b.json
+?? .tmp/falsify-b/bench/gate-h1.json
+?? .tmp/falsify-b/data/.bones/pool/pool-snapshot.json
+?? .tmp/falsify-b/data/.bones/strategy-library/seat-1.json
+?? .tmp/falsify-b/data/.bones/strategy-library/seat-2.json
+?? .tmp/falsify-b/data/.bones/strategy-library/seat-3.json
+?? .tmp/falsify-b/data/.bones/strategy-library/seat-4.json
+?? .tmp/falsify2-d/gate-absent.json
+?? .tmp/falsify2-d/gate-clean.json
+?? .tmp/falsify2-d/testlist.txt
+?? .tmp/fix-assumptions.ps1
+?? .tmp/fix-doc-text.ps1
+?? .tmp/fix-tests.ps1
+?? .tmp/goal-round2/arena-round2.json
+?? .tmp/goal-round2/gate-absent.json
+?? .tmp/goal-round2/gate-clean.json
+?? .tmp/goal-round2/gate-prefix.json
+?? .tmp/goal-round2/verify-gate-absent.json
+?? .tmp/goal-round2/verify-gate-clean.json
+?? .tmp/goal-round3/bindcheck/Program.cs
+?? .tmp/goal-round3/bindcheck/bindcheck.csproj
+?? .tmp/goal-round3/live/.bones/pool/pool-snapshot.json
+?? .tmp/goal-round3/live/.bones/strategy-library/seat-1.json
+?? .tmp/goal-round3/live/.bones/strategy-library/seat-2.json
+?? .tmp/goal-round3/live/.bones/strategy-library/seat-3.json
+?? .tmp/goal-round3/live/.bones/strategy-library/seat-4.json
+?? .tmp/prompt/WIP-Execution-Prompt.md
+?? "WIP/Bones Learning Loop \342\200\224 Live Evaluation and v2 Proposal.md"
+?? "WIP/Bones Learning Loop \342\200\224 Post-Fix Critical Evaluation.md"
+?? "WIP/Bones Learning Loop \342\200\224 Strategy Pool Adversarial Audit.md"
+?? "WIP/Bones Learning Loop \342\200\224 v2 P0 Remediation.md"
+?? "WIP/Bones Learning Loop \342\200\224 v3 Learning Improvement Plan.md"
+?? WIP/BonesLibraryRecovery/BonesLibraryRecovery.csproj
+?? WIP/BonesLibraryRecovery/Program.cs
+?? WIP/BonesLibraryRecovery/debug.csx
+?? WIP/Wip.Abstractions/Artifacts/ArtifactContracts.cs
+?? WIP/Wip.Artifacts.Local.Tests/Artifacts/WipArtifactStoreLocalTests.cs
+?? WIP/Wip.Artifacts.Local/Artifacts/WipArtifactStoreLocal.cs
+?? WIP/Wip.Bones.Agents/Champions/BonesChampionAggregation.cs
+?? WIP/Wip.Bones.Agents/Champions/BonesChampionSelection.cs
+?? WIP/Wip.Bones.Agents/Enhance/BonesStagnationException.cs
+?? WIP/Wip.Bones.Agents/Knowledge/BonesCrossSeatMatchConfig.cs
+?? WIP/Wip.Bones.Agents/Knowledge/BonesEloCalculator.cs
+?? WIP/Wip.Bones.Agents/Knowledge/BonesOpponentProfile.cs
+?? WIP/Wip.Bones.Agents/Knowledge/BonesStrategyDiversityGate.cs
+?? WIP/Wip.Bones.Agents/Knowledge/BonesStrategyGraveyard.cs
+?? WIP/Wip.Bones.Agents/Knowledge/BonesStrategyPool.cs
+?? WIP/Wip.Bones.Agents/Knowledge/CrossBreedPromptBuilder.cs
+?? WIP/Wip.Bones.Agents/Knowledge/EvaluationCycleManager.cs
+?? WIP/Wip.Bones.Agents/Knowledge/ExplorationInjector.cs
+?? WIP/Wip.Bones.Agents/Knowledge/PoolLineageRecord.cs
+?? WIP/Wip.Bones.Agents/Knowledge/PoolPersistenceTypes.cs
+?? WIP/Wip.Bones.Agents/Knowledge/PopulationMatchComposer.cs
+?? WIP/Wip.Bones.Agents/Knowledge/PopulationPoolOptions.cs
+?? WIP/Wip.Bones.Agents/Knowledge/TournamentSelector.cs
+?? WIP/Wip.Bones.Agents/Ponder/BonesAggressiveIterationOptions.cs
+?? WIP/Wip.Bones.Benchmark/Arena.cs
+?? WIP/Wip.Bones.Benchmark/ChainStep.cs
+?? WIP/Wip.Bones.Benchmark/ChampionRunner.cs
+?? WIP/Wip.Bones.Benchmark/DeterministicOpponents.cs
+?? WIP/Wip.Bones.Benchmark/GateStudy.cs
+?? WIP/Wip.Bones.Benchmark/HistoryScanner.cs
+?? WIP/Wip.Bones.Benchmark/Model.cs
+?? WIP/Wip.Bones.Benchmark/Program.cs
+?? WIP/Wip.Bones.Benchmark/README.md
+?? WIP/Wip.Bones.Benchmark/Stats.cs
+?? WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj
+?? WIP/Wip.Bones.Host.Tests/BonesCoLearningMetricsTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesHostAllowUnboundedOptionsTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesHostUnboundedStartupTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesLearningLoopStageMonitorTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesLoopStateSessionTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesPoolPersistenceTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesPoolResumeAndIntegrityTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesPoolWiringTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesStartupPlanTests.cs
+?? WIP/Wip.Bones.Host.Tests/BonesStrategyPoolTests.cs
+?? WIP/Wip.Bones.Host.Tests/Compliance/WipBonesStatusApiFixesBehaviorProofVerifier.cs
+?? WIP/Wip.Bones.Host.Tests/PopulationMatchComposerTests.cs
+?? WIP/Wip.Bones.Host.Tests/StatusApiFixesBehaviorProofComplianceGateTests.cs
+?? WIP/Wip.Bones.Host/BonesStartupPlan.cs
+?? WIP/Wip.Bones.Host/bones-data/.bones/pool/pool-snapshot.json
+?? WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/BonesDeepSeekResiliencePipelineTests.cs
+?? WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekResilienceOptions.cs
+?? WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekResiliencePipeline.cs
+?? WIP/Wip.Bones.ModelProviders.DeepSeek/RateLimitAwareDelegatingHandler.cs
+?? WIP/Wip.Bones.Tests/Agents/BonesEnhanceAggressiveFeaturesTests.cs
+?? WIP/Wip.Bones.Tests/Agents/BonesPonderCompileRetryOptionsTests.cs
+?? WIP/Wip.Bones.Tests/Champions/BonesChampionAggregatorTests.cs
+?? WIP/Wip.Bones.Tests/Champions/BonesChampionSelectorTests.cs
+?? WIP/Wip.Bones.Tests/Engine/BonesSeedDerivationTests.cs
+?? WIP/Wip.Bones.Tests/Engine/BonesStrategyScriptHostDirectTimeoutTests.cs
+?? WIP/Wip.Bones.Tests/Knowledge/BonesCrossSeatMatchConfigTests.cs
+?? WIP/Wip.Bones.Tests/Knowledge/BonesOpponentProfileTests.cs
+?? WIP/Wip.Bones.Web.Tests/BonesPoolRequirementsChecklistItems.cs
+?? WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolApiEndpointTests.cs
+?? WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolClientJsTests.cs
+?? WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolPageRenderTests.cs
+?? WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolTestCollection.cs
+?? WIP/Wip.Bones.Web.Tests/Viewer/BonesPoolTestHelper.cs
+?? WIP/Wip.Bones.Web.Tests/Viewer/StrategyPoolJsonServiceTests.cs
+?? WIP/Wip.Bones.Web/Viewer/StrategyDetailPageRenderer.cs
+?? WIP/Wip.Bones.Web/Viewer/StrategyPoolJsonService.cs
+?? WIP/Wip.Bones.Web/Viewer/StrategyPoolPageRenderer.cs
+?? WIP/Wip.Bones.Web/Viewer/StrategyPoolViewModels.cs
+?? WIP/Wip.Bones.Web/wwwroot/viewer/pool.css
+?? WIP/Wip.Bones.Web/wwwroot/viewer/pool.js
+?? WIP/Wip.Bones/Domain/BonesStrategyPoolTypes.cs
+?? WIP/Wip.Bones/Engine/BonesSeedDerivation.cs
+?? WIP/Wip.Builder.Tests/Builder/BuilderTestInMemoryArtifactStore.cs
+?? WIP/Wip.Modus.Tests/Documentation/ContributorReadmeRequirementsTests.cs
+?? WIP/Wip.Modus.Tests/Documentation/RepositoryLayoutTests.cs
+?? WIP/Wip.Runtime.Tests/Runtime/WorkflowStageCapabilityDispatcherTests.cs
+?? WIP/Wip.Runtime/Runtime/WorkflowStageCapabilityDispatcher.cs
+?? WIP/Wip.Runtime/Runtime/WorkflowStageDispatchScope.cs
+?? WIP/Wip.Runtime/Runtime/WorkflowStageMapAdapterRuntime.cs
+?? WIP/Wip.Shell.E2E.Tests/Documentation/ShellHostDocumentationTestDriver.cs
+?? WIP/Wip.Shell.E2E.Tests/Documentation/WipContributorDiagnosticsReadmeTests.cs
+?? WIP/Wip.Shell.E2E.Tests/Documentation/WipContributorOnboardingReadmeTests.cs
+?? WIP/Wip.Shell.E2E.Tests/E2E/BehaviorProofComplianceRegistryTests.cs
+?? WIP/Wip.Shell.E2E.Tests/E2E/E2EComplianceSequentialCollection.cs
+?? WIP/Wip.Shell.E2E.Tests/E2E/E2EMatrixComplianceGateTests.cs
+?? WIP/Wip.Shell.E2E.Tests/E2E/WipTestBaselineGateTests.cs
+?? WIP/Wip.Shell.E2E.Tests/xunit.runner.json
+?? WIP/Wip.Shell.E2E/Compliance/BehaviorProofComplianceRegistry.cs
+?? WIP/Wip.Shell.E2E/Compliance/E2EMatrixComplianceRegistry.cs
+?? WIP/Wip.Shell.E2E/Compliance/IntegrityRemediationBehaviorProofVerifier.cs
+?? WIP/Wip.Shell.E2E/Compliance/WipBonesBehaviorProofVerifier.cs
+?? WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj
+?? WIP/Wip.Shell/Interactive/WipShellCommandSemantics.cs
+?? WIP/_layout_probe.csx
+?? WIP/_probe_learning.csx
+?? WIP/_recover_library.csx
+?? WIP/_replay_probe.csx
+?? WIP/requirements/strategy-pool-persistence.md
+?? WIP/requirements/strategy-pool-visualization.md
+?? bones.ps1
+?? docs/WIP-Execution-Prompt.md
+?? docs/WIP-Implementation-Plan.md
+?? docs/WIP-Implementation-Plan.pdf
+?? docs/WIP-Requirements-and-Architecture-Report.md
+?? docs/WIP-Requirements-and-Architecture-Report.pdf
+?? docs/goal-bones-actual-champion/deliverables.md
+?? docs/goal-bones-actual-champion/evidence.md
+?? docs/goal-bones-actual-champion/goal.md
+?? docs/goal-bones-actual-champion/journal.md
+?? docs/goal-bones-actual-champion/state.md
+?? docs/goal-bones-aggression-search/deliverables.md
+?? docs/goal-bones-aggression-search/evidence.md
+?? docs/goal-bones-aggression-search/goal.md
+?? docs/goal-bones-aggression-search/journal.md
+?? docs/goal-bones-aggression-search/state.md
+?? docs/goal-bones-champion-promotion/deliverables.md
+?? docs/goal-bones-champion-promotion/evidence.md
+?? docs/goal-bones-champion-promotion/goal.md
+?? docs/goal-bones-champion-promotion/journal.md
+?? docs/goal-bones-champion-promotion/round-1/observation.md
+?? docs/goal-bones-champion-promotion/round-1/verdicts.md
+?? docs/goal-bones-champion-promotion/round-2/implementation.md
+?? docs/goal-bones-champion-promotion/round-4/orchestrator-verdicts.md
+?? docs/goal-bones-champion-promotion/state.md
+?? docs/goal-bones-fair-block-v2/deliverables.md
+?? docs/goal-bones-fair-block-v2/evidence.md
+?? docs/goal-bones-fair-block-v2/goal.md
+?? docs/goal-bones-fair-block-v2/journal.md
+?? docs/goal-bones-fair-block-v2/state.md
+?? docs/goal-bones-fair-block-v3/deliverables.md
+?? docs/goal-bones-fair-block-v3/evidence.md
+?? docs/goal-bones-fair-block-v3/goal.md
+?? docs/goal-bones-fair-block-v3/journal.md
+?? docs/goal-bones-fair-block-v3/state.md
+?? docs/goal-bones-fair-block/deliverables.md
+?? docs/goal-bones-fair-block/evidence.md
+?? docs/goal-bones-fair-block/goal.md
+?? docs/goal-bones-fair-block/journal.md
+?? docs/goal-bones-fair-block/state.md
+?? docs/goal-bones-v3-learning/deliverables.md
+?? docs/goal-bones-v3-learning/evidence.md
+?? docs/goal-bones-v3-learning/goal.md
+?? docs/goal-bones-v3-learning/journal.md
+?? docs/goal-bones-v3-learning/round-1/falsify-a.md
+?? docs/goal-bones-v3-learning/round-1/falsify-b.md
+?? docs/goal-bones-v3-learning/round-1/verdicts.md
+?? docs/goal-bones-v3-learning/round-2/implementation.md
+?? docs/goal-bones-v3-learning/round-2/verdicts.md
+?? docs/goal-bones-v3-learning/round-3/implementation.md
+?? docs/goal-bones-v3-learning/round-3/verdicts.md
+?? docs/goal-bones-v3-learning/state.md
+?? harness/requirements/Wip.Bones.AggressiveEvaluation.md
+?? harness/requirements/Wip.Bones.AggressiveIteration.md
+?? harness/requirements/Wip.Bones.ChampionPromotion.md
+?? harness/requirements/Wip.Bones.CoLearningRemediation.md
+?? harness/requirements/Wip.Bones.LibraryPersistenceFix.md
+?? harness/requirements/Wip.Bones.StatusApiFixes.md
+?? harness/requirements/Wip.Bones.StrategyPool-Runtime-Loop-Integration-Remediation.md
+?? harness/requirements/Wip.Bones.StrategyPool-Runtime-Loop-Integration.md
+?? harness/requirements/Wip.Bones.StrategyPoolArchitecture.md
+?? harness/requirements/Wip.Integrity-Remediation.md
+?? harness/requirements/Wip.Test-Performance.md
+?? harness/requirements/bones-pool-view.md
+?? harness/rules/audit-host-di-before-adding-services.md
+?? harness/rules/check-json-serialization-options-before-testing.md
+?? harness/rules/di-factory-override.md
+?? harness/rules/isolate-static-state-in-parallel-tests.md
+?? harness/rules/protect-user-workspace-data.md
+?? harness/rules/runtime-verify-cross-boundary.md
+?? harness/rules/static-singleton-di-fallback.md
+?? harness/rules/trace-all-callers-before-mirroring.md
+?? harness/rules/verify-renderer-output-before-dom-tests.md
+?? harness/skills/retrospective-harness-encoding.md
+?? harness/skills/trace-runtime-path.md
+?? host-stderr.txt
+?? host-stdout.txt
+?? test_status_simple.cs
+?? tmp-facing-repro.csx
+?? tools/HarnessSync.Tests/TextFileEncodingValidatorTests.cs
+?? tools/HarnessSync/TextFileEncodingValidator.cs
+?? tools/_write_bones_e2e_files.py
+?? tools/encoding/Repair-TextFileUtf8.ps1
+?? tools/encoding/Test-StagedTextFileEncoding.ps1
+?? tools/encoding/WriteUtf8.ps1

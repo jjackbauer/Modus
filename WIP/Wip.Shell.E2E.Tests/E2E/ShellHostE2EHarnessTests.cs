@@ -15,12 +15,13 @@ using Wip.Modus.Hosting;
 using Wip.Runtime.Runtime;
 using Wip.Shell.Interactive;
 using Wip.Shell.Prompting;
+using Wip.Shell.E2E.Compliance;
 using Wip.ShellHost.Hosting;
 using Xunit;
 
 namespace Wip.Shell.E2E.Tests.E2E;
 
-public sealed class ShellHostE2EHarnessTests
+public sealed partial class ShellHostE2EHarnessTests
 {
     private const string SessionPersistenceChecklistItem = "Complete session persistence and attach/restore behavior under .wip/sessions/{sessionId}/session-state.json with deterministic session event journaling [depends on runtime governance baseline]";
     private const string CommandSetChecklistItem = "Align shell command contract to full MVP global/session command surface, including context-sensitive errors and command guidance when no session is active [depends on shell baseline]";
@@ -48,6 +49,7 @@ public sealed class ShellHostE2EHarnessTests
     private const string ArchivePolicyChecklistItem = "Add worktree archive policy options and runtime proof for both mark-only and cleanup modes while preserving artifact retention and session traceability [depends on GW-009 archive/cleanup policy behavior]";
     private const string ApprovalReviewPrerequisiteChecklistItem = "Enforce approval prerequisite that current review evidence exists for the current diff hash at approval time, with deterministic stale-review rejection guidance [depends on RV-002 and RV-003 absolute review gate]";
     private const string ArtifactListingChecklistItem = "Expand artifact listing guarantees so `artifacts` returns stable descriptor fields (`id`, `type`, `version`, `created`, `producer`, `path`) with deterministic sort order [depends on AS-005 and AS-006 artifact descriptor contract]";
+    private const string StageExecutionArtifactsChecklistItem = "Persist per-stage execution artifacts (capability id, request/result contract names, correlation id, storage path) for every dispatched stage during `run` [depends on stage capability dispatcher]";
     private const string CorrelationContinuityChecklistItem = "Add runtime integration proof for correlation continuity from session/operation context into provider request metadata and back into produced artifacts/log evidence [depends on PlanOnlyAgent provider wiring]";
     private const string NegativePathIsolationChecklistItem = "Add deterministic negative-path isolation tests for missing/invalid credentials, unsupported model selection, and provider endpoint failure contracts without side-effect artifact mutation [depends on DeepSeek implementation and runtime wiring]";
     private const string RuntimePromptContextChecklistItem = "Add a first-class runtime prompt-context contract that models system instructions, environment facts, plugin facts, workflow/policy scope, validator/tool capability catalog, and explicit forbidden ecosystems for provider plan generation [foundation for dynamic system prompt]";
@@ -62,6 +64,8 @@ public sealed class ShellHostE2EHarnessTests
     private const string DotNetPolicyDrivenIsolationChecklistItem = "Strengthen policy-driven isolation so blocked/failed .NET commands cannot mutate session approval or merge state and always emit deterministic rejection payloads [depends on validation integration and policy gate]";
     private const string DotNetE2ETranscriptChecklistItem = "Add executable E2E transcripts proving init -> session start -> plan -> run -> validate -> review -> approve -> merge for C#/.NET tasks across Wip.* [depends on all implementation items]";
     private const string ChecklistItem = "Complete transcript-level E2E parity to the full E2E-001..E2E-035 matrix from the MVP requirements, including typed overload/inference and ambiguous registration failure cases [depends on end-to-end acceptance completeness]";
+    private const string GovernanceRestrictionChecklistItem =
+        "Restrict `RunWorkflowAsync` and shell `run` so they cannot advance session state beyond `Editing` or `Checkpointed` and cannot set `ApprovalStatus`/`ValidationStatus` to approved or passed without corresponding governance operations [depends on command semantics contract] [mandatory - governance truth]";
     private const string RequirementsDocumentPath = ".github/requirements/Wip.Next-Steps.md";
 
     [Fact]
@@ -1003,10 +1007,10 @@ public sealed class ShellHostE2EHarnessTests
         Assert.Contains("Workflow executed: workflow.safe-change", run.StdOut, StringComparison.Ordinal);
         Assert.Contains("- Plan state=Editing transition=applied", run.StdOut, StringComparison.Ordinal);
         Assert.Contains("- Run state=Editing transition=skipped", run.StdOut, StringComparison.Ordinal);
-        Assert.Contains("- Validate state=Validating transition=applied", run.StdOut, StringComparison.Ordinal);
-        Assert.Contains("- Review state=AwaitingApproval transition=applied", run.StdOut, StringComparison.Ordinal);
-        Assert.Contains("- RequireApproval state=Approved transition=applied", run.StdOut, StringComparison.Ordinal);
-        Assert.Contains("- Merge state=Merged transition=applied", run.StdOut, StringComparison.Ordinal);
+        Assert.Contains("- Validate state=Editing transition=skipped", run.StdOut, StringComparison.Ordinal);
+        Assert.Contains("- Review state=Editing transition=skipped", run.StdOut, StringComparison.Ordinal);
+        Assert.Contains("- RequireApproval state=Editing transition=skipped", run.StdOut, StringComparison.Ordinal);
+        Assert.Contains("- Merge state=Editing transition=skipped", run.StdOut, StringComparison.Ordinal);
         Assert.Contains("Workflow artifact:", run.StdOut, StringComparison.Ordinal);
         Assert.Contains("Artifacts for session", run.StdOut, StringComparison.Ordinal);
 
@@ -1083,17 +1087,18 @@ public sealed class ShellHostE2EHarnessTests
         Assert.Equal(0, resolutionRun.ExitCode);
         Assert.Contains("Workflow selected: workflow.safe-change", resolutionRun.StdOut, StringComparison.Ordinal);
         Assert.Contains("Workflow executed: workflow.safe-change", resolutionRun.StdOut, StringComparison.Ordinal);
-        Assert.Contains("- state: Merged", resolutionRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("- state: Editing", resolutionRun.StdOut, StringComparison.Ordinal);
 
         using var finalState = await ReadPersistedSessionStateAsync(fixture.RepositoryPath, sessionId);
         Assert.Equal("workflow.safe-change", finalState.RootElement.GetProperty("WorkflowId").GetString());
-        Assert.Equal("Merged", finalState.RootElement.GetProperty("State").GetString());
+        Assert.Equal("Editing", finalState.RootElement.GetProperty("State").GetString());
     }
 
     [Fact]
     [Trait("ChecklistItem", PlanRunArtifactsChecklistItem)]
+    [Trait("ChecklistItem", StageExecutionArtifactsChecklistItem)]
     [Trait("ChecklistItem", DotNetE2ETranscriptChecklistItem)]
-    public async Task RunArtifacts_GivenPlannedTypedWorkflow_ProducesAgentPlanAndAgentRunResultArtifacts()
+    public async Task RunArtifacts_GivenPlannedTypedWorkflow_ExpectedAgentRunResultReflectsExecutedCapabilitiesNotMetadataOnly()
     {
         await using var fixture = await TempGitRepositoryFixture.CreateAsync();
 
@@ -1121,6 +1126,7 @@ public sealed class ShellHostE2EHarnessTests
 
         AssertArtifactWithPrefixExists(artifactDirectory, "agent-plan-");
         AssertArtifactWithPrefixExists(artifactDirectory, "agent-run-result-");
+        AssertArtifactWithPrefixExists(artifactDirectory, "stage-execution-");
 
         var runArtifactPath = Assert.Single(
             Directory.EnumerateFiles(artifactDirectory, "agent-run-result-*.json", SearchOption.TopDirectoryOnly),
@@ -1134,13 +1140,26 @@ public sealed class ShellHostE2EHarnessTests
             .EnumerateArray()
             .Single(stage => string.Equals(stage.GetProperty("Stage").GetString(), "Run", StringComparison.Ordinal));
 
+        Assert.Equal("tool.shell.workflow.run", runStage.GetProperty("ProducerCapabilityId").GetString());
         Assert.False(string.IsNullOrWhiteSpace(runStage.GetProperty("RequestContractName").GetString()));
         Assert.False(string.IsNullOrWhiteSpace(runStage.GetProperty("ResultContractName").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(runStage.GetProperty("CorrelationId").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(runStage.GetProperty("StoragePath").GetString()));
+
+        var planStage = runArtifact.RootElement
+            .GetProperty("Stages")
+            .EnumerateArray()
+            .Single(stage => string.Equals(stage.GetProperty("Stage").GetString(), "Plan", StringComparison.Ordinal));
+
+        Assert.Equal("agent.shell.plan", planStage.GetProperty("ProducerCapabilityId").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(planStage.GetProperty("CorrelationId").GetString()));
+        Assert.False(string.IsNullOrWhiteSpace(planStage.GetProperty("StoragePath").GetString()));
     }
 
     [Fact]
     [Trait("ChecklistItem", ArtifactListingChecklistItem)]
-    public async Task ArtifactsCommand_GivenSessionArtifacts_ReturnsDeterministicDescriptorFieldsAndStableOrdering()
+    [Trait("ChecklistItem", StageExecutionArtifactsChecklistItem)]
+    public async Task Artifacts_GivenRunWithDispatchedStages_ExpectedListsStageExecutionEntriesWithStableSortOrder()
     {
         await using var fixture = await TempGitRepositoryFixture.CreateAsync();
 
@@ -1198,6 +1217,29 @@ public sealed class ShellHostE2EHarnessTests
             .ToArray();
 
         Assert.Equal(expectedOrder, parsedLines.Select(static line => line.Raw).ToArray());
+
+        var stageExecutionLines = parsedLines
+            .Where(static line => line.Id.StartsWith("stage-execution-", StringComparison.Ordinal))
+            .ToArray();
+        Assert.NotEmpty(stageExecutionLines);
+        Assert.Contains(stageExecutionLines, static line => string.Equals(line.Producer, "agent.shell.plan", StringComparison.Ordinal));
+        Assert.Contains(stageExecutionLines, static line => string.Equals(line.Producer, "tool.shell.workflow.run", StringComparison.Ordinal));
+
+        using var state = await ReadPersistedSessionStateAsync(fixture.RepositoryPath, sessionId);
+        var artifactDirectory = state.RootElement.GetProperty("ArtifactDirectory").GetString()
+            ?? throw new InvalidOperationException("Persisted session state did not contain an artifact directory.");
+
+        foreach (var stageLine in stageExecutionLines)
+        {
+            var relativePath = stageLine.Path.Trim().Replace('/', Path.DirectorySeparatorChar);
+            var artifactPath = Path.GetFullPath(Path.Combine(fixture.RepositoryPath, relativePath));
+            using var stagePayload = JsonDocument.Parse(await File.ReadAllTextAsync(artifactPath, CancellationToken.None));
+            Assert.Equal(stageLine.Producer, stagePayload.RootElement.GetProperty("producerCapabilityId").GetString());
+            Assert.False(string.IsNullOrWhiteSpace(stagePayload.RootElement.GetProperty("requestContractName").GetString()));
+            Assert.False(string.IsNullOrWhiteSpace(stagePayload.RootElement.GetProperty("resultContractName").GetString()));
+            Assert.False(string.IsNullOrWhiteSpace(stagePayload.RootElement.GetProperty("correlationId").GetString()));
+            Assert.Equal(relativePath, stagePayload.RootElement.GetProperty("storagePath").GetString());
+        }
     }
 
     [Fact]
@@ -2877,7 +2919,6 @@ public sealed class ShellHostE2EHarnessTests
             [
                 $"session attach {runSessionId}",
                 "run",
-                "archive",
                 "exit"
             ],
             CancellationToken.None,
@@ -2886,7 +2927,8 @@ public sealed class ShellHostE2EHarnessTests
         Assert.Equal(0, runProof.ExitCode);
         Assert.Contains($"Session attached: {runSessionId}", runProof.StdOut, StringComparison.Ordinal);
         Assert.Contains("Workflow executed: workflow.linear", runProof.StdOut, StringComparison.Ordinal);
-        Assert.Contains($"Session archived from shell: {runSessionId}.", runProof.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Active session state: Editing", runProof.StdOut, StringComparison.Ordinal);
+        Assert.DoesNotContain("Active session state: Merged", runProof.StdOut, StringComparison.Ordinal);
 
         var governanceBootstrapRun = await ShellHostProcessDriver.ExecuteScriptAsync(
             [
@@ -3107,6 +3149,108 @@ public sealed class ShellHostE2EHarnessTests
         Assert.Equal("Validating", finalState.RootElement.GetProperty("State").GetString());
         Assert.DoesNotContain(
             Directory.EnumerateFiles(artifactDirectory, "approval-token-*", SearchOption.AllDirectories),
+            path => !path.EndsWith(".metadata.json", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", GovernanceRestrictionChecklistItem)]
+    public async Task ShellProcess_GivenRunAfterPlan_ExpectedSessionStateAndApprovalStatusRemainPreGovernance()
+    {
+        await using var fixture = await TempGitRepositoryFixture.CreateAsync();
+        var setupRun = await ShellHostProcessDriver.ExecuteScriptAsync(
+            [
+                "init",
+                "use workflow workflow.linear",
+                "session start \"Run after plan governance guard\"",
+                "plan",
+                "run",
+                "exit"
+            ],
+            CancellationToken.None,
+            workingDirectory: fixture.RepositoryPath);
+
+        Assert.Equal(0, setupRun.ExitCode);
+        Assert.Contains("Plan generated: workflow=workflow.linear state=Editing", setupRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Workflow executed: workflow.linear", setupRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Active session state: Editing", setupRun.StdOut, StringComparison.Ordinal);
+        Assert.DoesNotContain("Active session state: Merged", setupRun.StdOut, StringComparison.Ordinal);
+        Assert.DoesNotContain("- Merge state=Merged transition=applied", setupRun.StdOut, StringComparison.Ordinal);
+
+        var sessionId = ExtractSessionId(setupRun.StdOut);
+        using var persistedState = await ReadPersistedSessionStateAsync(fixture.RepositoryPath, sessionId);
+
+        Assert.Equal("Editing", persistedState.RootElement.GetProperty("State").GetString());
+        Assert.Equal("NotRequested", persistedState.RootElement.GetProperty("ApprovalStatus").GetString());
+        Assert.Equal("NotStarted", persistedState.RootElement.GetProperty("ValidationStatus").GetString());
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", GovernanceRestrictionChecklistItem)]
+    public async Task ShellProcess_GivenRunOnly_ExpectedMergeCommandStillRequiresApprovalValidationAndReviewArtifacts()
+    {
+        await using var fixture = await TempGitRepositoryFixture.CreateAsync();
+        var setupRun = await ShellHostProcessDriver.ExecuteScriptAsync(
+            [
+                "init",
+                "use workflow workflow.linear",
+                "session start \"Run only governance guard\"",
+                "run",
+                "exit"
+            ],
+            CancellationToken.None,
+            workingDirectory: fixture.RepositoryPath);
+
+        Assert.Equal(0, setupRun.ExitCode);
+        Assert.Contains("Workflow executed: workflow.linear", setupRun.StdOut, StringComparison.Ordinal);
+        Assert.Contains("Active session state: Editing", setupRun.StdOut, StringComparison.Ordinal);
+
+        var sessionId = ExtractSessionId(setupRun.StdOut);
+        using (var startedState = await ReadPersistedSessionStateAsync(fixture.RepositoryPath, sessionId))
+        {
+            await AppendAndCommitWorktreeChangeAsync(
+                fixture,
+                startedState.RootElement,
+                "README.md",
+                "run-only-merge-guard\n",
+                "run only merge guard");
+        }
+
+        var mergeRun = await ShellHostProcessDriver.ExecuteScriptAsync(
+            [
+                $"session attach {sessionId}",
+                "merge",
+                "exit"
+            ],
+            CancellationToken.None,
+            workingDirectory: fixture.RepositoryPath);
+
+        Assert.Equal(0, mergeRun.ExitCode);
+        Assert.DoesNotContain("Merge completed: session=", mergeRun.StdOut, StringComparison.Ordinal);
+
+        var mergeFailurePayloadText = ExtractLastValueByPrefix(mergeRun.StdOut, "Merge failed: ");
+        Assert.StartsWith("{\"BlockedAction\":", mergeFailurePayloadText, StringComparison.Ordinal);
+
+        using var mergeFailurePayloadDocument = JsonDocument.Parse(mergeFailurePayloadText);
+        var mergeFailurePayload = mergeFailurePayloadDocument.RootElement;
+        Assert.Equal("merge", mergeFailurePayload.GetProperty("BlockedAction").GetString());
+        Assert.Equal("local-safe", mergeFailurePayload.GetProperty("BlockingPolicy").GetString());
+        Assert.Contains("Run 'validate'", mergeFailurePayload.GetProperty("NextStepGuidance").GetString(), StringComparison.Ordinal);
+
+        using var finalState = await ReadPersistedSessionStateAsync(fixture.RepositoryPath, sessionId);
+        var artifactDirectory = finalState.RootElement.GetProperty("ArtifactDirectory").GetString()
+            ?? throw new InvalidOperationException("Persisted session state did not contain an artifact directory.");
+
+        Assert.Equal("Editing", finalState.RootElement.GetProperty("State").GetString());
+        Assert.Equal("NotRequested", finalState.RootElement.GetProperty("ApprovalStatus").GetString());
+        Assert.Equal("NotStarted", finalState.RootElement.GetProperty("ValidationStatus").GetString());
+        Assert.DoesNotContain(
+            Directory.EnumerateFiles(artifactDirectory, "approval-token-*", SearchOption.AllDirectories),
+            path => !path.EndsWith(".metadata.json", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            Directory.EnumerateFiles(artifactDirectory, "validation-report-*", SearchOption.AllDirectories),
+            path => !path.EndsWith(".metadata.json", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(
+            Directory.EnumerateFiles(artifactDirectory, "review-summary-*", SearchOption.AllDirectories),
             path => !path.EndsWith(".metadata.json", StringComparison.OrdinalIgnoreCase));
     }
 
@@ -3538,35 +3682,42 @@ public sealed class ShellHostE2EHarnessTests
         var repositoryRoot = FindRepositoryRoot();
         var requirementsPath = Path.Combine(repositoryRoot, RequirementsDocumentPath.Replace('/', Path.DirectorySeparatorChar));
         var requirements = File.ReadAllText(requirementsPath);
-        var matrixEntries = ParseE2EMatrixEntries(requirements);
+        var matrixEntries = E2EMatrixComplianceRegistry.ParseMatrixEntries(requirements);
 
-        Assert.Equal(35, matrixEntries.Count);
+        Assert.Equal(E2EMatrixComplianceRegistry.ExpectedRowCount, matrixEntries.Count);
 
-        var expectedIds = Enumerable.Range(1, 35)
+        var expectedIds = Enumerable.Range(1, E2EMatrixComplianceRegistry.ExpectedRowCount)
             .Select(static index => $"E2E-{index:000}")
             .ToArray();
         var actualIds = matrixEntries
-            .Select(static entry => entry.Id)
+            .Select(static entry => entry.ScenarioId)
             .ToArray();
 
         Assert.Equal(expectedIds, actualIds);
 
         var duplicateIds = matrixEntries
-            .GroupBy(static entry => entry.Id, StringComparer.Ordinal)
+            .GroupBy(static entry => entry.ScenarioId, StringComparer.Ordinal)
             .Where(static group => group.Count() > 1)
             .Select(static group => group.Key)
             .ToArray();
         Assert.Empty(duplicateIds);
 
-        var executableTests = DiscoverExecutableTestNames(repositoryRoot);
+        var mappings = E2EMatrixComplianceRegistry.DiscoverTestProjectMappings(repositoryRoot);
+        var mappedTestNames = mappings
+            .Select(static mapping => mapping.TestName)
+            .ToHashSet(StringComparer.Ordinal);
         var missingMappings = matrixEntries
-            .Where(entry => !executableTests.Contains(entry.TestName, StringComparer.Ordinal))
-            .Select(static entry => $"{entry.Id} => {entry.TestName}")
+            .Where(entry => !mappedTestNames.Contains(entry.TestName))
+            .Select(static entry => $"{entry.ScenarioId} => {entry.TestName}")
             .ToArray();
 
         Assert.True(
             missingMappings.Length == 0,
             $"Every E2E matrix entry must map to an executable xUnit test method. Missing: {string.Join(", ", missingMappings)}");
+
+        Assert.Equal(
+            E2EMatrixComplianceRegistry.NextStepsDocument.RelativePath.Replace('/', Path.DirectorySeparatorChar),
+            RequirementsDocumentPath.Replace('/', Path.DirectorySeparatorChar));
     }
 
     [Fact]
@@ -3665,75 +3816,6 @@ public sealed class ShellHostE2EHarnessTests
         throw new InvalidOperationException("Could not locate repository root from current test base directory.");
     }
 
-    private static IReadOnlyList<E2EMatrixEntry> ParseE2EMatrixEntries(string requirements)
-    {
-        const string heading = "### E2E-001..E2E-035 Executable Transcript Matrix";
-        var headingIndex = requirements.IndexOf(heading, StringComparison.Ordinal);
-        if (headingIndex < 0)
-            throw new InvalidOperationException($"Missing heading '{heading}' in requirements document.");
-
-        var lines = requirements[headingIndex..]
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-            .ToArray();
-
-        var entries = new List<E2EMatrixEntry>();
-        foreach (var line in lines)
-        {
-            if (!line.StartsWith("| E2E-", StringComparison.Ordinal))
-                continue;
-
-            var columns = line.Split('|', StringSplitOptions.TrimEntries);
-            if (columns.Length < 4)
-                continue;
-
-            var id = columns[1];
-            var scenario = columns[2];
-            var testName = columns[3].Trim('`');
-            entries.Add(new E2EMatrixEntry(id, scenario, testName));
-        }
-
-        return entries;
-    }
-
-    private static IReadOnlyCollection<string> DiscoverExecutableTestNames(string repositoryRoot)
-    {
-        var testFolders = new[]
-        {
-            Path.Combine(repositoryRoot, "wip", "Wip.Shell.E2E.Tests"),
-            Path.Combine(repositoryRoot, "wip", "Wip.Builder.Tests"),
-            Path.Combine(repositoryRoot, "tests", "Wip.Shell.E2E.Tests"),
-            Path.Combine(repositoryRoot, "tests", "Wip.Builder.Tests")
-        };
-
-        const string methodPattern = "public\\s+(?:async\\s+)?(?:Task(?:<[^>]+>)?|void)\\s+(?<name>[A-Za-z0-9_]+)\\s*\\(";
-        var discovered = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (var folder in testFolders.Where(Directory.Exists))
-        {
-            foreach (var filePath in Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories)
-                         .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
-                             && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)))
-            {
-                var contents = File.ReadAllText(filePath);
-                var matches = Regex.Matches(contents, methodPattern, RegexOptions.Multiline);
-                foreach (Match match in matches)
-                {
-                    var searchStart = Math.Max(0, match.Index - 600);
-                    var prefix = contents[searchStart..match.Index];
-                    if (!prefix.Contains("[Fact", StringComparison.Ordinal)
-                        && !prefix.Contains("[Theory", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    discovered.Add(match.Groups["name"].Value);
-                }
-            }
-        }
-
-        return discovered;
-    }
-
     private static string ResolveProjectPath(string repositoryRoot, params string[] relativeCandidates)
     {
         foreach (var relativeCandidate in relativeCandidates)
@@ -3822,7 +3904,6 @@ public sealed class ShellHostE2EHarnessTests
         return new ProcessResult(process.ExitCode, output);
     }
 
-    private sealed record E2EMatrixEntry(string Id, string Scenario, string TestName);
     private sealed record ProcessResult(int ExitCode, string Output);
 
     private static WipBuilder CreateBuilderWithCorrelationProofProvider()

@@ -98,6 +98,8 @@ public sealed class BonesCoLearningLibraryViabilityTests
 
         // The co-learning ponder agent loops seats 1-4 calling the single-seat agent.
         // The single-seat agent records each processed seat via the model provider stub.
+        // When all seats fail compilation, the agent returns a placeholder result
+        // without throwing; seat processing is still recorded via the model provider.
         await fixture.CoLearningAgent.ExecuteAsync(request, context, CancellationToken.None);
 
         return fixture.TrackingModelProvider.ProcessedSeats;

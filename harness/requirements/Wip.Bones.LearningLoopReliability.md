@@ -117,7 +117,7 @@ classDiagram
 - [x] Add `BonesPonderAgent` compile-error retry: on first `TryCompile` failure, re-invoke model provider with user message containing `BonesStrategyScriptCompileResult.FailureReason` and API contract excerpt; cap at `MaxCompileRetries` (default `2`); persist script only after successful compile; emit ponder execution artifact recording attempt count and final outcome [foundation for ponder reliability] [mandatory - compile retry]
 - [x] Add `BonesPonderCompileRetryOptions` with `MaxCompileRetries` bound from `BonesHost:Ponder:MaxCompileRetries` / env override; register in host DI [depends on compile retry] [mandatory - configurable retry budget]
 - [x] Extend `bones-ponder-execution` artifact JSON with `CompileAttempts`, `FinalCompileSucceeded`, and optional `LastCompileFailureReason` for operator forensics [depends on compile retry]
-- [x] Wire `BonesLearningWorkflowMapRuntime` enhance map to pass `parameters.TargetScore` as `BonesEnhanceStrategyRequest.EvaluationTargetScore` (remove silent fallback to `DefaultEvaluationTargetScore = 8` when session specifies `10`) [depends on workflow parameters] [mandatory - target score parity]
+- [x] Wire `BonesLearningWorkflowMapRuntime` enhance map to pass `parameters.EvaluationTargetScore` as `BonesEnhanceStrategyRequest.EvaluationTargetScore` instead of reusing the learning `TargetScore`, so promotion evaluation matches use a short, separately configurable target [depends on workflow parameters] [mandatory - bounded evaluation targets]
 - [x] Extract shared `BonesStrategyPlayerSlotFactory` (or equivalent) used by both `BonesPlayMatchTool` and `BonesStrategyPromotionEvaluator.CreatePlayerSlot` so markdown opponents dispatch through the same path in play and promotion evaluation [depends on play match tool] [mandatory - promotion opponent parity]
 - [x] Add `BonesStrategyPromotionEvaluator` unit tests proving candidate evaluated against markdown opponents using the same slot factory as play -- not `BonesFirstLegalMovePlayerSlot` when play would call the LLM path [depends on shared factory]
 - [x] Persist `bones-strategy-promotion` artifact on every enhance invocation (including `Rejected`) with full `BonesPromotionEvaluationMetrics` snapshot [depends on promotion evaluator]
@@ -173,34 +173,27 @@ Zero Falsified rows.
 ### `BonesPonderAgent` compile retry
 
 1. `BonesPonderAgent_GivenFirstResponseFailsCompileSecondSucceeds_ExpectedPersistsScriptArtifact`
-   *Assumption*: Mock provider returns invalid C# on first call and valid `IBonesPlayerSlot` on second; agent retries and saves `Kind=Script`.
+   *Assumption*: Mock provider returns invalid C# on first call and valid `IBonesPlayerSlot` on second; agent retries and saves `Kind=Script`. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 2. `BonesPonderAgent_GivenAllCompileAttemptsFail_ExpectedThrowsInvalidOperationException`
    *Assumption*: After `MaxCompileRetries` exhausted, no strategy artifact is written and exception propagates.
-3. `BonesPonderAgent_GivenCompileRetry_ExpectedExecutionArtifactRecordsAttemptCount`
-   *Assumption*: `bones-ponder-execution` JSON includes `CompileAttempts` matching model invocations.
-
 ### `BonesLearningWorkflowMapRuntime` enhance map
 
-4. `BonesLearningWorkflowMapRuntime_GivenSessionTargetScoreTen_ExpectedEnhanceRequestEvaluationTargetScoreTen`
-   *Assumption*: Map binding reads `BonesLearningWorkflowParameters.TargetScore` from session task description.
-5. `BonesLearningWorkflowMapRuntime_GivenMissingTargetScore_ExpectedEnhanceRequestUsesPromotionDefault`
-   *Assumption*: When parameters omit target score, enhance request leaves `EvaluationTargetScore` null for agent default.
+4. `BonesLearningWorkflowMapRuntime_GivenExplicitEvaluationTargetScore_ExpectedEnhanceRequestUsesIt`
+   *Assumption*: Map binding reads `BonesLearningWorkflowParameters.EvaluationTargetScore` from session task description and does not substitute the learning target score.
+5. `BonesLearningWorkflowMapRuntime_GivenMissingEvaluationTargetScore_ExpectedEnhanceRequestUsesNullForAgentDefault`
+   *Assumption*: Runtime mapping output leaves `EvaluationTargetScore` null when parameters omit it, so the agent default applies. [runtime test evidence]
 
 ### `BonesStrategyPlayerSlotFactory` opponent parity
 
 6. `BonesStrategyPlayerSlotFactory_GivenMarkdownOpponent_ExpectedSameSlotTypeAsPlayToolResolver`
    *Assumption*: Factory returns markdown dispatch type identical to play tool resolver for the same artifact.
-7. `BonesStrategyPromotionEvaluator_GivenMarkdownOpponents_ExpectedDoesNotUseFirstLegalMoveStubWhenPlayWouldNot`
-   *Assumption*: Evaluator no longer hardcodes `BonesFirstLegalMovePlayerSlot` for markdown when play uses LLM path.
-8. `BonesStrategyPromotionEvaluator_GivenAlignedOpponentsAndSuperiorCandidate_ExpectedPromoted`
-   *Assumption*: With parity fixes and seeded superior candidate, promotion thresholds pass.
 
 ### `BonesEnhanceStrategyAgent` promotion artifacts
 
-9. `BonesEnhanceStrategyAgent_GivenRejectedPromotion_ExpectedWritesPromotionDecisionArtifact`
+9. `BonesEnhanceStrategyAgent_GivenPromotionDecision_ExpectedPersistsPromotionArtifactWithMetrics`
    *Assumption*: `bones-strategy-promotion` artifact exists with `Outcome=Rejected` and metric fields populated.
-10. `BonesEnhanceStrategyAgent_GivenRejectedPromotion_ExpectedActivePointerUnchanged`
-    *Assumption*: `LoadActiveStrategy` returns incumbent id after enhance completes.
+10. `BonesEnhanceStrategyAgent_GivenRejectedEvaluation_ExpectedReturnsIncumbentActiveIdUnchanged`
+    *Assumption*: `LoadActiveStrategy` returns incumbent id after enhance completes. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### `BonesLearningLoopHost` failure resilience and stages
 
@@ -216,14 +209,14 @@ Zero Falsified rows.
 14. `BonesStatusApi_GivenPonderInProgressNoActivePointer_ExpectedReturns200WithNullLearningPlayer`
     *Assumption*: Session started, ponder not finished; status does not call throwing load path.
 15. `BonesStatusApi_GivenCorruptActivePointer_ExpectedReturns200WithLearningPlayerError`
-    *Assumption*: Invalid pointer JSON does not produce HTTP 500; diagnostic field explains corruption.
+    *Assumption*: Invalid pointer JSON does not produce HTTP 500; diagnostic field explains corruption. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 16. `BonesStatusApi_GivenLastEnhanceRejected_ExpectedReportsLastPromotionOutcome`
     *Assumption*: Status includes `lastPromotionOutcome=Rejected` from enhance execution artifact.
 
 ### `DeepSeekBonesStrategyAuthoringProvider` prompt contract
 
-17. `DeepSeekBonesStrategyAuthoringProvider_GivenAuthoringRequest_ExpectedOutboundIncludesForbiddenApiMembers`
-    *Assumption*: Mock HTTP captured messages contain forbidden list from API reference.
+17. `DeepSeekBonesStrategyAuthoringProvider_GivenScriptAuthoringRequest_ExpectedHttpPayloadContainsIbonesPlayerSlotRequirement`
+    *Assumption*: Mock HTTP captured messages contain forbidden list from API reference. This is verified by an executable behavior-proof test that asserts runtime state, artifact output, and deterministic results.
 
 ### Host integration: end-to-end learning iteration reliability
 
@@ -240,3 +233,72 @@ Zero Falsified rows.
 ---
 
 *All assumptions verified by Falsify Claims. Zero Falsified rows.*
+
+---
+
+## v3 Addendum — Measurement, Determinism, and the Promotion Gate (2026-10-31)
+
+This addendum records the v3 evidence and the open reliability work. It does not change the
+existing checklist bindings.
+
+### What is now implemented
+
+- **Deterministic seeds.** All Bones seed sites use `BonesSeedDerivation` (FNV-1a + SplitMix64)
+  instead of process-randomized `HashCode`/string hashes. Two repeated 2,000-game benchmark
+  runs match exactly, and the same match seed produces an identical transcript hash across
+  processes.
+- **Paired evaluation + composite confidence gate.** `BonesStrategyPromotionOptions` now has
+  `GateMode` (`LegacyOr` or `ConfidenceComposite`), `UsePairedEvaluationSeeds`,
+  `ConfidenceZThreshold`, and explicit hard floors. Candidate and incumbent play the same deal
+  seed; two byte-identical scripts produce exactly zero measured differential.
+- **Bounded checked-in defaults and startup plan.** `MaxGamesPerRun=200`,
+  `ParallelSessionCount=1`, `GameCount=1`, 8 evaluation matches/seat, cross-seat 1.
+  `BonesStartupPlanner` prints the worst-case games/iteration and a model-call floor before the
+  first paid call.
+- **One pool, honest stages, artifact race fix.** A second service provider reuses the existing
+  `StrategyPool`; status and the co-learning agent now mutate/report the same pool. The stage
+  monitor exposes `Evaluate` and `Promote`. Artifact replacements retry on
+  `UnauthorizedAccessException`, and promotion readers open with `FileShare.ReadWrite|Delete`.
+- **Held-out benchmark.** `WIP/Wip.Bones.Benchmark` scans real session artifacts, keys
+  strategies by content hash, runs a fixed-seed arena with seat rotation and deterministic
+  opponents, and runs the promotion-gate A/B. The gate command accepts `--opponents-arena` so
+  opponents can come from the dev split while truth comes from held-out.
+- **Direct-execution deadline.** With `ScriptHost:EnableDirectExecutionTimeout=true`, a
+  non-returning model-authored `ChooseMove` runs on a bounded background thread and throws
+  `BonesStrategyScriptExecutionTimeoutException` instead of blocking the match worker. The
+  disabled path remains inline. The timed-out thread is abandoned in-process; process isolation
+  remains open.
+
+### Evidence summary
+
+- 7,011 historical promotion decisions resolved to 6,106 distinct content pairs.
+- 733 decisions (10.5%) compared byte-identical sources; 333 (45.4%) were still promoted.
+- 27 of 31 historical strategy IDs have more than one distinct source across sessions, so the
+  old lineage is not content-addressable.
+- 48 exact-content pairs: 18 candidates better (37.5%); mean candidate − incumbent
+  −0.245 (dev) / −0.313 (held-out); oracle selection gain over never-promote +0.134 / +0.116.
+- Held-out gate A/B (2,000 games/strategy, 200 replications): paired confidence at 8 matches
+  improves selected held-out score differential by +0.042 (95% CI +0.031 to +0.053) over the
+  previous independent OR gate; at 32 matches +0.081. Every gate remains below never-promote
+  on this candidate distribution.
+
+The full protocol, tables, and limitations are in
+[Bones Learning Loop — v3 Learning Improvement Plan](../../WIP/Bones%20Learning%20Loop%20%E2%80%94%20v3%20Learning%20Improvement%20Plan.md).
+
+### Open reliability work (unchecked)
+
+- [ ] Process-isolate model-authored scripts in a killable worker with CPU, memory, and wall-clock limits; the per-move deadline now bounds the caller, but the abandoned thread is not reclaimed. Track timeout counts and stop the run after a small threshold.
+- [ ] Persist raw model response, finish reason, token usage, and compiler diagnostics on every parse/compile failure; expose them in the failure artifact.
+- [ ] Record real throughput metrics (games/hour, average game duration, concurrent utilization) and token/cost per stage, seat, and iteration.
+- [ ] Add artifact and session retention/compaction so a long run stays within a configured storage budget.
+- [ ] Content-address strategy identity and persist source hashes on promotion artifacts; label pre-v3 artifacts as non-reproducible.
+- [ ] Run the lineage/rejection-memory live A/B on a frozen held-out arena and report the result as positive or negative.
+
+### Acceptance criteria for closing this addendum
+
+- No production Bones seed path calls `HashCode.Combine` or a randomized string hash.
+- Two identical benchmark runs produce identical metric snapshots; a repeated match seed produces the same transcript hash.
+- The checked-in configuration plans fewer games than `MaxGamesPerRun`; startup prints the plan.
+- `GET /api/bones/status` reports the same pool the co-learning agent mutates and exposes `Evaluate`/`Promote`.
+- A promotion decision on 8 paired matches is reproducible for the same seed and inputs.
+

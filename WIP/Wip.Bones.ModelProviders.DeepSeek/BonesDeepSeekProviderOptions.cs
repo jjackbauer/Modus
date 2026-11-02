@@ -1,4 +1,6 @@
-﻿namespace Wip.Bones.ModelProviders.DeepSeek;
+using Wip.Runtime.Runtime;
+
+namespace Wip.Bones.ModelProviders.DeepSeek;
 
 public enum BonesDeepSeekApiKeySourceKind
 {
@@ -7,11 +9,28 @@ public enum BonesDeepSeekApiKeySourceKind
 
 public readonly record struct BonesDeepSeekModelIdentifier
 {
-    private static readonly HashSet<string> SupportedValues = new(StringComparer.Ordinal)
-    {
-        "deepseek-chat",
-        "deepseek-reasoner",
-    };
+    public const string Flash = "deepseek-flash";
+
+    public const string V4Pro = "deepseek-v4-pro";
+
+    public const string V4FlashLegacy = "deepseek-v4-flash";
+
+    public const string V4FlashVisionExpLegacy = "deepseek-v4-flash-vision-exp";
+
+    private static readonly string[] SupportedModelValues =
+    [
+        Flash,
+        V4Pro,
+        V4FlashLegacy,
+        V4FlashVisionExpLegacy,
+    ];
+
+    private static readonly HashSet<string> SupportedValues = new(SupportedModelValues, StringComparer.Ordinal);
+
+    public static IReadOnlyList<string> SupportedModels => SupportedModelValues;
+
+    public static bool IsSupported(string? value)
+        => !string.IsNullOrWhiteSpace(value) && SupportedValues.Contains(value.Trim());
 
     public string Value { get; }
 
@@ -23,7 +42,7 @@ public readonly record struct BonesDeepSeekModelIdentifier
         if (!SupportedValues.Contains(normalized))
         {
             throw new InvalidOperationException(
-                $"DeepSeek provider configuration is invalid: Model '{normalized}' is not supported. Supported models: deepseek-chat, deepseek-reasoner.");
+                $"DeepSeek provider configuration is invalid: Model '{normalized}' is not supported. Supported models: {string.Join(", ", SupportedModelValues)}.");
         }
 
         Value = normalized;
@@ -39,7 +58,9 @@ public sealed record BonesDeepSeekProviderOptions
         BonesDeepSeekModelIdentifier model,
         TimeSpan timeout,
         BonesDeepSeekApiKeySourceKind apiKeySourceKind,
-        string apiKeySourceReference)
+        string apiKeySourceReference,
+        double? temperature = null,
+        DeepSeekThinkingMode thinking = DeepSeekThinkingMode.Disabled)
     {
         ArgumentNullException.ThrowIfNull(baseUrl);
 
@@ -61,6 +82,12 @@ public sealed record BonesDeepSeekProviderOptions
                 "DeepSeek provider configuration is invalid: Timeout must be greater than zero.");
         }
 
+        if (temperature.HasValue && (temperature.Value < 0.0 || temperature.Value > 2.0))
+        {
+            throw new InvalidOperationException(
+                $"DeepSeek provider configuration is invalid: Temperature '{temperature.Value}' must be between 0 and 2.");
+        }
+
         ArgumentException.ThrowIfNullOrWhiteSpace(apiKeySourceReference);
 
         BaseUrl = baseUrl;
@@ -68,6 +95,8 @@ public sealed record BonesDeepSeekProviderOptions
         Timeout = timeout;
         ApiKeySourceKind = apiKeySourceKind;
         ApiKeySourceReference = apiKeySourceReference.Trim();
+        Temperature = temperature;
+        Thinking = thinking;
     }
 
     public Uri BaseUrl { get; }
@@ -82,11 +111,17 @@ public sealed record BonesDeepSeekProviderOptions
 
     public string ApiKeySource => $"env:{ApiKeySourceReference}";
 
+    public double? Temperature { get; }
+
+    public DeepSeekThinkingMode Thinking { get; }
+
     public static BonesDeepSeekProviderOptions Create(
         string baseUrl,
         string model,
         TimeSpan timeout,
-        string apiKeySource)
+        string apiKeySource,
+        double? temperature = null,
+        DeepSeekThinkingMode thinking = DeepSeekThinkingMode.Disabled)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(baseUrl);
 
@@ -110,7 +145,9 @@ public sealed record BonesDeepSeekProviderOptions
             model: modelIdentifier,
             timeout: timeout,
             apiKeySourceKind: BonesDeepSeekApiKeySourceKind.EnvironmentVariable,
-            apiKeySourceReference: keyVariableName);
+            apiKeySourceReference: keyVariableName,
+            temperature: temperature,
+            thinking: thinking);
     }
 
     private static bool TryParseEnvironmentKeySource(string value, out string variableName)

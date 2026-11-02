@@ -128,7 +128,7 @@ public sealed class BonesMatchSimulator
     }
 
     private static int DeriveRoundSeed(int matchSeed, int roundNumber) =>
-        HashCode.Combine(matchSeed, roundNumber);
+        BonesSeedDerivation.Derive(matchSeed, roundNumber);
 
     private static void AppendRoundToTranscript(List<BonesEvent> transcript, IReadOnlyList<BonesEvent> roundEvents)
     {
