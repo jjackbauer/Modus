@@ -8,7 +8,7 @@
   "work_package": "WP-0.6",
   "status": "done",
   "gate": "G0",
-  "gate_status": "g0_adrs_accepted_ci_push_pending",
+  "gate_status": "g0_ci_runs_pending",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
@@ -17,8 +17,8 @@
     "WP-0.5": 1,
     "WP-0.6": 1
   },
-  "last_verified_at": "2026-11-02T12:51:53-03:00",
-  "next_action": "Push WIP to origin, monitor the Tests CI run, fix any unwaived failure, then close WP-0.4 and pass G0. Do not start Phase 1 before G0.",
+  "last_verified_at": "2026-11-02T13:21:12-03:00",
+  "next_action": "Monitor WIP run 41480351635 (post-split); close WP-0.4 and pass G0 only when the offline gate is green and the run evidence is attached. Do not start Phase 1 before G0.",
   "open_blockers": ["BLK-CI-REMOTE"],
   "deviations": ["DEV-001", "DEV-002"],
   "dirty_tree": {
@@ -62,7 +62,7 @@
     "offline_projects": 15,
     "waived_failures": 21,
     "known_aborts": 2,
-    "remote_ci": "pending_authorized_push",
+    "remote_ci": "run_41480351635_pending",
     "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]
   },
   "work_packages": {

@@ -118,3 +118,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Record:** `docs/execution/evidence/G0/decision-2026-11-02-g0-adrs.md`.
 - **WP-0.6:** done. G0 remains **NOT READY** until the pushed CI run passes the waiver/zero-test gate.
 - **Next:** commit, push `WIP`, monitor `Tests CI`, fix unwaived failures, close WP-0.4 and pass G0.
+
+## 2026-11-02T13:21:12-03:00 - G0 CI (root cause fixed; run pending)
+
+- **Root cause of the Ubuntu restore failure:** the tracked solution file was `WIP.slnx` (uppercase P) while every workflow/script/test used `Wip.slnx`. Windows is case-insensitive; Ubuntu failed with MSB1009. Renamed to `Wip.slnx` (`6a06e4c`).
+- **First pushed run (41475818406):** Ubuntu build/architecture failed at restore; Windows build succeeded; legacy `tests` job failed at the migration regression. After the rename, run 41477649857 shows Ubuntu build **success**, architecture **success**, Windows build **success**; offline tests were still running when the next push superseded it.
+- **CI split (`269c614`):** `Tests CI` now contains only WIP jobs; the legacy Modus `tests` job moved to `Modus CI` (`modus-ci.yml`). The Modus migration regression is outside the WIP gate. Offline suites now use a 15-minute blame-hang timeout.
+- **Pending:** WIP run 41480351635 (post-split). WP-0.4 remains **blocked** until its offline waiver gate is green; G0 not passed. ADRs accepted and push authorized by the product owner.
