@@ -34,3 +34,50 @@ Do not push to nuget.org from this session. Prepare local packages and a validat
 - **Still missing:** API key, version decision, green test evidence, and a release-gate exception/approval.
 - **Not packaged:** `Wip.Bones.Host` and `Wip.Bones.Web` (Web SDK, not packable by default); they are applications.
 - **Published check:** `Modus.Core`/`Modus.Host` = 0.0.1; `Wip.*` sample IDs = unpublished. This confirms the Modus update is real, not just suspected.
+
+## How to supply the API key without exposing it in chat
+
+### A. Encrypted key file outside the repo (recommended if the agent should publish)
+
+Create a DPAPI-encrypted key file outside the repository. The agent runs as the same Windows user and can decrypt it; the value is never printed.
+
+```powershell
+$secure = Read-Host -AsSecureString "NuGet API key"
+$dir = Join-Path $env:USERPROFILE ".secrets"
+New-Item -ItemType Directory -Force $dir | Out-Null
+ConvertFrom-SecureString $secure | Set-Content -Path (Join-Path $dir "nuget.key") -Encoding ascii
+```
+
+Then tell the agent the path (default `$env:USERPROFILE\.secrets\nuget.key`), the approved version, and whether tests are waived. The agent reads/decrypts it in one command, passes it to `dotnet nuget push` without printing it, and deletes the file afterwards. Residual risk: the key is briefly present in the child `dotnet` process command line.
+
+### B. Restart the DSH server with the environment variable
+
+A key set in another terminal does **not** reach the running DSH process (pid 28924, `node ... web`). Restart DSH from a shell that has the variable:
+
+```powershell
+# Stop the existing "dsh web" process first (Ctrl+C in its terminal).
+cd C:\Users\ricar\deepseek-harness
+$env:NUGET_API_KEY = Read-Host "NuGet API key"   # input is not stored in PSReadLine history
+pnpm dsh web
+```
+
+Reopen http://127.0.0.1:3080 and tell the agent the key is set. The conversation may restart; execution state is committed and the working tree is clean. Remove the variable and restart DSH again after publishing.
+
+### C. Publish yourself (no key shared with the agent)
+
+Ask the agent to pack at the approved version (for example `0.0.2`), then run in your own terminal:
+
+```powershell
+$env:NUGET_API_KEY = Read-Host "NuGet API key"
+dotnet nuget push "artifacts/nuget-0.0.2/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $env:NUGET_API_KEY --skip-duplicate
+dotnet nuget push "artifacts/nuget-0.0.2/*.snupkg" --source https://api.nuget.org/v3/index.json --api-key $env:NUGET_API_KEY --skip-duplicate
+```
+
+This is the safest option: the key never enters the agent process or this transcript.
+
+## Security rules
+
+- Do not paste the key into chat, a repository file, a commit, or an evidence file.
+- Scope the key to push-only for `Modus.*` and `Wip.*` with a short expiry; revoke it after publishing (https://www.nuget.org/account/apikeys).
+- Delete the encrypted file after use and clear the environment variable.
+- If the key is exposed, revoke it immediately.
