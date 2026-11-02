@@ -147,3 +147,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Fixes (`3f0a4da`):** offline job installs Chromium via `playwright.ps1`; README trace paths are code-spanned and the artifact path is `bin/Release`.
 - **Evidence:** `docs/execution/evidence/G0/ci-gate-errors-41483737752.md`.
 - **Rerun:** WIP run **41486872592** in progress. No waivers added for the 11.
+
+## 2026-11-02T14:02:38-03:00 - Run 41486872592 after Chromium/README fixes
+
+- `wip-build (ubuntu)`, `wip-build (windows)`, and `wip-architecture` **success**.
+- `Install Playwright Chromium` **success** (15s); offline suites started at 17:02:18Z.
+- Gate step still pending. WP-0.4 blocked; G0 not passed.
