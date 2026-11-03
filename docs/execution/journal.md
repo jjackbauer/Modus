@@ -347,3 +347,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Run 41655112634: installer/helper step success, Windows and Ubuntu security jobs success, builds/architecture success.
 - Client verifies TokenIsAppContainer before accepting the worker; helper is a SYSTEM task with token/path validation.
 - C1 is implemented on both platforms for the tested paths; P/Invoke/kernel residuals remain. Full G2 still needs independent re-review; no release.
+
+## 2026-11-03T11:39:54-03:00 - G2 re-review packet prepared
+
+- C1 implemented/verified on Windows (AppContainer helper + token check) and Linux (unshare+chroot); security CI run 41655112634 green.
+- G2 packet requests full approval with residual P/Invoke/kernel risk; no self-approval. WP-1.3/release wait for the human gate.
