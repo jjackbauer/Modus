@@ -389,3 +389,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Extended BonesWorkerState with event log, outcome, and winner; host/worker mapping and worker route test pass.
 - Still one worker-routed test; WP-1.3 remains in progress. No release.
+
+## 2026-11-03T12:59:48-03:00 - Event/outcome worker coverage; Bones 387
+
+- Added an event/outcome-aware worker strategy test; event log, outcome, and winner map correctly.
+- Full Bones suite 387 total (385 passed, 2 waived); waiver updated; 16-project gate green.
+- WP-1.3 still in progress for broader routing; no release.
