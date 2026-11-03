@@ -14,10 +14,16 @@ const int MaxCachedStrategies = 64;
 
 var strategies = new Dictionary<string, CompiledStrategy>(StringComparer.Ordinal);
 var handshakeCompleted = false;
-var stdin = Console.In;
+using var stdin = Console.OpenStandardInput();
 string? line;
-while ((line = stdin.ReadLine()) is not null)
+while ((line = ReadBoundedLine(stdin, SandboxProtocol.MaxFrameBytes, out var tooLong)) is not null)
 {
+    if (tooLong)
+    {
+        SendError(string.Empty, SandboxErrorCodes.LimitExceeded, "Frame exceeds the protocol limit.");
+        continue;
+    }
+
     if (!string.IsNullOrEmpty(line) && line[0] == '\uFEFF')
     {
         line = line[1..];
@@ -30,12 +36,6 @@ while ((line = stdin.ReadLine()) is not null)
 
     if (string.IsNullOrWhiteSpace(line))
     {
-        continue;
-    }
-
-    if (line.Length > SandboxProtocol.MaxFrameBytes || Encoding.UTF8.GetByteCount(line) > SandboxProtocol.MaxFrameBytes)
-    {
-        SendError(string.Empty, SandboxErrorCodes.LimitExceeded, "Frame exceeds the protocol limit.");
         continue;
     }
 
@@ -231,14 +231,33 @@ void HandleChooseMove(JsonElement root, string id)
 
 CompilationResult Compile(string source)
 {
+    string[] forbiddenFragments =
+    [
+        "DllImport", "LibraryImport", "extern ", "unsafe", "System.IO", "System.Net",
+        "System.Diagnostics", "System.Reflection", "System.Runtime.Loader", "System.Environment",
+        "AppDomain", "Process"
+    ];
+    if (forbiddenFragments.Any(fragment => source.Contains(fragment, StringComparison.Ordinal)))
+    {
+        return new CompilationResult(false, null, string.Empty, ["Source uses a forbidden API surface."], null);
+    }
+
     var syntaxTree = CSharpSyntaxTree.ParseText(source);
     var references = new List<MetadataReference>();
+    var allowedReferences = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "System.Runtime.dll",
+        "System.Console.dll",
+        "System.Collections.dll",
+        "System.Linq.dll",
+        "System.Private.CoreLib.dll"
+    };
     var trusted = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
     if (!string.IsNullOrWhiteSpace(trusted))
     {
         foreach (var path in trusted.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
         {
-            if (File.Exists(path))
+            if (File.Exists(path) && allowedReferences.Contains(Path.GetFileName(path)))
             {
                 references.Add(MetadataReference.CreateFromFile(path));
             }
@@ -284,6 +303,41 @@ CompilationResult Compile(string source)
         context.Unload();
         return new CompilationResult(false, null, string.Empty, ["Strategy assembly could not be loaded."], null);
     }
+}
+
+static string? ReadBoundedLine(Stream stream, int maxBytes, out bool tooLong)
+{
+    tooLong = false;
+    var buffer = new List<byte>(Math.Min(maxBytes, 4096));
+    int value;
+    while ((value = stream.ReadByte()) >= 0)
+    {
+        if (value == '\n')
+        {
+            break;
+        }
+
+        if (value == '\r')
+        {
+            continue;
+        }
+
+        if (buffer.Count < maxBytes)
+        {
+            buffer.Add((byte)value);
+        }
+        else
+        {
+            tooLong = true;
+        }
+    }
+
+    if (value < 0 && buffer.Count == 0)
+    {
+        return null;
+    }
+
+    return Encoding.UTF8.GetString(buffer.ToArray());
 }
 
 static string? GetString(JsonElement element, string name) =>

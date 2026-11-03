@@ -135,6 +135,40 @@ public sealed class WorkerProtocolTests
         Assert.True(handshake.GetProperty("ok").GetBoolean());
     }
 
+    [Fact]
+    public async Task Worker_GivenDllImport_ExpectedCompileError()
+    {
+        const string source = "using System.Runtime.InteropServices; public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { [DllImport(\"kernel32.dll\")] private static extern int GetCurrentProcessId(); public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState state) => GetCurrentProcessId(); }";
+        var compile = JsonSerializer.Serialize(new
+        {
+            type = "compile",
+            id = "c1",
+            payload = new { strategyId = "s1", sourceHash = "", source }
+        }, SandboxJson.Options);
+
+        var result = await RunWorkerAsync(
+            "{\"type\":\"handshake\",\"id\":\"h1\",\"protocolVersion\":\"1.0\"}",
+            compile,
+            "{\"type\":\"shutdown\",\"id\":\"q1\"}");
+
+        var lines = ParseLines(result.StdOut);
+        var compileResult = Assert.Single(lines, static line => line.GetProperty("type").GetString() == "compileResult");
+        Assert.False(compileResult.GetProperty("ok").GetBoolean());
+        Assert.Equal(SandboxErrorCodes.CompileError, compileResult.GetProperty("errorCode").GetString());
+    }
+
+    [Fact]
+    public async Task Worker_GivenOversizedFrame_ExpectedLimitExceeded()
+    {
+        var oversized = new string('x', SandboxProtocol.MaxFrameBytes + 1024);
+        var result = await RunWorkerAsync(oversized, "{\"type\":\"shutdown\",\"id\":\"q1\"}");
+
+        var lines = ParseLines(result.StdOut);
+        var error = Assert.Single(lines, static line => line.GetProperty("type").GetString() == "error");
+        Assert.Equal(SandboxErrorCodes.LimitExceeded, error.GetProperty("errorCode").GetString());
+        Assert.Contains(lines, static line => line.GetProperty("type").GetString() == "shutdownResult");
+    }
+
     private static JsonElement ParseSingle(string stdout, string type)
     {
         var lines = ParseLines(stdout);

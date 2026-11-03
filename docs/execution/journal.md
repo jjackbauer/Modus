@@ -194,3 +194,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Fixed after review:** handshake gate, 1.x negotiation, worker-computed source hash/mismatch rejection, per-strategy collectible ALC, stdout suppression, response caps, fixed error messages, cache cap.
 - **Tests:** worker 7/7; architecture 3/3; 16-project offline gate local green; build 0 errors; coverage 39/39.
 - **Gate:** G2 **not passed**. WP-1.3 blocked. Next: WP-1.4 resource limits/OS containment evidence (C1/C2/H1/H5).
+
+## 2026-11-03T09:28:27-03:00 - WP-1.2 hardening after review; 9/9 tests
+
+- Curated reference set + source deny-list; bounded 1 MiB byte reader; handshake/hash/ALC/stdout/caps/errors.
+- 9 worker tests pass; architecture 3/3; 16-project gate local green; build 0 errors; coverage 39/39.
+- Review still NOT READY: C1 no OS containment, C2 inherited environment, H1 P/Invoke not OS-blocked, H5 no limits.
+- Next: WP-1.4 host limits/launcher; G2 and WP-1.3 remain blocked.
