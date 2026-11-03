@@ -219,3 +219,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Windows Job Object + timeouts/kill + Linux prlimit launcher; environment allowlist; 16 worker/client tests (including File/Network/Process/Reflection/DllImport compile rejection, oversized frames, infinite-loop kill).
 - `Wip.Sandbox.WorkerClient` and `Wip.Sandbox.Worker` are not production-wired; WP-1.3 blocked.
 - **G2: NOT APPROVED**; packet offers fail (continue OS containment) or narrowed trusted-only approval. C1 file/network/native containment remains open.
+
+## 2026-11-03T09:37:57-03:00 - G2 security decision still pending; goal blocked
+
+- G2 packet is ready but not approved; C1 OS file/network/native containment remains open.
+- 16/16 worker/client tests and Linux/Windows limits are green; WP-1.3 has not started.
+- No human G2 decision across rounds 13–15; the goal is blocked on the security gate, not on code.
