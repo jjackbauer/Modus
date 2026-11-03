@@ -102,10 +102,9 @@ internal static class Program
             return "worker not found";
         }
 
-        if (!request.InputPipe.StartsWith("wip-sandbox-in-", StringComparison.Ordinal) ||
-            !request.OutputPipe.StartsWith("wip-sandbox-out-", StringComparison.Ordinal))
+        if (request.CallerPid <= 0 || request.StdinHandle <= 0 || request.StdoutHandle <= 0)
         {
-            return "invalid pipe names";
+            return "invalid caller/handles";
         }
 
         return null;
@@ -140,12 +139,26 @@ internal static class Program
 
     private static int Launch(LaunchRequest request)
     {
-        using var input = new NamedPipeClientStream(".", request.InputPipe, PipeDirection.Out, PipeOptions.None);
-        using var output = new NamedPipeClientStream(".", request.OutputPipe, PipeDirection.In, PipeOptions.None);
-        input.Connect(5000);
-        output.Connect(5000);
-        SetHandleInformation(input.SafePipeHandle.DangerousGetHandle(), HandleFlagInherit, HandleFlagInherit);
-        SetHandleInformation(output.SafePipeHandle.DangerousGetHandle(), HandleFlagInherit, HandleFlagInherit);
+        var host = OpenProcess(0x0040, false, request.CallerPid);
+        if (host == IntPtr.Zero)
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error(), "OpenProcess for handle duplication failed.");
+        }
+
+        var input = IntPtr.Zero;
+        var output = IntPtr.Zero;
+        try
+        {
+            if (!DuplicateHandle(host, new IntPtr(request.StdinHandle), GetCurrentProcess(), out input, 0, true, 0x00000002) ||
+                !DuplicateHandle(host, new IntPtr(request.StdoutHandle), GetCurrentProcess(), out output, 0, true, 0x00000002))
+            {
+                throw new Win32Exception(Marshal.GetLastWin32Error(), "DuplicateHandle failed.");
+            }
+        }
+        finally
+        {
+            CloseHandle(host);
+        }
 
         var sid = EnsureProfile();
         try
@@ -156,9 +169,9 @@ internal static class Program
             var startup = new StartupInfoEx();
             startup.StartupInfo.cb = Marshal.SizeOf<StartupInfoEx>();
             startup.StartupInfo.dwFlags = StartfUseStdHandles;
-            startup.StartupInfo.hStdInput = input.SafePipeHandle.DangerousGetHandle();
-            startup.StartupInfo.hStdOutput = output.SafePipeHandle.DangerousGetHandle();
-            startup.StartupInfo.hStdError = output.SafePipeHandle.DangerousGetHandle();
+            startup.StartupInfo.hStdInput = input;
+            startup.StartupInfo.hStdOutput = output;
+            startup.StartupInfo.hStdError = output;
 
             var size = IntPtr.Zero;
             InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref size);
@@ -205,6 +218,8 @@ internal static class Program
         }
         finally
         {
+            CloseHandle(input);
+            CloseHandle(output);
             FreeSid(sid);
         }
     }
@@ -265,6 +280,10 @@ internal static class Program
     private static extern IntPtr FreeSid(IntPtr sid);
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool SetHandleInformation(IntPtr handle, uint mask, uint flags);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(uint desiredAccess, bool inheritHandle, int processId);
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr sourceHandle, IntPtr targetProcess, out IntPtr targetHandle, uint desiredAccess, bool inheritHandle, uint options);
     [DllImport("kernel32.dll")]
     private static extern IntPtr GetCurrentProcess();
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -285,8 +304,9 @@ internal static class Program
         public string? Token { get; init; }
         public string WorkerPath { get; init; } = "";
         public string Temp { get; init; } = "";
-        public string InputPipe { get; init; } = "";
-        public string OutputPipe { get; init; } = "";
+        public int CallerPid { get; init; }
+        public long StdinHandle { get; init; }
+        public long StdoutHandle { get; init; }
     }
 
     [StructLayout(LayoutKind.Sequential)]
