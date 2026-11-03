@@ -290,6 +290,8 @@ Set options in `appsettings.json` under `BonesHost`, or via environment variable
 | Failure backoff cap (ms) | `BonesHost:FailureBackoffMaxMs` | `BonesHost__FailureBackoffMaxMs` |
 | Resume from best | `BonesHost:ResumeFromBest` | `BONES_RESUME_FROM_BEST` or `BonesHost__ResumeFromBest` |
 | Strategy script direct-execution timeout (default `false`; bounds each direct move with `BonesHost:ScriptHost:ExecutionTimeout`) | `BonesHost:ScriptHost:EnableDirectExecutionTimeout` | `BonesHost__ScriptHost__EnableDirectExecutionTimeout` |
+| Script host mode (default `InProcess`; `Worker` is trusted-only and fails closed until WP-1.3) | `BonesHost:ScriptHost:Mode` | `BonesHost__ScriptHost__Mode` |
+| Worker trusted-only guard (required for `Worker`; default `true`) | `BonesHost:ScriptHost:TrustedOnly` | `BonesHost__ScriptHost__TrustedOnly` |
 
 Default `MaxGamesPerRun` is `200`; `0` still means unlimited but is no longer the shipped default. Default `ResumeFromBest` is `true`. Default `EvaluationTargetScore` is `12`; evaluation matches do not use the learning target score. Default `ParallelSessionCount` is `1`, `GameCount` is `1`, and `Promotion:EvaluationMatchCount` is `8`.
 

@@ -214,6 +214,31 @@ public sealed class BonesStrategyScriptHostTests
             passStreak: 0,
             eventLog: []);
 
+
+    [Fact]
+    public void BonesStrategyScriptHost_GivenWorkerModeWithoutTrustedOnly_ExpectedThrows()
+    {
+        var options = new BonesStrategyScriptHostOptions
+        {
+            Mode = BonesScriptHostMode.Worker,
+            TrustedOnly = false
+        };
+
+        Assert.Throws<InvalidOperationException>(() => new BonesStrategyScriptHost(options));
+    }
+
+    [Fact]
+    public void BonesStrategyScriptHost_GivenWorkerModeTrustedOnly_ExpectedFailsClosed()
+    {
+        var options = new BonesStrategyScriptHostOptions
+        {
+            Mode = BonesScriptHostMode.Worker,
+            TrustedOnly = true
+        };
+
+        Assert.Throws<NotSupportedException>(() => new BonesStrategyScriptHost(options));
+    }
+
     private static IReadOnlyList<BonesMove> CreateLegalMoves() =>
     [
         BonesMove.Play(new BonesMoveId("move-1"), new BonesPlayerId(2), new BonesTile(new(3), new(4)), BonesBoardSide.Right),

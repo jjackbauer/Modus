@@ -58,6 +58,12 @@ public sealed class BonesStrategyScriptHost
         if (options.ExecutionTimeout <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(options), "ExecutionTimeout must be greater than zero.");
 
+        if (options.Mode == BonesScriptHostMode.Worker && !options.TrustedOnly)
+            throw new InvalidOperationException("Worker mode is trusted-only; set TrustedOnly=true explicitly.");
+
+        if (options.Mode == BonesScriptHostMode.Worker)
+            throw new NotSupportedException("Worker execution is not wired yet (WP-1.3). Use InProcess for trusted-only runs.");
+
         _options = options;
     }
 

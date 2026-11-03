@@ -225,3 +225,15 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - G2 packet is ready but not approved; C1 OS file/network/native containment remains open.
 - 16/16 worker/client tests and Linux/Windows limits are green; WP-1.3 has not started.
 - No human G2 decision across rounds 13–15; the goal is blocked on the security gate, not on code.
+
+## 2026-11-03T09:41:48-03:00 - G2 conditionally approved (Option 2, trusted-only)
+
+- Product owner selected option 2: trusted-only, default-off flag, no untrusted model code; expires 2026-12-03.
+- C1 OS containment remains open; WIP 1.0/G5 blocked until it closes.
+- Next: WP-1.6 safe ScriptHost:Mode flag/trusted-only guard; WP-1.3 routing remains unimplemented.
+
+## 2026-11-03T09:43:27-03:00 - G2 Option 2 recorded; WP-1.6 safe flag
+
+- G2 conditionally approved (trusted-only, default-off Worker flag, expiry 2026-12-03); C1 remains open; WIP 1.0/G5 blocked.
+- `ScriptHost:Mode` added with InProcess default; Worker requires TrustedOnly and fails closed until WP-1.3. DEV-004 records the default deviation.
+- Two guard tests pass; Bones expected suite count 385; C1 OS containment still open.

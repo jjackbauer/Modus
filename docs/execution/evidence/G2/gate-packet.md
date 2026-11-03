@@ -1,6 +1,6 @@
 # GATE: G2 — sandbox mechanism and residual risk
 
-**Status:** **NOT APPROVED — DECISION REQUIRED**
+**Status:** **CONDITIONALLY APPROVED (Option 2)** — trusted-only, default-off flag, expires 2026-12-03; C1 remains open.
 **Date:** 2026-11-03
 **Decision owners:** security reviewer + tech lead (plan §5.2)
 **Evidence:** [threat model](../../security/sandbox-threat-model.md), [protocol](../../security/worker-protocol.md), [independent review](../WP-1.1/security-review-2026-11-03.md), [WP-1.2 notes](../WP-1.2/notes.md)

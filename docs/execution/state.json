@@ -5,11 +5,10 @@
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
   "phase": 1,
-  "work_package": "WP-1.4",
+  "work_package": "WP-1.6",
   "status": "in_progress",
   "gate": "G2",
-  "gate_status": "g2_decision_pending",
-  "goal_status": "blocked_on_g2_security_decision",
+  "gate_status": "g2_conditionally_approved_trusted_only",
   "attempts": {
     "WP-0.1": 2,
     "WP-0.2": 1,
@@ -19,12 +18,13 @@
     "WP-0.6": 1,
     "WP-1.1": 1,
     "WP-1.2": 4,
-    "WP-1.4": 1
+    "WP-1.4": 1,
+    "WP-1.6": 1
   },
-  "last_verified_at": "2026-11-03T09:36:58-03:00",
-  "next_action": "Await the G2 security decision (fail and continue OS containment, or approve a narrowed trusted-only exception). WP-1.3 production routing remains blocked.",
+  "last_verified_at": "2026-11-03T09:43:27-03:00",
+  "next_action": "Implement the default-off ScriptHost:Mode flag and trusted-only guard (WP-1.6); no untrusted model code, and WIP 1.0/G5 stay blocked until C1 closes by 2026-12-03.",
   "open_blockers": [],
-  "deviations": ["DEV-001", "DEV-002", "DEV-003"],
+  "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
     "porcelain_entries": 0,
     "status": "clean",
@@ -85,7 +85,8 @@
     "WP-0.5": "done",
     "WP-0.6": "done",
     "WP-1.1": "in_progress",
-    "WP-1.2": "in_progress",
-    "WP-1.4": "in_progress"
+    "WP-1.2": "done",
+    "WP-1.4": "in_progress",
+    "WP-1.6": "in_progress"
   }
 }

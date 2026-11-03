@@ -604,6 +604,11 @@ public sealed class BonesHostOptions
                 ?? fallback.MaxCompiledScripts,
             EnableDirectExecutionTimeout = section.GetValue<bool?>("EnableDirectExecutionTimeout")
                 ?? fallback.EnableDirectExecutionTimeout,
+            Mode = Enum.TryParse<BonesScriptHostMode>(section["Mode"], ignoreCase: true, out var mode)
+                ? mode
+                : fallback.Mode,
+            TrustedOnly = section.GetValue<bool?>("TrustedOnly")
+                ?? fallback.TrustedOnly,
         };
 
         return result;
