@@ -314,21 +314,31 @@ public sealed class WorkerProtocolTests
         }
 
         var worker = Path.Combine(repositoryRoot, "WIP", "Wip.Sandbox.Worker", "bin", "Release", "net10.0", "Wip.Sandbox.Worker.dll");
-        await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+        try
         {
-            RequireOsContainment = true,
-            LinuxSandboxScript = script,
-            StartupTimeout = TimeSpan.FromSeconds(30),
-            CompileTimeout = TimeSpan.FromSeconds(30),
-            MoveTimeout = TimeSpan.FromSeconds(5)
-        });
-        await client.HandshakeAsync();
-        await client.CompileAsync(
-            "contained",
-            "public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState state) => state.LegalMoves[0]; }");
+            await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+            {
+                RequireOsContainment = true,
+                LinuxSandboxScript = script,
+                StartupTimeout = TimeSpan.FromSeconds(30),
+                CompileTimeout = TimeSpan.FromSeconds(30),
+                MoveTimeout = TimeSpan.FromSeconds(5)
+            });
+            await client.HandshakeAsync();
+            await client.CompileAsync(
+                "contained",
+                "public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState state) => state.LegalMoves[0]; }");
 
-        var move = await client.ChooseMoveAsync("contained", new WorkerStrategyState(["X.O", "..."], "X", [0, 1, 2], 3));
-        Assert.Equal(0, move);
+            var move = await client.ChooseMoveAsync("contained", new WorkerStrategyState(["X.O", "..."], "X", [0, 1, 2], 3));
+            Assert.Equal(0, move);
+        }
+        catch (Exception exception) when (OperatingSystem.IsWindows())
+        {
+            var directory = Path.Combine(repositoryRoot, "artifacts", "security-test-results");
+            Directory.CreateDirectory(directory);
+            File.WriteAllText(Path.Combine(directory, "containment-error.txt"), exception.ToString());
+            throw;
+        }
     }
 
     private static bool CanUseUserNamespaces()

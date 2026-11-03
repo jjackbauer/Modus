@@ -136,6 +136,15 @@ jobs:
         run: ./tools/sandbox/Install-WipAppContainer.ps1
       - name: Run sandbox hostile/protocol suite
         run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
+      - name: Dump containment diagnostics
+        if: always()
+        shell: pwsh
+        run: |
+          $errorFile = 'artifacts/security-test-results/containment-error.txt'
+          if (Test-Path $errorFile) { Write-Error (Get-Content $errorFile -Raw) }
+          $helperLog = 'C:\ProgramData\WIP\helper.log'
+          if (Test-Path $helperLog) { Get-Content $helperLog -Tail 80; Write-Error (Get-Content $helperLog -Raw) }
+          schtasks /Query /TN WipSandboxHelper /V /FO LIST
       - name: Upload security test results
         if: always()
         uses: actions/upload-artifact@v4
