@@ -116,3 +116,52 @@ jobs:
           path: artifacts/ci-test-results/**
           if-no-files-found: warn
 
+  wip-security:
+    name: wip-security
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and build WIP solution
+        run: |
+          dotnet restore Wip.slnx
+          dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Run sandbox hostile/protocol suite
+        run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
+      - name: Upload security test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wip-security-test-results
+          path: artifacts/security-test-results/**
+          if-no-files-found: warn
+
+  wip-security-linux:
+    name: wip-security (ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and build WIP solution
+        run: |
+          dotnet restore Wip.slnx
+          dotnet build Wip.slnx --configuration Release --no-restore
+      - name: Run sandbox hostile/protocol suite
+        run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results-linux --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
+      - name: Upload security test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wip-security-test-results-linux
+          path: artifacts/security-test-results-linux/**
+          if-no-files-found: warn

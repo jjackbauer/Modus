@@ -10,4 +10,5 @@ The plan asks for xUnit `Category` traits. At Phase 0 the gate groups projects; 
 | Bones offline | Bones, Bones.ModelProviders.DeepSeek, Bones.Host, Bones.E2E | `wip-offline-tests` |
 | E2E/Playwright (optional) | Bones.Web, Shell.E2E | `wip-optional.yml` |
 | Live | none configured | future |
-| Security | none until WP-1.5 | explicit placeholder |
+| Sandbox/security | `Wip.Sandbox.Worker.Tests` (16 tests) | `wip-security` (Windows), `wip-security-linux` (Ubuntu) |
+| Live | none configured | future |

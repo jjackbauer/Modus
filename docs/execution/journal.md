@@ -237,3 +237,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - G2 conditionally approved (trusted-only, default-off Worker flag, expiry 2026-12-03); C1 remains open; WIP 1.0/G5 blocked.
 - `ScriptHost:Mode` added with InProcess default; Worker requires TrustedOnly and fails closed until WP-1.3. DEV-004 records the default deviation.
 - Two guard tests pass; Bones expected suite count 385; C1 OS containment still open.
+
+## 2026-11-03T09:46:11-03:00 - WP-1.5 security jobs
+
+- Added `wip-security` (Windows) and `wip-security-linux` (Ubuntu) jobs running the 16-test sandbox suite with TRX artifacts.
+- Compile-time deny-list/curated refs, environment allowlist, timeout/kill, frame limits, and Linux prlimit are covered; C1 OS containment remains open.
+- G2 conditional/trusted-only until 2026-12-03; no untrusted model code.
