@@ -62,7 +62,7 @@ internal static class Program
             return;
         }
 
-        var request = JsonSerializer.Deserialize<LaunchRequest>(line);
+        var request = JsonSerializer.Deserialize<LaunchRequest>(line, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         if (request is null || !IsAuthorized(request.Token))
         {
             writer.WriteLine(JsonSerializer.Serialize(new { ok = false, error = "unauthorized" }));
