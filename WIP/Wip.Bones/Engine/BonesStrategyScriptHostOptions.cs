@@ -1,3 +1,5 @@
+using Wip.Sandbox.WorkerClient;
+
 namespace Wip.Bones.Engine;
 
 public enum BonesScriptHostMode
@@ -20,6 +22,9 @@ public sealed class BonesStrategyScriptHostOptions
     /// Required for Worker mode. No untrusted model-authored code may set this.
     /// </summary>
     public bool TrustedOnly { get; init; } = true;
+
+    /// <summary>Worker client used when <see cref="Mode"/> is Worker; null fails closed.</summary>
+    public SandboxWorkerClient? WorkerClient { get; init; }
 
     public TimeSpan CompilationTimeout { get; init; } = TimeSpan.FromSeconds(10);
 

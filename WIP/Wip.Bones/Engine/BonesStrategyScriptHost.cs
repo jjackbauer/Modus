@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.Emit;
 using Microsoft.CodeAnalysis.Text;
 using Wip.Bones.Domain;
 using Wip.Bones.Identifiers;
+using Wip.Sandbox.WorkerClient;
 
 namespace Wip.Bones.Engine;
 
@@ -61,8 +62,8 @@ public sealed class BonesStrategyScriptHost
         if (options.Mode == BonesScriptHostMode.Worker && !options.TrustedOnly)
             throw new InvalidOperationException("Worker mode is trusted-only; set TrustedOnly=true explicitly.");
 
-        if (options.Mode == BonesScriptHostMode.Worker)
-            throw new NotSupportedException("Worker execution is not wired yet (WP-1.3). Use InProcess for trusted-only runs.");
+        if (options.Mode == BonesScriptHostMode.Worker && options.WorkerClient is null)
+            throw new InvalidOperationException("Worker mode requires an installed SandboxWorkerClient; failing closed.");
 
         _options = options;
     }
@@ -93,6 +94,11 @@ public sealed class BonesStrategyScriptHost
         var namespaceViolation = FindDisallowedNamespaceViolation(source);
         if (namespaceViolation is not null)
             return BonesStrategyScriptCompileResult.Failure(namespaceViolation);
+
+        if (_options.Mode == BonesScriptHostMode.Worker)
+        {
+            return CompileWorker(strategyId, source, sourceHash);
+        }
 
         try
         {
@@ -198,6 +204,26 @@ public sealed class BonesStrategyScriptHost
         {
             throw new BonesStrategyScriptExecutionTimeoutException(_options.ExecutionTimeout);
         }
+    }
+
+    private BonesStrategyScriptCompileResult CompileWorker(BonesStrategyId strategyId, string source, string sourceHash)
+    {
+        var client = _options.WorkerClient!;
+        try
+        {
+            client.CompileBonesAsync(strategyId.Value, source).GetAwaiter().GetResult();
+        }
+        catch (SandboxWorkerException exception)
+        {
+            return BonesStrategyScriptCompileResult.Failure($"Strategy script compilation failed: {exception.Message}");
+        }
+
+        var compiled = new BonesCompiledStrategy(strategyId, sourceHash, new WorkerBonesPlayerSlot(client, strategyId.Value));
+        var cacheKey = CreateCacheKey(strategyId, sourceHash);
+        _compileCache[cacheKey] = compiled;
+        _lruOrder.Enqueue(cacheKey);
+        EvictLruIfNeeded();
+        return BonesStrategyScriptCompileResult.Success(compiled);
     }
 
     private void EvictLruIfNeeded()

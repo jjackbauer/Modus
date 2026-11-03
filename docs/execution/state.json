@@ -24,8 +24,8 @@
     "WP-1.5": 2,
     "WP-1.3": 1
   },
-  "last_verified_at": "2026-11-03T12:40:21-03:00",
-  "next_action": "Start WP-1.3 trusted-only executor routing; Windows C1 residual remains accepted until 2026-12-03. No release.",
+  "last_verified_at": "2026-11-03T12:52:09-03:00",
+  "next_action": "Extend WP-1.3 state fidelity (event log/outcome) and route more Bones tests through the worker; then WP-1.6. Windows residual remains accepted.",
   "open_blockers": ["Full G2/release still blocked; Windows C1 residual accepted for trusted-only WP-1.3 under conditional G2 (expires 2026-12-03)."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
