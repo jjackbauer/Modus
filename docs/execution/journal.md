@@ -313,3 +313,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Threat model now records Linux unshare+chroot containment and the Windows gap.
 - Windows AppContainer profile creation requires elevation; testhost gets access denied, and CreateProcess with security capabilities gets error 5. Windows remains Job Object-only and fails closed for RequireOsContainment.
 - No release; G2 conditional; next decision is elevated installer vs accepted Windows residual.
+
+## 2026-11-03T10:33:58-03:00 - Blocked on Windows containment elevation
+
+- Linux containment is implemented and security CI is green.
+- Windows AppContainer cannot be created/launched from the non-elevated testhost: profile creation 0x80070005, CreateProcess security capabilities error 5. Needs an elevated installer/token path or an explicit accepted Windows residual.
+- No release; goal blocked pending that decision.
