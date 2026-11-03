@@ -216,6 +216,24 @@ public sealed class WorkerProtocolTests
         Assert.False(client.IsRunning);
     }
 
+    [Fact]
+    public void Launcher_GivenLinuxPrlimit_ExpectedResourceLimits()
+    {
+        var launch = SandboxWorkerLauncher.Resolve(
+            "/repo/worker.dll",
+            new SandboxWorkerOptions { MoveTimeout = TimeSpan.FromSeconds(1), MaxMemoryBytes = 268_435_456, MaxProcesses = 16 },
+            "/usr/bin/dotnet",
+            isLinux: true,
+            prlimitPath: "/usr/bin/prlimit");
+
+        Assert.Equal("/usr/bin/prlimit", launch.FileName);
+        Assert.Contains("--as=4294967296", launch.Arguments);
+        Assert.Contains("--nproc=64", launch.Arguments);
+        Assert.Contains("--cpu=2", launch.Arguments);
+        Assert.Equal("/usr/bin/dotnet", launch.Arguments[^2]);
+        Assert.Equal("/repo/worker.dll", launch.Arguments[^1]);
+    }
+
     private static JsonElement ParseSingle(string stdout, string type)
     {
         var lines = ParseLines(stdout);

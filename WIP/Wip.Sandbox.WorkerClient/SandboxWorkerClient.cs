@@ -45,7 +45,14 @@ public sealed class SandboxWorkerClient : IAsyncDisposable
         var resolved = options ?? new SandboxWorkerOptions();
         var temp = Path.Combine(Path.GetTempPath(), "wip-sandbox-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(temp);
-        var startInfo = new ProcessStartInfo("dotnet")
+        var dotnet = SandboxWorkerLauncher.ResolveDotnet();
+        var launch = SandboxWorkerLauncher.Resolve(
+            workerPath,
+            resolved,
+            dotnet,
+            OperatingSystem.IsLinux(),
+            SandboxWorkerLauncher.FindPrlimit());
+        var startInfo = new ProcessStartInfo(launch.FileName)
         {
             WorkingDirectory = temp,
             RedirectStandardInput = true,
@@ -54,7 +61,11 @@ public sealed class SandboxWorkerClient : IAsyncDisposable
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        startInfo.ArgumentList.Add(workerPath);
+        foreach (var argument in launch.Arguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
         startInfo.Environment.Clear();
         foreach (var pair in SandboxWorkerEnvironment.Build(temp))
         {

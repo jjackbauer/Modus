@@ -207,3 +207,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - `Wip.Sandbox.WorkerClient` clears the inherited environment, applies startup/compile/move timeouts, kills the process tree, and applies a Windows Job Object (kill-on-close, 256 MiB, 16 processes).
 - Curated refs + deny-list and bounded byte reader added to the worker; 11/11 tests, architecture 3/3, build 0 errors, coverage 40/40, gate 16/16 local.
 - Review still **NOT READY**: C1 OS file/network/native containment and Linux limits remain; G2 not passed; WP-1.3 blocked.
+
+## 2026-11-03T09:36:01-03:00 - Linux prlimit launcher; 12/12 tests
+
+- `SandboxWorkerLauncher` now uses absolute dotnet, and on Linux wraps with `prlimit` (virtual memory/process/CPU bounds) when available; Windows uses the Job Object.
+- 12 worker/client tests pass; 16-project gate local green.
+- C1 OS file/network/native containment remains open; G2 not passed; WP-1.3 blocked.
