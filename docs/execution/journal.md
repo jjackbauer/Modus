@@ -341,3 +341,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Helper now verifies the worker token has TokenIsAppContainer before returning it; a normal process is killed and the launch fails closed.
 - Local 18/18 (helper not installed; containment test skips). CI helper run 41654416806 passed before this check; new CI pending.
+
+## 2026-11-03T11:39:30-03:00 - Windows AppContainer helper verified in CI
+
+- Run 41655112634: installer/helper step success, Windows and Ubuntu security jobs success, builds/architecture success.
+- Client verifies TokenIsAppContainer before accepting the worker; helper is a SYSTEM task with token/path validation.
+- C1 is implemented on both platforms for the tested paths; P/Invoke/kernel residuals remain. Full G2 still needs independent re-review; no release.
