@@ -28,7 +28,7 @@ It does not cover a malicious operator with local administrator rights, a compro
 
 1. **Host ↔ model/provider**: model output is untrusted input.
 2. **Host ↔ worker**: the worker is a separate OS process; the protocol is the only channel. The worker must not receive host DI, host objects, or inherited secrets.
-3. **Worker ↔ OS**: the worker is constrained by Job Object/prlimit/cgroup, timeouts, output caps, and a private temp directory.
+3. **Worker ↔ OS**: Windows uses Job Object/timeouts; Linux uses unshare user/net/pid/mount namespaces + chroot where unprivileged user namespaces are allowed. Windows AppContainer is not implemented, so Windows remains resource-capped only.
 4. **Host ↔ plugin**: plugins are untrusted and isolated by an AssemblyLoadContext; the worker cannot load host/plugin assemblies.
 5. **Worker ↔ filesystem/network**: denied by default; only explicit, narrow paths/handles if a future approval allows them.
 
@@ -71,7 +71,7 @@ A local developer tool cannot provide a perfect sandbox. The following remain ex
 - OS-specific limits (Windows Job Objects vs Linux prlimit/cgroup v2) may differ.
 - Network denial is best-effort unless a platform primitive is available.
 - A kernel/runtime vulnerability can escape any local sandbox.
-- The worker still runs with the developer's OS account; filesystem isolation is policy/protocol-level unless a stronger OS sandbox is added.
+- The worker runs with the developer's OS account. Linux additionally uses unshare+chroot when user namespaces are enabled; Windows still has Job Object resource limits only.
 - The worker has no host DI, but it may still use the .NET BCL broadly; the deny-list is defense in depth, not the boundary.
 - **Inherited environment (open):** the worker inherits the parent environment; a minimal allowlist/fail-closed launcher is not implemented yet (C2).
 - **P/Invoke/native escape (open):** the worker compiles against the trusted platform assemblies and can declare `[DllImport]`; the current reference set does **not** block native calls. This is a G2 blocker unless the worker restricts references/IL or an OS policy contains it. TM-13 is not yet contained.
@@ -91,4 +91,4 @@ G2 must accept, restrict, or explicitly waive these residuals before WP-1.3 rout
 
 **Verdict: NOT READY FOR G2.** The independent review found no OS containment (C1), inherited environment/secrets (C2), permitted P/Invoke (H1), and gaps in limits/ambient surface. It recommends failing G2 until C1, C2, H1, and the hostile suite are addressed.
 
-See [security-review-2026-11-03.md](../execution/evidence/WP-1.1/security-review-2026-11-03.md). The worker has since added a handshake gate, worker-computed source hashes, per-strategy collectible ALCs, stdout suppression, response caps, fixed error messages, a curated reference set/deny-list, and a bounded byte reader. The host client clears the inherited environment and applies timeouts, process-tree kill, and Windows Job Object limits. **C1 remains open:** Job Objects are resource caps, not file/network/native isolation; Linux limits and OS containment are still required. These changes reduce the attack surface but do not make the worker a sandbox.
+See [security-review-2026-11-03.md](../execution/evidence/WP-1.1/security-review-2026-11-03.md). The worker has since added a handshake gate, worker-computed source hashes, per-strategy collectible ALCs, stdout suppression, response caps, fixed error messages, a curated reference set/deny-list, and a bounded byte reader. The host client clears the inherited environment and applies timeouts, process-tree kill, and Windows Job Object limits. **C1 is partially closed:** Linux now runs the worker in unshare user/net/pid/mount namespaces + chroot with host paths unmounted (where unprivileged user namespaces are allowed). Windows still has Job Object resource caps only; AppContainer profile creation requires elevation and the current launcher fails with access denied/error 5. C1 is **not closed on Windows**, and P/Invoke remains permitted; the worker is not yet a full sandbox.

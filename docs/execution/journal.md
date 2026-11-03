@@ -307,3 +307,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Run 41644557144: `wip-security` Windows and Ubuntu both success; 18-test suite green.
 - Linux containment test skips where user namespaces are forbidden; WSL exercises the real chroot. Windows AppContainer still open; C1 partial.
+
+## 2026-11-03T10:33:25-03:00 - C1 status recorded; Windows blocked by elevation
+
+- Threat model now records Linux unshare+chroot containment and the Windows gap.
+- Windows AppContainer profile creation requires elevation; testhost gets access denied, and CreateProcess with security capabilities gets error 5. Windows remains Job Object-only and fails closed for RequireOsContainment.
+- No release; G2 conditional; next decision is elevated installer vs accepted Windows residual.
