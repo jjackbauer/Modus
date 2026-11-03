@@ -378,3 +378,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Added `IScriptExecutor`; `SandboxWorkerClient` implements it and the infinite-loop test consumes the interface.
 - 18/18 local; Bones host routing to the executor is still pending. Windows residual accepted; no release.
+
+## 2026-11-03T13:10:16-03:00 - Reverted unsafe worker->Bones route; architecture green
+
+- CI architecture rejected `Wip.Sandbox.Worker -> Wip.Bones` (sandbox-worker-no-host). Reverted the worker route (ef35b5e, 93179ce, 24d6899).
+- Architecture tests 3/3 pass; Bones 385 total / 383 passed / 2 waived; 16-project gate green.
+- WP-1.3 blocked pending contract extraction or assembly-bytes/reflection ADR. No release.
