@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Wip.Sandbox.Protocol;
+using Wip.Sandbox.WorkerClient;
 using Xunit;
 
 namespace Wip.Sandbox.Worker.Tests;
@@ -167,6 +168,52 @@ public sealed class WorkerProtocolTests
         var error = Assert.Single(lines, static line => line.GetProperty("type").GetString() == "error");
         Assert.Equal(SandboxErrorCodes.LimitExceeded, error.GetProperty("errorCode").GetString());
         Assert.Contains(lines, static line => line.GetProperty("type").GetString() == "shutdownResult");
+    }
+
+    [Fact]
+    public void Environment_GivenParentSecret_ExpectedMinimalAllowlist()
+    {
+        const string sentinel = "WIP_SANDBOX_SENTINEL";
+        var previous = Environment.GetEnvironmentVariable(sentinel);
+        try
+        {
+            Environment.SetEnvironmentVariable(sentinel, "secret");
+            var environment = SandboxWorkerEnvironment.Build(Path.GetTempPath());
+
+            Assert.False(environment.ContainsKey(sentinel));
+            Assert.Contains("TMP", environment.Keys);
+            Assert.Contains("TEMP", environment.Keys);
+            Assert.Contains("DOTNET_CLI_HOME", environment.Keys);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(sentinel, previous);
+        }
+    }
+
+    [Fact]
+    public async Task Client_GivenInfiniteLoop_ExpectedTimeoutAndKill()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var worker = Path.Combine(repositoryRoot, "WIP", "Wip.Sandbox.Worker", "bin", "Release", "net10.0", "Wip.Sandbox.Worker.dll");
+        Assert.True(File.Exists(worker), $"Worker not found at {worker}.");
+
+        await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+        {
+            StartupTimeout = TimeSpan.FromSeconds(20),
+            CompileTimeout = TimeSpan.FromSeconds(20),
+            MoveTimeout = TimeSpan.FromSeconds(1)
+        });
+        await client.HandshakeAsync();
+        await client.CompileAsync(
+            "loop",
+            "public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState state) { while (true) { } } }");
+
+        await Assert.ThrowsAsync<TimeoutException>(() => client.ChooseMoveAsync(
+            "loop",
+            new WorkerStrategyState(["X.O", "..."], "X", [0, 1, 2], 3)));
+
+        Assert.False(client.IsRunning);
     }
 
     private static JsonElement ParseSingle(string stdout, string type)

@@ -149,7 +149,7 @@ Errors never include host paths, secrets, or stack traces that reveal host inter
 ## 6. Security rules
 
 - No host DI, no host assembly resolution, no plugin assemblies.
-- No inherited environment secrets; construct a minimal environment.
+- The supported launcher (`Wip.Sandbox.WorkerClient`) clears the inherited environment and supplies only DOTNET_CLI_HOME/TMP/TEMP/TMPDIR/DOTNET_ROOT. Direct worker launch is unsupported.
 - No file/network APIs in the worker's approved surface; enforce with tests and OS limits.
 - Model assembly is loaded only in the worker ALC; unload/collect after strategy replacement where possible.
 - stdout/stderr are protocol/log only; no arbitrary host output.

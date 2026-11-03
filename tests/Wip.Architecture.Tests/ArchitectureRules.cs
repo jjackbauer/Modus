@@ -19,7 +19,8 @@ internal static class ArchitectureRules
         new("bones-host-no-shell", "Wip.Bones.Host", ["Wip.Shell", "Wip.Shell.*"]),
         new("bones-domain-no-agents-host-web", "Wip.Bones", ["Wip.Bones.Agents", "Wip.Bones.Host", "Wip.Bones.Web"]),
         new("sandbox-protocol-no-implementations", "Wip.Sandbox.Protocol", ["Wip.*"]),
-        new("sandbox-worker-no-host", "Wip.Sandbox.Worker", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.Runtime", "Wip.ShellHost", "Wip.Bones.Host"])
+        new("sandbox-worker-no-host", "Wip.Sandbox.Worker", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.Runtime", "Wip.ShellHost", "Wip.Bones.Host"]),
+        new("sandbox-client-no-host", "Wip.Sandbox.WorkerClient", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.Runtime", "Wip.ShellHost", "Wip.Bones.Host"])
     ];
 
     public static IReadOnlyList<ArchitectureViolation> Evaluate(IReadOnlyDictionary<string, IReadOnlyCollection<string>> graph)

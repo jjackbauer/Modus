@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Host-side launcher for the WIP sandbox worker: minimal environment, timeouts, process-tree kill, and Windows Job Object limits.</Description>
+    <PackageId>Wip.Sandbox.WorkerClient</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Sandbox.Protocol\Wip.Sandbox.Protocol.csproj" />
+  </ItemGroup>
+</Project>

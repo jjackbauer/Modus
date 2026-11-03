@@ -36,6 +36,7 @@
     <Project Path="WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj" />
     <Project Path="WIP/Wip.Sandbox.Protocol/Wip.Sandbox.Protocol.csproj" />
     <Project Path="WIP/Wip.Sandbox.Worker/Wip.Sandbox.Worker.csproj" />
+    <Project Path="WIP/Wip.Sandbox.WorkerClient/Wip.Sandbox.WorkerClient.csproj" />
     <Project Path="WIP/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj" />
     <Project Path="WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj" />
     <Project Path="WIP/Wip.Shell.Tests/Wip.Shell.Tests.csproj" />

@@ -201,3 +201,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - 9 worker tests pass; architecture 3/3; 16-project gate local green; build 0 errors; coverage 39/39.
 - Review still NOT READY: C1 no OS containment, C2 inherited environment, H1 P/Invoke not OS-blocked, H5 no limits.
 - Next: WP-1.4 host limits/launcher; G2 and WP-1.3 remain blocked.
+
+## 2026-11-03T09:31:46-03:00 - WP-1.2 client: env/timeout/kill + 11 tests
+
+- `Wip.Sandbox.WorkerClient` clears the inherited environment, applies startup/compile/move timeouts, kills the process tree, and applies a Windows Job Object (kill-on-close, 256 MiB, 16 processes).
+- Curated refs + deny-list and bounded byte reader added to the worker; 11/11 tests, architecture 3/3, build 0 errors, coverage 40/40, gate 16/16 local.
+- Review still **NOT READY**: C1 OS file/network/native containment and Linux limits remain; G2 not passed; WP-1.3 blocked.

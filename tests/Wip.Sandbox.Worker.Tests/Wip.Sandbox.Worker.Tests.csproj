@@ -15,5 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\WIP\Wip.Sandbox.Protocol\Wip.Sandbox.Protocol.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.Sandbox.Worker\Wip.Sandbox.Worker.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\WIP\Wip.Sandbox.WorkerClient\Wip.Sandbox.WorkerClient.csproj" />
   </ItemGroup>
 </Project>
