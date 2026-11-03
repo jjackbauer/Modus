@@ -141,9 +141,16 @@ jobs:
         shell: pwsh
         run: |
           $errorFile = 'artifacts/security-test-results/containment-error.txt'
-          if (Test-Path $errorFile) { Write-Error (Get-Content $errorFile -Raw) }
+          if (Test-Path $errorFile) {
+            $text = ((Get-Content $errorFile -Raw) -split "\r?\n") -join ' | '
+            Write-Host ('::error title=ContainmentDiagnostic::' + $text)
+          }
           $helperLog = 'C:\ProgramData\WIP\helper.log'
-          if (Test-Path $helperLog) { Get-Content $helperLog -Tail 80; Write-Error (Get-Content $helperLog -Raw) }
+          if (Test-Path $helperLog) {
+            Get-Content $helperLog -Tail 80
+            $text = ((Get-Content $helperLog -Raw) -split "\r?\n") -join ' | '
+            Write-Host ('::error title=HelperLog::' + $text)
+          }
           schtasks /Query /TN WipSandboxHelper /V /FO LIST
       - name: Upload security test results
         if: always()
