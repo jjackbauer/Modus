@@ -74,6 +74,7 @@
     "waived_failures": 27,
     "known_aborts": 2,
     "remote_ci": "run_41489673359_success",
+    "security_ci": "transient_setup_dotnet_download_failure",
     "ci_exposed_failures": 6,
     "chromium_install": "success",
     "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]

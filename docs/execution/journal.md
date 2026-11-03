@@ -243,3 +243,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Added `wip-security` (Windows) and `wip-security-linux` (Ubuntu) jobs running the 16-test sandbox suite with TRX artifacts.
 - Compile-time deny-list/curated refs, environment allowlist, timeout/kill, frame limits, and Linux prlimit are covered; C1 OS containment remains open.
 - G2 conditional/trusted-only until 2026-12-03; no untrusted model code.
+
+## 2026-11-03T09:48:11-03:00 - Security CI transient setup failure
+
+- Run 41638523013: Windows `wip-security` failed at Set up job because codeload could not serve setup-dotnet; no tests ran. This is an Actions download failure, not a suite failure.
+- Linux security/other WIP jobs were in progress at inspection. Local 16/16 suite and 16-project gate remain green.
+- Retry via the next push; no source fix for the codeload failure.
