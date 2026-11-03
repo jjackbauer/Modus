@@ -389,3 +389,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - ADR-IMPL-08 proposed: A extract Bones contracts or B assembly-bytes/reflection; rule sandbox-worker-no-host is not relaxed.
 - Goal blocked on the architecture decision; gates remain green. No release.
+
+## 2026-11-03T13:11:21-03:00 - WP-1.3 blocked on ADR-IMPL-08 choice
+
+- No A/B decision from the human; worker->Bones remains forbidden; gates stay green.
+- Stopping at the architecture decision; no release/completion claim.
