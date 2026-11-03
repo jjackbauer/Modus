@@ -394,3 +394,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - No A/B decision from the human; worker->Bones remains forbidden; gates stay green.
 - Stopping at the architecture decision; no release/completion claim.
+
+## 2026-11-03T15:35:12-03:00 - Option A: Bones contracts extracted
+
+- Created `Wip.Sandbox.BonesContracts` (41st WIP project) with domain/state/identifier/player-slot contracts; Bones references it.
+- Worker references contracts, not Wip.Bones; architecture 41/41 and build green. Worker execution wiring is next.

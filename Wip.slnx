@@ -29,6 +29,7 @@
     <Project Path="WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj" />
     <Project Path="WIP/Wip.Bones.Web.Tests/Wip.Bones.Web.Tests.csproj" />
     <Project Path="WIP/Wip.Bones.Web/Wip.Bones.Web.csproj" />
+    <Project Path="WIP/Wip.Sandbox.BonesContracts/Wip.Sandbox.BonesContracts.csproj" />
     <Project Path="WIP/Wip.Bones/Wip.Bones.csproj" />
     <Project Path="WIP/Wip.Builder.Tests/Wip.Builder.Tests.csproj" />
     <Project Path="WIP/Wip.Modus.Tests/Wip.Modus.Tests.csproj" />

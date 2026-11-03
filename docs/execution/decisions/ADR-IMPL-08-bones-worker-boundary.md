@@ -1,6 +1,6 @@
 # ADR-IMPL-08 (proposed) — Bones worker boundary
 
-**Status:** proposed; requires architecture approval. WP-1.3 is blocked by the
+**Status:** accepted — option A (contracts extraction) selected by the user. WP-1.3 is blocked by the
 `sandbox-worker-no-host` rule: `Wip.Sandbox.Worker` must not reference `Wip.Bones`.
 
 ## Options
