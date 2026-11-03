@@ -21,24 +21,13 @@ internal static class BonesWorkerBridge
                 pair.Key.Seat,
                 pair.Value.Tiles.Select(tile => new BonesWorkerTile(tile.LowPip.Value, tile.HighPip.Value)).ToArray()))
             .ToArray();
-        var events = state.EventLog
-            .Select(item => new BonesWorkerEvent(
-                item.TurnIndex,
-                item.PlayerId.Seat,
-                (int)item.Kind,
-                item.Tile is { } tile ? new BonesWorkerTile(tile.LowPip.Value, tile.HighPip.Value) : null,
-                item.Side is null ? null : (int)item.Side.Value))
-            .ToArray();
         return new BonesWorkerState(
             state.GameId.Value,
             board,
             hands,
             state.CurrentPlayer.Seat,
             new BonesWorkerTile(state.OpeningTile.LowPip.Value, state.OpeningTile.HighPip.Value),
-            state.PassStreak,
-            events,
-            state.Outcome is null ? null : (int)state.Outcome.Value,
-            state.Winner?.Seat);
+            state.PassStreak);
     }
 
     public static BonesWorkerMove ToMoveDto(BonesMove move)

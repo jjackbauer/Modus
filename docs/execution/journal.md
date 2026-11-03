@@ -384,8 +384,3 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Worker `compileBones`/`chooseBonesMove` and host `WorkerBonesPlayerSlot` pass the new end-to-end test.
 - Full Bones suite 386 total (384 passed, 2 waived); 16-project gate green. Waiver expected total updated to 386.
 - WP-1.3 remains in progress: DTO omits event log/outcome/winner; only one test is routed through the worker. No release.
-
-## 2026-11-03T12:53:10-03:00 - WP-1.3 state fidelity: event log/outcome/winner
-
-- Extended BonesWorkerState with event log, outcome, and winner; host/worker mapping and worker route test pass.
-- Still one worker-routed test; WP-1.3 remains in progress. No release.

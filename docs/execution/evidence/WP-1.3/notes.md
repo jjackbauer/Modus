@@ -12,6 +12,6 @@
 
 ## Limits / residual
 
-- The DTO now carries the event log, outcome, and winner; only one test is routed through the worker so far.
+- The DTO omits the Bones event log, outcome, and winner; strategies that depend on those fields do not get them yet.
 - Worker mode is trusted-only; Windows OS containment residual remains accepted; no release.
 - The full Bones suite must be regenerated at 386 tests; CI/waivers are being updated.

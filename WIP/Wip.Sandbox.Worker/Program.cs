@@ -364,12 +364,6 @@ BonesRoundState ToBonesState(BonesWorkerState dto)
     var hands = dto.Hands.ToDictionary(
         hand => new BonesPlayerId(hand.Seat),
         hand => new BonesHand(hand.Tiles.Select(tile => new BonesTile(new BonesPipCount(tile.FirstPip), new BonesPipCount(tile.SecondPip))).ToArray()));
-    var events = dto.EventLog.Select(item => new BonesEvent(
-        item.TurnIndex,
-        new BonesPlayerId(item.PlayerSeat),
-        (BonesEventKind)item.Kind,
-        item.Tile is null ? null : new BonesTile(new BonesPipCount(item.Tile.FirstPip), new BonesPipCount(item.Tile.SecondPip)),
-        item.Side is null ? null : (BonesBoardSide)item.Side.Value)).ToArray();
     return new BonesRoundState(
         new BonesGameId(dto.GameId),
         new BonesBoard(board),
@@ -377,9 +371,7 @@ BonesRoundState ToBonesState(BonesWorkerState dto)
         new BonesPlayerId(dto.CurrentSeat),
         new BonesTile(new BonesPipCount(dto.OpeningTile.FirstPip), new BonesPipCount(dto.OpeningTile.SecondPip)),
         dto.PassStreak,
-        events,
-        dto.Outcome is null ? null : (BonesRoundOutcomeKind)dto.Outcome.Value,
-        dto.Winner is null ? null : new BonesPlayerId(dto.Winner.Value));
+        []);
 }
 
 BonesMove ToBonesMove(BonesWorkerMove move) =>
