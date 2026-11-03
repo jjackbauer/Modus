@@ -325,3 +325,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Added `tools/sandbox/Install-WipAppContainer.ps1`: elevated, creates profile + SID ACLs for worker/temp/dotnet host/shared, writes `%ProgramData%\WIP\appcontainer.sid` marker and evidence.
 - Added non-elevated AppContainer launcher (derive profile, security capabilities, pipes, Job Object); Windows test skips unless installer marker exists; CI Windows security job runs the installer first.
 - Local Windows suite 18/18; gate green. CI AppContainer launch validation pending.
+
+## 2026-11-03T11:26:52-03:00 - Installer alone insufficient; CI install step removed
+
+- CI run 41652788313: installer step **success**, sandbox test step **failure**. Profile/ACL creation works, but non-elevated AppContainer launch still fails (error 5 locally; consistent with CI).
+- Removed the installer step from the blocking Windows security job so green CI reflects the tested path; installer/launcher remain opt-in and documented as pending. Next production step is an elevated helper/service that launches the AppContainer worker.
