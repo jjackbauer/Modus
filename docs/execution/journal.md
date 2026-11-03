@@ -255,3 +255,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Added a Windows Job Object memory-bomb test (64 MiB cap) and verified 17/17 sandbox tests; infinite-loop timeout/kill and env allowlist remain green.
 - WP-1.4 resource limits marked done; C1 OS file/network/native containment remains open and G2 stays conditional/trusted-only.
 - Full Bones suite rerun in background to refresh the 385-test TRX/gate.
+
+## 2026-11-03T09:58:03-03:00 - Linux security job failure; raise nproc
+
+- Retry run 41638793797: Windows `wip-security` **success**, Ubuntu `wip-security (ubuntu)` failed in the test step. Annotations only reported exit 1 (no test names).
+- Hypothesis: RLIMIT_NPROC=64 is too low for the .NET worker on the CI user; raised the Linux `prlimit --nproc` floor to 512 and updated the launcher test.
+- Windows suite remains 17/17. Retry pushed; Linux result pending.

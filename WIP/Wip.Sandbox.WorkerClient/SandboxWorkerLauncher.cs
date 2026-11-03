@@ -18,7 +18,7 @@ public static class SandboxWorkerLauncher
             return new SandboxWorkerLaunch(prlimitPath,
             [
                 "--as=" + memoryBytes.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                "--nproc=" + Math.Max(64, options.MaxProcesses * 4).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--nproc=" + Math.Max(512, options.MaxProcesses * 8).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--cpu=" + cpuSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--",
                 dotnetPath,
