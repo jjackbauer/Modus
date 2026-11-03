@@ -273,3 +273,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - WSL Ubuntu 24.04 runs the full sandbox suite **17/17** with the 8GB/512-floor settings; CI still failed, so the 2s CPU cap was the likely CI-only startup kill.
 - Raised Linux `prlimit --cpu` floor to 30s and `--nproc` to 4096; client move timeout still kills at 1s.
 - Windows 17/17; WSL 17/17. Retry pushed to CI.
+
+## 2026-11-03T10:09:47-03:00 - WP-1.5 security CI green (Windows + Ubuntu)
+
+- Run 41641244173: `wip-security` and `wip-security (ubuntu)` both success; builds and architecture green.
+- Linux success uses 30s CPU / 8GB VM / 4096 nproc floors; client move timeout still 1s.
+- WP-1.5 marked done; C1 OS containment remains open; G2 conditional/trusted-only; WP-1.3 next.
