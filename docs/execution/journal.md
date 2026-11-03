@@ -384,3 +384,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - CI architecture rejected `Wip.Sandbox.Worker -> Wip.Bones` (sandbox-worker-no-host). Reverted the worker route (ef35b5e, 93179ce, 24d6899).
 - Architecture tests 3/3 pass; Bones 385 total / 383 passed / 2 waived; 16-project gate green.
 - WP-1.3 blocked pending contract extraction or assembly-bytes/reflection ADR. No release.
+
+## 2026-11-03T13:10:49-03:00 - WP-1.3 architecture decision required
+
+- ADR-IMPL-08 proposed: A extract Bones contracts or B assembly-bytes/reflection; rule sandbox-worker-no-host is not relaxed.
+- Goal blocked on the architecture decision; gates remain green. No release.
