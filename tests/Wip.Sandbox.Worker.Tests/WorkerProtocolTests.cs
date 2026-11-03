@@ -290,6 +290,39 @@ public sealed class WorkerProtocolTests
         Assert.False(client.IsRunning);
     }
 
+    [Fact]
+    public async Task Client_GivenOsContainment_ExpectedWorkerRunsInChroot()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return;
+        }
+
+        var repositoryRoot = FindRepositoryRoot();
+        var script = Path.Combine(repositoryRoot, "tools", "sandbox", "linux-worker-sandbox.sh");
+        if (!File.Exists(script) || SandboxWorkerLauncher.FindUnshare() is null)
+        {
+            return;
+        }
+
+        var worker = Path.Combine(repositoryRoot, "WIP", "Wip.Sandbox.Worker", "bin", "Release", "net10.0", "Wip.Sandbox.Worker.dll");
+        await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+        {
+            RequireOsContainment = true,
+            LinuxSandboxScript = script,
+            StartupTimeout = TimeSpan.FromSeconds(30),
+            CompileTimeout = TimeSpan.FromSeconds(30),
+            MoveTimeout = TimeSpan.FromSeconds(5)
+        });
+        await client.HandshakeAsync();
+        await client.CompileAsync(
+            "contained",
+            "public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState state) => state.LegalMoves[0]; }");
+
+        var move = await client.ChooseMoveAsync("contained", new WorkerStrategyState(["X.O", "..."], "X", [0, 1, 2], 3));
+        Assert.Equal(0, move);
+    }
+
     private static JsonElement ParseSingle(string stdout, string type)
     {
         var lines = ParseLines(stdout);

@@ -285,3 +285,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Completed: G0/Phase 0, WP-1.2, WP-1.4, WP-1.5; conditional G2 (trusted-only, expires 2026-12-03); 17 sandbox tests green on Windows+Ubuntu; 385-test Bones/16-project gate green locally.
 - Not done: WP-1.1 formal review/G2 full, WP-1.3 worker routing, C1 OS containment, WP-1.6 default Worker, G1/G3-G5, Phases 2-6, WIP 1.0 release, post-release verification.
 - The goal hit its 24-round cap; no completion claim.
+
+## 2026-11-03T10:19:41-03:00 - Linux OS containment implemented (unshare+chroot)
+
+- `linux-worker-sandbox.sh` creates user/net/pid/mount namespaces and chroots to a rootfs containing only runtime, worker output, system libs, tmpfs/proc/dev; host repo/home/secrets are not mounted.
+- Containment test passes; full sandbox suite **18/18** on Windows and WSL; 16-project gate green locally.
+- Windows AppContainer remains pending, so C1 is only partially closed; G2 stays conditional/trusted-only and no release.

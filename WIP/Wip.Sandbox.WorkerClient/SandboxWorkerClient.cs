@@ -12,6 +12,12 @@ public sealed class SandboxWorkerOptions
     public TimeSpan MoveTimeout { get; init; } = TimeSpan.FromSeconds(2);
     public long MaxMemoryBytes { get; init; } = 268_435_456;
     public int MaxProcesses { get; init; } = 16;
+
+    /// <summary>When true, the worker must be launched inside an OS containment layer or fail closed.</summary>
+    public bool RequireOsContainment { get; init; }
+
+    /// <summary>Linux unshare/chroot wrapper. Required when RequireOsContainment is true on Linux.</summary>
+    public string? LinuxSandboxScript { get; init; }
 }
 
 public sealed class SandboxWorkerException : Exception
@@ -46,12 +52,18 @@ public sealed class SandboxWorkerClient : IAsyncDisposable
         var temp = Path.Combine(Path.GetTempPath(), "wip-sandbox-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(temp);
         var dotnet = SandboxWorkerLauncher.ResolveDotnet();
-        var launch = SandboxWorkerLauncher.Resolve(
-            workerPath,
-            resolved,
-            dotnet,
-            OperatingSystem.IsLinux(),
-            SandboxWorkerLauncher.FindPrlimit());
+        var launch = resolved.RequireOsContainment
+            ? SandboxWorkerLauncher.ResolveOsContained(
+                workerPath,
+                resolved,
+                dotnet,
+                resolved.LinuxSandboxScript)
+            : SandboxWorkerLauncher.Resolve(
+                workerPath,
+                resolved,
+                dotnet,
+                OperatingSystem.IsLinux(),
+                SandboxWorkerLauncher.FindPrlimit());
         var startInfo = new ProcessStartInfo(launch.FileName)
         {
             WorkingDirectory = temp,

@@ -57,6 +57,58 @@ public static class SandboxWorkerLauncher
         return "dotnet";
     }
 
+    public static SandboxWorkerLaunch ResolveOsContained(
+        string workerPath,
+        SandboxWorkerOptions options,
+        string dotnetPath,
+        string? linuxSandboxScript)
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            throw new PlatformNotSupportedException("Windows AppContainer launch is not wired yet; OS containment is Linux-only in this build.");
+        }
+
+        if (string.IsNullOrWhiteSpace(linuxSandboxScript) || !File.Exists(linuxSandboxScript))
+        {
+            throw new FileNotFoundException("Linux sandbox script was not found.", linuxSandboxScript);
+        }
+
+        var unshare = FindUnshare()
+            ?? throw new PlatformNotSupportedException("unshare was not found; OS containment is unavailable.");
+
+        return new SandboxWorkerLaunch(unshare,
+        [
+            "--user",
+            "--map-root-user",
+            "--net",
+            "--pid",
+            "--mount",
+            "--fork",
+            "/bin/bash",
+            linuxSandboxScript,
+            dotnetPath,
+            workerPath
+        ]);
+    }
+
+    public static string? FindUnshare()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return null;
+        }
+
+        foreach (var candidate in new[] { "/usr/bin/unshare", "/bin/unshare" })
+        {
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
     public static string? FindPrlimit()
     {
         if (!OperatingSystem.IsLinux())

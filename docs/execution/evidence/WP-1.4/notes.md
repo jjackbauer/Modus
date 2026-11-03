@@ -21,3 +21,9 @@
 - Linux memory/process/security limits are best-effort via `prlimit`, not cgroup/seccomp.
 - No OS file/network/native boundary (C1); Job Object/prlimit are resource caps.
 - C1 remains a G2 condition; no untrusted production execution.
+
+## OS containment (Linux)
+
+- unshare --user --map-root-user --net --pid --mount + chroot rootfs (runtime/app/usr libs/tmp/proc/dev only).
+- Host repo/home/secrets not mounted; empty network namespace; PID namespace.
+- Test passes 18/18 on WSL; Windows AppContainer pending, so C1 is only partially closed.
