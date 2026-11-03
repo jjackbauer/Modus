@@ -228,8 +228,8 @@ public sealed class WorkerProtocolTests
 
         Assert.Equal("/usr/bin/prlimit", launch.FileName);
         Assert.Contains("--as=8589934592", launch.Arguments);
-        Assert.Contains("--nproc=512", launch.Arguments);
-        Assert.Contains("--cpu=2", launch.Arguments);
+        Assert.Contains("--nproc=4096", launch.Arguments);
+        Assert.Contains("--cpu=30", launch.Arguments);
         Assert.Equal("/usr/bin/dotnet", launch.Arguments[^2]);
         Assert.Equal("/repo/worker.dll", launch.Arguments[^1]);
     }

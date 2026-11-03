@@ -13,12 +13,12 @@ public static class SandboxWorkerLauncher
     {
         if (isLinux && !string.IsNullOrWhiteSpace(prlimitPath))
         {
-            var cpuSeconds = Math.Max(1, (int)Math.Ceiling(options.MoveTimeout.TotalSeconds * 2));
+            var cpuSeconds = Math.Max(30, (int)Math.Ceiling(options.MoveTimeout.TotalSeconds * 10));
             var memoryBytes = Math.Max(options.MaxMemoryBytes, 8L * 1024 * 1024 * 1024);
             return new SandboxWorkerLaunch(prlimitPath,
             [
                 "--as=" + memoryBytes.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                "--nproc=" + Math.Max(512, options.MaxProcesses * 8).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                "--nproc=" + Math.Max(4096, options.MaxProcesses * 16).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--cpu=" + cpuSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 "--",
                 dotnetPath,

@@ -267,3 +267,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Ubuntu `wip-security` still failed after nproc=512, with only exit 1 annotations. Likely .NET virtual-address reservation hit the 4GB `prlimit --as`.
 - Raised the Linux `--as` floor to 8GB and updated the launcher test; Windows suite 17/17.
 - Retry pushed; Linux result pending.
+
+## 2026-11-03T10:05:27-03:00 - Linux CPU floor raised; WSL 17/17
+
+- WSL Ubuntu 24.04 runs the full sandbox suite **17/17** with the 8GB/512-floor settings; CI still failed, so the 2s CPU cap was the likely CI-only startup kill.
+- Raised Linux `prlimit --cpu` floor to 30s and `--nproc` to 4096; client move timeout still kills at 1s.
+- Windows 17/17; WSL 17/17. Retry pushed to CI.
