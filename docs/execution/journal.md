@@ -373,3 +373,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - User selected option 2: accept Windows C1 residual under conditional G2; trusted-only, no untrusted code, no release.
 - Linux C1 verified; Windows helper remains fail-closed.
+
+## 2026-11-03T12:40:21-03:00 - WP-1.3 started: IScriptExecutor abstraction
+
+- Added `IScriptExecutor`; `SandboxWorkerClient` implements it and the infinite-loop test consumes the interface.
+- 18/18 local; Bones host routing to the executor is still pending. Windows residual accepted; no release.

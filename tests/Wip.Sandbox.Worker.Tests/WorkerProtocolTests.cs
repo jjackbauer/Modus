@@ -198,7 +198,7 @@ public sealed class WorkerProtocolTests
         var worker = Path.Combine(repositoryRoot, "WIP", "Wip.Sandbox.Worker", "bin", "Release", "net10.0", "Wip.Sandbox.Worker.dll");
         Assert.True(File.Exists(worker), $"Worker not found at {worker}.");
 
-        await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+        await using IScriptExecutor client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
         {
             StartupTimeout = TimeSpan.FromSeconds(20),
             CompileTimeout = TimeSpan.FromSeconds(20),

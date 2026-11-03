@@ -26,7 +26,7 @@ public sealed class SandboxWorkerException : Exception
     public string Code { get; }
 }
 
-public sealed class SandboxWorkerClient : IAsyncDisposable
+public sealed class SandboxWorkerClient : IScriptExecutor
 {
     private readonly Process _process;
     private readonly StreamWriter _input;
