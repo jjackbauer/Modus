@@ -142,32 +142,6 @@ public sealed class SandboxWorkerClient : IScriptExecutor
         return payload.GetProperty("move").GetInt32();
     }
 
-    public async Task CompileBonesAsync(string strategyId, string source, CancellationToken cancellationToken = default)
-    {
-        await SendAsync(new
-        {
-            type = "compileBones",
-            id = NextId(),
-            payload = new { strategyId, sourceHash = string.Empty, source }
-        }, _options.CompileTimeout, cancellationToken);
-    }
-
-    public async Task<BonesWorkerMove> ChooseBonesMoveAsync(
-        string strategyId,
-        BonesWorkerState state,
-        IReadOnlyList<BonesWorkerMove> legalMoves,
-        CancellationToken cancellationToken = default)
-    {
-        var payload = await SendAsync(new
-        {
-            type = "chooseBonesMove",
-            id = NextId(),
-            payload = new { strategyId, state, legalMoves }
-        }, _options.MoveTimeout, cancellationToken);
-        return payload.GetProperty("move").Deserialize<BonesWorkerMove>(SandboxJson.Options)
-            ?? throw new SandboxWorkerException(SandboxErrorCodes.InternalError, "Worker returned no Bones move.");
-    }
-
     private async Task<JsonElement> SendAsync(object request, TimeSpan timeout, CancellationToken cancellationToken)
     {
         try

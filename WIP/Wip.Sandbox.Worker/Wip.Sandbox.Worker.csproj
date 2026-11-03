@@ -14,6 +14,5 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wip.Sandbox.Protocol\Wip.Sandbox.Protocol.csproj" />
-    <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
   </ItemGroup>
 </Project>

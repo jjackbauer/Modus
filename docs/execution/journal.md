@@ -378,9 +378,3 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Added `IScriptExecutor`; `SandboxWorkerClient` implements it and the infinite-loop test consumes the interface.
 - 18/18 local; Bones host routing to the executor is still pending. Windows residual accepted; no release.
-
-## 2026-11-03T12:52:09-03:00 - Bones worker execution works; 386/386 suite
-
-- Worker `compileBones`/`chooseBonesMove` and host `WorkerBonesPlayerSlot` pass the new end-to-end test.
-- Full Bones suite 386 total (384 passed, 2 waived); 16-project gate green. Waiver expected total updated to 386.
-- WP-1.3 remains in progress: DTO omits event log/outcome/winner; only one test is routed through the worker. No release.
