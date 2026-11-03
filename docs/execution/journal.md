@@ -213,3 +213,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - `SandboxWorkerLauncher` now uses absolute dotnet, and on Linux wraps with `prlimit` (virtual memory/process/CPU bounds) when available; Windows uses the Job Object.
 - 12 worker/client tests pass; 16-project gate local green.
 - C1 OS file/network/native containment remains open; G2 not passed; WP-1.3 blocked.
+
+## 2026-11-03T09:36:58-03:00 - Linux prlimit + 16 hostile tests; G2 packet ready
+
+- Windows Job Object + timeouts/kill + Linux prlimit launcher; environment allowlist; 16 worker/client tests (including File/Network/Process/Reflection/DllImport compile rejection, oversized frames, infinite-loop kill).
+- `Wip.Sandbox.WorkerClient` and `Wip.Sandbox.Worker` are not production-wired; WP-1.3 blocked.
+- **G2: NOT APPROVED**; packet offers fail (continue OS containment) or narrowed trusted-only approval. C1 file/network/native containment remains open.

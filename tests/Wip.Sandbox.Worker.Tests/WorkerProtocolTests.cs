@@ -234,6 +234,31 @@ public sealed class WorkerProtocolTests
         Assert.Equal("/repo/worker.dll", launch.Arguments[^1]);
     }
 
+    [Theory]
+    [InlineData("public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState s) => System.IO.File.Exists(\"C:\\Windows\\win.ini\") ? 1 : 0; }")]
+    [InlineData("public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState s) { using var client = new System.Net.Http.HttpClient(); return 0; } }")]
+    [InlineData("public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState s) { System.Diagnostics.Process.Start(\"cmd.exe\"); return 0; } }")]
+    [InlineData("public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState s) { var a = System.Reflection.Assembly.GetExecutingAssembly(); return 0; } }")]
+    public async Task Worker_GivenForbiddenApi_ExpectedCompileError(string source)
+    {
+        var compile = JsonSerializer.Serialize(new
+        {
+            type = "compile",
+            id = "c1",
+            payload = new { strategyId = "s1", sourceHash = "", source }
+        }, SandboxJson.Options);
+
+        var result = await RunWorkerAsync(
+            "{\"type\":\"handshake\",\"id\":\"h1\",\"protocolVersion\":\"1.0\"}",
+            compile,
+            "{\"type\":\"shutdown\",\"id\":\"q1\"}");
+
+        var lines = ParseLines(result.StdOut);
+        var compileResult = Assert.Single(lines, static line => line.GetProperty("type").GetString() == "compileResult");
+        Assert.False(compileResult.GetProperty("ok").GetBoolean());
+        Assert.Equal(SandboxErrorCodes.CompileError, compileResult.GetProperty("errorCode").GetString());
+    }
+
     private static JsonElement ParseSingle(string stdout, string type)
     {
         var lines = ParseLines(stdout);

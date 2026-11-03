@@ -8,11 +8,11 @@
 - `Wip.Sandbox.Protocol`: versioned envelopes, DTOs, `IWorkerStrategy`, error codes.
 - `Wip.Sandbox.Worker`: handshake gate, 1.x negotiation, worker-computed SHA-256 source hash, curated reference set + deny-list, bounded 1 MiB byte reader, Roslyn compile, per-strategy collectible ALC, stdout suppression, response cap, cache cap 64, fixed errors.
 - `Wip.Sandbox.WorkerClient`: **clears the inherited environment** and supplies only DOTNET_CLI_HOME/TMP/TEMP/TMPDIR/DOTNET_ROOT; startup/compile/move timeouts; process-tree kill; Windows Job Object with kill-on-close, 256 MiB process-memory cap and 16-process cap; Linux prlimit launcher with CPU/process/virtual-memory bounds.
-- 11 worker/client tests; architecture rules for protocol/worker/client.
+- 16 worker/client tests; architecture rules for protocol/worker/client.
 
 ## Verification
 
-- Worker tests: **12/12 passed**.
+- Worker tests: **16/16 passed**.
 - Architecture tests: 3/3 (40 WIP projects); solution build 0 errors; coverage 40/40.
 - Offline gate locally: 16 projects / 27 waivers, exit 0.
 
