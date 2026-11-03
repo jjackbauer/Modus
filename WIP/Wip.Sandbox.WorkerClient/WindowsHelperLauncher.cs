@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
 
@@ -38,8 +40,8 @@ internal static class WindowsHelperLauncher
         var suffix = Guid.NewGuid().ToString("N");
         var inputName = "wip-sandbox-in-" + suffix;
         var outputName = "wip-sandbox-out-" + suffix;
-        using var input = new NamedPipeServerStream(inputName, PipeDirection.Out, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-        using var output = new NamedPipeServerStream(outputName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+        using var input = CreateServerPipe(inputName, PipeDirection.Out);
+        using var output = CreateServerPipe(outputName, PipeDirection.In);
         var inputWait = input.WaitForConnectionAsync();
         var outputWait = output.WaitForConnectionAsync();
 
@@ -89,6 +91,24 @@ internal static class WindowsHelperLauncher
         var inputWriter = new StreamWriter(input) { AutoFlush = true };
         var outputReader = new StreamReader(output);
         return new WindowsContainedProcess(process, inputWriter, outputReader, job);
+    }
+
+    private static NamedPipeServerStream CreateServerPipe(string name, PipeDirection direction)
+    {
+        var security = new PipeSecurity();
+        security.AddAccessRule(new PipeAccessRule(
+            new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null),
+            PipeAccessRights.FullControl,
+            AccessControlType.Allow));
+        security.AddAccessRule(new PipeAccessRule(
+            new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
+            PipeAccessRights.FullControl,
+            AccessControlType.Allow));
+        security.AddAccessRule(new PipeAccessRule(
+            WindowsIdentity.GetCurrent().User!,
+            PipeAccessRights.FullControl,
+            AccessControlType.Allow));
+        return NamedPipeServerStreamAcl.Create(name, direction, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous, 0, 0, security);
     }
 
     private static bool IsAppContainerToken(Process process)
