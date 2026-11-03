@@ -115,6 +115,19 @@ $tempFile = Join-Path $data 'temp-root.txt'
 & icacls $dotnetFile /inheritance:r /grant:r ('*' + $userSid + ':(R)') 'SYSTEM:(F)' /Q | Out-Null
 & icacls $tempFile /inheritance:r /grant:r ('*' + $userSid + ':(R)') 'SYSTEM:(F)' /Q | Out-Null
 
+function Grant-Traverse([string]$path) {
+    $directory = [IO.Path]::GetDirectoryName($path)
+    while (-not [string]::IsNullOrWhiteSpace($directory)) {
+        & icacls $directory /grant ('*' + $sidText + ':(RX)') /Q | Out-Null
+        $parent = [IO.Path]::GetDirectoryName($directory)
+        if ($parent -eq $directory) { break }
+        $directory = $parent
+    }
+}
+Grant-Traverse (Join-Path $workerDir 'Wip.Sandbox.Worker.dll')
+Grant-Traverse (Join-Path $dotnetRoot 'dotnet.exe')
+Grant-Traverse (Join-Path $tempRoot 'probe')
+
 $dotnetExe = Join-Path $dotnetRoot 'dotnet.exe'
 $taskCommand = '"' + $dotnetExe + '" "' + $helperDll + '" --serve'
 & schtasks /End /TN 'WipSandboxHelper' 2>$null | Out-Null
