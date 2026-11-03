@@ -14,7 +14,7 @@ public static class SandboxWorkerLauncher
         if (isLinux && !string.IsNullOrWhiteSpace(prlimitPath))
         {
             var cpuSeconds = Math.Max(1, (int)Math.Ceiling(options.MoveTimeout.TotalSeconds * 2));
-            var memoryBytes = Math.Max(options.MaxMemoryBytes, 4L * 1024 * 1024 * 1024);
+            var memoryBytes = Math.Max(options.MaxMemoryBytes, 8L * 1024 * 1024 * 1024);
             return new SandboxWorkerLaunch(prlimitPath,
             [
                 "--as=" + memoryBytes.ToString(System.Globalization.CultureInfo.InvariantCulture),

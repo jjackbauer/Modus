@@ -227,7 +227,7 @@ public sealed class WorkerProtocolTests
             prlimitPath: "/usr/bin/prlimit");
 
         Assert.Equal("/usr/bin/prlimit", launch.FileName);
-        Assert.Contains("--as=4294967296", launch.Arguments);
+        Assert.Contains("--as=8589934592", launch.Arguments);
         Assert.Contains("--nproc=512", launch.Arguments);
         Assert.Contains("--cpu=2", launch.Arguments);
         Assert.Equal("/usr/bin/dotnet", launch.Arguments[^2]);

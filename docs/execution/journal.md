@@ -261,3 +261,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Retry run 41638793797: Windows `wip-security` **success**, Ubuntu `wip-security (ubuntu)` failed in the test step. Annotations only reported exit 1 (no test names).
 - Hypothesis: RLIMIT_NPROC=64 is too low for the .NET worker on the CI user; raised the Linux `prlimit --nproc` floor to 512 and updated the launcher test.
 - Windows suite remains 17/17. Retry pushed; Linux result pending.
+
+## 2026-11-03T10:02:59-03:00 - Linux security retry: 8GB virtual-memory floor
+
+- Ubuntu `wip-security` still failed after nproc=512, with only exit 1 annotations. Likely .NET virtual-address reservation hit the 4GB `prlimit --as`.
+- Raised the Linux `--as` floor to 8GB and updated the launcher test; Windows suite 17/17.
+- Retry pushed; Linux result pending.
