@@ -12,7 +12,7 @@
 
 ## Verification
 
-- Worker tests: **16/16 passed**.
+- Worker tests: **17/17 passed**.
 - Architecture tests: 3/3 (40 WIP projects); solution build 0 errors; coverage 40/40.
 - Offline gate locally: 16 projects / 27 waivers, exit 0.
 

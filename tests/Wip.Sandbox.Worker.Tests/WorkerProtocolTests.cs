@@ -259,6 +259,37 @@ public sealed class WorkerProtocolTests
         Assert.Equal(SandboxErrorCodes.CompileError, compileResult.GetProperty("errorCode").GetString());
     }
 
+    [Fact]
+    public async Task Client_GivenMemoryBomb_ExpectedCappedOrKilled()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return; // Windows Job Object is the current hard memory cap; Linux prlimit is best-effort.
+        }
+
+        var repositoryRoot = FindRepositoryRoot();
+        var worker = Path.Combine(repositoryRoot, "WIP", "Wip.Sandbox.Worker", "bin", "Release", "net10.0", "Wip.Sandbox.Worker.dll");
+        Assert.True(File.Exists(worker), $"Worker not found at {worker}.");
+
+        await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+        {
+            StartupTimeout = TimeSpan.FromSeconds(20),
+            CompileTimeout = TimeSpan.FromSeconds(20),
+            MoveTimeout = TimeSpan.FromSeconds(10),
+            MaxMemoryBytes = 64L * 1024 * 1024
+        });
+        await client.HandshakeAsync();
+        await client.CompileAsync(
+            "memory",
+            "public sealed class Strategy : Wip.Sandbox.Protocol.IWorkerStrategy { public int ChooseMove(Wip.Sandbox.Protocol.WorkerStrategyState state) { var data = new byte[256 * 1024 * 1024]; return data.Length; } }");
+
+        await Assert.ThrowsAnyAsync<Exception>(() => client.ChooseMoveAsync(
+            "memory",
+            new WorkerStrategyState(["X.O", "..."], "X", [0, 1, 2], 3)));
+
+        Assert.False(client.IsRunning);
+    }
+
     private static JsonElement ParseSingle(string stdout, string type)
     {
         var lines = ParseLines(stdout);

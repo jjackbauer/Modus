@@ -249,3 +249,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Run 41638523013: Windows `wip-security` failed at Set up job because codeload could not serve setup-dotnet; no tests ran. This is an Actions download failure, not a suite failure.
 - Linux security/other WIP jobs were in progress at inspection. Local 16/16 suite and 16-project gate remain green.
 - Retry via the next push; no source fix for the codeload failure.
+
+## 2026-11-03T09:51:19-03:00 - WP-1.4 memory cap + 17 tests
+
+- Added a Windows Job Object memory-bomb test (64 MiB cap) and verified 17/17 sandbox tests; infinite-loop timeout/kill and env allowlist remain green.
+- WP-1.4 resource limits marked done; C1 OS file/network/native containment remains open and G2 stays conditional/trusted-only.
+- Full Bones suite rerun in background to refresh the 385-test TRX/gate.
