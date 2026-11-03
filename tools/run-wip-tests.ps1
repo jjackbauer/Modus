@@ -27,7 +27,8 @@ $projects = @(
     'WIP/Wip.Bones.ModelProviders.DeepSeek.Tests/Wip.Bones.ModelProviders.DeepSeek.Tests.csproj',
     'WIP/Wip.Bones.Host.Tests/Wip.Bones.Host.Tests.csproj',
     'WIP/Wip.ShellHost.Tests/Wip.ShellHost.Tests.csproj',
-    'WIP/Wip.Bones.E2E.Tests/Wip.Bones.E2E.Tests.csproj'
+    'WIP/Wip.Bones.E2E.Tests/Wip.Bones.E2E.Tests.csproj',
+    'tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj'
 )
 
 New-Item -ItemType Directory -Force -Path $ResultsDirectory | Out-Null

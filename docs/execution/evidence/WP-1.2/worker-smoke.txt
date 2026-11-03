@@ -1,0 +1,15 @@
+System.Object[]
+--- input ---
+{"type":"handshake","id":"h1","protocolVersion":"1.0"}
+{"type":"ping","id":"p1"}
+{"id":"c1","type":"compile","payload":{"sourceHash":"sha256:smoke","strategyId":"s1","source":"using Wip.Sandbox.Protocol; public sealed class Strategy : IWorkerStrategy { public int ChooseMove(WorkerStrategyState state) =\u003e state.LegalMoves[0]; }"}}
+{"type":"chooseMove","id":"m1","payload":{"strategyId":"s1","state":{"board":["X.O","..."],"player":"X","legalMoves":[0,1,2],"turn":3}}}
+{"type":"shutdown","id":"q1"}
+--- stdout ---
+{"type":"handshakeResult","id":"h1","ok":true,"payload":{"protocolVersion":"1.0","capabilities":["compile","chooseMove","ping","shutdown"]}}
+{"type":"pong","id":"p1","ok":true,"payload":{}}
+{"type":"compileResult","id":"c1","ok":true,"payload":{"assemblyHash":"CD0EC4F6B0E78639846677C3BC5605194041CBCA83A4863E66C544CAC5BE0714","diagnostics":[]}}
+{"type":"chooseMoveResult","id":"m1","ok":true,"payload":{"move":0}}
+{"type":"shutdownResult","id":"q1","ok":true,"payload":{}}
+
+--- stderr ---

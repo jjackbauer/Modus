@@ -60,8 +60,9 @@ It does not cover a malicious operator with local administrator rights, a compro
 | TM-10 | Malformed protocol frame | Deterministic protocol error; no crash | MalformedFrame_GivenInvalidJson_ExpectedProtocolError |
 | TM-11 | Stale/replayed correlation ID | Rejected or ignored deterministically | Replay_GivenOldCorrelationId_ExpectedRejected |
 | TM-12 | Temp data survives | Temp removed after stop/crash | TempCleanup_GivenCrash_ExpectedNoResidue |
+| TM-13 | P/Invoke/native call | **Open gap** — currently not blocked by reference allowlist; G2 must restrict or accept | PInvoke_GivenNativeCall_ExpectedDeniedOrAcceptedRisk (WP-1.5) |
 
-These names are proposed; WP-1.5 must implement them on Windows and Linux.
+These names are proposed; WP-1.5 must implement them on Windows and Linux. TM-13 is explicitly not claimed as contained in v1.0.
 
 ## 6. Residual risk
 
@@ -72,13 +73,15 @@ A local developer tool cannot provide a perfect sandbox. The following remain ex
 - A kernel/runtime vulnerability can escape any local sandbox.
 - The worker still runs with the developer's OS account; filesystem isolation is policy/protocol-level unless a stronger OS sandbox is added.
 - The worker has no host DI, but it may still use the .NET BCL broadly; the deny-list is defense in depth, not the boundary.
+- **P/Invoke/native escape (open):** the worker compiles against the trusted platform assemblies and can declare `[DllImport]`; the current reference set does **not** block native calls. This is a G2 blocker unless the worker restricts references/IL or an OS policy contains it. TM-13 is not yet contained.
+- **Contract surface:** the model source references only `Wip.Sandbox.Protocol` plus the BCL/TPA; there is no minimal-contract-only reference set yet. G2 must decide whether to curate references.
 
-G2 must accept or tighten these residuals before WP-1.3 routes production execution through the worker.
+G2 must accept, restrict, or explicitly waive these residuals before WP-1.3 routes production execution through the worker.
 
 ## 7. Review checklist (G2)
 
 - [ ] Assets and trust boundaries reviewed.
-- [ ] Each TM-01..12 mapped to an executable test.
+- [ ] Each TM-01..13 mapped to an executable test, or TM-13 explicitly accepted as residual risk.
 - [ ] Worker protocol version and limits approved.
 - [ ] Residual risk accepted or mitigated.
 - [ ] Fallback/trusted-mode policy approved.

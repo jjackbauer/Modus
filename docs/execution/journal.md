@@ -180,3 +180,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **G0:** approved by the product owner’s instruction “go on... unblock it...” (recorded in `decision-2026-11-02-g0.md`); Phase 0 is complete.
 - **Phase 1 / WP-1.1:** threat model and worker protocol v1.0 drafted under `docs/security/`; abuse cases TM-01..12 mapped to planned WP-1.5 tests.
 - **Status:** WP-1.1 draft complete; security review/G2 **not passed**; WP-1.2 can scaffold against the draft, WP-1.3 waits for G2.
+
+## 2026-11-03T07:59:01-03:00 - WP-1.2 worker host implemented
+
+- **Protocol/worker:** `Wip.Sandbox.Protocol` and `Wip.Sandbox.Worker` added; handshake/ping/compile/chooseMove/shutdown, Roslyn compile, worker-only assembly load, deterministic malformed-frame errors.
+- **Tests:** worker protocol 3/3; architecture 3/3; `dotnet build Wip.slnx` 0 errors; coverage 39/39.
+- **Gate:** G2 still pending; P/Invoke/TM-13, broad TPA contract, and missing resource limits are documented blockers.
+- **Next:** independent review results, fixes, G2; WP-1.3 blocked.

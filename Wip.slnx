@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/tests/">
     <Project Path="tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj" />
+    <Project Path="tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj" />
   </Folder>
   <Folder Name="/WIP/">
     <Project Path="WIP/Wip.Agent.Basic/Wip.Agent.Basic.csproj" />
@@ -33,6 +34,8 @@
     <Project Path="WIP/Wip.Modus.Tests/Wip.Modus.Tests.csproj" />
     <Project Path="WIP/Wip.Policy.LocalSafe.Tests/Wip.Policy.LocalSafe.Tests.csproj" />
     <Project Path="WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj" />
+    <Project Path="WIP/Wip.Sandbox.Protocol/Wip.Sandbox.Protocol.csproj" />
+    <Project Path="WIP/Wip.Sandbox.Worker/Wip.Sandbox.Worker.csproj" />
     <Project Path="WIP/Wip.Shell.E2E.Tests/Wip.Shell.E2E.Tests.csproj" />
     <Project Path="WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj" />
     <Project Path="WIP/Wip.Shell.Tests/Wip.Shell.Tests.csproj" />
