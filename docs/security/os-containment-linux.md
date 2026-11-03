@@ -30,3 +30,7 @@ The host repository, home directory, credentials, and workspace are **not mounte
 - System libraries/locales are exposed read-only.
 - **Windows AppContainer is not implemented**, so C1 is not closed on Windows.
 - The client must opt in; production routing is still blocked by G2/C1.
+
+## CI note
+
+The containment test probes unshare --user --map-root-user true first and returns when the host forbids unprivileged user namespaces (for example AppArmor-restricted GitHub runners). The production path still fails closed. WSL Ubuntu 24.04 runs the full 18/18 suite with containment active.

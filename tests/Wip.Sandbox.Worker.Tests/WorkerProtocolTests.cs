@@ -300,7 +300,7 @@ public sealed class WorkerProtocolTests
 
         var repositoryRoot = FindRepositoryRoot();
         var script = Path.Combine(repositoryRoot, "tools", "sandbox", "linux-worker-sandbox.sh");
-        if (!File.Exists(script) || SandboxWorkerLauncher.FindUnshare() is null)
+        if (!File.Exists(script) || !CanUseUserNamespaces())
         {
             return;
         }
@@ -321,6 +321,36 @@ public sealed class WorkerProtocolTests
 
         var move = await client.ChooseMoveAsync("contained", new WorkerStrategyState(["X.O", "..."], "X", [0, 1, 2], 3));
         Assert.Equal(0, move);
+    }
+
+    private static bool CanUseUserNamespaces()
+    {
+        if (!OperatingSystem.IsLinux() || SandboxWorkerLauncher.FindUnshare() is null)
+        {
+            return false;
+        }
+
+        try
+        {
+            var startInfo = new ProcessStartInfo("/usr/bin/unshare", ["--user", "--map-root-user", "true"])
+            {
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+            using var process = Process.Start(startInfo);
+            if (process is null || !process.WaitForExit(3_000))
+            {
+                return false;
+            }
+
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static JsonElement ParseSingle(string stdout, string type)

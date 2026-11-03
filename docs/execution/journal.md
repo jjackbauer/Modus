@@ -297,3 +297,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Linux containment is done (18/18, unshare+chroot).
 - Windows AppContainer profile creation returns access denied from testhost; CreateProcessAsUser/CreateProcess with security capabilities fail with error 5. Experimental code removed; Windows RequireOsContainment fails closed.
 - C1 remains partially closed; G2 conditional/trusted-only; no release.
+
+## 2026-11-03T10:27:50-03:00 - Linux containment CI probe + 18/18
+
+- Containment test now probes unprivileged user namespaces; it skips where the host forbids them (AppArmor CI) while production fails closed. WSL 18/18 still exercises the real chroot.
+- Windows AppContainer remains open; C1 is Linux-only.
