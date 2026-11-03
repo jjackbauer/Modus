@@ -91,3 +91,36 @@ $marker = Join-Path $markerDir 'appcontainer.sid'
 
 Write-Output ('AppContainer profile ready: ' + $sidText)
 Write-Output ('Evidence: ' + $evidence)
+
+$helperProject = Join-Path $repo 'tools\Wip.Sandbox.Helper\Wip.Sandbox.Helper.csproj'
+& dotnet build $helperProject -c Release --nologo | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not build the sandbox helper.' }
+$helperDll = Join-Path $repo 'tools\Wip.Sandbox.Helper\bin\Release\net10.0\Wip.Sandbox.Helper.dll'
+if (-not (Test-Path $helperDll)) { throw ('Helper not found: ' + $helperDll) }
+
+$data = Join-Path $env:ProgramData 'WIP'
+New-Item -ItemType Directory -Path $data -Force | Out-Null
+$token = [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+$userSid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
+$tokenFile = Join-Path $data 'helper.token'
+$rootFile = Join-Path $data 'allowed-root.txt'
+$dotnetFile = Join-Path $data 'dotnet-path.txt'
+$tempFile = Join-Path $data 'temp-root.txt'
+[IO.File]::WriteAllText($tokenFile, $token + [Environment]::NewLine, $utf8)
+[IO.File]::WriteAllText($rootFile, $repo + [Environment]::NewLine, $utf8)
+[IO.File]::WriteAllText($dotnetFile, $dotnetRoot + [Environment]::NewLine, $utf8)
+[IO.File]::WriteAllText($tempFile, [IO.Path]::GetTempPath() + [Environment]::NewLine, $utf8)
+& icacls $tokenFile /inheritance:r /grant:r ('*' + $userSid + ':(R)') 'SYSTEM:(F)' /Q | Out-Null
+& icacls $rootFile /inheritance:r /grant:r ('*' + $userSid + ':(R)') 'SYSTEM:(F)' /Q | Out-Null
+& icacls $dotnetFile /inheritance:r /grant:r ('*' + $userSid + ':(R)') 'SYSTEM:(F)' /Q | Out-Null
+& icacls $tempFile /inheritance:r /grant:r ('*' + $userSid + ':(R)') 'SYSTEM:(F)' /Q | Out-Null
+
+$dotnetExe = Join-Path $dotnetRoot 'dotnet.exe'
+$taskCommand = '"' + $dotnetExe + '" "' + $helperDll + '" --serve'
+& schtasks /End /TN 'WipSandboxHelper' 2>$null | Out-Null
+& schtasks /Create /TN 'WipSandboxHelper' /SC ONSTART /RU 'SYSTEM' /RL HIGHEST /TR $taskCommand /F | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not create the sandbox helper task.' }
+& schtasks /Run /TN 'WipSandboxHelper' | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not start the sandbox helper task.' }
+
+Write-Output ('Helper installed: ' + $helperDll)
