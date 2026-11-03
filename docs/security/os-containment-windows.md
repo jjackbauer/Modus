@@ -32,3 +32,7 @@ The Windows `wip-security` job runs the installer before the sandbox suite (the 
 - AppContainer creation is an install-time operation; an uninstalled machine is fail-closed.
 - `CreateProcessAsUser`/security-capability launch must be verified in CI and on a clean machine.
 - If AppContainer launch still returns error 5 after the installer, the next step is an elevated helper/service that owns the launch over a local named pipe; the main app must remain non-elevated.
+
+## Elevated helper
+
+The installer also builds and starts a SYSTEM scheduled task WipSandboxHelper. The helper listens on the WipSandboxHelper named pipe, validates a per-install token plus worker/temp paths, launches the AppContainer worker with inherited pipe handles, and returns the PID. The app never runs elevated.

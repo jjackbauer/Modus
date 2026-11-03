@@ -53,7 +53,7 @@ public sealed class SandboxWorkerClient : IAsyncDisposable
             return SandboxWorkerLauncher.FindUnshare() is not null;
         }
 
-        return OperatingSystem.IsWindows() && WindowsAppContainer.IsAvailable();
+        return OperatingSystem.IsWindows() && WindowsHelperLauncher.IsAvailable();
     }
 
     public static SandboxWorkerClient Start(string workerPath, SandboxWorkerOptions? options = null)
@@ -63,7 +63,7 @@ public sealed class SandboxWorkerClient : IAsyncDisposable
         Directory.CreateDirectory(temp);
         if (resolved.RequireOsContainment && OperatingSystem.IsWindows())
         {
-            var contained = WindowsAppContainer.Start(workerPath, resolved, temp);
+            var contained = WindowsHelperLauncher.Start(workerPath, resolved, temp);
             return new SandboxWorkerClient(contained.Process, contained.Input, contained.Output, contained.Job, resolved);
         }
 

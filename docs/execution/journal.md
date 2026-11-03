@@ -330,3 +330,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - CI run 41652788313: installer step **success**, sandbox test step **failure**. Profile/ACL creation works, but non-elevated AppContainer launch still fails (error 5 locally; consistent with CI).
 - Removed the installer step from the blocking Windows security job so green CI reflects the tested path; installer/launcher remain opt-in and documented as pending. Next production step is an elevated helper/service that launches the AppContainer worker.
+
+## 2026-11-03T11:30:45-03:00 - Windows helper/service implemented
+
+- Added `tools/Wip.Sandbox.Helper`: SYSTEM task, named-pipe protocol, token/path validation, AppContainer launch with inherited pipe handles.
+- Client `WindowsHelperLauncher` creates named pipes and connects; installer builds/starts task and writes config/ACL. CI installer step re-enabled for validation.
+- Local Windows suite 18/18 (helper not installed, containment test skips). CI launch pending.
