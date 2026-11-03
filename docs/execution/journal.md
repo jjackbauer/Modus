@@ -368,3 +368,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Installer + SYSTEM helper succeed; token/path accepted; handles duplicated. `CreateProcessAsUser` still returns error 5 with the AppContainer capability attribute.
 - Disabled the blocking CI install step so the main security job stays on the verified Linux path. Windows C1 is **not** claimed; Linux C1 is verified.
 - Next: Windows AppContainer token/ACL/desktop investigation or explicit accepted residual.
+
+## 2026-11-03T12:39:14-03:00 - Windows residual accepted; WP-1.3 trusted-only unblocked
+
+- User selected option 2: accept Windows C1 residual under conditional G2; trusted-only, no untrusted code, no release.
+- Linux C1 verified; Windows helper remains fail-closed.
