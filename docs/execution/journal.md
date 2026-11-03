@@ -399,3 +399,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Created `Wip.Sandbox.BonesContracts` (41st WIP project) with domain/state/identifier/player-slot contracts; Bones references it.
 - Worker references contracts, not Wip.Bones; architecture 41/41 and build green. Worker execution wiring is next.
+
+## 2026-11-03T15:45:26-03:00 - Option A worker execution works
+
+- Contracts project wired; worker compiles/executes against contracts; host WorkerBonesPlayerSlot test passes.
+- Architecture 41/41; Bones 386 total (384 pass, 2 waived); 16-project gate green.
+- WP-1.3 remains in progress for broader coverage; no release.

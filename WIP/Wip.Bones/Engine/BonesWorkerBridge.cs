@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using Wip.Bones.Domain;
 using Wip.Bones.Identifiers;
 using Wip.Sandbox.Protocol;
+using Wip.Sandbox.WorkerClient;
 
 namespace Wip.Bones.Engine;
 
@@ -80,3 +81,25 @@ internal static class BonesWorkerBridge
             dto.Winner is null ? null : new BonesPlayerId(dto.Winner.Value));
     }
 }
+
+internal sealed class WorkerBonesPlayerSlot : IBonesPlayerSlot
+{
+    private readonly SandboxWorkerClient _client;
+    private readonly string _strategyId;
+
+    public WorkerBonesPlayerSlot(SandboxWorkerClient client, string strategyId)
+    {
+        _client = client;
+        _strategyId = strategyId;
+    }
+
+    public BonesMove ChooseMove(BonesRoundState state, IReadOnlyList<BonesMove> legalMoves)
+    {
+        var move = _client.ChooseBonesMoveAsync(
+            _strategyId,
+            BonesWorkerBridge.ToState(state),
+            legalMoves.Select(BonesWorkerBridge.ToMoveDto).ToArray()).GetAwaiter().GetResult();
+        return BonesWorkerBridge.ToMove(move);
+    }
+}
+

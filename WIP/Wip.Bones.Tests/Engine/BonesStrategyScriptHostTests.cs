@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using Wip.Bones.Domain;
 using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
+using Wip.Sandbox.WorkerClient;
 using Xunit;
 
 namespace Wip.Bones.Tests.Engine;
@@ -198,6 +199,49 @@ public sealed class BonesStrategyScriptHostTests
         Assert.Equal(2, host.CompileInvocationCount);
     }
 
+    [Fact]
+    public async Task BonesStrategyScriptHost_GivenWorkerMode_ExpectedExecutionThroughWorker()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var worker = Path.Combine(repositoryRoot, "WIP", "Wip.Sandbox.Worker", "bin", "Release", "net10.0", "Wip.Sandbox.Worker.dll");
+        Assert.True(File.Exists(worker), $"Worker not found at {worker}.");
+
+        await using var client = SandboxWorkerClient.Start(worker, new SandboxWorkerOptions
+        {
+            StartupTimeout = TimeSpan.FromSeconds(20),
+            CompileTimeout = TimeSpan.FromSeconds(20),
+            MoveTimeout = TimeSpan.FromSeconds(10)
+        });
+        await client.HandshakeAsync();
+        var host = new BonesStrategyScriptHost(new BonesStrategyScriptHostOptions
+        {
+            Mode = BonesScriptHostMode.Worker,
+            TrustedOnly = true,
+            WorkerClient = client
+        });
+        var result = host.TryCompile(DefaultStrategyId, ValidScriptSource);
+        Assert.True(result.Succeeded, result.FailureReason);
+        Assert.NotNull(result.Compiled);
+        var move = host.ExecuteChooseMoveDirect(result.Compiled!, CreateMidgameState(), CreateLegalMoves());
+        Assert.Equal(new BonesPlayerId(2), move.PlayerId);
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "Wip.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new InvalidOperationException("Repository root not found.");
+    }
+
     private static BonesRoundState CreateMidgameState() =>
         new(
             new BonesGameId("script-host-test"),
@@ -236,7 +280,7 @@ public sealed class BonesStrategyScriptHostTests
             TrustedOnly = true
         };
 
-        Assert.Throws<NotSupportedException>(() => new BonesStrategyScriptHost(options));
+        Assert.Throws<InvalidOperationException>(() => new BonesStrategyScriptHost(options));
     }
 
     private static IReadOnlyList<BonesMove> CreateLegalMoves() =>
