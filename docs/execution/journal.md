@@ -352,3 +352,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - C1 implemented/verified on Windows (AppContainer helper + token check) and Linux (unshare+chroot); security CI run 41655112634 green.
 - G2 packet requests full approval with residual P/Invoke/kernel risk; no self-approval. WP-1.3/release wait for the human gate.
+
+## 2026-11-03T11:40:26-03:00 - Stopped at G2 human gate
+
+- C1 implemented/verified Windows+Linux; security CI run 41655112634 green; G2 re-review packet prepared.
+- Per MODE, did not self-approve G2 and did not start WP-1.3. Goal blocked pending human full-G2 decision.
