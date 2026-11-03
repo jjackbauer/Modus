@@ -291,3 +291,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - `linux-worker-sandbox.sh` creates user/net/pid/mount namespaces and chroots to a rootfs containing only runtime, worker output, system libs, tmpfs/proc/dev; host repo/home/secrets are not mounted.
 - Containment test passes; full sandbox suite **18/18** on Windows and WSL; 16-project gate green locally.
 - Windows AppContainer remains pending, so C1 is only partially closed; G2 stays conditional/trusted-only and no release.
+
+## 2026-11-03T10:26:03-03:00 - Windows AppContainer attempt failed; C1 Windows open
+
+- Linux containment is done (18/18, unshare+chroot).
+- Windows AppContainer profile creation returns access denied from testhost; CreateProcessAsUser/CreateProcess with security capabilities fail with error 5. Experimental code removed; Windows RequireOsContainment fails closed.
+- C1 remains partially closed; G2 conditional/trusted-only; no release.
