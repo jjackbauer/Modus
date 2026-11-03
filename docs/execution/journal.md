@@ -336,3 +336,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Added `tools/Wip.Sandbox.Helper`: SYSTEM task, named-pipe protocol, token/path validation, AppContainer launch with inherited pipe handles.
 - Client `WindowsHelperLauncher` creates named pipes and connects; installer builds/starts task and writes config/ACL. CI installer step re-enabled for validation.
 - Local Windows suite 18/18 (helper not installed, containment test skips). CI launch pending.
+
+## 2026-11-03T11:34:55-03:00 - AppContainer token verification added
+
+- Helper now verifies the worker token has TokenIsAppContainer before returning it; a normal process is killed and the launch fails closed.
+- Local 18/18 (helper not installed; containment test skips). CI helper run 41654416806 passed before this check; new CI pending.

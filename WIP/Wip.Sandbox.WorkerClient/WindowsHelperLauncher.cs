@@ -1,5 +1,7 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -8,6 +10,8 @@ namespace Wip.Sandbox.WorkerClient;
 internal static class WindowsHelperLauncher
 {
     private const string HelperPipe = "WipSandboxHelper";
+    private const uint TokenQuery = 0x0008;
+    private const int TokenIsAppContainer = 29;
 
     private static string DataDirectory => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
@@ -75,9 +79,41 @@ internal static class WindowsHelperLauncher
         }
 
         var process = Process.GetProcessById(processId);
+        if (!IsAppContainerToken(process))
+        {
+            process.Kill(entireProcessTree: true);
+            throw new SandboxWorkerException("containmentFailed", "The helper launched the worker without an AppContainer token.");
+        }
+
         var job = WindowsJobObject.Create(process, options.MaxMemoryBytes, options.MaxProcesses);
         var inputWriter = new StreamWriter(input) { AutoFlush = true };
         var outputReader = new StreamReader(output);
         return new WindowsContainedProcess(process, inputWriter, outputReader, job);
     }
+
+    private static bool IsAppContainerToken(Process process)
+    {
+        if (!OpenProcessToken(process.Handle, TokenQuery, out var token))
+        {
+            return false;
+        }
+
+        try
+        {
+            return GetTokenInformation(token, TokenIsAppContainer, out var value, sizeof(int), out _) && value != 0;
+        }
+        finally
+        {
+            CloseHandle(token);
+        }
+    }
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool OpenProcessToken(IntPtr process, uint desiredAccess, out IntPtr token);
+
+    [DllImport("advapi32.dll", SetLastError = true)]
+    private static extern bool GetTokenInformation(IntPtr token, int tokenInformationClass, out int tokenInformation, int tokenInformationLength, out int returnLength);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr handle);
 }
