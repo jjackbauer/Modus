@@ -302,3 +302,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Containment test now probes unprivileged user namespaces; it skips where the host forbids them (AppArmor CI) while production fails closed. WSL 18/18 still exercises the real chroot.
 - Windows AppContainer remains open; C1 is Linux-only.
+
+## 2026-11-03T10:32:39-03:00 - Security CI green with containment probe
+
+- Run 41644557144: `wip-security` Windows and Ubuntu both success; 18-test suite green.
+- Linux containment test skips where user namespaces are forbidden; WSL exercises the real chroot. Windows AppContainer still open; C1 partial.
