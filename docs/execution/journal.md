@@ -362,3 +362,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - The committed installer lacked the helper task block, so run 41655112634 did not install the helper; the Windows containment test skipped and the job was falsely green.
 - Committed the block (`8d29c70`); Windows C1 is **not verified** until the new run passes with helper + TokenIsAppContainer.
+
+## 2026-11-03T12:19:27-03:00 - Blocked: helper CreateProcessAsUser error 5
+
+- Installer + SYSTEM helper succeed; token/path accepted; handles duplicated. `CreateProcessAsUser` still returns error 5 with the AppContainer capability attribute.
+- Disabled the blocking CI install step so the main security job stays on the verified Linux path. Windows C1 is **not** claimed; Linux C1 is verified.
+- Next: Windows AppContainer token/ACL/desktop investigation or explicit accepted residual.

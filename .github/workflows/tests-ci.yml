@@ -131,9 +131,6 @@ jobs:
         run: |
           dotnet restore Wip.slnx
           dotnet build Wip.slnx --configuration Release --no-restore
-      - name: Install AppContainer profile and helper
-        shell: pwsh
-        run: ./tools/sandbox/Install-WipAppContainer.ps1
       - name: Run sandbox hostile/protocol suite
         run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
       - name: Dump containment diagnostics
