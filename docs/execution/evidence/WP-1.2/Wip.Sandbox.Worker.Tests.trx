@@ -1,45 +1,69 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TestRun id="d6260bc9-d358-4f15-a245-1e3288df6fe4" name="ricar@RICARDO-PC 2026-11-03 07:59:12" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
-  <Times creation="2026-11-03T07:59:12.2224973-03:00" queuing="2026-11-03T07:59:12.2224974-03:00" start="2026-11-03T07:59:10.8125217-03:00" finish="2026-11-03T07:59:12.2258501-03:00" />
-  <TestSettings name="default" id="e0a05a35-c7d6-4adc-8134-fe4e271e6327">
-    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-03_07_59_12" />
+<TestRun id="69a612ff-54f6-408b-bdd8-3935bd82bb74" name="ricar@RICARDO-PC 2026-11-03 08:06:43" runUser="RICARDO-PC\ricar" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-11-03T08:06:43.0434227-03:00" queuing="2026-11-03T08:06:43.0434228-03:00" start="2026-11-03T08:06:41.2269422-03:00" finish="2026-11-03T08:06:44.0607678-03:00" />
+  <TestSettings name="default" id="141fd2f2-d0ee-4426-951d-ca21ad211853">
+    <Deployment runDeploymentRoot="ricar_RICARDO-PC_2026-11-03_08_06_43" />
   </TestSettings>
   <Results>
-    <UnitTestResult executionId="988fe15f-aa36-49d9-ad91-84572b9e76f1" testId="e36bad7b-7a37-8abb-779c-b2c2fcc0caef" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenMalformedFrame_ExpectedDeterministicError" computerName="RICARDO-PC" duration="00:00:00.0803602" startTime="2026-11-03T07:59:12.1577467-03:00" endTime="2026-11-03T07:59:12.1577469-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="988fe15f-aa36-49d9-ad91-84572b9e76f1" />
-    <UnitTestResult executionId="03658423-6006-4aaf-94be-a17f0c6ecdcf" testId="cf2d7b5d-ab17-03ac-7629-2883b3a14adb" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenHandshake_ExpectedVersionAndCapabilities" computerName="RICARDO-PC" duration="00:00:00.0849379" startTime="2026-11-03T07:59:12.0770836-03:00" endTime="2026-11-03T07:59:12.0770840-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="03658423-6006-4aaf-94be-a17f0c6ecdcf" />
-    <UnitTestResult executionId="f86ceb83-30bc-47f2-aa43-3f62182dc09e" testId="6124782d-c992-ea8e-e466-b1f688010549" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenCompileAndChooseMove_ExpectedMove" computerName="RICARDO-PC" duration="00:00:00.8071250" startTime="2026-11-03T07:59:11.9914339-03:00" endTime="2026-11-03T07:59:11.9914733-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f86ceb83-30bc-47f2-aa43-3f62182dc09e" />
+    <UnitTestResult executionId="3fe8acea-7b4c-4684-b88a-b350b70449f9" testId="cf2d7b5d-ab17-03ac-7629-2883b3a14adb" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenHandshake_ExpectedVersionAndCapabilities" computerName="RICARDO-PC" duration="00:00:00.0877016" startTime="2026-11-03T08:06:42.7471756-03:00" endTime="2026-11-03T08:06:42.7471760-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3fe8acea-7b4c-4684-b88a-b350b70449f9" />
+    <UnitTestResult executionId="feb952c5-3b65-474f-b345-a87034307679" testId="1e1bd5e6-4d12-b808-3808-231e6bb839e1" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenClaimedHashMismatch_ExpectedSourceHashMismatch" computerName="RICARDO-PC" duration="00:00:00.0867431" startTime="2026-11-03T08:06:42.9974672-03:00" endTime="2026-11-03T08:06:42.9974674-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="feb952c5-3b65-474f-b345-a87034307679" />
+    <UnitTestResult executionId="ce32ba1e-e658-40e5-9148-68e4ed53e632" testId="e36bad7b-7a37-8abb-779c-b2c2fcc0caef" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenMalformedFrame_ExpectedDeterministicError" computerName="RICARDO-PC" duration="00:00:00.0817744" startTime="2026-11-03T08:06:42.9104027-03:00" endTime="2026-11-03T08:06:42.9104029-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ce32ba1e-e658-40e5-9148-68e4ed53e632" />
+    <UnitTestResult executionId="0019a35b-5ec5-47e0-9451-00f5f8601d4d" testId="ae5db023-cc1a-4ca4-cb13-894b7e3f42bd" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenMinorProtocolVersion_ExpectedAccepted" computerName="RICARDO-PC" duration="00:00:00.0880910" startTime="2026-11-03T08:06:43.0858706-03:00" endTime="2026-11-03T08:06:43.0858708-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0019a35b-5ec5-47e0-9451-00f5f8601d4d" />
+    <UnitTestResult executionId="a2d362e4-bfde-46b5-933b-54adba87ac51" testId="6124782d-c992-ea8e-e466-b1f688010549" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenCompileAndChooseMove_ExpectedMove" computerName="RICARDO-PC" duration="00:00:00.9802082" startTime="2026-11-03T08:06:42.6580188-03:00" endTime="2026-11-03T08:06:42.6580771-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a2d362e4-bfde-46b5-933b-54adba87ac51" />
+    <UnitTestResult executionId="87ad2dd9-5953-40e1-8ca4-9597fc315665" testId="84e4a0ce-f671-7009-816f-dc2f3fb39272" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenStrategyWritesToStdout_ExpectedNoProtocolInjection" computerName="RICARDO-PC" duration="00:00:00.9325436" startTime="2026-11-03T08:06:44.0187753-03:00" endTime="2026-11-03T08:06:44.0187755-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="87ad2dd9-5953-40e1-8ca4-9597fc315665" />
+    <UnitTestResult executionId="80e3f4b4-7fa6-46cb-9958-3c25d5e772d5" testId="83ee3585-095c-b388-d4c7-0b263255bfb3" testName="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenCompileBeforeHandshake_ExpectedInvalidMessage" computerName="RICARDO-PC" duration="00:00:00.0808417" startTime="2026-11-03T08:06:42.8283207-03:00" endTime="2026-11-03T08:06:42.8283209-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="80e3f4b4-7fa6-46cb-9958-3c25d5e772d5" />
   </Results>
   <TestDefinitions>
+    <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenStrategyWritesToStdout_ExpectedNoProtocolInjection" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="84e4a0ce-f671-7009-816f-dc2f3fb39272">
+      <Execution id="87ad2dd9-5953-40e1-8ca4-9597fc315665" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenStrategyWritesToStdout_ExpectedNoProtocolInjection" />
+    </UnitTest>
+    <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenCompileBeforeHandshake_ExpectedInvalidMessage" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="83ee3585-095c-b388-d4c7-0b263255bfb3">
+      <Execution id="80e3f4b4-7fa6-46cb-9958-3c25d5e772d5" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenCompileBeforeHandshake_ExpectedInvalidMessage" />
+    </UnitTest>
     <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenMalformedFrame_ExpectedDeterministicError" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="e36bad7b-7a37-8abb-779c-b2c2fcc0caef">
-      <Execution id="988fe15f-aa36-49d9-ad91-84572b9e76f1" />
+      <Execution id="ce32ba1e-e658-40e5-9148-68e4ed53e632" />
       <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenMalformedFrame_ExpectedDeterministicError" />
     </UnitTest>
+    <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenClaimedHashMismatch_ExpectedSourceHashMismatch" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="1e1bd5e6-4d12-b808-3808-231e6bb839e1">
+      <Execution id="feb952c5-3b65-474f-b345-a87034307679" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenClaimedHashMismatch_ExpectedSourceHashMismatch" />
+    </UnitTest>
     <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenCompileAndChooseMove_ExpectedMove" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="6124782d-c992-ea8e-e466-b1f688010549">
-      <Execution id="f86ceb83-30bc-47f2-aa43-3f62182dc09e" />
+      <Execution id="a2d362e4-bfde-46b5-933b-54adba87ac51" />
       <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenCompileAndChooseMove_ExpectedMove" />
     </UnitTest>
+    <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenMinorProtocolVersion_ExpectedAccepted" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="ae5db023-cc1a-4ca4-cb13-894b7e3f42bd">
+      <Execution id="0019a35b-5ec5-47e0-9451-00f5f8601d4d" />
+      <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenMinorProtocolVersion_ExpectedAccepted" />
+    </UnitTest>
     <UnitTest name="Wip.Sandbox.Worker.Tests.WorkerProtocolTests.Worker_GivenHandshake_ExpectedVersionAndCapabilities" storage="c:\users\ricar\dev\modus\tests\wip.sandbox.worker.tests\bin\release\net10.0\wip.sandbox.worker.tests.dll" id="cf2d7b5d-ab17-03ac-7629-2883b3a14adb">
-      <Execution id="03658423-6006-4aaf-94be-a17f0c6ecdcf" />
+      <Execution id="3fe8acea-7b4c-4684-b88a-b350b70449f9" />
       <TestMethod codeBase="C:\Users\ricar\dev\Modus\tests\Wip.Sandbox.Worker.Tests\bin\Release\net10.0\Wip.Sandbox.Worker.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="Wip.Sandbox.Worker.Tests.WorkerProtocolTests" name="Worker_GivenHandshake_ExpectedVersionAndCapabilities" />
     </UnitTest>
   </TestDefinitions>
   <TestEntries>
-    <TestEntry testId="e36bad7b-7a37-8abb-779c-b2c2fcc0caef" executionId="988fe15f-aa36-49d9-ad91-84572b9e76f1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
-    <TestEntry testId="cf2d7b5d-ab17-03ac-7629-2883b3a14adb" executionId="03658423-6006-4aaf-94be-a17f0c6ecdcf" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
-    <TestEntry testId="6124782d-c992-ea8e-e466-b1f688010549" executionId="f86ceb83-30bc-47f2-aa43-3f62182dc09e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cf2d7b5d-ab17-03ac-7629-2883b3a14adb" executionId="3fe8acea-7b4c-4684-b88a-b350b70449f9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1e1bd5e6-4d12-b808-3808-231e6bb839e1" executionId="feb952c5-3b65-474f-b345-a87034307679" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e36bad7b-7a37-8abb-779c-b2c2fcc0caef" executionId="ce32ba1e-e658-40e5-9148-68e4ed53e632" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ae5db023-cc1a-4ca4-cb13-894b7e3f42bd" executionId="0019a35b-5ec5-47e0-9451-00f5f8601d4d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6124782d-c992-ea8e-e466-b1f688010549" executionId="a2d362e4-bfde-46b5-933b-54adba87ac51" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="84e4a0ce-f671-7009-816f-dc2f3fb39272" executionId="87ad2dd9-5953-40e1-8ca4-9597fc315665" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="83ee3585-095c-b388-d4c7-0b263255bfb3" executionId="80e3f4b4-7fa6-46cb-9958-3c25d5e772d5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
   </TestEntries>
   <TestLists>
     <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
     <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
   </TestLists>
   <ResultSummary outcome="Completed">
-    <Counters total="3" executed="3" passed="3" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Counters total="7" executed="7" passed="7" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
     <Output>
       <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 10.0.3)&#xD;
-[xUnit.net 00:00:00.04]   Discovering: Wip.Sandbox.Worker.Tests&#xD;
-[xUnit.net 00:00:00.06]   Discovered:  Wip.Sandbox.Worker.Tests&#xD;
-[xUnit.net 00:00:00.07]   Starting:    Wip.Sandbox.Worker.Tests&#xD;
-[xUnit.net 00:00:01.07]   Finished:    Wip.Sandbox.Worker.Tests&#xD;
+[xUnit.net 00:00:00.06]   Discovering: Wip.Sandbox.Worker.Tests&#xD;
+[xUnit.net 00:00:00.09]   Discovered:  Wip.Sandbox.Worker.Tests&#xD;
+[xUnit.net 00:00:00.09]   Starting:    Wip.Sandbox.Worker.Tests&#xD;
+[xUnit.net 00:00:02.47]   Finished:    Wip.Sandbox.Worker.Tests&#xD;
 </StdOut>
     </Output>
   </ResultSummary>

@@ -1,35 +1,36 @@
-# WP-1.2 — Worker host (implementation)
+# WP-1.2 — Worker host (hardened prototype; G2 not ready)
 
-**Status:** implementation complete; **G2 not passed**.
-**Date:** 2026-11-02
+**Status:** implementation hardened; **independent review verdict: NOT READY FOR G2**.
+**Date:** 2026-11-03
 **Projects:** WIP/Wip.Sandbox.Protocol, WIP/Wip.Sandbox.Worker, tests/Wip.Sandbox.Worker.Tests
 
 ## Delivered
 
-- Versioned protocol contracts (`SandboxProtocol`, request/response envelopes, `WorkerStrategyState`, `IWorkerStrategy`, error codes).
-- `Wip.Sandbox.Worker` console host: UTF-8 JSON-lines stdio, BOM tolerance, handshake/ping/compile/chooseMove/shutdown, correlation IDs, bounded frames, deterministic error codes.
-- Roslyn compile in the worker; model assembly loaded only in the worker; cache by strategyId/sourceHash; no host DI, no host/plugin assembly resolution.
-- Protocol tests (3) and a process-level smoke test.
+- Protocol contracts and JSON-lines worker: handshake/ping/compile/chooseMove/shutdown.
+- Handshake gate; 1.x negotiation; worker-computed SHA-256 source hash with mismatch rejection.
+- Roslyn compile; per-strategy collectible AssemblyLoadContext; unload on replacement/shutdown; cache cap 64.
+- Model stdout/stderr suppressed during chooseMove; response size cap; fixed error codes/messages; bounded frame byte check.
+- 7 protocol/process tests; smoke test; architecture rules for sandbox protocol/worker.
 
-## Acceptance
+## Verification
 
-| Criterion | Status |
-|---|---|
-| Worker compiles and executes a sample strategy | **PASS** — tests + smoke |
-| Malformed input returns deterministic errors | **PASS** — InvalidMessage |
-| Protocol tests pass | **PASS** — 3/3 |
-| Host never loads a model-authored assembly | **PASS for worker; host routing is WP-1.3** |
+- Worker tests: **7/7 passed**.
+- Architecture tests: 3/3 passed (39 WIP projects).
+- Offline gate locally: 16 projects / 27 waivers, exit 0.
+- `dotnet build Wip.slnx` exit 0; coverage 39/39.
 
-## Evidence
+## Review verdict (2026-11-03)
 
-- [worker-smoke.txt](worker-smoke.txt) — handshake, ping, compile, chooseMove=0, shutdown.
-- [worker-tests.txt](worker-tests.txt) — worker tests 3/3; architecture tests 3/3; solution build 0 errors; coverage 39/39.
-- Wip.Sandbox.Worker.Tests.trx / Wip.Architecture.Tests.post-phase1.trx.
+**NOT READY FOR G2.** See [security review](../WP-1.1/security-review-2026-11-03.md).
 
-## Residual / G2 blockers
+Open blockers:
+- **C1:** no OS containment (AppContainer/namespaces/seccomp/landlock); Job Object/prlimit do not block file/network/native.
+- **C2:** worker inherits parent environment/secrets; minimal allowlist not implemented.
+- **H1/TM-13:** P/Invoke/native calls permitted.
+- **H5:** no host timeouts/process-tree kill/memory cap yet (WP-1.4).
+- **H7:** inbound line is fully read before the byte cap is checked.
+- **M5:** broad TPA references, not curated reference assemblies.
 
-- **No resource limits or kill yet** (WP-1.4): infinite loop/memory/output can still exhaust the worker.
-- **P/Invoke/native calls are not blocked** by the current TPA reference set (TM-13 open; documented in the threat model).
-- **Contract surface is broad:** model source can reference BCL/TPA, not just the protocol contract; G2 must accept or restrict.
-- No worker restart/health policy; no feature flag (WP-1.6); no host routing (WP-1.3).
-- The security review is pending; this note does not self-approve G2.
+## Gate
+
+G2 is **not passed**. WP-1.3 production routing must not start. WP-1.4 resource limits and OS-containment evidence are the next work.

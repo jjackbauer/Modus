@@ -1,4 +1,7 @@
 using System.Reflection;
+using System.Runtime.Loader;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -7,7 +10,10 @@ using Wip.Sandbox.Protocol;
 Console.InputEncoding = System.Text.Encoding.UTF8;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+const int MaxCachedStrategies = 64;
+
 var strategies = new Dictionary<string, CompiledStrategy>(StringComparer.Ordinal);
+var handshakeCompleted = false;
 var stdin = Console.In;
 string? line;
 while ((line = stdin.ReadLine()) is not null)
@@ -27,7 +33,7 @@ while ((line = stdin.ReadLine()) is not null)
         continue;
     }
 
-    if (line.Length > SandboxProtocol.MaxFrameBytes)
+    if (line.Length > SandboxProtocol.MaxFrameBytes || Encoding.UTF8.GetByteCount(line) > SandboxProtocol.MaxFrameBytes)
     {
         SendError(string.Empty, SandboxErrorCodes.LimitExceeded, "Frame exceeds the protocol limit.");
         continue;
@@ -54,13 +60,30 @@ while ((line = stdin.ReadLine()) is not null)
                 Send("pong", id, true, null, null, new { });
                 break;
             case "compile":
+                if (!handshakeCompleted)
+                {
+                    SendError(id, SandboxErrorCodes.InvalidMessage, "Handshake is required before compile.");
+                    break;
+                }
+
                 HandleCompile(root, id);
                 break;
             case "chooseMove":
+                if (!handshakeCompleted)
+                {
+                    SendError(id, SandboxErrorCodes.InvalidMessage, "Handshake is required before chooseMove.");
+                    break;
+                }
+
                 HandleChooseMove(root, id);
                 break;
             case "shutdown":
                 Send("shutdownResult", id, true, null, null, new { });
+                foreach (var cached in strategies.Values)
+                {
+                    cached.Context.Unload();
+                }
+
                 return;
             default:
                 SendError(id, SandboxErrorCodes.InvalidMessage, $"Unknown message type '{type}'.");
@@ -71,21 +94,22 @@ while ((line = stdin.ReadLine()) is not null)
     {
         SendError(string.Empty, SandboxErrorCodes.InvalidMessage, "Malformed JSON frame.");
     }
-    catch (Exception exception)
+    catch
     {
-        SendError(string.Empty, SandboxErrorCodes.InternalError, exception.GetType().Name);
+        SendError(string.Empty, SandboxErrorCodes.InternalError, "Worker internal error.");
     }
 }
 
 void HandleHandshake(JsonElement root, string id)
 {
     var version = GetString(root, "protocolVersion") ?? "0.0";
-    if (!string.Equals(version, SandboxProtocol.Version, StringComparison.Ordinal))
+    if (!version.StartsWith("1.", StringComparison.Ordinal))
     {
         SendError(id, SandboxErrorCodes.ProtocolVersionUnsupported, $"Unsupported protocol version '{version}'.");
-        return;
+        Environment.Exit(2);
     }
 
+    handshakeCompleted = true;
     Send("handshakeResult", id, true, null, null, new
     {
         protocolVersion = SandboxProtocol.Version,
@@ -103,10 +127,18 @@ void HandleCompile(JsonElement root, string id)
 
     var strategyId = GetString(payload, "strategyId");
     var source = GetString(payload, "source");
-    var sourceHash = GetString(payload, "sourceHash") ?? string.Empty;
+    var claimedSourceHash = GetString(payload, "sourceHash") ?? string.Empty;
     if (string.IsNullOrWhiteSpace(strategyId) || string.IsNullOrWhiteSpace(source))
     {
         SendError(id, SandboxErrorCodes.InvalidMessage, "strategyId and source are required.");
+        return;
+    }
+
+    var sourceHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
+    if (!string.IsNullOrEmpty(claimedSourceHash)
+        && !string.Equals(claimedSourceHash, sourceHash, StringComparison.OrdinalIgnoreCase))
+    {
+        Send("compileResult", id, false, SandboxErrorCodes.SourceHashMismatch, "sourceHash does not match the source.", new { diagnostics = Array.Empty<string>() });
         return;
     }
 
@@ -116,14 +148,36 @@ void HandleCompile(JsonElement root, string id)
         return;
     }
 
-    var compilation = Compile(source);
+    if (strategies.Count >= MaxCachedStrategies && !strategies.ContainsKey(strategyId))
+    {
+        SendError(id, SandboxErrorCodes.ResourceExhausted, "Strategy cache limit reached.");
+        return;
+    }
+
+    CompilationResult compilation;
+    try
+    {
+        compilation = Compile(source);
+    }
+    catch
+    {
+        Send("compileResult", id, false, SandboxErrorCodes.CompileError, "Strategy compilation failed.", new { diagnostics = Array.Empty<string>() });
+        return;
+    }
+
     if (!compilation.Success)
     {
         Send("compileResult", id, false, SandboxErrorCodes.CompileError, "Strategy compilation failed.", new { diagnostics = compilation.Diagnostics });
         return;
     }
 
-    strategies[strategyId] = new CompiledStrategy(compilation.Type!, sourceHash, compilation.AssemblyHash);
+    if (strategies.TryGetValue(strategyId, out var previous))
+    {
+        strategies.Remove(strategyId);
+        previous.Context.Unload();
+    }
+
+    strategies[strategyId] = new CompiledStrategy(compilation.Type!, sourceHash, compilation.AssemblyHash, compilation.Context!);
     Send("compileResult", id, true, null, null, new { assemblyHash = compilation.AssemblyHash, diagnostics = Array.Empty<string>() });
 }
 
@@ -155,15 +209,23 @@ void HandleChooseMove(JsonElement root, string id)
         return;
     }
 
+    var originalOut = Console.Out;
+    var originalError = Console.Error;
     try
     {
+        Console.SetOut(TextWriter.Null);
+        Console.SetError(TextWriter.Null);
         var instance = (IWorkerStrategy)Activator.CreateInstance(compiled.Type)!;
         var move = instance.ChooseMove(state);
+        Console.SetOut(originalOut);
+        Console.SetError(originalError);
         Send("chooseMoveResult", id, true, null, null, new { move });
     }
-    catch (Exception exception)
+    catch
     {
-        SendError(id, SandboxErrorCodes.InternalError, exception.GetType().Name);
+        Console.SetOut(originalOut);
+        Console.SetError(originalError);
+        SendError(id, SandboxErrorCodes.InternalError, "Worker internal error.");
     }
 }
 
@@ -198,19 +260,30 @@ CompilationResult Compile(string source)
             .Select(static diagnostic => diagnostic.Id + ": " + diagnostic.GetMessage())
             .Take(50)
             .ToArray();
-        return new CompilationResult(false, null, string.Empty, diagnostics);
+        return new CompilationResult(false, null, string.Empty, diagnostics, null);
     }
 
     var bytes = stream.ToArray();
-    var assembly = Assembly.Load(bytes);
-    var type = assembly.GetTypes().FirstOrDefault(static candidate =>
-        typeof(IWorkerStrategy).IsAssignableFrom(candidate) && !candidate.IsAbstract && !candidate.IsInterface);
-    if (type is null)
+    var context = new StrategyLoadContext();
+    try
     {
-        return new CompilationResult(false, null, string.Empty, ["No IWorkerStrategy implementation was found."]);
-    }
+        using var assemblyStream = new MemoryStream(bytes);
+        var assembly = context.LoadFromStream(assemblyStream);
+        var type = assembly.GetTypes().FirstOrDefault(static candidate =>
+            typeof(IWorkerStrategy).IsAssignableFrom(candidate) && !candidate.IsAbstract && !candidate.IsInterface);
+        if (type is null)
+        {
+            context.Unload();
+            return new CompilationResult(false, null, string.Empty, ["No IWorkerStrategy implementation was found."], null);
+        }
 
-    return new CompilationResult(true, type, Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)), []);
+        return new CompilationResult(true, type, Convert.ToHexString(SHA256.HashData(bytes)), [], context);
+    }
+    catch
+    {
+        context.Unload();
+        return new CompilationResult(false, null, string.Empty, ["Strategy assembly could not be loaded."], null);
+    }
 }
 
 static string? GetString(JsonElement element, string name) =>
@@ -225,10 +298,31 @@ static void Send(string type, string id, bool ok, string? errorCode, string? err
         ? null
         : JsonSerializer.SerializeToElement(payload, SandboxJson.Options);
     var response = new SandboxResponse(type, id, ok, errorCode, errorMessage, element);
-    Console.Out.WriteLine(JsonSerializer.Serialize(response, SandboxJson.Options));
+    var json = JsonSerializer.Serialize(response, SandboxJson.Options);
+    if (Encoding.UTF8.GetByteCount(json) > SandboxProtocol.MaxOutputBytes)
+    {
+        json = JsonSerializer.Serialize(
+            new SandboxResponse("error", id, false, SandboxErrorCodes.LimitExceeded, "Response exceeds the output limit.", null),
+            SandboxJson.Options);
+    }
+
+    Console.Out.WriteLine(json);
     Console.Out.Flush();
 }
 
-internal sealed record CompiledStrategy(Type Type, string SourceHash, string AssemblyHash);
+internal sealed record CompiledStrategy(Type Type, string SourceHash, string AssemblyHash, AssemblyLoadContext Context);
 
-internal sealed record CompilationResult(bool Success, Type? Type, string AssemblyHash, string[] Diagnostics);
+internal sealed record CompilationResult(bool Success, Type? Type, string AssemblyHash, string[] Diagnostics, AssemblyLoadContext? Context);
+
+internal sealed class StrategyLoadContext : AssemblyLoadContext
+{
+    public StrategyLoadContext()
+        : base(isCollectible: true)
+    {
+    }
+
+    protected override Assembly? Load(AssemblyName assemblyName) =>
+        string.Equals(assemblyName.Name, typeof(IWorkerStrategy).Assembly.GetName().Name, StringComparison.Ordinal)
+            ? typeof(IWorkerStrategy).Assembly
+            : null;
+}

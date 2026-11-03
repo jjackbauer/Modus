@@ -187,3 +187,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Tests:** worker protocol 3/3; architecture 3/3; `dotnet build Wip.slnx` 0 errors; coverage 39/39.
 - **Gate:** G2 still pending; P/Invoke/TM-13, broad TPA contract, and missing resource limits are documented blockers.
 - **Next:** independent review results, fixes, G2; WP-1.3 blocked.
+
+## 2026-11-03T08:06:30-03:00 - Independent review: G2 NOT READY; worker hardened
+
+- **Review:** subagent review verdict **NOT READY FOR G2**; C1 no OS containment, C2 inherited environment/secrets, H1 P/Invoke, H5 missing limits. Recorded in `docs/execution/evidence/WP-1.1/security-review-2026-11-03.md`.
+- **Fixed after review:** handshake gate, 1.x negotiation, worker-computed source hash/mismatch rejection, per-strategy collectible ALC, stdout suppression, response caps, fixed error messages, cache cap.
+- **Tests:** worker 7/7; architecture 3/3; 16-project offline gate local green; build 0 errors; coverage 39/39.
+- **Gate:** G2 **not passed**. WP-1.3 blocked. Next: WP-1.4 resource limits/OS containment evidence (C1/C2/H1/H5).

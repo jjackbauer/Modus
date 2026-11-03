@@ -33,6 +33,7 @@ public static class SandboxErrorCodes
     public const string InvalidMessage = "invalidMessage";
     public const string LimitExceeded = "limitExceeded";
     public const string CompileError = "compileError";
+    public const string SourceHashMismatch = "sourceHashMismatch";
     public const string Timeout = "timeout";
     public const string ResourceExhausted = "resourceExhausted";
     public const string WorkerCrash = "workerCrash";

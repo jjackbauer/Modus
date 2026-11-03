@@ -132,12 +132,13 @@ A timeout, crash, or invalid move returns ok=false with a deterministic error.
 | invalidMessage | malformed/oversized/missing fields | stop/restart; fail move |
 | limitExceeded | memory/output/time/process cap | kill tree; restart |
 | compileError | source did not compile | return diagnostics; no assembly loaded |
+| sourceHashMismatch | worker-computed hash differs from the claimed hash | reject; no assembly loaded |
 | timeout | operation exceeded its budget | kill tree; restart |
 | resourceExhausted | OS limit hit | kill tree; restart |
 | workerCrash | process exited unexpectedly | restart; fail current request |
 | internalError | unexpected worker failure | log correlation; restart |
 
-Errors never include host paths, secrets, or stack traces that reveal host internals.
+Errors never include host paths, secrets, or stack traces that reveal host internals. The worker also emits `{"type":"error",...}` for frame/protocol failures; clients must tolerate it.
 
 ## 5. Timeouts and kill policy
 
@@ -159,3 +160,10 @@ Errors never include host paths, secrets, or stack traces that reveal host inter
 - Additive optional properties are allowed within 1.x.
 - Removing/renaming fields or changing semantics requires 2.0.
 - The host and worker negotiate in handshake; unsupported versions fail closed.
+- Compile/chooseMove before a successful handshake return `invalidMessage`.
+- A minor version in the 1.x line is accepted; the worker advertises 1.0.
+- Responses exceeding 256 KiB are replaced by a `limitExceeded` error frame.
+- Model stdout/stderr are suppressed during `chooseMove`; protocol output stays on the host channel.
+- Each strategy is loaded in a collectible `AssemblyLoadContext`; replacement/shutdown unloads it.
+- The worker currently inherits the parent environment; the host launcher must supply a minimal allowlist (C2, open).
+- P/Invoke/native calls are not blocked by this protocol (TM-13, open).
