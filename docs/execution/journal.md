@@ -357,3 +357,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - C1 implemented/verified Windows+Linux; security CI run 41655112634 green; G2 re-review packet prepared.
 - Per MODE, did not self-approve G2 and did not start WP-1.3. Goal blocked pending human full-G2 decision.
+
+## 2026-11-03T11:40:57-03:00 - Correction: earlier helper CI skipped containment
+
+- The committed installer lacked the helper task block, so run 41655112634 did not install the helper; the Windows containment test skipped and the job was falsely green.
+- Committed the block (`8d29c70`); Windows C1 is **not verified** until the new run passes with helper + TokenIsAppContainer.
