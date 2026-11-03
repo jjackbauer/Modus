@@ -293,14 +293,22 @@ public sealed class WorkerProtocolTests
     [Fact]
     public async Task Client_GivenOsContainment_ExpectedWorkerRunsInChroot()
     {
-        if (!OperatingSystem.IsLinux())
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsWindows())
         {
             return;
         }
 
         var repositoryRoot = FindRepositoryRoot();
-        var script = Path.Combine(repositoryRoot, "tools", "sandbox", "linux-worker-sandbox.sh");
-        if (!File.Exists(script) || !CanUseUserNamespaces())
+        string? script = null;
+        if (OperatingSystem.IsLinux())
+        {
+            script = Path.Combine(repositoryRoot, "tools", "sandbox", "linux-worker-sandbox.sh");
+            if (!File.Exists(script) || !CanUseUserNamespaces())
+            {
+                return;
+            }
+        }
+        else if (!SandboxWorkerClient.IsOsContainmentAvailable())
         {
             return;
         }

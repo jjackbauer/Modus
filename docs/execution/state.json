@@ -23,8 +23,8 @@
     "WP-1.6": 1,
     "WP-1.5": 2
   },
-  "last_verified_at": "2026-11-03T10:33:58-03:00",
-  "next_action": "Windows AppContainer requires an elevated profile/token installer; choose that or accept the Windows residual, then WP-1.3 routing behind the conditional flag. No release.",
+  "last_verified_at": "2026-11-03T11:20:49-03:00",
+  "next_action": "Verify the Windows AppContainer installer/launcher in CI; if error 5 persists, add an elevated helper/service. Then WP-1.3. No release until C1 is closed.",
   "open_blockers": ["Windows AppContainer requires elevation/installer; testhost gets access denied and CreateProcess security capabilities error 5. Need admin installer or explicit Windows residual acceptance."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
@@ -76,7 +76,7 @@
     "known_aborts": 2,
     "remote_ci": "run_41489673359_success",
     "security_ci": "run_41644557144_success",
-    "os_containment": "linux_unshare_chroot_implemented_windows_pending",
+    "os_containment": "linux_done_windows_installer_pending_ci",
     "ci_exposed_failures": 6,
     "chromium_install": "success",
     "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]

@@ -46,11 +46,27 @@ public sealed class SandboxWorkerClient : IAsyncDisposable
 
     public bool IsRunning => !_process.HasExited;
 
+    public static bool IsOsContainmentAvailable()
+    {
+        if (OperatingSystem.IsLinux())
+        {
+            return SandboxWorkerLauncher.FindUnshare() is not null;
+        }
+
+        return OperatingSystem.IsWindows() && WindowsAppContainer.IsAvailable();
+    }
+
     public static SandboxWorkerClient Start(string workerPath, SandboxWorkerOptions? options = null)
     {
         var resolved = options ?? new SandboxWorkerOptions();
         var temp = Path.Combine(Path.GetTempPath(), "wip-sandbox-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(temp);
+        if (resolved.RequireOsContainment && OperatingSystem.IsWindows())
+        {
+            var contained = WindowsAppContainer.Start(workerPath, resolved, temp);
+            return new SandboxWorkerClient(contained.Process, contained.Input, contained.Output, contained.Job, resolved);
+        }
+
         var dotnet = SandboxWorkerLauncher.ResolveDotnet();
         var launch = resolved.RequireOsContainment
             ? SandboxWorkerLauncher.ResolveOsContained(

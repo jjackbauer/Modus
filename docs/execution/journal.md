@@ -319,3 +319,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Linux containment is implemented and security CI is green.
 - Windows AppContainer cannot be created/launched from the non-elevated testhost: profile creation 0x80070005, CreateProcess security capabilities error 5. Needs an elevated installer/token path or an explicit accepted Windows residual.
 - No release; goal blocked pending that decision.
+
+## 2026-11-03T11:20:49-03:00 - Windows production install path implemented
+
+- Added `tools/sandbox/Install-WipAppContainer.ps1`: elevated, creates profile + SID ACLs for worker/temp/dotnet host/shared, writes `%ProgramData%\WIP\appcontainer.sid` marker and evidence.
+- Added non-elevated AppContainer launcher (derive profile, security capabilities, pipes, Job Object); Windows test skips unless installer marker exists; CI Windows security job runs the installer first.
+- Local Windows suite 18/18; gate green. CI AppContainer launch validation pending.
