@@ -5,6 +5,9 @@
     <Project Path="plugins/Plugin.Lifetime.Singleton.csproj" />
     <Project Path="plugins/Plugin.Lifetime.Transient.csproj" />
     <Project Path="plugins/Plugin.Machine.Telemetry.csproj" />
+    <Project Path="plugins/Plugin.Orders.Fulfillment.csproj" />
+    <Project Path="plugins/Plugin.Payments.Gateway.csproj" />
+    <Project Path="plugins/Plugin.Timer.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Modus.Core/Modus.Core.csproj" />

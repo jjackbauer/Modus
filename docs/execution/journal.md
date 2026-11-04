@@ -497,3 +497,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Fix:** normalized every plugin/sample `Include` path to forward slashes; added `ModusRuntimePluginType` + `ModusServiceLifetime=Singleton` to the three wrapper projects; upgraded `Modus.Host.IntegrationTests` to Test SDK 17.14.1 (matching WIP) so the parent-query switch can be applied locally; improved the curl-gate assertion to print the response payload; and made the Modus CI migration step emit failing lines/log head/tail as annotations (job logs need authentication).
 - **Verification:** migration regression suite **19/19 on Windows and 19/19 on Linux (clean clone, full solution build)**.
 - This is the pre-existing Modus CI failure recorded at G0, unrelated to the WIP gate (Tests CI has been green throughout).
+## 2026-11-04T20:10:00-03:00 - Modus CI: curl probe fixed; three plugin wrappers were not in the solution
+
+- **Root cause:** `Modus.slnx` listed only 5 of the 8 `plugins/*.csproj` projects. `Plugin.Timer`, `Plugin.Orders.Fulfillment` and `Plugin.Payments.Gateway` were never built by CI, so `PluginLoader.ScanRuntimeAssemblies` (recursive over the plugins folder) found no DLL for them and project-based dispatch could not resolve the runtime type.
+- **Fix:** add the three wrappers to `Modus.slnx`. The curl gate now passes on a clean Linux clone with a full solution build (2/2); migration suite 19/19.
+- **Next:** let Modus CI run the full integration suite; if more Linux-only failures appear they will be triaged here.
