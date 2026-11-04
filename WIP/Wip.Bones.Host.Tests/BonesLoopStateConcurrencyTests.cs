@@ -214,7 +214,10 @@ public sealed class BonesLoopStateConcurrencyTests
         var reader = Task.Run(() =>
         {
             barrier.SignalAndWait();
-            while (!done.IsSet)
+
+            // Read at least once even if all writers finish before this task is scheduled
+            // (a loaded two-core CI runner can starve the reader past `done`).
+            do
             {
                 var isRunning = state.IsRunning;
                 var iterationCount = state.IterationCount;
@@ -229,6 +232,7 @@ public sealed class BonesLoopStateConcurrencyTests
 
                 Interlocked.Increment(ref readCount);
             }
+            while (!done.IsSet);
         });
 
         await Task.WhenAll(setRunning, setIteration, setStopRequested, reader);
