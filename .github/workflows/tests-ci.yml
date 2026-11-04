@@ -148,7 +148,16 @@ jobs:
             $text = ((Get-Content $helperLog -Raw) -split "\r?\n") -join ' | '
             Write-Host ('::error title=HelperLog::' + $text)
           }
-          schtasks /Query /TN WipSandboxHelper /V /FO LIST
+          schtasks /Query /TN WipSandboxHelper *> $null
+          if ($LASTEXITCODE -eq 0) {
+            schtasks /Query /TN WipSandboxHelper /V /FO LIST
+          }
+          else {
+            Write-Host 'WipSandboxHelper task is not installed; Windows OS containment remains fail-closed (accepted residual).'
+          }
+
+          # Diagnostics are informational: the test step is the gate. Never fail the job here.
+          exit 0
       - name: Upload security test results
         if: always()
         uses: actions/upload-artifact@v4
