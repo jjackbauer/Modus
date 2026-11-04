@@ -462,3 +462,7 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Gate:** 16 offline projects, **1,104 executed / 1,081 passed / 23 failed** (all waivers), `verify-test-results.ps1` exit 0. Architecture **4/4**; Runtime.Tests 73/72/1 (new provider test included); sandbox 18/18.
 - **Host E2E (Worker mode, stub provider):** the “Script execution mode is Worker” line now appears **once** (it appeared twice before), confirming the per-run nested provider and its duplicate sandbox worker are gone. No worker processes remain after host exit.
 - **Next:** WP-2.2 (remove `StrategyPool.Instance`), then WP-2.3/2.4 workflow + maps, WP-2.5 Bones migration, WP-2.6 shell decoupling, WP-2.7 plugin ALC; then G4.
+## 2026-11-04T12:01:00-03:00 - WP-2.1 remote CI green
+
+- Tests CI run [41850279760](https://github.com/jjackbauer/Modus/actions/runs/41850279760) on `ee59b64`: all six jobs success, including `wip-offline-tests` (suite + count/waiver gate). WP-2.1 is closed on local and remote evidence.
+- Next: WP-2.2 (remove `StrategyPool.Instance`).
