@@ -8,7 +8,7 @@ public sealed class TestsCiWorkflowConcurrencyCancellationTests
     [Trait("ChecklistItem", "Add workflow-level concurrency cancellation to prevent stale commits from masking current behavior")]
     public void TestsWorkflow_GivenWorkflowLevelConcurrency_ExpectedCancellationEnabledForSupersededRuns()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var policy = ParseWorkflowLevelConcurrency(workflow);
 
         Assert.NotNull(policy);
@@ -20,7 +20,7 @@ public sealed class TestsCiWorkflowConcurrencyCancellationTests
     [Trait("ChecklistItem", "Add workflow-level concurrency cancellation to prevent stale commits from masking current behavior")]
     public void TestsWorkflow_GivenSupersededCommitOnSameBranch_ExpectedOlderRunCancelledAndLatestRunContinues()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var policy = ParseWorkflowLevelConcurrency(workflow);
 
         Assert.NotNull(policy);

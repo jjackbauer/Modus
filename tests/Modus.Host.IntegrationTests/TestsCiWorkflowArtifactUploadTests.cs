@@ -10,7 +10,7 @@ public sealed class TestsCiWorkflowArtifactUploadTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenTestsJobDefinition_ExpectedUploadArtifactStepCollectsTrxAndRelevantLogs()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
 
         Assert.Contains("- name: Upload test results and logs", workflow, StringComparison.Ordinal);
         Assert.Contains("if: always()", workflow, StringComparison.Ordinal);
@@ -24,7 +24,7 @@ public sealed class TestsCiWorkflowArtifactUploadTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenTestsAndArtifactSteps_ExpectedArtifactUploadRunsAfterDotnetTestCommands()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var normalized = workflow.Replace("\r\n", "\n", StringComparison.Ordinal);
         var lines = normalized.Split('\n', StringSplitOptions.None);
 
@@ -43,7 +43,7 @@ public sealed class TestsCiWorkflowArtifactUploadTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenTestFailure_ExpectedArtifactUploadConditionStillEvaluatesTrue()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var simulation = SimulateArtifactUploadEligibility(

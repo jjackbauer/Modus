@@ -8,7 +8,7 @@ public sealed class TestsCiWorkflowRestoreBuildGateTests
     [Trait("ChecklistItem", "Execute `dotnet restore` and `dotnet build --configuration Release --no-restore` against `Modus.slnx` before tests")]
     public void TestsWorkflow_GivenTestsJobDefinition_ExpectedRestoreAndReleaseBuildAgainstSolutionBeforeDotnetTest()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         var restoreIndex = FindCommandIndex(runCommands, "dotnet restore Modus.slnx");
@@ -32,7 +32,7 @@ public sealed class TestsCiWorkflowRestoreBuildGateTests
     [Trait("ChecklistItem", "Execute `dotnet restore` and `dotnet build --configuration Release --no-restore` against `Modus.slnx` before tests")]
     public void TestsWorkflow_GivenRestoreAndBuildCommandChain_ExpectedStageBoundarySimulationPasses()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         var simulation = SimulateStageBoundaries(runCommands);
@@ -46,7 +46,7 @@ public sealed class TestsCiWorkflowRestoreBuildGateTests
     [Trait("ChecklistItem", "Execute `dotnet restore` and `dotnet build --configuration Release --no-restore` against `Modus.slnx` before tests")]
     public void TestsWorkflow_GivenWorkflowRunCommands_ExpectedExecutionEvidenceShowsRestoreThenBuildBeforeTestPhase()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         var evidence = CreateExecutionEvidence(runCommands);
@@ -79,7 +79,7 @@ public sealed class TestsCiWorkflowRestoreBuildGateTests
     [Trait("ChecklistItem", "Execute `dotnet restore` and `dotnet build --configuration Release --no-restore` against `Modus.slnx` before tests")]
     public void TestsWorkflow_GivenRestoreCommandRemoved_ExpectedReleaseBuildNoRestoreSimulationFails()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow)
             .Where(static command => !string.Equals(command, "dotnet restore Modus.slnx", StringComparison.Ordinal))
             .ToArray();

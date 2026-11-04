@@ -20,7 +20,7 @@ public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenTestsJobDefinition_ExpectedUnitAndIntegrationProjectsRunWithReleaseNoBuildAndTrxLogger()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
         var testCommands = runCommands
             .Where(static command => command.StartsWith("dotnet test ", StringComparison.Ordinal))
@@ -45,7 +45,7 @@ public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenDotnetTestCommands_ExpectedEachCommandEnforcesReleaseNoBuildAndTrxContract()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
         var testCommands = runCommands
             .Where(static command => command.StartsWith("dotnet test ", StringComparison.Ordinal))
@@ -67,7 +67,7 @@ public sealed class TestsCiWorkflowDotnetTestExecutionGateTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenSingleFailingTestCommand_ExpectedFailurePropagatesToJobResult()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         var simulation = SimulateJobResult(

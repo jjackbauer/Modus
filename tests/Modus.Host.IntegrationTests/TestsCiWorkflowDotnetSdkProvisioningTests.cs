@@ -8,7 +8,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
     [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
     public void TestsWorkflow_GivenRunnerWithoutDotnet10_ExpectedSetupDotnetProvisioningEnablesDotnetCommands()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var setupStep = Assert.Single(steps, IsSetupDotnetStep);
@@ -28,7 +28,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
     [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
     public void TestsWorkflow_GivenSdkVersionDowngraded_ExpectedDotnetCommandSimulationFails()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var downgraded = steps
@@ -50,7 +50,7 @@ public sealed class TestsCiWorkflowDotnetSdkProvisioningTests
     [Trait("ChecklistItem", "Add `actions/setup-dotnet` for `10.0.x` to guarantee runtime-compatible SDK provisioning before test commands")]
     public void TestsWorkflow_GivenConfiguredDotnetRunSteps_ExpectedSetupDotnetAppearsBeforeFirstDotnetCommand()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var setupIndex = Array.FindIndex(steps, IsSetupDotnetStep);

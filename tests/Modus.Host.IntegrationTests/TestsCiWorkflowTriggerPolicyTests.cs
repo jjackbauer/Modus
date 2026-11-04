@@ -10,7 +10,7 @@ public sealed class TestsCiWorkflowTriggerPolicyTests
     [Trait("ChecklistItem", "Configure workflow triggers for `push` and `pull_request` to ensure test execution on mainline and review paths")]
     public void TestsWorkflow_GivenMainlineOrReviewPathEvent_ExpectedPolicySchedulesTestsJob(string eventName, string targetBranch)
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var policy = ParseTriggerPolicy(workflow);
 
         var shouldRun = ShouldRunForEvent(policy, eventName, targetBranch);
@@ -27,7 +27,7 @@ public sealed class TestsCiWorkflowTriggerPolicyTests
     [Trait("ChecklistItem", "Configure workflow triggers for `push` and `pull_request` to ensure test execution on mainline and review paths")]
     public void TestsWorkflow_GivenNonConfiguredPathEvent_ExpectedPolicyDoesNotScheduleTestsJob(string eventName, string targetBranch)
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var policy = ParseTriggerPolicy(workflow);
 
         var shouldRun = ShouldRunForEvent(policy, eventName, targetBranch);
@@ -41,7 +41,7 @@ public sealed class TestsCiWorkflowTriggerPolicyTests
     [Trait("ChecklistItem", "Configure workflow triggers for `push` and `pull_request` to ensure test execution on mainline and review paths")]
     public void TestsWorkflow_GivenTriggerPolicy_ExpectedOnlyPushAndPullRequestTargetMainline()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var policy = ParseTriggerPolicy(workflow);
 
         Assert.Equal(new[] { "pull_request", "push" }, policy.Keys.OrderBy(static key => key, StringComparer.Ordinal));

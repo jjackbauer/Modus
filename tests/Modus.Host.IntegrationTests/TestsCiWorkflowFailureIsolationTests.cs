@@ -10,7 +10,7 @@ public sealed class TestsCiWorkflowFailureIsolationTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenFailingDotnetTest_ExpectedFailedConclusionAndNoSuccessOnlyPublications()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var simulation = SimulateWorkflow(
@@ -30,7 +30,7 @@ public sealed class TestsCiWorkflowFailureIsolationTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenPassingRun_ExpectedSuccessOnlyFlagAndArtifactPublish()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var steps = ParseWorkflowSteps(workflow);
 
         var simulation = SimulateWorkflow(

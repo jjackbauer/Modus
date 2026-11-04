@@ -13,7 +13,7 @@ public sealed class TestsCiWorkflowMigrationRegressionSuiteWiringTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenTestsJobDefinition_ExpectedDedicatedMigrationRegressionGateCommandPresent()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         Assert.Contains(MigrationRegressionCommand, runCommands);
@@ -23,7 +23,7 @@ public sealed class TestsCiWorkflowMigrationRegressionSuiteWiringTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenMigrationRegressionGate_ExpectedGateRunsBeforeCurlProbeAndFullIntegrationSuite()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         var migrationIndex = Array.IndexOf(runCommands, MigrationRegressionCommand);
@@ -39,7 +39,7 @@ public sealed class TestsCiWorkflowMigrationRegressionSuiteWiringTests
     [Trait("ChecklistItem", ChecklistItem)]
     public void TestsWorkflow_GivenMigrationRegressionFailure_ExpectedLaterTestCommandsNotExecuted()
     {
-        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "tests-ci.yml"));
+        var workflow = ReadRepositoryFile(Path.Combine(".github", "workflows", "modus-ci.yml"));
         var runCommands = ParseRunCommands(workflow);
 
         var simulation = SimulateJobExecution(
