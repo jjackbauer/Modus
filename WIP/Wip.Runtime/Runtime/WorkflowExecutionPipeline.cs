@@ -2,43 +2,10 @@ using System.Reflection;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
+using Wip.Abstractions.Workflows;
 using Wip.Builder;
 
 namespace Wip.Runtime.Runtime;
-
-public enum WorkflowStageKind
-{
-    Plan = 1,
-    Run = 2,
-    Validate = 3,
-    Review = 4,
-    RequireApproval = 5,
-    Merge = 6
-}
-
-public sealed record WorkflowStageDescriptor(
-    WorkflowStageKind Stage,
-    Type RequestType,
-    Type ResultType,
-    string RequestContractName,
-    string ResultContractName)
-{
-    public static WorkflowStageDescriptor Create<TRequest, TResult>(WorkflowStageKind stage)
-        where TRequest : notnull
-        where TResult : notnull
-        => new(
-            stage,
-            typeof(TRequest),
-            typeof(TResult),
-            ResolveContractName(typeof(TRequest)),
-            ResolveContractName(typeof(TResult)));
-
-    public static string ResolveContractName(Type contractType)
-    {
-        ArgumentNullException.ThrowIfNull(contractType);
-        return contractType.FullName ?? contractType.Name;
-    }
-}
 
 public sealed record WorkflowStageMapAdapterDescriptor(
     WorkflowStageKind FromStage,
@@ -62,24 +29,6 @@ public sealed record LinearWorkflowStageCompilation(
         return MapAdapters.FirstOrDefault(adapter => adapter.TargetType == stageDescriptor.RequestType)?.TargetContractName;
     }
 }
-
-public sealed record WorkflowStageExecution(
-    WorkflowStageDescriptor Descriptor,
-    SessionState StateAfterStage,
-    bool AppliedTransition)
-{
-    public string? MappedInputContractName { get; init; }
-
-    public CapabilityId? ProducerCapabilityId { get; init; }
-
-    public string? CorrelationId { get; init; }
-
-    public ArtifactDescriptor? ExecutionArtifact { get; init; }
-}
-
-public sealed record WorkflowExecutionResult(
-    WorkflowId WorkflowId,
-    IReadOnlyList<WorkflowStageExecution> Stages);
 
 public static class WorkflowStageDescriptorMapper
 {

@@ -20,6 +20,8 @@ using Wip.Policy.LocalSafe;
 using Wip.Shell.CommandSemantics;
 using Wip.Shell.History;
 using Wip.Shell.Prompting;
+using Wip.Abstractions.Workflows;
+
 
 namespace Wip.Shell.Interactive;
 

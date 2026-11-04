@@ -13,6 +13,8 @@ using Wip.Builder;
 using Wip.Workspaces.Git;
 using DotNetValidationRequest = Wip.Validation.DotNet.DotNet.DotNetValidationRequest;
 using DotNetValidationValidator = Wip.Validation.DotNet.DotNet.DotNetValidationValidator;
+using Wip.Abstractions.Workflows;
+
 
 namespace Wip.Runtime.Runtime;
 
@@ -248,7 +250,13 @@ public sealed class WipRuntimeOrchestrator
             var correlationId = CreateGovernanceCorrelationId(current.SessionId, "run");
 
             var workflow = ResolveWorkflowSelection(current.WorkflowId, selectedWorkflowId, builder.WorkflowRegistrations);
-            var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflow);
+
+            // Declarative workflows (WP-2.3) compile to a plan with explicit stage maps. Legacy
+            // IWorkflow registrations keep the reflection/heuristic compiler for one release.
+            var definitionPlan = ResolveDefinitionPlan(services, workflow.WorkflowId);
+            var compilation = definitionPlan is null
+                ? WorkflowBuilderStageCompiler.CompileLinear(workflow)
+                : CreateCompilation(definitionPlan);
 
             // The host owns composition and the run scope; the runtime never builds a provider.
             // Callers pass the scoped provider for this run and dispose the scope when it ends.
@@ -278,11 +286,17 @@ public sealed class WipRuntimeOrchestrator
                             $"Workflow stage '{stageDescriptor.Stage}' requires an artifact store to persist stage execution artifacts during run.");
                     }
 
-                    var mappedInputEvidence = WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
-                        stageDescriptor,
-                        compilation,
-                        current,
-                        previousStageResult);
+                    var mappedInputEvidence = definitionPlan is null
+                        ? WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
+                            stageDescriptor,
+                            compilation,
+                            current,
+                            previousStageResult)
+                        : WorkflowPlanMapRuntime.ApplyMappedStageInput(
+                            stageDescriptor,
+                            definitionPlan,
+                            current,
+                            previousStageResult);
 
                     dispatchResult = await dispatcher.ExecuteStageAsync(
                         stageDescriptor,
@@ -1686,6 +1700,31 @@ public sealed class WipRuntimeOrchestrator
 
         var serialized = JsonSerializer.Serialize(payload, SessionStateJsonOptions);
         await File.AppendAllTextAsync(journalPath, serialized + Environment.NewLine, cancellationToken);
+    }
+
+    private static WorkflowPlan? ResolveDefinitionPlan(IServiceProvider services, WorkflowId workflowId)
+    {
+        if (services.GetService(typeof(IEnumerable<IWorkflowDefinition>)) is not IEnumerable<IWorkflowDefinition> definitions)
+            return null;
+
+        var definition = definitions.FirstOrDefault(
+            candidate => candidate.WorkflowId.Value.Equals(workflowId.Value, StringComparison.Ordinal));
+        return definition?.Compile();
+    }
+
+    private static LinearWorkflowStageCompilation CreateCompilation(WorkflowPlan plan)
+    {
+        var mapAdapters = plan.Maps
+            .Select(map => new WorkflowStageMapAdapterDescriptor(
+                map.FromStage,
+                map.ToStage,
+                map.SourceType,
+                map.TargetType,
+                map.SourceContractName,
+                map.TargetContractName))
+            .ToArray();
+
+        return new LinearWorkflowStageCompilation(plan.Stages, mapAdapters);
     }
 
     private static WorkflowRegistration ResolveWorkflowSelection(

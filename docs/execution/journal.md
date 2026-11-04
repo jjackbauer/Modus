@@ -474,3 +474,16 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Flake fix discovered by the gate:** the first in-process Roslyn compile costs ~9-10 s on this machine (later ~0.8 s), exceeding the 10 s default in parallel test runs. The default `CompilationTimeout` is now 30 s, matching the host appsettings and the worker compile timeout; no execution/security semantics changed. The two in-process timeout tests use the same explicit budget.
 - **Web suite (not in the offline gate):** 276 tests, 267 passed; the 9 failures are pre-existing compliance meta-gates, Playwright DOM tests and one stub-model viewer test, none pool-related.
 - **Next:** WP-2.3/2.4 workflow definition/executor + explicit maps.
+## 2026-11-04T14:30:00-03:00 - WP-2.3 part 1: workflow definitions with explicit plan maps
+
+- **Contracts moved to `Wip.Abstractions.Workflows`** (`WorkflowStageKind`, `WorkflowStageDescriptor`, `WorkflowStageExecution`, `WorkflowExecutionResult`) so `Wip.Builder` can register definitions without referencing `Wip.Runtime`.
+- **Added** `IWorkflowDefinition`, `WorkflowPlan`, `StageMap`/`StageMap<TSource,TTarget>` (typed `Func<TSource, WorkflowContext, TTarget>`) and `WorkflowPlanMapRuntime`, which applies plan maps with deterministic errors — no static registry, no property-name heuristic, no string-constructor fallback.
+- **Wiring:** `WipBuilder.AddWorkflowDefinition<T>()`; `RunWorkflowAsync` resolves definitions from the run provider and uses the plan (stages + maps) when one matches; legacy `IWorkflow` workflows keep the old compiler/registry path for now.
+- **Test:** declarative six-stage linear workflow runs through the definition path; Plan→Run map supplies the request; producing capabilities asserted.
+- **Remaining WP-2.3:** `IWorkflowExecutor`/`LinearWorkflowExecutor` extraction + custom executor + obsolete `IWorkflow` adapter. Then WP-2.4 migrates Bones and deletes the static map registry.
+- **Local gate:** running; Runtime.Tests expected 74 (73 + the declarative test).
+## 2026-11-04T15:18:00-03:00 - WP-2.3 part 1 gate note (environmental browser timeout)
+
+- The full gate ran 16 projects; 15 were clean and the Host suite had **one** unwaived failure: `BonesHostViewerLearningLoopStatus_GivenLiveMatchPublish_ExpectedTurnOfYIncreasesWithFrameCount` — `Playwright Timeout 30000ms` in `WaitForLearningLoopFrameCountAsync`. Re-running it in isolation failed at the same 30 s wait.
+- Cause measured earlier in this environment: the first in-process Roslyn compile costs ~9-10 s (vs ~0.8 s warm/CI), so a four-seat Bones iteration cannot reach the Play stage/frames inside the test's fixed 30 s wait. The same test passed in the two previous gates and in CI when compiles were fast. No workflow definition is registered in the Bones host (grep: only the runtime test uses `AddWorkflowDefinition`), so the WP-2.3 change cannot alter the viewer path.
+- Decision: commit part 1 with the local gate red on this single environment-bound browser timeout; Tests CI is the authoritative verification for this commit. If CI fails the same test, fix before proceeding.

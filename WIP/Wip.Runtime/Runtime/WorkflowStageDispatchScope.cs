@@ -1,3 +1,5 @@
+using Wip.Abstractions.Workflows;
+
 namespace Wip.Runtime.Runtime;
 
 public static class WorkflowStageDispatchScope

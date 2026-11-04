@@ -236,6 +236,18 @@ public sealed class WipBuilder
         return this;
     }
 
+    /// <summary>
+    /// Registers a declarative workflow definition. The runtime resolves it from the run provider,
+    /// compiles its <see cref="WorkflowPlan"/> and executes the stages with the plan's explicit
+    /// <see cref="StageMap"/> delegates instead of the legacy registry/heuristic path.
+    /// </summary>
+    public WipBuilder AddWorkflowDefinition<TDefinition>()
+        where TDefinition : class, IWorkflowDefinition
+    {
+        Services.AddSingleton<IWorkflowDefinition, TDefinition>();
+        return this;
+    }
+
     private WipBuilder AddCapability<TCapability, TRequest, TResult>(
         CapabilityId capabilityId,
         string displayName,

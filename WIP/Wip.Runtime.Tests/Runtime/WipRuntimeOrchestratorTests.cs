@@ -1668,6 +1668,65 @@ public sealed class WipRuntimeOrchestratorTests
         Assert.Contains(typeof(IArtifactStore), recording.RequestedTypes);
     }
 
+    [Fact]
+    public async Task RunWorkflowAsync_GivenDeclarativeWorkflowDefinition_ExpectedPlanMapsDriveEveryStage()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+        builder.AddWorkflowDefinition<DeclarativeLinearWorkflowDefinition>();
+        await using var provider = builder.Services.BuildServiceProvider();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("declarative-definition"),
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: provider,
+            cancellationToken: CancellationToken.None);
+
+        Assert.Equal("workflow.linear", result.WorkflowId.Value);
+        Assert.Equal(6, result.Stages.Count);
+        Assert.Equal(new CapabilityId("agent.workflow.plan"), result.Stages[0].ProducerCapabilityId);
+        Assert.Equal(new CapabilityId("tool.workflow.run"), result.Stages[1].ProducerCapabilityId);
+    }
+
+    private sealed class DeclarativeLinearWorkflowDefinition : IWorkflowDefinition
+    {
+        public WorkflowId WorkflowId => new("workflow.linear");
+
+        public WorkflowPlan Compile() => new(
+            WorkflowStageDescriptorMapper.CreateLinear(typeof(WorkflowRequest), typeof(WorkflowResult)),
+            [
+                new StageMap<PlanStageResult, WorkflowRequest>(
+                    WorkflowStageKind.Plan,
+                    WorkflowStageKind.Run,
+                    (plan, context) => new WorkflowRequest(context.Task)),
+                new StageMap<WorkflowResult, ValidateStageRequest>(
+                    WorkflowStageKind.Run,
+                    WorkflowStageKind.Validate,
+                    (result, context) => new ValidateStageRequest(context.SessionId.Value)),
+                new StageMap<ValidateStageResult, ReviewStageRequest>(
+                    WorkflowStageKind.Validate,
+                    WorkflowStageKind.Review,
+                    (result, context) => new ReviewStageRequest(context.SessionId.Value)),
+                new StageMap<ReviewStageResult, RequireApprovalStageRequest>(
+                    WorkflowStageKind.Review,
+                    WorkflowStageKind.RequireApproval,
+                    (result, context) => new RequireApprovalStageRequest(context.SessionId.Value)),
+                new StageMap<RequireApprovalStageResult, MergeStageRequest>(
+                    WorkflowStageKind.RequireApproval,
+                    WorkflowStageKind.Merge,
+                    (result, context) => new MergeStageRequest(context.SessionId.Value)),
+            ]);
+    }
+
     private sealed class RecordingServiceProvider(IServiceProvider inner) : IServiceProvider
     {
         public List<Type> RequestedTypes { get; } = [];
