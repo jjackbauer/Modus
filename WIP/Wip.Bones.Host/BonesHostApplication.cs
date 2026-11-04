@@ -46,6 +46,11 @@ public static class BonesHostApplication
 
         var app = builder.Build();
 
+        // Resolve the script host eagerly: a Worker-mode misconfiguration must fail at startup
+        // instead of at the first strategy compile, and the execution mode is logged before the
+        // learning loop starts.
+        _ = app.Services.GetRequiredService<BonesStrategyScriptHost>();
+
         BonesWebHost.MapMatchRoutes(app);
         BonesWebHost.MapPoolRoutes(app);
         BonesWebHost.MapStaticViewer(app);

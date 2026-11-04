@@ -12,6 +12,12 @@ if (-not $repoRoot) {
 
 Set-Location $repoRoot
 
+# A non-admin Windows user cannot write to the shared ".NET Runtime" event source; the EventLog
+# logger then throws an AggregateException from ILogger, which fails host integration tests for an
+# environmental reason. Tests still log to the console. CI runners are administrators, so this only
+# removes the local-only failure mode.
+$env:Logging__EventLog__LogLevel__Default = 'None'
+
 $projects = @(
     'WIP/Wip.Abstractions.Tests/Wip.Abstractions.Tests.csproj',
     'WIP/Wip.Artifacts.Local.Tests/Wip.Artifacts.Local.Tests.csproj',

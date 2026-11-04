@@ -1,25 +1,26 @@
 # DEV-004 — ScriptHost mode defaults to InProcess, not Worker
 
-**Status:** proposed for G2/G5 review
-**Date:** 2026-11-03
+**Status:** active deviation; approved scope is conditional Gate G2 (trusted-only). Re-review at G2/G5.
+**Date:** 2026-11-03 (updated 2026-11-04 after WP-1.3/WP-1.6)
 **Plan reference:** WP-1.6 (“default Worker”)
 
 ## What the plan assumed
 
 WP-1.6 would add `ScriptHost:Mode=Worker|InProcess`, default `Worker`, with `InProcess` restricted to tests/trusted use.
 
-## What is true
+## What is true now
 
-- WP-1.3 (worker routing) is not implemented; `BonesStrategyScriptHost` still compiles/executes in-process.
-- Under G2 Option 2 (trusted-only, conditional), the safe default is **`InProcess`**.
-- Selecting `Worker` requires `TrustedOnly=true` and currently **fails closed** with `NotSupportedException` until WP-1.3 exists.
-- C1 OS containment is still open; WIP 1.0/G5 remain blocked until it closes.
+- WP-1.3 worker routing is implemented: in Worker mode `BonesStrategyScriptHost` compiles and selects moves through `SandboxWorkerClient`, the host caches a `WorkerBonesPlayerSlot` bridge, and the model assembly is never loaded in the host. Evidence: `docs/execution/evidence/WP-1.3/worker-coverage.md`.
+- WP-1.6 implements the flag end to end: `BonesScriptHostRuntime`, configuration binding, deterministic startup validation, the InProcess warning, Worker opt-in with a fail-closed start, and tests. Evidence: `docs/execution/evidence/WP-1.6/notes.md`.
+- The default remains **`InProcess`** deliberately: Gate G2 is conditional (trusted-only, expiry 2026-12-03), Windows C1 is an accepted residual, and release packaging does not yet deploy the worker (WP-6.2).
+- `Worker` requires `TrustedOnly=true`; a missing worker, a failed handshake, or `TrustedOnly=false` stops the host at startup. There is no silent in-process fallback.
+- C1: Linux verified (unshare + chroot); Windows not contained (Job Object only). No release.
 
 ## Impact
 
-- The flag exists and is configurable, but does not yet switch execution to the worker. This is a scaffold, not WP-1.3 completion.
-- The plan’s “default Worker” is not met; this deviation is deliberate and safer for the conditional G2.
+- The plan’s “default Worker” is not met. `InProcess` remains the shipped default and logs a warning at startup.
+- Execution routing itself is complete: setting `BonesHost:ScriptHost:Mode=Worker` switches the host to the worker once the worker binary is deployed and `ScriptHost:WorkerPath` resolves.
 
 ## Reversal
 
-When WP-1.3 routes execution through `WorkerScriptExecutor` and C1 containment evidence exists, make `Worker` the default, remove the fail-closed guard, and retire this deviation.
+When all of the following hold — full G2 approval, Windows containment fixed or explicitly accepted for release, and release packaging deploying the worker — make `Worker` the default, keep the fail-closed guards, and retire this deviation at G5.

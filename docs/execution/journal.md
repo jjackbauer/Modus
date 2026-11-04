@@ -405,3 +405,30 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Contracts project wired; worker compiles/executes against contracts; host WorkerBonesPlayerSlot test passes.
 - Architecture 41/41; Bones 386 total (384 pass, 2 waived); 16-project gate green.
 - WP-1.3 remains in progress for broader coverage; no release.
+
+## 2026-11-04T06:41:00-03:00 - WP-1.3 coverage (worker-mode tests + host isolation proof)
+
+- **Baseline reproduced first:** build `Wip.slnx` exit 0 (0 errors, 115 warnings); architecture 3/3 with graph count 41; sandbox 18/18; Bones 386 total / 384 passed / 2 waived.
+- **Tests:** added `BonesStrategyScriptHostWorkerModeTests` (9 cases, serialized collection, one worker per class): a 4-case state theory drives the selection from board tiles, the current player’s hand, pass streak and legal moves; the public `BonesScriptStrategyPlayerSlot` fallback test asserts the exact warning artifact for an illegal worker move; the isolation test asserts no `BonesStrategyScript_*` assembly delta in the host AppDomain, `CompileInvocationCount == 0`, and the `WorkerBonesPlayerSlot` bridge; a paired InProcess test proves the detector can fail (it observes the load); cache reuse and worker-side compile rejection are covered.
+- **Real defect found and fixed:** the worker retained ~34 MB per Roslyn compile and hit the default 256 MiB Job Object cap at compile 7 (`OutOfMemoryException` through a direct worker probe). `WIP/Wip.Sandbox.Worker/Program.cs` now caches metadata references per process and runs a forced full collection after each compile. Measured: peak 60.7 MB over 16 compiles (was 328.5 MB), ~15 ms per compile after a 683 ms warm-up.
+- **Verification:** new class 9/9; full Bones suite **395 total / 393 passed / 2 waived**; sandbox 18/18 after the worker change; expected total updated in `docs/plan/test-waivers.json` with the TRX evidence.
+- **Evidence:** `docs/execution/evidence/WP-1.3/worker-coverage.md`.
+
+## 2026-11-04T06:56:00-03:00 - WP-1.6 (ScriptHost execution-mode flag complete)
+
+- `BonesScriptHostRuntime` owns the mode: InProcess logs the trust-boundary warning; Worker validates `TrustedOnly`, resolves `WorkerPath`, starts the worker, completes the handshake, and fails closed with no in-process fallback. Registered as a singleton that disposes the worker; `BonesHostApplication.Build` resolves it eagerly so a misconfiguration fails at startup.
+- 10 flag tests pass (options binding, unknown mode rejection, warning log, fail-closed paths, real worker execution with no model assembly in the host AppDomain).
+- Host-process evidence: with `BonesHost__ScriptHost__Mode=Worker` and a worker path the host logged the Worker mode line and listened; a first attempt with a non-writable temp failed closed at startup. The log line appeared twice, proving the workflow runtime’s nested service provider creates a second script host/worker (WP-2.1). Recorded in `docs/security/sandbox-threat-model.md` §9 and the host README.
+- Docs updated: host README configuration + sandbox section; threat model §9; `DEV-004` rewritten (routing is complete, default still InProcess until full G2 + deployment).
+
+## 2026-11-04T07:10:00-03:00 - Gate attempt 1 failed; two defects fixed
+
+- **Host suite (42 unwaived failures):** the new InProcess `LogWarning` hit the Windows Event Log provider, which is denied in this environment; the default host throws an AggregateException from logging, so `BonesHostApplication.Build` failed for 42 integration tests. Fix: startup logging is best-effort (`TryLog` catches the aggregated provider failure and falls back to the console), so a logging sink can never stop the host.
+- **Bones suite (1 unwaived failure):** `BonesLearningWorkflowMapRuntime_GivenExplicitEvaluationTargetScore…` failed with “No runtime map adapter binding exists” — a process-global registry race: three test classes reset `WorkflowStageMapAdapterRuntime` while other classes map. Serialized those mutators in a non-parallel `BonesWorkflowMapRuntime` collection (WP-2.4 will remove the global registry). Post-fix Bones suite: 395 / 393 passed / 2 waived.
+- **Environment note:** a `dotnet` build transiently failed on a stale NuGet scratch lock; `dotnet build --no-restore` succeeded. Not a repository defect.
+## 2026-11-04T08:20:00-03:00 - Full gate green; G1 packet ready; stop at the G1 product decision
+
+- **Offline gate:** 16 projects, **1,103 executed / 1,080 passed / 23 failed**, all failures on the 27-entry waiver register; `tools/verify-test-results.ps1` exit 0 (`test_gate=ok projects=16 waived_failures=27`). Host suite completed 251 tests (242 passed, 9 waived failures); its register total was stale at 153 and is corrected to 251 (`OBS-007`).
+- **Architecture:** 3/3 with 41 WIP projects after all changes. **Sandbox:** 18/18. **Bones:** 395 total / 393 passed / 2 waived.
+- **G1 packet:** `docs/execution/evidence/G1/gate-packet.md` — autonomy (yes/no), streaming (recommended descope), sample-agent scope (read-only), cited evidence and residual risks. **Not approved; awaiting the product owner.**
+- **Stop:** no Phase 3 work started; Phase 3 also requires G4 (Phase 2) and G3 (permissions) regardless of the G1 answer. No release, no full G2, no Windows containment claim.

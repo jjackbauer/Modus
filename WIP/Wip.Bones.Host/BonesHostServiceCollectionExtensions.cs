@@ -227,7 +227,10 @@ public static class BonesHostServiceCollectionExtensions
             return pool;
         });
         services.AddSingleton(sp => new BonesStrategyBootstrapper(sp.GetRequiredService<BonesStrategyLibrary>()));
-        services.AddSingleton(sp => new BonesStrategyScriptHost(options.ScriptHost));
+        services.AddSingleton(sp => BonesScriptHostRuntime.Create(
+            options.ScriptHost,
+            sp.GetService<ILoggerFactory>()));
+        services.AddSingleton(sp => sp.GetRequiredService<BonesScriptHostRuntime>().Host);
         services.AddSingleton<PopulationMatchComposer>();
 
         RegisterModelProviders(services, options);

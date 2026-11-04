@@ -290,12 +290,39 @@ Set options in `appsettings.json` under `BonesHost`, or via environment variable
 | Failure backoff cap (ms) | `BonesHost:FailureBackoffMaxMs` | `BonesHost__FailureBackoffMaxMs` |
 | Resume from best | `BonesHost:ResumeFromBest` | `BONES_RESUME_FROM_BEST` or `BonesHost__ResumeFromBest` |
 | Strategy script direct-execution timeout (default `false`; bounds each direct move with `BonesHost:ScriptHost:ExecutionTimeout`) | `BonesHost:ScriptHost:EnableDirectExecutionTimeout` | `BonesHost__ScriptHost__EnableDirectExecutionTimeout` |
-| Script host mode (default `InProcess`; `Worker` is trusted-only and fails closed until WP-1.3) | `BonesHost:ScriptHost:Mode` | `BonesHost__ScriptHost__Mode` |
+| Script host mode (`InProcess` default = trusted-only; `Worker` = sandbox worker, trusted-only, opt-in) | `BonesHost:ScriptHost:Mode` | `BonesHost__ScriptHost__Mode` |
 | Worker trusted-only guard (required for `Worker`; default `true`) | `BonesHost:ScriptHost:TrustedOnly` | `BonesHost__ScriptHost__TrustedOnly` |
+| Sandbox worker path for `Worker` mode (default: `Wip.Sandbox.Worker.dll` next to the host) | `BonesHost:ScriptHost:WorkerPath` | `BonesHost__ScriptHost__WorkerPath` |
 
 Default `MaxGamesPerRun` is `200`; `0` still means unlimited but is no longer the shipped default. Default `ResumeFromBest` is `true`. Default `EvaluationTargetScore` is `12`; evaluation matches do not use the learning target score. Default `ParallelSessionCount` is `1`, `GameCount` is `1`, and `Promotion:EvaluationMatchCount` is `8`.
 
 `MaxGamesPerRun` is a hard ceiling. Observe games, play matches, and every promotion/cross-seat evaluation match reserve capacity before running. If the next stage cannot reserve, the loop stops with `capReached=true` and `stopReason=GameBudgetExhausted` instead of overshooting. A cap smaller than one iteration's planned games stops before the expensive evaluation stage.
+
+### Strategy execution sandbox (`ScriptHost:Mode`)
+
+Bones compiles model-authored C# strategies and runs them through `Wip.Bones.Engine.BonesStrategyScriptHost`. The execution mode is explicit:
+
+| Mode | Behaviour | Trust boundary |
+|---|---|---|
+| `InProcess` (**default**) | Strategies compile with Roslyn and load in the host process. A warning is logged at startup. | Trusted strategies only. This is the deliberate deviation in `DEV-004` while Gate G2 is conditional; never feed it untrusted model output. |
+| `Worker` (opt-in) | The host starts `Wip.Sandbox.Worker` at `ScriptHost:WorkerPath`, completes the protocol handshake, and routes compile/choose-move over JSON lines. The model assembly is loaded only in the worker; the host holds a `WorkerBonesPlayerSlot` bridge. | Trusted-only, and fails closed: missing worker, failed handshake, or `TrustedOnly=false` stops the host at startup instead of falling back to in-process execution. |
+
+Worker mode requires a built worker next to the host (or an absolute `WorkerPath`) and `ScriptHost:TrustedOnly=true`:
+
+```powershell
+dotnet build WIP/Wip.Sandbox.Worker -c Release
+$env:BonesHost__ScriptHost__Mode = "Worker"
+$env:BonesHost__ScriptHost__WorkerPath = "C:\path\to\Wip.Sandbox.Worker\bin\Release\net10.0\Wip.Sandbox.Worker.dll"
+dotnet run --project WIP/Wip.Bones.Host
+```
+
+Look for this startup line to confirm routing:
+
+```
+Script execution mode is Worker: strategies compile and run in the sandbox worker at ...
+```
+
+Residual risk (not a containment claim): Linux uses `unshare` + `chroot` where unprivileged user namespaces are available; Windows uses Job Object resource caps only because the AppContainer launch is not implemented (accepted residual, see `docs/security/os-containment-windows.md`). Full Gate G2 is not approved and no untrusted model code may run in either mode. During a workflow run the runtime currently builds a nested service provider (`WP-2.1`), so a second worker process can start; it is bounded by the same limits and dies with the host. See `docs/security/sandbox-threat-model.md`.
 
 ### Operator setup: bounded runs and resume
 
@@ -447,7 +474,7 @@ A failed iteration triggers exponential backoff. After `MaxConsecutiveIterationF
 ## Tests
 
 ```powershell
-# Core agent tests (371 passing, 373 total; two behavior-proof plan/execution gates remain)
+# Core agent tests (393 passing, 395 total; two behavior-proof plan/execution gates remain waived)
 dotnet test WIP/Wip.Bones.Tests/Wip.Bones.Tests.csproj
 
 # Web viewer & pool tests (260 passing, 271 total; 40 pool tests)

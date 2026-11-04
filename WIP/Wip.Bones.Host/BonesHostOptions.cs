@@ -592,6 +592,9 @@ public sealed class BonesHostOptions
         BonesStrategyScriptHostOptions fallback)
     {
         var section = configuration.GetSection($"{SectionName}:ScriptHost");
+
+        // ScriptHost.Mode is validated by the configuration binder in Bind(): an unknown value
+        // fails startup deterministically instead of silently falling back to InProcess.
         var result = new BonesStrategyScriptHostOptions
         {
             CompilationTimeout = TimeSpan.TryParse(section["CompilationTimeout"], out var compileTimeout)
@@ -604,11 +607,12 @@ public sealed class BonesHostOptions
                 ?? fallback.MaxCompiledScripts,
             EnableDirectExecutionTimeout = section.GetValue<bool?>("EnableDirectExecutionTimeout")
                 ?? fallback.EnableDirectExecutionTimeout,
-            Mode = Enum.TryParse<BonesScriptHostMode>(section["Mode"], ignoreCase: true, out var mode)
-                ? mode
-                : fallback.Mode,
+            Mode = fallback.Mode,
             TrustedOnly = section.GetValue<bool?>("TrustedOnly")
                 ?? fallback.TrustedOnly,
+            WorkerPath = string.IsNullOrWhiteSpace(section["WorkerPath"])
+                ? fallback.WorkerPath
+                : section["WorkerPath"],
         };
 
         return result;

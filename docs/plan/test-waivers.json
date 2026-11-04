@@ -4,7 +4,7 @@
     "expectedTotals":  {
                            "Wip.Validation.DotNet.Tests":  54,
                            "Wip.Bones.E2E.Tests":  10,
-                           "Wip.Bones.Host.Tests":  163,
+                           "Wip.Bones.Host.Tests":  251,
                            "Wip.Shell.Tests":  32,
                            "Wip.Policy.LocalSafe.Tests":  40,
                            "Wip.ShellHost.Tests":  47,
