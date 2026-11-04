@@ -180,3 +180,18 @@
 - **Confidence**: High
 - **Agent**: orchestrator
 - **Related**: OBS-009
+### DEC-004: G1 approved — autonomy, streaming, write-capable sample agent
+
+- **Decision**: Phase 3 is in scope with streaming; the sample agent must be able to modify the repository (harness working on itself), inside the worktree and through the validation/approval boundary.
+- **Rationale**: product-owner decision, 2026-11-04; see `docs/execution/evidence/G1/decision-2026-11-04.md`.
+- **Alternatives considered**: read-only sample (rejected by the owner); descope autonomy (rejected); descope streaming (rejected).
+- **Related**: OQ-001, ART-003
+
+### OBS-011: G1 closes the phase-1 exit
+
+- **Source**: `docs/execution/evidence/G1/decision-2026-11-04.md`
+- **Fact**: D1 yes, D2 yes, D3 write-capable (verbatim recorded). Plan, state and evidence updated in the same change.
+- **Implications**: Phase 2 is the next executable work; Phase 3 requires G4 and G3 first. The write-capable scope adds +2 ED and a write-path security obligation.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: DEC-004

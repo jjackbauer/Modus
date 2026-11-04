@@ -445,3 +445,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Run 41836821034 (`24e4d77`):** offline gate failed with a different timing flake, `BonesHostFeed_GivenRunningLoop_ExpectedViewerSnapshotFrameCountGreaterThanZero` (ViewerUrl wait while ~10 full web hosts run in parallel). Fixed in `57f5632` by running the Host test assembly sequentially; no assertions weakened.
 - **Run 41839526456 (`57f5632`):** **all six jobs success** — `wip-build (ubuntu)`, `wip-build (windows)`, `wip-architecture`, `wip-security`, `wip-security (ubuntu)`, `wip-offline-tests` (suite + gate). Remote CI evidence for the two work packages is now recorded in `docs/execution/evidence/WP-1.6/gate-run-2026-11-04.md`.
 - **Status unchanged:** G1 packet awaiting the product decision; no release, no full G2, no Windows containment claim.
+## 2026-11-04T11:20:00-03:00 - G1 APPROVED: autonomy in, streaming in, write-capable sample agent
+
+- **D1:** general autonomy is a product goal; Phase 3 is in scope. **D2:** streaming ships in 1.0 (WP-3.5 kept). **D3:** the sample agent is **write-capable** — verbatim: “write able is non negotiable. the harness got to be able to work on itself”.
+- **Decision record:** `docs/execution/evidence/G1/decision-2026-11-04.md`. Plan updated: WP-3.6 becomes a write-capable repository agent (6 ED), WP-3.7 adds write-path abuse cases (4 ED), Phase 3 is 31 ED, the G1 gate row and D-01/D-02 register are marked approved.
+- **Write-path constraints recorded:** writes only inside the session worktree; `workspace.write` enforced by WP-3.2 after G3; validation → review → approval → merge boundary; no self-approval/auto-merge/direct push; audited diffs; WP-3.7 covers escape, traversal, injection-driven deletion and self-approval.
+- **Next:** Phase 2 (WP-2.1 host-managed DI first), then G3, then Phase 3. No release; full G2 remains conditional.

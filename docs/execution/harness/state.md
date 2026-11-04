@@ -1,9 +1,9 @@
-# Harness state Ã¢â‚¬â€ WIP-IMPL-001 / phase 1 close-out
+# Harness state ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â WIP-IMPL-001 / phase 1 close-out
 
 - **Round**: 2 of 12 (remote CI verification added; objectives 1-3 completed)
 - **Goal**: WP-1.3 coverage + WP-1.6 + G1 packet, then stop at G1
 - **Definition of done**: 8/8 dimensions verified
-- **Stop criteria**: G1 packet presented Ã¢â‚¬â€ **met**; human product decision outstanding
+- **Stop criteria**: G1 packet presented ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â **met**; human product decision outstanding
 
 ## Gate status
 
@@ -39,6 +39,6 @@
 | 1 | Gate attempt 2 + G1 | Survey | 0 | 1 | 0 | PASS | converged at G1 |
 | 2 | Remote CI verification | Survey | 0 | 1 | 0 | PASS | green run 41839526456 |
 
-## Next objective
+## Next objective`n`nPhase 2 / WP-2.1: host-managed DI (remove the nested `BuildServiceProvider`). G1 no longer blocks; G4 follows Phase 2 and G3 gates Phase 3.
 
 None in this run. The next action is the human G1 decision; then Phase 2 (G4) -> G3 -> Phase 3 per the chosen option.

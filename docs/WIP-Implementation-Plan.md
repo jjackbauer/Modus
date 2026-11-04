@@ -74,7 +74,7 @@ The red path is the schedule-critical chain: **truth → coherent runtime → ag
 | 0 | Truth and baseline | Week 1 | 12 | G0: baseline accepted |
 | 1 | Isolation and permissions | Weeks 2–5 | 28 | G2: sandbox approved; G3: permission model approved |
 | 2 | Runtime seams | Weeks 4–6 | 27 | G4: workflow/DI contracts accepted |
-| 3 | Agent runtime | Weeks 6–9 | 29 | Agent loop E2E accepted |
+| 3 | Agent runtime | Weeks 6–9 | 31 | Agent loop E2E accepted |
 | 4 | Requirements and CI | Weeks 2–9 | 13 | One authoritative requirements tree |
 | 5 | Operability and compatibility | Weeks 10–11 | 19 | Security review and operability sign-off |
 | 6 | Hardening and release | Weeks 12–13 | 14 | G5: release approved |
@@ -605,7 +605,7 @@ The plan owns its maps. There is no static registry, no property-name heuristic,
 
 **Goal:** Add a reusable, model-agnostic agent loop with tool calls, memory, budgets, streaming, permissions, and a sample agent that proves the stack end to end.
 
-**Duration:** Weeks 6–9. **Effort:** 29 ED. **Owner:** agent/LLM engineer + runtime engineer.
+**Duration:** Weeks 6–9. **Effort:** 31 ED (G1: streaming kept + write-capable sample agent). **Owner:** agent/LLM engineer + runtime engineer.
 
 | ID | Work package | Key tasks | Acceptance | Depends | ED |
 |---|---|---|---|---|---:|
@@ -614,8 +614,8 @@ The plan owns its maps. There is no static registry, no property-name heuristic,
 | WP-3.3 | Agent executor loop | Add `IAgentExecutor`, `AgentExecutionRequest/Result`, `AgentLoopOptions`; loop model turn → tool calls → observations → repeat; stop on final answer, max steps, max tokens, timeout, cancellation, or repeated tool failure. | Fake model/tool loop succeeds; budget exhaustion stops; cancellation stops; malformed tool call is handled; tests. | WP-3.1, WP-3.2, WP-2.3 | 7 |
 | WP-3.4 | Agent memory | Add `IAgentMemory` with load/append/summarize; implement `ArtifactAgentMemory` (session-scoped JSON artifacts); isolate sessions; add retention hooks. | Memory survives turns; sessions are isolated; artifacts are inspectable; tests. | WP-3.3 | 4 |
 | WP-3.5 | Streaming | Add `IChatModel.StreamAsync` and streaming chunks; DeepSeek SSE adapter; agent executor emits deltas; shell/status can display progress; cancellation closes the stream. | Incremental output observed; cancellation stops the stream; tests. | WP-3.1, WP-3.3 | 3 |
-| WP-3.6 | Runtime integration and sample agent | Add `RunAgentAsync` to the runtime; add an `AgentExecutorTool` capability for workflows; implement a read-only `RepoResearchAgent` (search, read file, git status, shell tool under policy); add E2E. | Sample agent answers a repository question using tools and memory; artifacts/telemetry; E2E passes. | WP-3.3, WP-3.4, WP-3.5 | 4 |
-| WP-3.7 | Agent safety tests | Prompt injection, data exfiltration via tools, tool-loop, permission denial, budget exhaustion, oversized observations, model error, cancellation. | Every abuse case fails closed or is bounded; tests run in `Security`/`Agent` jobs. | WP-3.3, WP-3.6 | 3 |
+| WP-3.6 | Runtime integration and sample agent | Add `RunAgentAsync` to the runtime; add an `AgentExecutorTool` capability for workflows; implement a **write-capable repository agent** (search, read file, git status, shell under policy, and worktree-confined edit/delete under `workspace.write`) that can modify the harness itself; add E2E. **G1 decision (2026-11-04):** write-capable is required, not read-only. | Sample agent answers a repository question and makes a scoped edit inside its isolated worktree using tools and memory; the edit is validated/reviewed but never auto-merged; artifacts/telemetry; E2E passes. | WP-3.3, WP-3.4, WP-3.5, WP-1.7 | 6 |
+| WP-3.7 | Agent safety tests | Prompt injection, data exfiltration via tools, tool-loop, permission denial, budget exhaustion, oversized observations, model error, cancellation, **worktree escape/traversal writes, injection-driven deletion, self-approval attempt**. | Every abuse case fails closed or is bounded; tests run in `Security`/`Agent` jobs. | WP-3.3, WP-3.6 | 4 |
 
 #### Phase 3 notes
 
@@ -629,7 +629,7 @@ The plan owns its maps. There is no static registry, no property-name heuristic,
 
 Branching, multi-agent collaboration, and long-running planning belong in a workflow executor or a higher-level orchestrator, not in the loop.
 
-**The sample agent must be read-only by default.** A `RepoResearchAgent` with search/read/git-status tools proves the loop without creating another autonomous code-writing surface. A write-capable sample can follow after the permission and approval model is proven.
+**The sample agent is write-capable (G1 decision 2026-11-04).** The product owner requires the harness to be able to work on itself: the sample agent may edit the repository, but only inside its isolated Git worktree, only with the `workspace.write` permission enforced by the tool invoker, and only through the validation → review → approval → merge boundary. It cannot self-approve or auto-merge, and every write is audited and diffable. This supersedes the earlier read-only default; the write path is a first-class 1.0 capability covered by WP-3.7 and the G5 security review.
 
 **Memory is not a vector database.** The first implementation is session-scoped artifact memory with append and summarize. It is enough for multi-turn tool use and auditability. RAG/vector memory is a later feature, not a release blocker.
 
@@ -884,7 +884,7 @@ The dates are indicative and should be re-baselined after Gate G0. They assume t
 | Gate | When | Decision | Owner | Pass criteria | If failed |
 |---|---|---|---|---|---|
 | **G0** | End of Phase 0 | Accept baseline, solution topology, and ADRs | Tech lead + product | Clean baseline, all projects in `Wip.slnx`, CI inventory, architecture tests, ADRs | Re-baseline; do not start Phase 1/2 |
-| **G1** | Before Phase 3 | Is general autonomy a product goal? Is streaming in scope? | Product owner | Written decision; sample agent scope | Descope Phase 3/streaming; reposition as governed runtime |
+| **G1** | Before Phase 3 | Is general autonomy a product goal? Is streaming in scope? | Product owner | **PASSED 2026-11-04** — autonomy yes, streaming yes, write-capable sample agent; see `docs/execution/evidence/G1/decision-2026-11-04.md` | Descope Phase 3/streaming; reposition as governed runtime |
 | **G2** | Before WP-1.3 | Approve sandbox mechanism and residual risk | Security reviewer + tech lead | Threat model, protocol, OS limits, fallback plan | Do not execute model code outside host; restrict to trusted strategies |
 | **G3** | Before WP-1.7 enforcement | Approve permission catalog and enforcement points | Security reviewer + runtime lead | Catalog, audit report, built-in grants | Stay in audit mode; do not claim least privilege |
 | **G4** | End of Phase 2 | Accept DI and workflow contracts | Tech lead + runtime lead | No nested provider, definition/executor, explicit maps, compatibility adapter | Keep legacy path; delay Phase 3 |
@@ -1352,8 +1352,8 @@ The first 10 days deliberately do not start the agent runtime. If the build grap
 
 | ID | Decision | Owner | Needed by | Default if undecided |
 |---|---|---|---|---|
-| D-01 | Is general autonomy a product goal? | Product | G1 | Descope Phase 3; release as governed runtime |
-| D-02 | Is streaming in 1.0? | Product | G1 | Include if Phase 3 stays on schedule; else post-1.0 |
+| D-01 | Is general autonomy a product goal? | Product | G1 | **Approved 2026-11-04: yes — Phase 3 in scope.** |
+| D-02 | Is streaming in 1.0? | Product | G1 | **Approved 2026-11-04: yes — streaming ships in 1.0.** |
 | D-03 | Windows-only or Windows+Linux? | Tech lead | G0 | Both; CI matrix |
 | D-04 | Worker OS isolation level | Security | G2 | Process + job object/cgroup; no full AppContainer |
 | D-05 | Permission enforcement vs metadata | Security + runtime | G3 | Enforce for plugins/tools; built-ins granted |
