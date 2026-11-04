@@ -49,10 +49,13 @@ jobs:
           dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter "MigrationRegression=true" --logger "trx;LogFileName=MigrationRegressionSuite.trx" 2>&1 | tee migration-regression.log
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
-            # Surface the failing tests as annotations so they are visible without log access.
-            grep -E "^\s*(Failed|Error Message|System\.)" migration-regression.log | head -60 | while IFS= read -r line; do
-              echo "::error title=MigrationRegression::${line}"
-            done
+            # Surface the failure reason as annotations so it is visible without log access.
+            matched=$(grep -nE "Aborted|aborted|Exception|error CS|Failed|Cannot|No such|not found" migration-regression.log | head -8 || true)
+            if [ -n "$matched" ]; then
+              echo "$matched" | while IFS= read -r line; do echo "::error title=MigrationRegression::${line}"; done
+            fi
+            head -6 migration-regression.log | while IFS= read -r line; do echo "::error title=MigrationRegressionHead::${line}"; done
+            tail -6 migration-regression.log | while IFS= read -r line; do echo "::error title=MigrationRegressionTail::${line}"; done
           fi
           exit "$status"
       - name: Gate plugin endpoint curl probe (Release, no build, TRX)
