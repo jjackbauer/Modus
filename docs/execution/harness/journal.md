@@ -163,3 +163,20 @@
 - **Priority**: P1 important
 - **Raised by**: Round 1, orchestrator
 - **Related**: OBS-008
+### OBS-009: Remote Tests CI green on 57f5632
+
+- **Source**: GitHub Actions run [41839526456](https://github.com/jjackbauer/Modus/actions/runs/41839526456) (`Tests CI`, branch WIP, head `57f5632`)
+- **Fact**: All six jobs succeeded: `wip-build (ubuntu)`, `wip-build (windows)`, `wip-architecture`, `wip-security`, `wip-security (ubuntu)`, `wip-offline-tests` (suite run and the known-failure/zero-test/count gate).
+- **Implications**: The 395-test Bones suite and the 251-test Host suite run in CI under the 27-waiver register; the Windows security job is green after the diagnostics fix. Closes OQ-003.
+- **Confidence**: High
+- **Agent**: orchestrator (API read)
+- **Related**: EVD-012, OQ-003
+
+### OBS-010: Two CI-only flakes came from host-test parallel load
+
+- **Source**: runs 41834133205 (loop-state `readCount==0`) and 41836821034 (ViewerUrl wait); both tests pass in isolation and locally
+- **Fact**: The Host suite starts ~10 full web hosts; parallel collections starved timing waits on the CI runner. The loop-state test also had a genuine design race (reader could miss all writers). Fixed in `24e4d77` (deterministic at-least-one-read) and `57f5632` (assembly-level sequential execution).
+- **Implications**: The green run is a real green, not a waiver; no assertions were weakened.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: OBS-009

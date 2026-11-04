@@ -437,3 +437,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Attempt:** `git push origin WIP` failed `Permission denied (publickey)`; HTTPS push failed with no cached credential ("could not read Username"). No push occurred.
 - **Impact:** the two commits `ca6f41d` and `0ffefe2` have **no remote CI evidence**. The workflow is unchanged; the next authorized push runs it. No CI success is claimed.
 - **Record:** local gate evidence (16 projects, 1,103/1,080/23, verifier exit 0) is committed at `docs/execution/evidence/WP-1.6/gate-run-2026-11-04.md`.
+## 2026-11-04T10:50:00-03:00 - SSH push worked; remote Tests CI green after two CI-only flake fixes
+
+- **Push:** the earlier `Permission denied (publickey)` was transient; SSH retry succeeded. Pushed `ca6f41d`, `0ffefe2`, `61e38a0`, `cad07cf`, `24e4d77`, `57f5632` to `origin/WIP`.
+- **Run 41831871318 (`61e38a0`):** builds (ubuntu/windows), architecture, `wip-security (ubuntu)` and **`wip-offline-tests` suite + count/waiver gate success**. Windows `wip-security` failed only in the always-on `schtasks` diagnostics step; its 18-test suite passed. Fixed in `cad07cf` (query the helper task defensively, `exit 0`).
+- **Run 41834133205 (`cad07cf`):** both security jobs green; offline gate failed with one unwaived CI-only flake, `BonesLoopState_GivenMultiFieldConcurrentWrites_NoTornOrCorruptReads` (reader starved, `readCount==0`). Fixed deterministically in `24e4d77` (reader performs at least one read).
+- **Run 41836821034 (`24e4d77`):** offline gate failed with a different timing flake, `BonesHostFeed_GivenRunningLoop_ExpectedViewerSnapshotFrameCountGreaterThanZero` (ViewerUrl wait while ~10 full web hosts run in parallel). Fixed in `57f5632` by running the Host test assembly sequentially; no assertions weakened.
+- **Run 41839526456 (`57f5632`):** **all six jobs success** — `wip-build (ubuntu)`, `wip-build (windows)`, `wip-architecture`, `wip-security`, `wip-security (ubuntu)`, `wip-offline-tests` (suite + gate). Remote CI evidence for the two work packages is now recorded in `docs/execution/evidence/WP-1.6/gate-run-2026-11-04.md`.
+- **Status unchanged:** G1 packet awaiting the product decision; no release, no full G2, no Windows containment claim.
