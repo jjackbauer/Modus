@@ -1,10 +1,10 @@
 {
-    "generated":  "2026-11-02T12:41:23.6902693-03:00",
+    "generated":  "2026-11-04T06:54:59.3904242-03:00",
     "description":  "Known red-baseline failures for the offline suite (Playwright projects excluded and run optionally); CI gate fails on unlisted failures, zero tests, missing projects, or new partial suites.",
     "expectedTotals":  {
                            "Wip.Validation.DotNet.Tests":  54,
                            "Wip.Bones.E2E.Tests":  10,
-                           "Wip.Bones.Host.Tests":  153,
+                           "Wip.Bones.Host.Tests":  163,
                            "Wip.Shell.Tests":  32,
                            "Wip.Policy.LocalSafe.Tests":  40,
                            "Wip.ShellHost.Tests":  47,
@@ -13,7 +13,7 @@
                            "Wip.Modus.Tests":  18,
                            "Wip.Workspaces.Git.Tests":  12,
                            "Wip.Tools.Shell.Tests":  25,
-                           "Wip.Bones.Tests":  386,
+                           "Wip.Bones.Tests":  395,
                            "Wip.Abstractions.Tests":  44,
                            "Wip.Runtime.Tests":  72,
                            "Wip.Builder.Tests":  32,

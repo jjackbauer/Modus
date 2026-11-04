@@ -16,6 +16,7 @@ using Xunit;
 
 namespace Wip.Bones.Tests.Agents;
 
+[Collection(BonesWorkflowMapRuntimeCollection.Name)]
 public sealed class BonesLearningLoopReliabilityAgentTests
 {
     [Fact]

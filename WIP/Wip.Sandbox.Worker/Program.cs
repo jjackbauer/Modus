@@ -72,6 +72,7 @@ while ((line = ReadBoundedLine(stdin, SandboxProtocol.MaxFrameBytes, out var too
                 }
 
                 HandleCompile(root, id);
+                ReclaimCompilationMemory();
                 break;
             case "chooseMove":
                 if (!handshakeCompleted)
@@ -90,6 +91,7 @@ while ((line = ReadBoundedLine(stdin, SandboxProtocol.MaxFrameBytes, out var too
                 }
 
                 HandleCompileBones(root, id);
+                ReclaimCompilationMemory();
                 break;
             case "chooseBonesMove":
                 if (!handshakeCompleted)
@@ -403,27 +405,7 @@ BonesCompilationResult CompileBones(string source)
     }
 
     var syntaxTree = CSharpSyntaxTree.ParseText("global using System.Collections.Generic;" + Environment.NewLine + source);
-    var references = new List<MetadataReference>();
-    var allowedReferences = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
-        "System.Runtime.dll", "System.Console.dll", "System.Collections.dll", "System.Collections.Immutable.dll",
-        "System.Linq.dll", "System.Private.CoreLib.dll", "System.Memory.dll"
-    };
-    var trusted = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
-    if (!string.IsNullOrWhiteSpace(trusted))
-    {
-        foreach (var path in trusted.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            if (File.Exists(path) && allowedReferences.Contains(Path.GetFileName(path)))
-            {
-                references.Add(MetadataReference.CreateFromFile(path));
-            }
-        }
-    }
-
-    references.Add(MetadataReference.CreateFromFile(typeof(IBonesPlayerSlot).Assembly.Location));
-    references.Add(MetadataReference.CreateFromFile(typeof(BonesWorkerState).Assembly.Location));
-    var compilation = CSharpCompilation.Create("WipBonesWorkerStrategy", [syntaxTree], references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    var compilation = CSharpCompilation.Create("WipBonesWorkerStrategy", [syntaxTree], WorkerCompilationReferences.Bones, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
     using var stream = new MemoryStream();
     var emit = compilation.Emit(stream);
     if (!emit.Success)
@@ -473,32 +455,10 @@ CompilationResult Compile(string source)
     }
 
     var syntaxTree = CSharpSyntaxTree.ParseText(source);
-    var references = new List<MetadataReference>();
-    var allowedReferences = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-    {
-        "System.Runtime.dll",
-        "System.Console.dll",
-        "System.Collections.dll",
-        "System.Linq.dll",
-        "System.Private.CoreLib.dll"
-    };
-    var trusted = (string?)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES");
-    if (!string.IsNullOrWhiteSpace(trusted))
-    {
-        foreach (var path in trusted.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-        {
-            if (File.Exists(path) && allowedReferences.Contains(Path.GetFileName(path)))
-            {
-                references.Add(MetadataReference.CreateFromFile(path));
-            }
-        }
-    }
-
-    references.Add(MetadataReference.CreateFromFile(typeof(IWorkerStrategy).Assembly.Location));
     var compilation = CSharpCompilation.Create(
         "WipSandboxStrategy",
         [syntaxTree],
-        references,
+        WorkerCompilationReferences.Generic,
         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
     using var stream = new MemoryStream();
     var emit = compilation.Emit(stream);
@@ -533,6 +493,15 @@ CompilationResult Compile(string source)
         context.Unload();
         return new CompilationResult(false, null, string.Empty, ["Strategy assembly could not be loaded."], null);
     }
+}
+
+static void ReclaimCompilationMemory()
+{
+    // Roslyn keeps compilation graphs alive until a full GC. The worker runs under a hard OS
+    // memory cap (Windows Job Object), and measurements showed ~34 MB retained per compile with
+    // the first full GC only near the default cap, so a sequence of compiles exhausted it.
+    // Reclaim deterministically after each compile; the compile budget, not latency, is the bound.
+    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: false);
 }
 
 static string? ReadBoundedLine(Stream stream, int maxBytes, out bool tooLong)
@@ -601,6 +570,67 @@ internal sealed record BonesCompiledStrategy(Type Type, string SourceHash, strin
 internal sealed record BonesCompilationResult(bool Success, Type? Type, string AssemblyHash, string[] Diagnostics, AssemblyLoadContext? Context);
 
 internal sealed record CompilationResult(bool Success, Type? Type, string AssemblyHash, string[] Diagnostics, AssemblyLoadContext? Context);
+
+/// <summary>
+/// Metadata references are immutable and process-stable, so they are created once instead of
+/// once per compile; re-reading the same assemblies for every strategy was the dominant
+/// per-compile allocation in the worker.
+/// </summary>
+internal static class WorkerCompilationReferences
+{
+    private static readonly string[] GenericAssemblies =
+    [
+        "System.Runtime.dll",
+        "System.Console.dll",
+        "System.Collections.dll",
+        "System.Linq.dll",
+        "System.Private.CoreLib.dll",
+    ];
+
+    private static readonly string[] BonesAssemblies =
+    [
+        "System.Runtime.dll",
+        "System.Console.dll",
+        "System.Collections.dll",
+        "System.Collections.Immutable.dll",
+        "System.Linq.dll",
+        "System.Private.CoreLib.dll",
+        "System.Memory.dll",
+    ];
+
+    public static IReadOnlyList<MetadataReference> Generic { get; } = Create(GenericAssemblies, includeBonesContracts: false);
+
+    public static IReadOnlyList<MetadataReference> Bones { get; } = Create(BonesAssemblies, includeBonesContracts: true);
+
+    private static MetadataReference[] Create(string[] allowedFileNames, bool includeBonesContracts)
+    {
+        var allowed = new HashSet<string>(allowedFileNames, StringComparer.OrdinalIgnoreCase);
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string trusted)
+        {
+            foreach (var path in trusted.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (File.Exists(path) && allowed.Contains(Path.GetFileName(path)))
+                {
+                    paths.Add(path);
+                }
+            }
+        }
+
+        paths.Add(typeof(IWorkerStrategy).Assembly.Location);
+        if (includeBonesContracts)
+        {
+            paths.Add(typeof(IBonesPlayerSlot).Assembly.Location);
+            paths.Add(typeof(BonesWorkerState).Assembly.Location);
+        }
+
+        return paths
+            .Where(static path => !string.IsNullOrWhiteSpace(path))
+            .Select(static path => MetadataReference.CreateFromFile(path))
+            .ToArray();
+    }
+}
 
 internal sealed class StrategyLoadContext : AssemblyLoadContext
 {

@@ -21,6 +21,7 @@ using Xunit;
 
 namespace Wip.Bones.Tests.Workflow;
 
+[Collection(BonesWorkflowMapRuntimeCollection.Name)]
 public sealed class BonesLearningWorkflowRegistrationTests
 {
     private const string BuilderExtensionChecklistItem = BonesRequirementsChecklistItems.BuilderExtension;

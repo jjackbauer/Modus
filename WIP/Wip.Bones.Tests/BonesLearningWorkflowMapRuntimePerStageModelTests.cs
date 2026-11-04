@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Wip.Bones.Tests;
 
+[Collection(BonesWorkflowMapRuntimeCollection.Name)]
 public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
 {
     private const string StageKindEnumItem =

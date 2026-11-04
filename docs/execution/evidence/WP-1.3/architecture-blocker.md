@@ -21,3 +21,7 @@ the unsafe route (commits `ef35b5e`, `93179ce`, `24d6899`) to keep the architect
    the existing JSON DTOs. No project reference; host never loads the model assembly.
 
 Either requires an ADR/architecture review; no worker route is claimed.
+
+## Resolution (2026-11-04)
+
+Option 1 was selected (ADR-IMPL-08, option A) and implemented with `Wip.Sandbox.BonesContracts`; the worker references contracts only and `sandbox-worker-no-host` remains enforced. The worker route is now covered by `worker-coverage.md`. This file is kept as history of the blocked state.
