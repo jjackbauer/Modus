@@ -432,3 +432,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Architecture:** 3/3 with 41 WIP projects after all changes. **Sandbox:** 18/18. **Bones:** 395 total / 393 passed / 2 waived.
 - **G1 packet:** `docs/execution/evidence/G1/gate-packet.md` — autonomy (yes/no), streaming (recommended descope), sample-agent scope (read-only), cited evidence and residual risks. **Not approved; awaiting the product owner.**
 - **Stop:** no Phase 3 work started; Phase 3 also requires G4 (Phase 2) and G3 (permissions) regardless of the G1 answer. No release, no full G2, no Windows containment claim.
+## 2026-11-04T08:30:00-03:00 - Remote CI not triggered (no credentials); local gate recorded
+
+- **Attempt:** `git push origin WIP` failed `Permission denied (publickey)`; HTTPS push failed with no cached credential ("could not read Username"). No push occurred.
+- **Impact:** the two commits `ca6f41d` and `0ffefe2` have **no remote CI evidence**. The workflow is unchanged; the next authorized push runs it. No CI success is claimed.
+- **Record:** local gate evidence (16 projects, 1,103/1,080/23, verifier exit 0) is committed at `docs/execution/evidence/WP-1.6/gate-run-2026-11-04.md`.

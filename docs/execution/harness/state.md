@@ -1,9 +1,9 @@
-# Harness state — WIP-IMPL-001 / phase 1 close-out
+# Harness state â€” WIP-IMPL-001 / phase 1 close-out
 
 - **Round**: 1 of 12 (objectives 1-3 completed in three dispatch-free, self-verified passes)
 - **Goal**: WP-1.3 coverage + WP-1.6 + G1 packet, then stop at G1
 - **Definition of done**: 8/8 dimensions verified
-- **Stop criteria**: G1 packet presented — **met**; human product decision outstanding
+- **Stop criteria**: G1 packet presented â€” **met**; human product decision outstanding
 
 ## Gate status
 
@@ -13,7 +13,7 @@
 | G2 Falsification | PASS | 0 open Falsified rows; the two gate-attempt failures were diagnosed and fixed |
 | G3 Coverage | PASS | D1-D8 all verified |
 | G4 Reproduction | PASS | build, architecture, sandbox, Bones, host suite and full 16-project gate re-run by the orchestrator |
-| G5 Honesty | PASS | OQ-001 (G1), OQ-002 (`IScriptExecutor` seam) and the environment notes are recorded |
+| G5 Honesty | PASS | OQ-001 (G1), OQ-002 (`IScriptExecutor` seam), OQ-003 (remote CI not run) and the environment notes are recorded |
 
 ## Definition-of-done evidence
 

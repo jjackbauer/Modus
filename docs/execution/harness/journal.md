@@ -147,3 +147,19 @@
 - **Priority**: P2 curiosity
 - **Raised by**: Round 1, orchestrator
 - **Related**: OBS-001
+### OBS-008: No push credentials in this session
+
+- **Source**: `git push origin WIP` -> `Permission denied (publickey)`; HTTPS push -> "could not read Username"; no `gh`, no `GH_TOKEN`.
+- **Fact**: The two commits cannot be pushed from this session, so no remote CI run exists for them.
+- **Implications**: Local gate evidence is the authority; remote CI remains unverified for these commits and must run on the next authorized push.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-011
+
+### OQ-003: Remote CI for ca6f41d/0ffefe2
+
+- **Question**: Does Tests CI pass for these two commits (16 offline projects, 16/251-test suites, Linux/Windows security)?
+- **Needed evidence**: A pushed run of Tests CI with the gate job green.
+- **Priority**: P1 important
+- **Raised by**: Round 1, orchestrator
+- **Related**: OBS-008

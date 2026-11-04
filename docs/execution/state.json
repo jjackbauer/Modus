@@ -26,7 +26,7 @@
   },
   "last_verified_at": "2026-11-04T07:05:00-03:00",
   "next_action": "Human G1 decision: autonomy and streaming scope. Then Phase 2 (G4) -> G3 -> Phase 3 per the decision. No release.",
-  "open_blockers": ["G1 product decision pending; full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-1.1 formal review, G3 permissions, G4/Phases 2-6 remain."],
+  "open_blockers": ["G1 product decision pending; full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-1.1 formal review, G3 permissions, G4/Phases 2-6 remain.", "Remote CI not run for ca6f41d/0ffefe2: no push credentials in the session. Local gate is green; the next authorized push triggers Tests CI."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
     "porcelain_entries": 0,
@@ -86,7 +86,7 @@
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_41489673359_success",
+    "remote_ci": "not_run_for_ca6f41d/0ffefe2_no_push_credentials; last_success_run_41489673359_earlier_commits",
     "security_ci": "run_41655112634_invalidated_helper_not_installed",
     "os_containment": "linux_verified_windows_helper_createprocess_error5",
     "ci_exposed_failures": 6,
