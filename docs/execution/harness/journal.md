@@ -203,3 +203,11 @@
 - **Result**: Supported
 - **Conclusion**: The nested provider is gone; the duplicate worker (RISK-001) is resolved.
 - **Related**: RISK-001, EVD-013
+### VAL-004: WP-2.2 supported — no process-wide pool
+
+- **Target**: WP-2.2 acceptance ("No `StrategyPool.Instance` references; status API and agents see the same pool")
+- **Method**: source grep (0 code references), full gate (16 projects, verifier exit 0), web suite run, host DI identity tests.
+- **Evidence examined**: `.tmp/gate-check` (16 TRX); `.tmp/web-check/web.trx` (276/267, 9 pre-existing); grep.
+- **Result**: Supported
+- **Conclusion**: The pool is a single DI singleton; web routes, status, agents and tests resolve it explicitly.
+- **Related**: EVD-016

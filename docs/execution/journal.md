@@ -466,3 +466,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - Tests CI run [41850279760](https://github.com/jjackbauer/Modus/actions/runs/41850279760) on `ee59b64`: all six jobs success, including `wip-offline-tests` (suite + count/waiver gate). WP-2.1 is closed on local and remote evidence.
 - Next: WP-2.2 (remove `StrategyPool.Instance`).
+## 2026-11-04T14:12:00-03:00 - WP-2.2 done: `StrategyPool.Instance` removed; gate green
+
+- **Removed:** the static pool (property + ctor assignment), both host `StrategyPool.Instance = ...` sites and the static-unification branch. `StrategyPoolJsonService` takes the DI pool, the six pool routes check `service.Pool`, and `BonesCoLearningEnhanceAgent` requires the injected pool (missing registration now fails deterministically).
+- **Tests:** web tests publish the pool through a DI holder (transient JSON service reads it per request); JSON-service/client-JS tests construct the service with a pool; host tests assert the DI singleton is identical from root and run scope and that a missing pool fails resolution. Views/pool endpoints unchanged.
+- **Gate:** 16 projects, **1,104 executed / 1,081 passed / 23 failed** (all waivers), verifier exit 0.
+- **Flake fix discovered by the gate:** the first in-process Roslyn compile costs ~9-10 s on this machine (later ~0.8 s), exceeding the 10 s default in parallel test runs. The default `CompilationTimeout` is now 30 s, matching the host appsettings and the worker compile timeout; no execution/security semantics changed. The two in-process timeout tests use the same explicit budget.
+- **Web suite (not in the offline gate):** 276 tests, 267 passed; the 9 failures are pre-existing compliance meta-gates, Playwright DOM tests and one stub-model viewer test, none pool-related.
+- **Next:** WP-2.3/2.4 workflow definition/executor + explicit maps.

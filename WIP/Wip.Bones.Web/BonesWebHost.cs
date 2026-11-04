@@ -93,7 +93,7 @@ public static class BonesWebHost
             "/bones/pool",
             (StrategyPoolJsonService service) =>
             {
-                if (StrategyPool.Instance is null)
+                if (service.Pool is null)
                     return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
 
                 var snapshot = service.BuildPoolSnapshot();
@@ -104,7 +104,7 @@ public static class BonesWebHost
             "/bones/pool/{strategyId}",
             (string strategyId, StrategyPoolJsonService service) =>
             {
-                if (StrategyPool.Instance is null)
+                if (service.Pool is null)
                     return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
 
                 var detail = service.BuildStrategyDetail(new BonesStrategyId(strategyId));
@@ -118,7 +118,7 @@ public static class BonesWebHost
             "/bones/pool/{strategyId}/lineage",
             (string strategyId, StrategyPoolJsonService service) =>
             {
-                if (StrategyPool.Instance is null)
+                if (service.Pool is null)
                     return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
 
                 var lineage = service.BuildLineageViewModel(new BonesStrategyId(strategyId));
@@ -132,7 +132,7 @@ public static class BonesWebHost
             "/bones/pool/stats",
             (StrategyPoolJsonService service) =>
             {
-                if (StrategyPool.Instance is null)
+                if (service.Pool is null)
                     return Results.Json(new { error = "PoolUninitialized" }, JsonOptions, statusCode: 503);
 
                 var stats = service.BuildPoolStats();
@@ -143,7 +143,7 @@ public static class BonesWebHost
             "/bones/pool/{strategyId}/view",
             (string strategyId, StrategyPoolJsonService service) =>
             {
-                if (StrategyPool.Instance is null)
+                if (service.Pool is null)
                     return Results.Content(
                         StrategyDetailPageRenderer.RenderNotFound(strategyId),
                         "text/html; charset=utf-8",
@@ -164,7 +164,7 @@ public static class BonesWebHost
             "/bones/pool/view",
             (StrategyPoolJsonService service) =>
             {
-                if (StrategyPool.Instance is null)
+                if (service.Pool is null)
                     return Results.Content(
                         StrategyPoolPageRenderer.RenderUninitialized(),
                         "text/html; charset=utf-8");

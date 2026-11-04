@@ -136,7 +136,7 @@ public sealed class BonesStrategyScriptHostTests
     {
         var host = new BonesStrategyScriptHost(new BonesStrategyScriptHostOptions
         {
-            CompilationTimeout = TimeSpan.FromSeconds(10),
+            CompilationTimeout = TimeSpan.FromSeconds(30),
             ExecutionTimeout = TimeSpan.FromMilliseconds(250),
         });
 

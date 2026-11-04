@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using AngleSharp.Html.Parser;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Wip.Bones.Agents.Knowledge;
@@ -11,21 +11,9 @@ using Xunit;
 namespace Wip.Bones.Web.Tests;
 
 [Collection("StrategyPool")]
-public sealed class BonesPoolClientJsTests : IDisposable
+public sealed class BonesPoolClientJsTests
 {
     private readonly HtmlParser _parser = new();
-    private StrategyPool? _previousInstance;
-
-    public BonesPoolClientJsTests()
-    {
-        _previousInstance = StrategyPool.Instance;
-        StrategyPool.Instance = null;
-    }
-
-    public void Dispose()
-    {
-        StrategyPool.Instance = _previousInstance;
-    }
 
     private StrategyPool CreatePopulatedPool()
     {
@@ -47,8 +35,7 @@ public sealed class BonesPoolClientJsTests : IDisposable
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void DashboardAutoPoll_WhenIsRunning_PollsPoolEndpoint()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var snapshot = new StrategyPoolJsonService().BuildPoolSnapshot();
+        var snapshot = new StrategyPoolJsonService(CreatePopulatedPool()).BuildPoolSnapshot();
         // When pool is populated, IsRunning is true (pool active)
         Assert.True(snapshot.IsRunning);
         Assert.Equal(4, snapshot.Entries.Count);
@@ -64,7 +51,6 @@ public sealed class BonesPoolClientJsTests : IDisposable
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void DashboardNoPoll_WhenNotRunning_DoesNotPoll()
     {
-        StrategyPool.Instance = null;
         var snapshot = new StrategyPoolJsonService().BuildPoolSnapshot();
         Assert.False(snapshot.IsRunning);
         Assert.Empty(snapshot.Entries);

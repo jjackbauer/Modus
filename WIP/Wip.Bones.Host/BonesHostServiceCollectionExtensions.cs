@@ -154,16 +154,8 @@ public static class BonesHostServiceCollectionExtensions
             var snapshotPath = StrategyPool.GetPoolSnapshotPath(opts.DataDirectory);
             var logger = sp.GetService<ILogger<StrategyPool>>();
 
-            // A second service provider (host vs. workflow/agent container) must share the
-            // same pool. Creating a fresh instance per provider made status report poolSize=0
-            // while the co-learning agent mutated a different pool.
-            var existingPool = StrategyPool.Instance;
-            if (existingPool is not null
-                && string.Equals(existingPool.SnapshotPath, snapshotPath, StringComparison.OrdinalIgnoreCase))
-            {
-                return existingPool;
-            }
-
+            // The pool is a DI singleton: the status endpoint, pool routes and agents all resolve
+            // this same instance. Nothing else may create or mutate a process-wide pool.
             // I2: Always attempt to load a snapshot when the file exists.
             // ResumeFromBest no longer gates snapshot loading — it only controls
             // whether library entries are used as fallback during bootstrapping.
@@ -175,10 +167,6 @@ public static class BonesHostServiceCollectionExtensions
                 if (issues.Count == 0)
                 {
                     loaded.SnapshotPath = snapshotPath;
-                    // R4: Explicitly unify the static Instance with the DI singleton.
-                    // TryLoad sets Instance via the constructor, but this assignment
-                    // guarantees the status API and Web pool routes read the same pool.
-                    StrategyPool.Instance = loaded;
                     // Log success via a simple console/debug emit since we don't have ILogger<BonesHostServiceCollectionExtensions>
                     System.Diagnostics.Debug.WriteLine(
                         $"Loaded pool snapshot with {loaded.Count} entries from {snapshotPath}");
@@ -214,11 +202,6 @@ public static class BonesHostServiceCollectionExtensions
 
             // Configure auto-persist path for the freshly seeded pool.
             pool.SnapshotPath = snapshotPath;
-
-            // R4: Explicitly unify the static Instance with the DI singleton.
-            // SeedFromLibrary sets Instance via the constructor, but this assignment
-            // guarantees the status API and Web pool routes read the same pool.
-            StrategyPool.Instance = pool;
 
             // R5: Write the initial pool snapshot at startup so the pool/ directory
             // is created immediately, decoupled from the periodic 10-iteration timer.

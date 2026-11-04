@@ -21,11 +21,11 @@ public sealed class BonesCoLearningEnhanceAgent : IAgent<BonesEnhanceStrategyReq
 
     public BonesCoLearningEnhanceAgent(
         BonesEnhanceStrategyAgent singleSeatAgent,
-        StrategyPool? strategyPool = null,
+        StrategyPool strategyPool,
         ILogger<BonesCoLearningEnhanceAgent>? logger = null)
     {
         _singleSeatAgent = singleSeatAgent ?? throw new ArgumentNullException(nameof(singleSeatAgent));
-        _strategyPool = strategyPool;
+        _strategyPool = strategyPool ?? throw new ArgumentNullException(nameof(strategyPool));
         _logger = logger;
     }
 
@@ -64,32 +64,28 @@ public sealed class BonesCoLearningEnhanceAgent : IAgent<BonesEnhanceStrategyReq
                     cancellationToken);
                 lastResult = seatResult;
 
-                // Add enhanced strategy to the population pool.
-                // Prefer the DI-injected pool; fall back to the static singleton for backward compatibility.
-                var pool = _strategyPool ?? StrategyPool.Instance;
-                if (pool is not null)
+                // Add the enhanced strategy to the DI-registered population pool.
+                var pool = _strategyPool;
+                try
                 {
-                    try
-                    {
-                        pool.Add(new StrategyEntry(
-                            seatResult.StrategyId,
-                            seat,
-                            BonesStrategyKind.Script,
-                            seatResult.StrategyDocument.Markdown,
-                            0, 0, 0, 0,
-                            1500.0));
-                    }
-                    catch (ArgumentException)
-                    {
-                        // Duplicate strategy ID — already in pool from a previous session
-                    }
+                    pool.Add(new StrategyEntry(
+                        seatResult.StrategyId,
+                        seat,
+                        BonesStrategyKind.Script,
+                        seatResult.StrategyDocument.Markdown,
+                        0, 0, 0, 0,
+                        1500.0));
+                }
+                catch (ArgumentException)
+                {
+                    // Duplicate strategy ID — already in pool from a previous session
                 }
 
                 _logger?.LogInformation(
                     "Co-learning enhance succeeded for seat {Seat} in session {SessionId}. Pool size: {PoolSize}",
                     seat,
                     context.SessionId.Value,
-                    pool?.Count ?? 0);
+                    pool.Count);
             }
             catch (BonesGameSimulationBudgetExhaustedException)
             {

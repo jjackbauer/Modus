@@ -1,9 +1,9 @@
-# Harness state ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â WIP-IMPL-001 / phase 1 close-out
+# Harness state ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â WIP-IMPL-001 / phase 1 close-out
 
 - **Round**: 2 of 12 (remote CI verification added; objectives 1-3 completed)
 - **Goal**: WP-1.3 coverage + WP-1.6 + G1 packet, then stop at G1
 - **Definition of done**: 8/8 dimensions verified
-- **Stop criteria**: G1 packet presented ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â **met**; human product decision outstanding
+- **Stop criteria**: G1 packet presented ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â **met**; human product decision outstanding
 
 ## Gate status
 
@@ -39,7 +39,8 @@
 | 1 | Gate attempt 2 + G1 | Survey | 0 | 1 | 0 | PASS | converged at G1 |
 | 2 | Remote CI verification | Survey | 0 | 1 | 0 | PASS | green run 41839526456 |
 | 3 | WP-2.1 host-managed DI | Probe + gate | 0 | 2 | 0 | PASS | gate green; duplicate worker gone |
+| 4 | WP-2.2 remove StrategyPool.Instance | Probe + gate | 0 | 1 | 0 | PASS | gate green; static removed |
 
-## Next objective`n`nWP-2.2: remove `StrategyPool.Instance` and inject the pool through host DI. WP-2.1 is done and gated (16 projects, 1,104/1,081/23; architecture 4/4; duplicate worker gone).
+## Next objective`n`nWP-2.3/2.4: workflow definition/executor and explicit stage maps (delete the process-global map registry). WP-2.2 is done and gated (16 projects, 1,104/1,081/23, verifier exit 0; `StrategyPool.Instance` references: 0).
 
 None in this run. The next action is the human G1 decision; then Phase 2 (G4) -> G3 -> Phase 3 per the chosen option.

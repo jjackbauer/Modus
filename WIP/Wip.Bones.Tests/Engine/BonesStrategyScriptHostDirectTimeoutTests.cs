@@ -61,7 +61,7 @@ public sealed class BonesStrategyScriptHostDirectTimeoutTests
     {
         var host = new BonesStrategyScriptHost(new BonesStrategyScriptHostOptions
         {
-            CompilationTimeout = TimeSpan.FromSeconds(10),
+            CompilationTimeout = TimeSpan.FromSeconds(30),
             ExecutionTimeout = TimeSpan.FromMilliseconds(200),
             EnableDirectExecutionTimeout = true,
         });
@@ -106,7 +106,7 @@ public sealed class BonesStrategyScriptHostDirectTimeoutTests
     {
         var host = new BonesStrategyScriptHost(new BonesStrategyScriptHostOptions
         {
-            CompilationTimeout = TimeSpan.FromSeconds(10),
+            CompilationTimeout = TimeSpan.FromSeconds(30),
             ExecutionTimeout = TimeSpan.FromMilliseconds(200),
             EnableDirectExecutionTimeout = true,
         });

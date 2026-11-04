@@ -1,4 +1,4 @@
-﻿using Wip.Bones.Agents.Knowledge;
+using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Domain;
 using Wip.Bones.Identifiers;
 
@@ -6,16 +6,21 @@ namespace Wip.Bones.Web.Viewer;
 
 public sealed class StrategyPoolJsonService
 {
+    private readonly StrategyPool? _pool;
     private readonly BonesStrategyLibrary? _library;
 
-    public StrategyPoolJsonService(BonesStrategyLibrary? library = null)
+    public StrategyPoolJsonService(StrategyPool? pool = null, BonesStrategyLibrary? library = null)
     {
+        _pool = pool;
         _library = library;
     }
 
+    /// <summary>The DI-registered pool, or null when the host has not initialized one.</summary>
+    public StrategyPool? Pool => _pool;
+
     public PoolSnapshot BuildPoolSnapshot()
     {
-        var pool = StrategyPool.Instance;
+        var pool = _pool;
         if (pool is null)
             return new PoolSnapshot
             {
@@ -51,7 +56,7 @@ public sealed class StrategyPoolJsonService
 
     public StrategyDetailViewModel? BuildStrategyDetail(BonesStrategyId strategyId)
     {
-        var pool = StrategyPool.Instance;
+        var pool = _pool;
         if (pool is null)
             return null;
 
@@ -106,7 +111,7 @@ public sealed class StrategyPoolJsonService
 
     public StrategyLineageViewModel? BuildLineageViewModel(BonesStrategyId strategyId)
     {
-        var pool = StrategyPool.Instance;
+        var pool = _pool;
         if (pool is null)
             return null;
 
@@ -148,7 +153,7 @@ public sealed class StrategyPoolJsonService
 
     public PoolStatsViewModel BuildPoolStats()
     {
-        var pool = StrategyPool.Instance;
+        var pool = _pool;
         if (pool is null)
             return BuildEmptyStats();
 

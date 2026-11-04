@@ -277,20 +277,19 @@ public sealed class BonesPoolWiringTests
     // ════════════════════════════════════════════
 
     [Fact]
-    public void StrategyPool_Instance_PointsToDiResolvedSingletonAfterContainerBuild()
+    public void StrategyPool_GivenDiSingleton_ExpectedSameInstanceInRootAndRunScope()
     {
-        // Build a minimal DI container that registers StrategyPool as a singleton.
+        // The pool is a DI singleton: status, web routes and agents resolve the same object from
+        // the root provider and from a per-run scope (WP-2.2 removed the static Instance).
         var services = new ServiceCollection();
         services.AddSingleton<StrategyPool>();
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
         var resolved = provider.GetRequiredService<StrategyPool>();
+        using var scope = provider.CreateScope();
+        var scoped = scope.ServiceProvider.GetRequiredService<StrategyPool>();
 
-        // The static Instance must reference the same object as the DI-resolved singleton.
-        // This ensures /api/bones/status (DI-injected) and /bones/pool (StrategyPool.Instance)
-        // read the same pool data.
-        Assert.NotNull(StrategyPool.Instance);
-        Assert.Same(resolved, StrategyPool.Instance);
+        Assert.Same(resolved, scoped);
     }
 }
 

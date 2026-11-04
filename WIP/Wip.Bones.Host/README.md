@@ -431,7 +431,7 @@ dotnet run --project WIP/Wip.Bones.Host
 | `GET` | `/bones/pool/stats` | Aggregate pool statistics with ELO distribution histogram buckets |
 | `GET` | `/bones/pool/view` | Server-rendered HTML dashboard with expandable strategy cards |
 
-> All pool endpoints return 503 `{"error":"PoolUninitialized"}` when `StrategyPool.Instance` is null. Returns 200 with empty array when the pool is empty.
+> All pool endpoints return 503 `{"error":"PoolUninitialized"}` when the DI-registered `StrategyPool` is unavailable. Returns 200 with empty array when the pool is empty.
 
 Match replay and catalog routes are mapped by `Wip.Bones.Web`.
 

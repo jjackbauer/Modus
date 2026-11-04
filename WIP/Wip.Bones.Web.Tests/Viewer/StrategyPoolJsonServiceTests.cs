@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Domain;
 using Wip.Bones.Identifiers;
@@ -9,21 +9,9 @@ using Xunit;
 namespace Wip.Bones.Web.Tests;
 
 [Collection("StrategyPool")]
-public sealed class StrategyPoolJsonServiceTests : IDisposable
+public sealed class StrategyPoolJsonServiceTests
 {
     private const string ChecklistItem = BonesPoolRequirementsChecklistItems.PoolJsonService;
-    private StrategyPool? _saved;
-
-    public StrategyPoolJsonServiceTests()
-    {
-        _saved = StrategyPool.Instance;
-        StrategyPool.Instance = null;
-    }
-
-    public void Dispose()
-    {
-        StrategyPool.Instance = _saved;
-    }
 
     private static StrategyEntry CreateEntry(
         string id, int seat = 1,
@@ -53,8 +41,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildPoolSnapshot_GivenPopulatedPool_ReturnsEntriesOrderedByRatingDescending()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var snapshot = sut.BuildPoolSnapshot();
 
         Assert.Equal(4, snapshot.Entries.Count);
@@ -67,8 +54,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildPoolSnapshot_GivenEmptyPool_ReturnsEmptyEntriesAndStats()
     {
-        StrategyPool.Instance = new StrategyPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(new StrategyPool());
         var snapshot = sut.BuildPoolSnapshot();
 
         Assert.Empty(snapshot.Entries);
@@ -81,8 +67,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildPoolSnapshot_GivenNullInstance_ReturnsEmptySnapshot()
     {
-        StrategyPool.Instance = null;
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(null);
         var snapshot = sut.BuildPoolSnapshot();
         Assert.Empty(snapshot.Entries);
         Assert.False(snapshot.IsRunning);
@@ -92,8 +77,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildStrategyDetail_GivenValidId_ReturnsDetailWithSourceAndLineage()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var detail = sut.BuildStrategyDetail(new BonesStrategyId("alpha"));
 
         Assert.NotNull(detail);
@@ -109,8 +93,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildStrategyDetail_GivenUnknownId_ReturnsNull()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var detail = sut.BuildStrategyDetail(new BonesStrategyId("nonexistent"));
         Assert.Null(detail);
     }
@@ -119,8 +102,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildStrategyDetail_SourceIsExactStrategyContent()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var detail = sut.BuildStrategyDetail(new BonesStrategyId("alpha"));
         Assert.NotNull(detail);
         Assert.Equal("// test source", detail!.Source);
@@ -130,8 +112,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildStrategyDetail_GivenNullInstance_ReturnsNull()
     {
-        StrategyPool.Instance = null;
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(null);
         var detail = sut.BuildStrategyDetail(new BonesStrategyId("alpha"));
         Assert.Null(detail);
     }
@@ -140,8 +121,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildPoolStats_GivenPopulatedPool_ReturnsAggregateStatistics()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var stats = sut.BuildPoolStats();
 
         Assert.Equal(4, stats.TotalStrategies);
@@ -157,8 +137,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildPoolStats_EloDistributionBucketsAreMonotonic()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var stats = sut.BuildPoolStats();
 
         Assert.NotEmpty(stats.EloDistribution);
@@ -173,8 +152,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildPoolStats_GivenEmptyPool_ReturnsZeroStats()
     {
-        StrategyPool.Instance = new StrategyPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(new StrategyPool());
         var stats = sut.BuildPoolStats();
         Assert.Equal(0, stats.TotalStrategies);
         Assert.Equal(0, stats.TotalMatchesPlayed);
@@ -191,9 +169,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
             new BonesStrategyId("gamma"),
             [new BonesStrategyId("alpha")],
             "enhanced", "improved scoring");
-        StrategyPool.Instance = pool;
-
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(pool);
         var lineage = sut.BuildLineageViewModel(new BonesStrategyId("gamma"));
 
         Assert.NotNull(lineage);
@@ -211,9 +187,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
             new BonesStrategyId("gamma"),
             [new BonesStrategyId("alpha")],
             "enhanced", "improved scoring");
-        StrategyPool.Instance = pool;
-
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(pool);
         var lineage = sut.BuildLineageViewModel(new BonesStrategyId("alpha"));
 
         Assert.NotNull(lineage);
@@ -225,8 +199,7 @@ public sealed class StrategyPoolJsonServiceTests : IDisposable
     [Trait("ChecklistItem", ChecklistItem)]
     public void BuildLineageViewModel_GivenUnknownId_ReturnsNull()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
-        var sut = new StrategyPoolJsonService();
+        var sut = new StrategyPoolJsonService(CreatePopulatedPool());
         var lineage = sut.BuildLineageViewModel(new BonesStrategyId("unknown"));
         Assert.Null(lineage);
     }

@@ -441,18 +441,15 @@ public sealed class BonesPoolResumeAndIntegrityTests
         // Act
         var agent = provider.GetRequiredService<BonesCoLearningEnhanceAgent>();
 
-        // Assert: StrategyPool.Instance should be set (the DI singleton sets it in its ctor).
-        // The injected pool and Instance should reference the same object.
-        Assert.NotNull(StrategyPool.Instance);
-        Assert.Same(pool, StrategyPool.Instance);
+        // Assert: the agent resolves and the DI-registered pool is the singleton the runtime sees.
         Assert.NotNull(agent);
+        Assert.Same(pool, provider.GetRequiredService<StrategyPool>());
     }
 
     [Fact]
-    public void CoLearningEnhanceAgent_GivenNoPoolRegistered_StillResolvesWithNullPool()
+    public void CoLearningEnhanceAgent_GivenNoPoolRegistered_ExpectedResolutionFailsDeterministically()
     {
-        // When StrategyPool is NOT registered in DI, the agent should still resolve
-        // (strategyPool defaults to null) and fall back to StrategyPool.Instance at runtime.
+        // The pool is a required dependency now; there is no static fallback.
         var services = new ServiceCollection();
 
         var artifactStore = new WipArtifactStoreLocal(
@@ -463,13 +460,12 @@ public sealed class BonesPoolResumeAndIntegrityTests
         services.AddSingleton<BonesEnhanceStrategyAgent>();
         services.AddSingleton<BonesCoLearningEnhanceAgent>();
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
 
-        // Act: Resolution should succeed even without StrategyPool registered.
-        var agent = provider.GetRequiredService<BonesCoLearningEnhanceAgent>();
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => provider.GetRequiredService<BonesCoLearningEnhanceAgent>());
 
-        // Assert: Agent resolved. At execution time it will fall back to StrategyPool.Instance.
-        Assert.NotNull(agent);
+        Assert.Contains(nameof(StrategyPool), exception.Message, StringComparison.Ordinal);
     }
 
     // ════════════════════════════════════════════

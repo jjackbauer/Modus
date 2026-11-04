@@ -366,6 +366,7 @@ public sealed class BonesLearningWorkflowRegistrationTests
         services.AddSingleton<IArtifactStore>(artifactStore);
         services.AddSingleton(new BonesMatchSimulator());
         services.AddSingleton(new BonesGameEngine());
+        services.AddSingleton(new StrategyPool());
         services.AddSingleton(strategyModelProvider);
         services.AddSingleton(playTurnModelProvider);
         services.AddSingleton(enhancementModelProvider);

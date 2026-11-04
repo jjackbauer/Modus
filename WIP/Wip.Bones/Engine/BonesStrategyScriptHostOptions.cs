@@ -34,7 +34,12 @@ public sealed class BonesStrategyScriptHostOptions
     /// </summary>
     public string? WorkerPath { get; init; }
 
-    public TimeSpan CompilationTimeout { get; init; } = TimeSpan.FromSeconds(10);
+    /// <summary>
+    /// Budget for compiling one strategy script. The first Roslyn compile in a process can take
+    /// several seconds on a cold/slow disk, so this matches the host appsettings and the sandbox
+    /// worker compile timeout (30 s) instead of a tight 10 s.
+    /// </summary>
+    public TimeSpan CompilationTimeout { get; init; } = TimeSpan.FromSeconds(30);
 
     public TimeSpan ExecutionTimeout { get; init; } = TimeSpan.FromSeconds(2);
 

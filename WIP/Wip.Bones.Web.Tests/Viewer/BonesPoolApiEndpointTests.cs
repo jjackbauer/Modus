@@ -15,29 +15,28 @@ namespace Wip.Bones.Web.Tests;
 
 public sealed class BonesPoolApiWebAppFactory : WebApplicationFactory<Program>
 {
+    public StrategyPoolHolder Holder { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            services.AddSingleton<StrategyPoolJsonService>();
+            services.AddSingleton(Holder);
+            services.AddTransient<StrategyPoolJsonService>(
+                sp => new StrategyPoolJsonService(sp.GetRequiredService<StrategyPoolHolder>().Pool));
         });
     }
 }
 
 [Collection("StrategyPool")]
-public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebAppFactory>, IDisposable
+public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebAppFactory>
 {
     private readonly BonesPoolApiWebAppFactory _factory;
-    private StrategyPool? _prev;
 
     public BonesPoolApiEndpointTests(BonesPoolApiWebAppFactory factory)
     {
         _factory = factory;
-        _prev = StrategyPool.Instance;
-        StrategyPool.Instance = null;
     }
-
-    public void Dispose() => StrategyPool.Instance = _prev;
 
     private static StrategyPool MakePool()
     {
@@ -61,7 +60,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetPool_GivenPopulatedPool_Returns200WithAllEntries()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -79,7 +78,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetPool_GivenEmptyPool_Returns200WithEmptyArray()
     {
-        StrategyPool.Instance = new StrategyPool(new Random(42));
+        _factory.Holder.Pool = new StrategyPool(new Random(42));
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -92,7 +91,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetPool_GivenNullPoolInstance_Returns503WithErrorBody()
     {
-        StrategyPool.Instance = null;
+        _factory.Holder.Pool = null;
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool").Result;
         Assert.Equal(HttpStatusCode.ServiceUnavailable, resp.StatusCode);
@@ -105,7 +104,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetPool_EntriesOrderedByCompositeScoreDescending()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool").Result;
         using var doc = JsonDocument.Parse(resp.Content.ReadAsStringAsync().Result);
@@ -120,7 +119,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetStrategyDetail_GivenValidId_Returns200WithSourceCodeAndLineage()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/s2").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -136,7 +135,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetStrategyDetail_GivenUnknownId_Returns404()
     {
-        StrategyPool.Instance = new StrategyPool(new Random(42));
+        _factory.Holder.Pool = new StrategyPool(new Random(42));
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/nope").Result;
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
@@ -150,7 +149,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
         var pool = new StrategyPool(new Random(42));
         var src = "// Exact source\nreturn Move.Play(6, 6);";
         pool.Add(new StrategyEntry(new BonesStrategyId("exact"), 1, BonesStrategyKind.Script, src, 5, 3, 2, 10, 1500));
-        StrategyPool.Instance = pool;
+        _factory.Holder.Pool = pool;
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/exact").Result;
         using var doc = JsonDocument.Parse(resp.Content.ReadAsStringAsync().Result);
@@ -162,7 +161,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetLineage_GivenStrategyWithParent_ReturnsChainWithPredecessor()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/s2/lineage").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -175,7 +174,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetLineage_GivenRootStrategy_ReturnsChainWithNoPredecessor()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/s1/lineage").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -190,7 +189,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetPoolStats_GivenPopulatedPool_ReturnsAggregateStatistics()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/stats").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -206,7 +205,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolApi)]
     public void GetPoolStats_EloDistributionBucketsAreMonotonic()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/stats").Result;
         using var doc = JsonDocument.Parse(resp.Content.ReadAsStringAsync().Result);
@@ -221,7 +220,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolNavigation)]
     public void MapPoolRoutes_RegistersAllExpectedEndpoints()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         Assert.NotEqual(HttpStatusCode.NotFound, client.GetAsync("/bones/pool").Result.StatusCode);
         Assert.NotEqual(HttpStatusCode.NotFound, client.GetAsync("/bones/pool/s1").Result.StatusCode);
@@ -236,7 +235,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void GetStrategyDetailView_GivenValidId_Returns200HtmlWithSourceCode()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/s2/view").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -253,7 +252,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void GetStrategyDetailView_GivenUnknownId_Returns404Html()
     {
-        StrategyPool.Instance = new StrategyPool(new Random(42));
+        _factory.Holder.Pool = new StrategyPool(new Random(42));
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/nope/view").Result;
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
@@ -269,7 +268,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolNavigation)]
     public void GetStrategyDetailView_GivenValidId_ExpectedContainsBackToPoolLink()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/s1/view").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -283,7 +282,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void GetPoolDashboardView_GivenPopulatedPool_ExpectedCardHeadersHaveNavLinks()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/view").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
@@ -297,7 +296,7 @@ public sealed class BonesPoolApiEndpointTests : IClassFixture<BonesPoolApiWebApp
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void GetPoolDashboardView_GivenPopulatedPool_ExpectedViewFullDetailLinkPointsToViewRoute()
     {
-        StrategyPool.Instance = MakePool();
+        _factory.Holder.Pool = MakePool();
         using var client = _factory.CreateClient();
         using var resp = client.GetAsync("/bones/pool/view").Result;
         Assert.Equal(HttpStatusCode.OK, resp.StatusCode);

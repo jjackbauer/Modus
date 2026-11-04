@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using AngleSharp.Html.Parser;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -14,32 +14,28 @@ namespace Wip.Bones.Web.Tests;
 
 public sealed class BonesPoolPageRenderWebApplicationFactory : WebApplicationFactory<Program>
 {
+    public StrategyPoolHolder Holder { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            services.AddSingleton<StrategyPoolJsonService>();
+            services.AddSingleton(Holder);
+            services.AddTransient<StrategyPoolJsonService>(
+                sp => new StrategyPoolJsonService(sp.GetRequiredService<StrategyPoolHolder>().Pool));
         });
     }
 }
 
 [Collection("StrategyPool")]
-public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRenderWebApplicationFactory>, IDisposable
+public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRenderWebApplicationFactory>
 {
     private readonly BonesPoolPageRenderWebApplicationFactory _factory;
     private readonly HtmlParser _parser = new();
-    private StrategyPool? _previousInstance;
 
     public BonesPoolPageRenderTests(BonesPoolPageRenderWebApplicationFactory factory)
     {
         _factory = factory;
-        _previousInstance = StrategyPool.Instance;
-        StrategyPool.Instance = null;
-    }
-
-    public void Dispose()
-    {
-        StrategyPool.Instance = _previousInstance;
     }
 
     private StrategyPool CreatePopulatedPool()
@@ -67,7 +63,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void RenderDashboard_GivenPopulatedPool_RendersCardPerEntry()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         var doc = _parser.ParseDocument(html);
@@ -79,7 +75,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void RenderDashboard_CollapsedCardShowsSimplifiedStats()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         var doc = _parser.ParseDocument(html);
@@ -96,7 +92,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void RenderDashboard_ExpandedCardShowsSourceInPreBlock()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         var doc = _parser.ParseDocument(html);
@@ -108,7 +104,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void RenderDashboard_ExpandedCardContainsMatchLinks()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         var doc = _parser.ParseDocument(html);
@@ -120,7 +116,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void RenderDashboard_ExpandedCardShowsLineageTree()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         var doc = _parser.ParseDocument(html);
@@ -132,7 +128,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolDashboard)]
     public void PoolDashboardHeader_ShowsLearningLoopStatus()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         var doc = _parser.ParseDocument(html);
@@ -145,7 +141,7 @@ public sealed class BonesPoolPageRenderTests : IClassFixture<BonesPoolPageRender
     [Trait("ChecklistItem", BonesPoolRequirementsChecklistItems.PoolNavigation)]
     public void MatchViewerSidebar_HasPoolDashboardLink()
     {
-        StrategyPool.Instance = CreatePopulatedPool();
+        _factory.Holder.Pool = CreatePopulatedPool();
         using var client = _factory.CreateClient();
         var html = client.GetStringAsync("/bones/pool/view").Result;
         // The pool page links back to the match viewer

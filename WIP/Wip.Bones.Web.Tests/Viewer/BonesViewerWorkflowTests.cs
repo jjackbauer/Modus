@@ -219,6 +219,7 @@ public sealed class BonesViewerWorkflowTests
     {
         services.AddSingleton(artifactStore);
         services.AddSingleton<IArtifactStore>(artifactStore);
+        services.AddSingleton(new StrategyPool());
         services.AddSingleton<IBonesMatchCatalog>(catalog);
         services.AddSingleton<IBonesPublicMatchFeed, BonesCatalogPublicMatchFeed>();
         services.AddSingleton<IBonesViewerStdout>(stdout);

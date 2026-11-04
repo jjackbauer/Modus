@@ -15,12 +15,6 @@ public sealed class StrategyPool
 {
     private const int MinimumSeatCoverage = 4;
 
-    /// <summary>
-    /// The singleton pool instance for the current process. Set by DI during startup.
-    /// Any code that needs to observe or contribute to the population pool can use this.
-    /// </summary>
-    public static StrategyPool? Instance { get; internal set; }
-
     private readonly Dictionary<BonesStrategyId, StrategyEntry> _pool = new();
     private readonly Dictionary<BonesStrategyId, int> _eliteGracePeriod = new();
     private readonly Random _random;
@@ -42,7 +36,6 @@ public sealed class StrategyPool
 
     public StrategyPool(Random? random = null)
     {
-        Instance = this;
         _random = random ?? Random.Shared;
     }
 
