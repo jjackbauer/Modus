@@ -195,3 +195,11 @@
 - **Confidence**: High
 - **Agent**: orchestrator
 - **Related**: DEC-004
+### VAL-003: WP-2.1 supported — the runtime resolves from the host provider
+
+- **Target**: WP-2.1 acceptance (host/runtime share one provider; no nested provider)
+- **Method**: Recording `IServiceProvider` wrapper test (asserts the run resolves `WorkflowRunTool` and `IArtifactStore` through it) plus a source-scan architecture test over `WIP/Wip.Runtime`; then the full gate and a host E2E in Worker mode.
+- **Evidence examined**: `.tmp/gate-check` (16 TRX, verifier exit 0); architecture 4/4; host log line appears once.
+- **Result**: Supported
+- **Conclusion**: The nested provider is gone; the duplicate worker (RISK-001) is resolved.
+- **Related**: RISK-001, EVD-013

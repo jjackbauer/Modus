@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Xunit;
 
@@ -60,5 +61,28 @@ public sealed class ArchitectureReferenceTests
             violation => violation.RuleId == "shellhost-no-bones"
                 && violation.Source == "Wip.ShellHost"
                 && violation.Target == "Wip.Bones");
+    }
+
+    /// <summary>
+    /// WP-2.1: the host owns composition and the per-run scope. If the runtime builds its own
+    /// provider, hosts and runtime see different singleton instances.
+    /// </summary>
+    [Fact]
+    public void RuntimeSource_GivenBuildServiceProvider_ExpectedNoNestedProvider()
+    {
+        var runtimeDirectory = Path.Combine(RepositoryRoot.Find(), "WIP", "Wip.Runtime");
+        Assert.True(Directory.Exists(runtimeDirectory), $"Missing runtime directory: {runtimeDirectory}");
+
+        var offenders = Directory
+            .EnumerateFiles(runtimeDirectory, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains(
+                $"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}",
+                StringComparison.OrdinalIgnoreCase))
+            .Where(path => File.ReadAllText(path).Contains("BuildServiceProvider", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.True(
+            offenders.Length == 0,
+            "Wip.Runtime must not build service providers; the host owns composition: " + string.Join(", ", offenders));
     }
 }

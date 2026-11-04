@@ -187,6 +187,7 @@ public sealed class BonesLearningWorkflowRegistrationTests
                 snapshot.SessionId,
                 builder,
                 selectedWorkflowId: BonesLearningWorkflowIds.WorkflowId,
+                services: builder.Services.BuildServiceProvider(),
                 cancellationToken: CancellationToken.None,
                 artifactStore: artifactStore);
 
@@ -278,6 +279,7 @@ public sealed class BonesLearningWorkflowRegistrationTests
                     snapshot.SessionId,
                     builder,
                     selectedWorkflowId: BonesLearningWorkflowIds.WorkflowId,
+                    services: builder.Services.BuildServiceProvider(),
                     cancellationToken: CancellationToken.None,
                     artifactStore: artifactStore));
 

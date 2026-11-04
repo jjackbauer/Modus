@@ -1,9 +1,9 @@
-# Harness state ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â WIP-IMPL-001 / phase 1 close-out
+# Harness state ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â WIP-IMPL-001 / phase 1 close-out
 
 - **Round**: 2 of 12 (remote CI verification added; objectives 1-3 completed)
 - **Goal**: WP-1.3 coverage + WP-1.6 + G1 packet, then stop at G1
 - **Definition of done**: 8/8 dimensions verified
-- **Stop criteria**: G1 packet presented ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â **met**; human product decision outstanding
+- **Stop criteria**: G1 packet presented ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â **met**; human product decision outstanding
 
 ## Gate status
 
@@ -38,7 +38,8 @@
 | 1 | Gate attempt 1 | Survey | 0 | 1 | 2 (OBS-005, OBS-006 root causes) | G2 | re-dispatch after fixes |
 | 1 | Gate attempt 2 + G1 | Survey | 0 | 1 | 0 | PASS | converged at G1 |
 | 2 | Remote CI verification | Survey | 0 | 1 | 0 | PASS | green run 41839526456 |
+| 3 | WP-2.1 host-managed DI | Probe + gate | 0 | 2 | 0 | PASS | gate green; duplicate worker gone |
 
-## Next objective`n`nPhase 2 / WP-2.1: host-managed DI (remove the nested `BuildServiceProvider`). G1 no longer blocks; G4 follows Phase 2 and G3 gates Phase 3.
+## Next objective`n`nWP-2.2: remove `StrategyPool.Instance` and inject the pool through host DI. WP-2.1 is done and gated (16 projects, 1,104/1,081/23; architecture 4/4; duplicate worker gone).
 
 None in this run. The next action is the human G1 decision; then Phase 2 (G4) -> G3 -> Phase 3 per the chosen option.

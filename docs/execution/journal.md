@@ -451,3 +451,14 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Decision record:** `docs/execution/evidence/G1/decision-2026-11-04.md`. Plan updated: WP-3.6 becomes a write-capable repository agent (6 ED), WP-3.7 adds write-path abuse cases (4 ED), Phase 3 is 31 ED, the G1 gate row and D-01/D-02 register are marked approved.
 - **Write-path constraints recorded:** writes only inside the session worktree; `workspace.write` enforced by WP-3.2 after G3; validation → review → approval → merge boundary; no self-approval/auto-merge/direct push; audited diffs; WP-3.7 covers escape, traversal, injection-driven deletion and self-approval.
 - **Next:** Phase 2 (WP-2.1 host-managed DI first), then G3, then Phase 3. No release; full G2 remains conditional.
+## 2026-11-04T11:40:00-03:00 - WP-2.1 host-managed DI implemented (verification pending)
+
+- **Runtime contract:** `RunWorkflowAsync` now requires the host's `IServiceProvider`; the nested `BuildServiceProvider()` is deleted. All 21 call sites updated (Bones host, shell loop, runtime/builder/bones/web tests).
+- **Hosts:** Bones opens a DI scope per learning iteration from the injected root provider; the shell builds one provider per loop (or uses the supplied one) and a scope per run/operation.
+- **Tests:** new recording-provider test proves every capability/artifact resolution goes through the caller's provider; new architecture test fails if `BuildServiceProvider` returns to `Wip.Runtime` (architecture now 4/4). `Wip.Runtime.Tests` 72 → 73 with the new test (one pre-existing waiver unchanged).
+- **Expected side effect:** the run no longer instantiates a second script host/worker (RISK-001); to be confirmed by the host E2E and the gate.
+## 2026-11-04T11:55:00-03:00 - WP-2.1 done; gate green; duplicate worker confirmed gone
+
+- **Gate:** 16 offline projects, **1,104 executed / 1,081 passed / 23 failed** (all waivers), `verify-test-results.ps1` exit 0. Architecture **4/4**; Runtime.Tests 73/72/1 (new provider test included); sandbox 18/18.
+- **Host E2E (Worker mode, stub provider):** the “Script execution mode is Worker” line now appears **once** (it appeared twice before), confirming the per-run nested provider and its duplicate sandbox worker are gone. No worker processes remain after host exit.
+- **Next:** WP-2.2 (remove `StrategyPool.Instance`), then WP-2.3/2.4 workflow + maps, WP-2.5 Bones migration, WP-2.6 shell decoupling, WP-2.7 plugin ALC; then G4.

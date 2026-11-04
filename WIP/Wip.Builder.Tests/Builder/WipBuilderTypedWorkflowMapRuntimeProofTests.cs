@@ -108,6 +108,7 @@ public sealed class WipBuilderTypedWorkflowMapRuntimeProofTests
                 started.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("todoapp.workflow.delivery"),
+                services: builder.Services.BuildServiceProvider(),
                 cancellationToken: CancellationToken.None,
                 artifactStore: artifactStore);
 

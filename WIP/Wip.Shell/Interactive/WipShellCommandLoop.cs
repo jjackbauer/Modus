@@ -23,7 +23,7 @@ using Wip.Shell.Prompting;
 
 namespace Wip.Shell.Interactive;
 
-public sealed class WipShellCommandLoop
+public sealed class WipShellCommandLoop : IDisposable
 {
     private const string ApprovalReviewRecoveryGuidance = "Run 'review' to regenerate review evidence for the current diff hash, then retry 'approve'.";
 
@@ -125,6 +125,8 @@ public sealed class WipShellCommandLoop
     private readonly TextReader _input;
     private readonly TextWriter _output;
     private readonly WipBuilder? _builder;
+    private readonly IServiceProvider? _services;
+    private readonly ServiceProvider? _ownedServices;
     private readonly string _repositoryRoot;
     private readonly IModusWipBridge? _diagnosticsBridge;
     private readonly IReadOnlyList<string> _validationCommands;
@@ -179,13 +181,21 @@ public sealed class WipShellCommandLoop
         IReadOnlyList<string>? validationCommands = null,
         string? policyId = null,
         ICommandHistory? history = null,
-        Func<SessionSnapshot, RuntimePromptContext>? promptContextFactory = null)
+        Func<SessionSnapshot, RuntimePromptContext>? promptContextFactory = null,
+        IServiceProvider? services = null)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _workspaceProvider = workspaceProvider ?? new WipWorkspaceProviderGit();
         _input = input ?? throw new ArgumentNullException(nameof(input));
         _output = output ?? throw new ArgumentNullException(nameof(output));
         _builder = builder;
+
+        // The host owns composition. A supplied provider is used as-is; otherwise this loop
+        // builds the provider once from the builder's service collection (never per run).
+        _ownedServices = services is null && builder is not null
+            ? builder.Services.BuildServiceProvider()
+            : null;
+        _services = services ?? _ownedServices;
         _repositoryRoot = Path.GetFullPath(repositoryRoot ?? Directory.GetCurrentDirectory());
         _diagnosticsBridge = diagnosticsBridge;
         _customCommandHandler = customCommandHandler;
@@ -934,8 +944,10 @@ public sealed class WipShellCommandLoop
 
         try
         {
-            using var services = _builder.Services.BuildServiceProvider();
-            var capability = services.GetService(providerDescriptor.CapabilityType)
+            var services = _services
+                ?? throw new InvalidOperationException("No service provider is configured for this shell instance.");
+            await using var resolutionScope = services.CreateAsyncScope();
+            var capability = resolutionScope.ServiceProvider.GetService(providerDescriptor.CapabilityType)
                 ?? throw new InvalidOperationException($"Registered model provider '{providerDescriptor.CapabilityId.Value}' could not be resolved from builder services.");
 
             if (capability is not IModelProvider<DeepSeekChatCompletionRequest, DeepSeekChatCompletionResult> provider)
@@ -1162,10 +1174,14 @@ public sealed class WipShellCommandLoop
                 return;
 
             var artifactStore = new SessionArtifactStore(snapshot);
+            var services = _services
+                ?? throw new InvalidOperationException("Cannot run workflow: no service provider is configured for this shell instance.");
+            await using var runScope = services.CreateAsyncScope();
             var result = await _orchestrator.RunWorkflowAsync(
                 snapshot.SessionId,
                 _builder,
                 _selectedWorkflowId,
+                runScope.ServiceProvider,
                 cancellationToken,
                 artifactStore);
             _activeSession = await _orchestrator.GetSessionAsync(snapshot.SessionId, cancellationToken) ?? snapshot;
@@ -3202,6 +3218,12 @@ public sealed class WipShellCommandLoop
         string? WorktreesPath,
         string? PluginsPath,
         string? DefaultWorkflowId);
+
+    /// <summary>
+    /// Disposes the service provider this loop built for itself. A provider supplied by the host
+    /// stays owned by the host.
+    /// </summary>
+    public void Dispose() => _ownedServices?.Dispose();
 
     private enum RepositoryConfigSource
     {

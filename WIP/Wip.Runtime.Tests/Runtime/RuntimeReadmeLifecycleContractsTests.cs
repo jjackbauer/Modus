@@ -143,6 +143,7 @@ public sealed class RuntimeReadmeLifecycleContractsTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None,
             artifactStore: artifactStore);
 

@@ -233,10 +233,12 @@ public sealed class WipRuntimeOrchestrator
         SessionId sessionId,
         WipBuilder builder,
         WorkflowId? selectedWorkflowId,
+        IServiceProvider services,
         CancellationToken cancellationToken,
         IArtifactStore? artifactStore = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(services);
 
         await _authorityGate.WaitAsync(cancellationToken);
         try
@@ -247,10 +249,11 @@ public sealed class WipRuntimeOrchestrator
 
             var workflow = ResolveWorkflowSelection(current.WorkflowId, selectedWorkflowId, builder.WorkflowRegistrations);
             var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflow);
-            await using var serviceScope = builder.Services.BuildServiceProvider().CreateAsyncScope();
-            var serviceProvider = serviceScope.ServiceProvider;
-            artifactStore ??= serviceProvider.GetService<IArtifactStore>();
-            var dispatcher = new WorkflowStageCapabilityDispatcher(serviceProvider, builder.CapabilityDescriptors);
+
+            // The host owns composition and the run scope; the runtime never builds a provider.
+            // Callers pass the scoped provider for this run and dispose the scope when it ends.
+            artifactStore ??= services.GetService<IArtifactStore>();
+            var dispatcher = new WorkflowStageCapabilityDispatcher(services, builder.CapabilityDescriptors);
             dispatcher.EnsureDispatchCapabilitiesRegistered(compilation.StageDescriptors);
 
             var dispatchContext = new WorkflowStageDispatchContext(

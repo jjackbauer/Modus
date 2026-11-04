@@ -82,6 +82,7 @@ public sealed class WorkflowStageCapabilityDispatcherTests
                 snapshot.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("workflow.missing-capability"),
+                services: builder.Services.BuildServiceProvider(),
                 CancellationToken.None));
 
         Assert.Contains("requires a registered", exception.Message, StringComparison.Ordinal);

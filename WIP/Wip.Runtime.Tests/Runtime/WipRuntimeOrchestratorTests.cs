@@ -814,6 +814,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         Assert.Equal("workflow.linear", result.WorkflowId.Value);
@@ -858,6 +859,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         Assert.All(result.Stages, stage => Assert.Equal(SessionState.Checkpointed, stage.StateAfterStage));
@@ -889,6 +891,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         var persisted = await orchestrator.GetSessionAsync(snapshot.SessionId, CancellationToken.None);
@@ -1110,6 +1113,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         var runStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
@@ -1154,6 +1158,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         var planStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Plan);
@@ -1188,6 +1193,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         Assert.Equal("workflow.linear", result.WorkflowId.Value);
@@ -1313,6 +1319,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         Assert.Collection(
@@ -1374,6 +1381,7 @@ public sealed class WipRuntimeOrchestratorTests
             sessionId: snapshot.SessionId,
             builder: builder,
             selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: builder.Services.BuildServiceProvider(),
             cancellationToken: CancellationToken.None);
 
         var runStage = Assert.Single(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Run);
@@ -1429,6 +1437,7 @@ public sealed class WipRuntimeOrchestratorTests
                     sessionId: snapshot.SessionId,
                     builder: builder,
                     selectedWorkflowId: new WorkflowId("workflow.linear"),
+                    services: builder.Services.BuildServiceProvider(),
                     cancellationToken: CancellationToken.None));
 
             Assert.Contains(typeof(WorkflowResult).FullName!, exception.Message, StringComparison.Ordinal);
@@ -1460,6 +1469,7 @@ public sealed class WipRuntimeOrchestratorTests
                 sessionId: snapshot.SessionId,
                 builder: builder,
                 selectedWorkflowId: null,
+                services: builder.Services.BuildServiceProvider(),
                 cancellationToken: CancellationToken.None));
 
         Assert.Contains("explicit workflow selection", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -1626,6 +1636,47 @@ public sealed class WipRuntimeOrchestratorTests
             displayName: "Workflow validate stage validator");
 
         return builder;
+    }
+
+    [Fact]
+    public async Task RunWorkflowAsync_GivenCallerOwnedProvider_ExpectedAllResolutionsGoThroughIt()
+    {
+        // WP-2.1: the runtime must resolve capabilities from the provider the host passes
+        // (the per-run scope's provider), never from a nested provider of its own.
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+        await using var provider = builder.Services.BuildServiceProvider();
+        var recording = new RecordingServiceProvider(provider);
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("caller-provider"),
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: recording,
+            cancellationToken: CancellationToken.None);
+
+        Assert.Equal("workflow.linear", result.WorkflowId.Value);
+        Assert.Contains(typeof(WorkflowRunTool), recording.RequestedTypes);
+        Assert.Contains(typeof(IArtifactStore), recording.RequestedTypes);
+    }
+
+    private sealed class RecordingServiceProvider(IServiceProvider inner) : IServiceProvider
+    {
+        public List<Type> RequestedTypes { get; } = [];
+
+        public object? GetService(Type serviceType)
+        {
+            RequestedTypes.Add(serviceType);
+            return inner.GetService(serviceType);
+        }
     }
 
     private static WipBuilder CreateBuilderWithWorkflows(InMemoryArtifactStore? artifactStore = null)

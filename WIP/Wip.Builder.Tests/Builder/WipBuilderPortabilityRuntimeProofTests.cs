@@ -51,6 +51,7 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
                 started.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("workflow.portable.capabilities"),
+                services: builder.Services.BuildServiceProvider(),
                 cancellationToken: CancellationToken.None,
                 artifactStore: artifactStore);
 
@@ -107,6 +108,7 @@ public sealed class WipBuilderPortabilityRuntimeProofTests
                 started.SessionId,
                 builder,
                 selectedWorkflowId: new WorkflowId("workflow.portable.runtime"),
+                services: builder.Services.BuildServiceProvider(),
                 cancellationToken: CancellationToken.None,
                 artifactStore: artifactStore);
 

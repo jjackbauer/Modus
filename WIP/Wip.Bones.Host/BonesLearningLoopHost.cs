@@ -30,6 +30,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
     private readonly BonesStrategyLibrary _strategyLibrary;
     private readonly WipRuntimeOrchestrator _orchestrator;
     private readonly WipBuilder _workflowBuilder;
+    private readonly IServiceProvider _services;
     private readonly IArtifactStore _artifactStore;
     private readonly StrategyPool _strategyPool;
     private readonly ILogger<BonesLearningLoopHost> _logger;
@@ -50,6 +51,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
         BonesStrategyLibrary strategyLibrary,
         WipRuntimeOrchestrator orchestrator,
         WipBuilder workflowBuilder,
+        IServiceProvider services,
         IArtifactStore artifactStore,
         StrategyPool strategyPool,
         ILogger<BonesLearningLoopHost> logger)
@@ -63,6 +65,7 @@ public sealed class BonesLearningLoopHost : BackgroundService
         _strategyLibrary = strategyLibrary ?? throw new ArgumentNullException(nameof(strategyLibrary));
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
         _workflowBuilder = workflowBuilder ?? throw new ArgumentNullException(nameof(workflowBuilder));
+        _services = services ?? throw new ArgumentNullException(nameof(services));
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _strategyPool = strategyPool ?? throw new ArgumentNullException(nameof(strategyPool));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -421,10 +424,12 @@ public sealed class BonesLearningLoopHost : BackgroundService
 
             try
             {
+                await using var runScope = _services.CreateAsyncScope();
                 await _orchestrator.RunWorkflowAsync(
                     snapshot.SessionId,
                     _workflowBuilder,
                     BonesLearningWorkflowIds.WorkflowId,
+                    runScope.ServiceProvider,
                     cancellationToken,
                     _artifactStore);
             }

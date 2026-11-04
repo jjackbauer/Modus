@@ -102,6 +102,7 @@ public sealed class BonesViewerWorkflowTests
                 snapshot.SessionId,
                 builder,
                 BonesLearningWorkflowIds.WorkflowId,
+                builder.Services.BuildServiceProvider(),
                 CancellationToken.None,
                 artifactStore);
 
