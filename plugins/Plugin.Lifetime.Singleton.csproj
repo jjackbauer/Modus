@@ -14,7 +14,7 @@
     <Compile Include="LifetimeOperationResult.cs" />
     <Compile Include="LifetimeOperationPayload.cs" />
     <Compile Include="SingletonLifetimePlugin.cs" />
-    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
+    <ProjectReference Include="../src/Modus.Core/Modus.Core.csproj" />
   </ItemGroup>
 
 </Project>

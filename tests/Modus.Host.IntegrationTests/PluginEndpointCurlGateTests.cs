@@ -154,7 +154,9 @@ public sealed class PluginEndpointCurlGateTests
         }
 
         Assert.NotNull(body);
-        Assert.True(body!.Success);
+        Assert.True(
+            body!.Success,
+            $"Timer endpoint '{endpointPath}' returned Success=false (status={body.Status}, correlation={body.CorrelationId}) with payload: {payload}");
         Assert.Equal(JsonValueKind.Object, payload.ValueKind);
         Assert.True(
             payload.TryGetProperty("timestampUtcIso8601", out var timestamp)

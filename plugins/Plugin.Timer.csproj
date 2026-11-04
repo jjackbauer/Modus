@@ -7,14 +7,16 @@
     <AssemblyName>Plugin.Timer</AssemblyName>
     <ModusVersion>1.0.0</ModusVersion>
     <ModusCapabilities>Cap.Timer</ModusCapabilities>
+    <ModusRuntimePluginType>Modus.Core.Plugins.TimerPlugin</ModusRuntimePluginType>
+    <ModusServiceLifetime>Singleton</ModusServiceLifetime>
     <ModusOperations>Timer.WriteCurrentTime</ModusOperations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\src\Modus.Core\Plugins\Implementation\TimerPlugin.cs" />
+    <Compile Include="../src/Modus.Core/Plugins/Implementation/TimerPlugin.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
+    <ProjectReference Include="../src/Modus.Core/Modus.Core.csproj" />
   </ItemGroup>
 </Project>

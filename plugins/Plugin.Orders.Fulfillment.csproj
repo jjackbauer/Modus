@@ -7,14 +7,16 @@
     <AssemblyName>Plugin.Orders.Fulfillment</AssemblyName>
     <ModusVersion>1.4.3</ModusVersion>
     <ModusCapabilities>Cap.Orders;Cap.Fulfillment</ModusCapabilities>
+    <ModusRuntimePluginType>Modus.SamplePlugins.Orders.OrdersFulfillmentPlugin</ModusRuntimePluginType>
+    <ModusServiceLifetime>Singleton</ModusServiceLifetime>
     <ModusOperations>Orders.AllocateInventory;Orders.CreateShipment</ModusOperations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\src\SamplePlugins\Plugin.Orders.Fulfillment\OrdersFulfillmentPlugin.cs" />
+    <Compile Include="../src/SamplePlugins/Plugin.Orders.Fulfillment/OrdersFulfillmentPlugin.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
+    <ProjectReference Include="../src/Modus.Core/Modus.Core.csproj" />
   </ItemGroup>
 </Project>

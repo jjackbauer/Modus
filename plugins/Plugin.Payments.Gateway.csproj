@@ -7,14 +7,16 @@
     <AssemblyName>Plugin.Payments.Gateway</AssemblyName>
     <ModusVersion>2.1.0</ModusVersion>
     <ModusCapabilities>Cap.Payments;Cap.Billing</ModusCapabilities>
+    <ModusRuntimePluginType>Modus.SamplePlugins.Payments.PaymentsGatewayPlugin</ModusRuntimePluginType>
+    <ModusServiceLifetime>Singleton</ModusServiceLifetime>
     <ModusOperations>Payments.SyncLedger;Payments.EmitSettlement</ModusOperations>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\src\SamplePlugins\Plugin.Payments.Gateway\PaymentsGatewayPlugin.cs" />
+    <Compile Include="../src/SamplePlugins/Plugin.Payments.Gateway/PaymentsGatewayPlugin.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
+    <ProjectReference Include="../src/Modus.Core/Modus.Core.csproj" />
   </ItemGroup>
 </Project>

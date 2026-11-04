@@ -12,6 +12,6 @@
 
   <ItemGroup>
     <Compile Include="MachineTelemetryPlugin.cs" />
-    <ProjectReference Include="..\src\Modus.Core\Modus.Core.csproj" />
+    <ProjectReference Include="../src/Modus.Core/Modus.Core.csproj" />
   </ItemGroup>
 </Project>
