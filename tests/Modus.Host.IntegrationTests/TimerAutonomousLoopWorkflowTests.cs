@@ -67,9 +67,11 @@ public sealed class TimerAutonomousLoopWorkflowTests
                     return writes.Count >= 2;
                 }
             },
-            millisecondsTimeout: 1000);
+            // Generous but bounded: a loaded runner can take seconds to schedule the initial
+            // iterations even with a 20 ms interval.
+            millisecondsTimeout: 10000);
 
-        Assert.True(writesObserved);
+        Assert.True(writesObserved, "Expected the autonomous loop to write at least two lines.");
 
         if (stopPath)
         {

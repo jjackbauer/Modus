@@ -45,8 +45,8 @@ public sealed class TestsCiWorkflowTriggerPolicyTests
         var policy = ParseTriggerPolicy(workflow);
 
         Assert.Equal(new[] { "pull_request", "push" }, policy.Keys.OrderBy(static key => key, StringComparer.Ordinal));
-        Assert.Equal(new[] { "main" }, policy["push"]);
-        Assert.Equal(new[] { "main" }, policy["pull_request"]);
+        Assert.Equal(new[] { "main", "WIP" }, policy["push"]);
+        Assert.Equal(new[] { "main", "WIP" }, policy["pull_request"]);
     }
 
     private static Dictionary<string, IReadOnlyList<string>> ParseTriggerPolicy(string workflow)
