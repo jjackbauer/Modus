@@ -21,6 +21,7 @@
     <Project Path="WIP/Wip.Artifacts.Local.Tests/Wip.Artifacts.Local.Tests.csproj" />
     <Project Path="WIP/Wip.Bones.Agents/Wip.Bones.Agents.csproj" />
     <Project Path="WIP/Wip.Bones.Benchmark/Wip.Bones.Benchmark.csproj" />
+    <Project Path="WIP/Wip.Bones.E2E.Host/Wip.Bones.E2E.Host.csproj" />
     <Project Path="WIP/Wip.Bones.E2E.Tests/Wip.Bones.E2E.Tests.csproj" />
     <Project Path="WIP/Wip.Bones.Host.Tests/Wip.Bones.Host.Tests.csproj" />
     <Project Path="WIP/Wip.Bones.Host/Wip.Bones.Host.csproj" />

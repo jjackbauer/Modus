@@ -361,7 +361,7 @@ public sealed class BonesLearningShellE2EHarnessTests
             string? workingDirectory = null,
             IReadOnlyDictionary<string, string?>? environmentVariables = null)
         {
-            var shellHostAssemblyPath = typeof(WipShellHost).Assembly.Location;
+            var shellHostAssemblyPath = typeof(Wip.Bones.E2E.Host.BonesE2ERegistration).Assembly.Location;
             var startInfo = new ProcessStartInfo("dotnet")
             {
                 RedirectStandardInput = true,

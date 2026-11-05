@@ -6,14 +6,6 @@ using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Policies;
 using Wip.Abstractions.Sessions;
 using Wip.Abstractions.Workflows;
-using Wip.Bones.Agents.Enhance;
-using Wip.Bones.Agents.Observe;
-using Wip.Bones.Agents.Play;
-using Wip.Bones.Agents.Ponder;
-using Wip.Bones.Agents.Viewer;
-using Wip.Bones.Agents.Workflow;
-using Wip.Bones.Engine;
-using Wip.Bones.Identifiers;
 using Wip.Builder;
 using Wip.Modus.Hosting;
 using Wip.Runtime.Runtime;
@@ -23,13 +15,18 @@ namespace Wip.ShellHost.Hosting;
 
 public static class WipShellHostFactory
 {
-    public static WipShellHost CreateDefault(WipShellHostOptions options, TextReader input, TextWriter output)
+    public static WipShellHost CreateDefault(
+        WipShellHostOptions options,
+        TextReader input,
+        TextWriter output,
+        Action<WipBuilder>? configure = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
 
         var builder = CreateShellBuilder();
+        configure?.Invoke(builder);
         RegisterConfiguredModelProvider(builder, options.EffectiveConfig.ProviderConfig);
         Wip.Modus.Hosting.IModusWipBridge bridge = new Wip.Modus.Hosting.ModusWipBridge(
             options.PluginsPath,
@@ -154,7 +151,6 @@ public static class WipShellHostFactory
         builder.AddWorkflow<ShellLinearWorkflow, ShellWorkflowRequest, ShellWorkflowResult>(
             workflowId: new WorkflowId("workflow.safe-change"),
             displayName: "Safe change workflow");
-        BonesShellHostRegistration.RegisterWhenEnabled(builder);
         return builder;
     }
 
@@ -243,118 +239,4 @@ public static class WipShellHostFactory
             => ValueTask.FromResult(new ShellWorkflowResult(request.Task));
     }
 
-    internal static class BonesShellHostRegistration
-{
-    public const string EnableEnvironmentVariable = "WIP_BONES_E2E";
-
-    public static bool IsEnabled()
-        => string.Equals(
-            Environment.GetEnvironmentVariable(EnableEnvironmentVariable),
-            "1",
-            StringComparison.Ordinal);
-
-    public static void RegisterWhenEnabled(WipBuilder builder)
-    {
-        if (!IsEnabled())
-            return;
-
-        var repositoryPath = Directory.GetCurrentDirectory();
-        var artifactStore = new Wip.Artifacts.Local.WipArtifactStoreLocal(repositoryPath);
-
-        builder.Services.AddSingleton<IArtifactStore>(artifactStore);
-        builder.Services.AddSingleton(new BonesMatchSimulator());
-        builder.Services.AddSingleton(new BonesGameEngine());
-        builder.Services.AddSingleton<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>, StubBonesStrategyModelProvider>();
-        builder.Services.AddSingleton<IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>, StubBonesPlayTurnModelProvider>();
-        builder.Services.AddSingleton<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>, StubBonesEnhancementModelProvider>();
-        builder.Services.AddSingleton<IBonesPublicMatchFeed, NoOpBonesPublicMatchFeed>();
-
-        builder.AddBonesLearningWorkflowWithViewer(new Uri("http://127.0.0.1:8765"));
-    }
-
-    private sealed class NoOpBonesPublicMatchFeed : IBonesPublicMatchFeed
-    {
-        public void PublishMatchState(
-            SessionId sessionId,
-            BonesGameId matchId,
-            int matchSeed,
-            BonesMatchResult matchResult,
-            bool isComplete)
-        {
-        }
-    }
-
-    private sealed class StubBonesStrategyModelProvider
-        : IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>
-    {
-        public ValueTask<ModelProviderResponse<BonesStrategyAuthoringResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyAuthoringRequest> request,
-            CapabilityContext context,
-            CancellationToken cancellationToken)
-        {
-            const string markdown = """
-                # Bones Strategy
-
-                ## Rules
-                - Prefer matching open ends before passing.
-                - Track board state transitions from observation transcripts.
-                - Use GetLegalMoves options only; pass when the legal set is empty.
-                """;
-
-            return ValueTask.FromResult(
-                new ModelProviderResponse<BonesStrategyAuthoringResult>(
-                    payload: new BonesStrategyAuthoringResult(markdown),
-                    providerId: "bones-strategy-stub",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(120, 48),
-                    correlationId: request.CorrelationId));
-        }
-    }
-
-    private sealed class StubBonesPlayTurnModelProvider
-        : IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>
-    {
-        public ValueTask<ModelProviderResponse<BonesPlayTurnResult>> ExecuteAsync(
-            ModelProviderRequest<BonesPlayTurnRequest> request,
-            CapabilityContext context,
-            CancellationToken cancellationToken)
-            => ValueTask.FromResult(
-                new ModelProviderResponse<BonesPlayTurnResult>(
-                    payload: new BonesPlayTurnResult(request.Payload.AllowedMoves[0].MoveId.Value),
-                    providerId: "bones-play-turn-stub",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(64, 16),
-                    correlationId: request.CorrelationId));
-    }
-
-    private sealed class StubBonesEnhancementModelProvider
-        : IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>
-    {
-        public ValueTask<ModelProviderResponse<BonesStrategyEnhancementResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyEnhancementRequest> request,
-            CapabilityContext context,
-            CancellationToken cancellationToken)
-        {
-            const string markdown = """
-                # Bones Strategy
-
-                ## Rules
-                - Prefer matching open ends before passing.
-                - After a loss, prioritize blocking opponent scoring lines earlier in the round.
-                - Use GetLegalMoves options only; pass when the legal set is empty.
-
-                ## Enhancements
-                - Refined tactics based on match outcome review.
-                """;
-
-            return ValueTask.FromResult(
-                new ModelProviderResponse<BonesStrategyEnhancementResult>(
-                    payload: new BonesStrategyEnhancementResult(markdown),
-                    providerId: "bones-enhance-stub",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(140, 60),
-                    correlationId: request.CorrelationId));
-        }
-    }
-}
 }

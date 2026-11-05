@@ -14,7 +14,6 @@
     <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
     <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
     <ProjectReference Include="..\Wip.Artifacts.Local\Wip.Artifacts.Local.csproj" />
-    <ProjectReference Include="..\Wip.Bones.Agents\Wip.Bones.Agents.csproj" />
     <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
     <ProjectReference Include="..\..\src\Modus.Core\Modus.Core.csproj" />
   </ItemGroup>

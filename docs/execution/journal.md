@@ -546,3 +546,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Pre-existing finding:** `BonesViewerWorkflowTests.BonesViewerWorkflow_GivenLearningRun...` fails at HEAD too ("Model response did not contain a compilable IBonesPlayerSlot script"); `Wip.Bones.Web.Tests` is not in the 16-project gate nor in CI. Recorded, not caused by this change.
 - **Remaining WP-2.4:** the stateless legacy adapter (default-linear heuristics) still serves ~15 test-fixture `IWorkflow` classes; migrating them to explicit maps lets it be deleted. Tracked in the WP-2.4 notes.
 - **Gate:** running.
+## 2026-11-05T01:00:00-03:00 - WP-2.6 done: ShellHost no longer references Bones
+
+- New test-only host `WIP/Wip.Bones.E2E.Host` owns the `WIP_BONES_E2E` registration (workflow, stub providers, match feed, artifact store) and is composed through the new `WipShellHostFactory.CreateDefault(..., Action<WipBuilder>?)` hook. The E2E harness launches this host; `Wip.ShellHost` dropped its `Wip.Bones.Agents` reference.
+- ADR-IMPL-07 is Superseded; both `shellhost-no-bones` waivers are deleted from the architecture waiver file and the project-graph assertion moved from 41 to 42 projects.
+- Verified: architecture 4/4, ShellHost 47/47, Bones E2E 3 passed / 7 pre-existing waived, full Release build green.
+- **Next:** WP-2.4 remainder (migrate default-linear test fixtures and delete the stateless legacy map adapter), then WP-2.7 plugin ALC, G4.

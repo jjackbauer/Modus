@@ -1,18 +1,1 @@
-[
-  {
-    "rule": "shellhost-no-bones",
-    "source": "Wip.ShellHost",
-    "target": "Wip.Bones.Agents",
-    "owner": "tech lead",
-    "expiry": "2026-11-30",
-    "adr": "ADR-IMPL-07"
-  },
-  {
-    "rule": "shellhost-no-bones",
-    "source": "Wip.ShellHost",
-    "target": "Wip.Bones",
-    "owner": "tech lead",
-    "expiry": "2026-11-30",
-    "adr": "ADR-IMPL-07"
-  }
-]
+[]

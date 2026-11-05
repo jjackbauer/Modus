@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Wip.Bones.E2E.Host</AssemblyName>
+    <RootNamespace>Wip.Bones.E2E.Host</RootNamespace>
+    <Description>Test-only shell host process that composes the Bones E2E workflow; keeps Wip.ShellHost free of Bones references.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Wip.ShellHost/Wip.ShellHost.csproj" />
+    <ProjectReference Include="../Wip.Bones.Agents/Wip.Bones.Agents.csproj" />
+    <ProjectReference Include="../Wip.Artifacts.Local/Wip.Artifacts.Local.csproj" />
+  </ItemGroup>
+</Project>

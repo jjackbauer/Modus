@@ -1,6 +1,6 @@
 # ADR-IMPL-07 — Temporary ShellHost-to-Bones coupling waiver
 
-- **Status:** Accepted at G0 (2026-11-02); expires 2026-11-30 / WP-2.6
+- **Status:** **Superseded by WP-2.6** (2026-11-04). The `Wip.ShellHost -> Wip.Bones.Agents` reference and its waivers were removed; the E2E registration moved to the test-only `Wip.Bones.E2E.Host` project. Accepted at G0 (2026-11-02), originally expiring 2026-11-30.
 - **Date:** 2026-11-02
 - **Owner:** tech lead
 - **Reversal cost:** Low

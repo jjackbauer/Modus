@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
     <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
     <ProjectReference Include="..\Wip.ShellHost\Wip.ShellHost.csproj" />
+    <ProjectReference Include="..\Wip.Bones.E2E.Host\Wip.Bones.E2E.Host.csproj" />
     <ProjectReference Include="..\Wip.Shell.E2E\Wip.Shell.E2E.csproj" />
   </ItemGroup>
 </Project>
