@@ -37,7 +37,11 @@
   into `wip-security` (Windows) and `wip-security-linux`; `Wip.Runtime.Tests` 134 → **137** (full
   suite: 137 discovered, 131 passed, 6 documented environment/waiver failures).
 - **Baseline CI:** the round-2 records HEAD `9e03c98` is fully green (Tests CI `42043470844`, Modus
-  CI `42043470827`). The round-3 commit's CI is the pending check.
+  CI `42043470827`). **WP-3.6 is verified green on `cda224a`** (Tests CI `42045866606`, all six jobs).
+- **Remote status:** **green on `89308d1`** — Tests CI `42048062612` all six jobs, with the new
+  **Run agent safety suite** step executed in both security jobs (step 6, success) and the offline
+  gate at Runtime 137; Modus CI `42048062647` success. The round-3 records commit is local and rides
+  the next push.
 
 ## Objective ledger
 
@@ -45,7 +49,7 @@
 |---|---|---|---|---|---|---|---|
 | 1 | Fix the red Modus CI hard gate at HEAD deterministically | Probe + measured self-implementation | 0 | 30 | 1 (HYP-003) | all PASS | converged: Modus + Tests CI green on `1b6d7cd` |
 | 2 | Finish WP-3.5: runtime streaming entry + shell progress | Probe + measured self-implementation | 0 | 4 | 0 | all PASS | verified green on `5b78a9e` |
-| 3 | WP-3.6 HTTP-boundary sample agent + WP-3.7 safety tail | Probe + measured self-implementation | 0 | 7 | 0 | all PASS | local green; push → Tests CI `windows-latest` |
+| 3 | WP-3.6 HTTP-boundary sample agent + WP-3.7 safety tail | Probe + measured self-implementation | 0 | 10 | 0 | all PASS | converged: Tests CI `42048062612` + Modus CI `42048062647` green on `89308d1` |
 | — | (prior run) Phase 0–3 core, G3/G4 accepted | — | — | EVD-001..019 | — | — | carried |
 
 ## Next objective

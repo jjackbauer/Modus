@@ -711,3 +711,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **CI wiring:** `.github/workflows/tests-ci.yml` runs `Wip.Runtime.Tests --filter "FullyQualifiedName~AgentSafetyTests"` in both `wip-security` (windows-latest) and `wip-security-linux`; the workflow parses as YAML.
 - **Totals:** `Wip.Runtime.Tests` 134 → **137**; full suite 137 discovered / 131 passed / 6 documented environment-or-waiver failures; waiver expected total updated.
 - **Next:** Phase 4 (legacy Modus meta-tests/CI truth, docs/runbooks), then Phase 5 security/privacy, Phase 6 release engineering, G2 re-review and G5. No release claim.
+
+## 2026-11-05T12:00:00-03:00 — Round 3 close: Phase 3 complete and green on `89308d1`
+
+- **Tests CI run `42048062612`: all six jobs success** — the windows-latest offline gate at `Wip.Runtime.Tests` 137, and both `wip-security` and `wip-security (ubuntu)` executed the new **Run agent safety suite** step (step 6, success). **Modus CI run `42048062647`: success.** WP-3.6 was independently verified on `cda224a` (Tests CI `42045866606`).
+- **Phase 3 is complete:** DeepSeek `IChatModel` adapter (Complete + SSE), streaming runtime and shell `agent` command, real-model write-capable sample agent E2E at the HTTP boundary, and the WP-3.7 safety suite (injection, self-approval, exfiltration, worktree escape, budgets, model error, cancellation) wired into both security jobs.
+- **Remaining:** Phase 4 (reconcile `BLK-MODUS-LEGACY-SUITE`, make the full Modus suite blocking, docs/runbooks/operator guide), Phase 5 (privacy/retention + security review packet), Phase 6 (release engineering), the G2 re-review packet (2026-12-03, C1 unclaimed) and the G5 human decision. No release claim; G5 not requested.
