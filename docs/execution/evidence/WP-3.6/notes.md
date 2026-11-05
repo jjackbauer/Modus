@@ -22,6 +22,12 @@ remain.
   observation and no file escape; deleting `.git/config` is blocked and the file stays intact; an
   absolute write is blocked.
 
+## Increment 2 — AgentExecutorTool capability (2026-11-05)
+
+- `AgentExecutorTool` (`tool.agent.run`) + `AddAgentExecutorTool()`: a workflow-facing capability that runs the agent loop with the host's `IChatModel` (required) and, by default, `RuntimeToolInvoker`/`AgentExecutor` over the builder's tools; returns a typed `AgentExecutorToolResult` (status, final answer, steps, error).
+- Tests (2): a registered chat model yields a Completed result; a missing chat model fails with a deterministic error.
+- `Wip.Runtime.Tests` total 123.
+
 ## Remaining
 
 - Artifact memory (WP-3.4) and a sample agent that answers a repository question with a

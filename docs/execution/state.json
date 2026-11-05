@@ -8,7 +8,7 @@
   "work_package": "WP-3.5",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "phase3_wp34_done_wp35_streaming_core_done_remaining_adapter_safety",
+  "gate_status": "phase3_wp34_done_wp35_core_wp36_core_done_g5_not_requested",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
     "WP-0.1": 2,
@@ -32,8 +32,8 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T09:50:00-03:00",
-  "next_action": "Remaining Phase 3: DeepSeek SSE adapter + shell progress, real-model sample agent + AgentExecutorTool, prompt-injection/self-approval safety + Agent/Security job; then Phase 4-6 release readiness, G2 re-review and the G5 human release decision. No release claim.",
+  "last_verified_at": "2026-11-05T10:20:00-03:00",
+  "next_action": "Not release-ready (see docs/execution/evidence/G5/release-readiness.md): DeepSeek chat/SSE adapter + shell progress, real-model sample agent, WP-3.7 safety remainder + Agent/Security job, Phase 4 CI truth, Phase 5 security/privacy, Phase 6 release engineering, G2 re-review, then G5 human decision. No release claim.",
   "open_blockers": ["Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-1.1 formal review, G3 permissions, G4/Phases 2-6 remain."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
