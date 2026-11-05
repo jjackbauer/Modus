@@ -522,3 +522,15 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Tests CI run [41943047685](https://github.com/jjackbauer/Modus/actions/runs/41943047685) on `3553f30`: **all six jobs success**, including the 16-project offline suite and the count/waiver gate. The two Playwright viewer tests that failed locally passed on CI, confirming they were environment-bound.
 - Modus CI on the same commit: **success** (hard gates green; legacy suite non-blocking per BLK-MODUS-LEGACY-SUITE).
 - **Next:** WP-2.4 — explicit plan maps for all workflows, delete `WorkflowStageMapAdapterRuntime`, then WP-2.5 Bones migration.
+## 2026-11-04T22:10:00-03:00 - WP-2.4/2.5 increment: Bones runs from an explicit plan
+
+- **Plan-scoped initial requests:** `WorkflowPlan.InitialRequest` + `WorkflowPlanMapRuntime` support plans whose first stage is not governance's Plan (Bones starts with Observe). Deterministic failure when absent/mismatched.
+- **Bones definition:** `BonesLearningWorkflow.Compile()` declares the four stages, three explicit StageMaps and the initial request; the map bodies are shared with the legacy registration. `AddBonesLearningWorkflow` registers `AddWorkflowDefinition<BonesLearningWorkflow>()`, and the orchestrator prefers definitions, so production Bones now runs through plan maps.
+- **Context:** `WorkflowContext.RepositoryPath` and a `TryParse(string)` parameters overload so maps have the data they need without touching a session snapshot.
+- **Tests:** new registration/plan test (4 stages, 3 maps, initial request); the seven Bones workflow tests pass. Bones.Tests total 396.
+- **Remaining WP-2.4:** delete `WorkflowStageMapAdapterRuntime` and the legacy registration once the default-linear test fixtures declare maps; tracked in the WP-2.4 notes.
+- **Gate:** running.
+## 2026-11-04T23:20:00-03:00 - WP-2.4/2.5 increment gate result
+
+- **Gate:** 16 projects, 1,106 executed / 1,081 passed / 25 failed — 23 waived plus the same two environment-bound Playwright viewer tests (`BonesHostViewerLearningLoopStatus`, 30 s browser waits under this machine's ~10 s first-compile). The Bones suite itself is 396 total / 394 passed / 2 waived, including the new definition-plan test and all workflow-run tests; no definition-path regression.
+- **Decision:** commit with the documented environment caveat; Tests CI (which passes these tests) is the authoritative verification for the workflow change.

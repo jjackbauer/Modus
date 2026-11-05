@@ -128,7 +128,8 @@ public sealed class WorkflowPlan
 {
     public WorkflowPlan(
         IReadOnlyList<WorkflowStageDescriptor> stages,
-        IReadOnlyList<StageMap>? maps = null)
+        IReadOnlyList<StageMap>? maps = null,
+        Func<SessionSnapshot, object?>? initialRequest = null)
     {
         ArgumentNullException.ThrowIfNull(stages);
         if (stages.Count == 0)
@@ -136,11 +137,18 @@ public sealed class WorkflowPlan
 
         Stages = stages;
         Maps = maps ?? Array.Empty<StageMap>();
+        InitialRequest = initialRequest;
     }
 
     public IReadOnlyList<WorkflowStageDescriptor> Stages { get; }
 
     public IReadOnlyList<StageMap> Maps { get; }
+
+    /// <summary>
+    /// Builds the request for a plan whose first stage is not the governance Plan stage (for
+    /// example an Observe stage). Replaces the old process-wide initial-request factory.
+    /// </summary>
+    public Func<SessionSnapshot, object?>? InitialRequest { get; }
 
     public StageMap? ResolveMap(WorkflowStageDescriptor target)
     {

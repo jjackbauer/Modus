@@ -21,6 +21,10 @@ public static class BonesLearningWorkflowExtensions
             BonesLearningWorkflowIds.WorkflowId,
             "Bones learning workflow");
 
+        // WP-2.5: the declarative definition carries the explicit four-stage plan and maps; the
+        // runtime prefers it over the legacy registry path.
+        builder.AddWorkflowDefinition<BonesLearningWorkflow>();
+
         builder.AddTool<BonesObserveGamesTool, BonesObserveGamesRequest, BonesObserveGamesResult>(
             BonesObserveGamesCapability.Id,
             "Bones observe games tool");

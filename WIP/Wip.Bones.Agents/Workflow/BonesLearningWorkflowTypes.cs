@@ -75,15 +75,19 @@ public sealed record BonesLearningWorkflowParameters(
     public static bool TryParse(SessionSnapshot session, out BonesLearningWorkflowParameters parameters)
     {
         ArgumentNullException.ThrowIfNull(session);
+        return TryParse(session.TaskDescription, out parameters);
+    }
 
+    public static bool TryParse(string? taskDescription, out BonesLearningWorkflowParameters parameters)
+    {
         parameters = default!;
-        if (string.IsNullOrWhiteSpace(session.TaskDescription)
-            || !session.TaskDescription.StartsWith(TaskDescriptionPrefix, StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(taskDescription)
+            || !taskDescription.StartsWith(TaskDescriptionPrefix, StringComparison.Ordinal))
         {
             return false;
         }
 
-        var values = session.TaskDescription
+        var values = taskDescription
             .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(part => part.Split('=', 2, StringSplitOptions.TrimEntries))
             .Where(parts => parts.Length == 2)

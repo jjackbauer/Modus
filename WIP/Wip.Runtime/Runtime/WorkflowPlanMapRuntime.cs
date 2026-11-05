@@ -20,28 +20,47 @@ public static class WorkflowPlanMapRuntime
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(session);
 
-        if (stageDescriptor.Stage == WorkflowStageKind.Plan
-            && stageDescriptor.RequestType == typeof(PlanStageRequest))
+        if (previousStageResult is null)
         {
-            var planRequest = new PlanStageRequest(session.SessionId.Value);
-            return new WorkflowStageMappedInputEvidence(
-                stageDescriptor.RequestContractName,
-                planRequest,
-                stageDescriptor.RequestContractName,
-                planRequest);
+            if (plan.InitialRequest is { } initialRequestFactory)
+            {
+                var initialRequest = initialRequestFactory(session)
+                    ?? throw new InvalidOperationException(
+                        $"Workflow plan initial request factory returned null for stage '{stageDescriptor.Stage}'.");
+
+                if (!stageDescriptor.RequestType.IsInstanceOfType(initialRequest))
+                {
+                    throw new InvalidOperationException(
+                        $"Workflow plan initial request produced '{initialRequest.GetType().FullName}' but stage " +
+                        $"'{stageDescriptor.Stage}' requires '{stageDescriptor.RequestContractName}'.");
+                }
+
+                return new WorkflowStageMappedInputEvidence(
+                    stageDescriptor.RequestContractName,
+                    initialRequest,
+                    stageDescriptor.RequestContractName,
+                    initialRequest);
+            }
+
+            if (stageDescriptor.Stage == WorkflowStageKind.Plan
+                && stageDescriptor.RequestType == typeof(PlanStageRequest))
+            {
+                var planRequest = new PlanStageRequest(session.SessionId.Value);
+                return new WorkflowStageMappedInputEvidence(
+                    stageDescriptor.RequestContractName,
+                    planRequest,
+                    stageDescriptor.RequestContractName,
+                    planRequest);
+            }
+
+            throw new InvalidOperationException(
+                $"Workflow stage '{stageDescriptor.Stage}' has no source payload and the plan declares no initial request.");
         }
 
         var map = plan.ResolveMap(stageDescriptor)
             ?? throw new InvalidOperationException(
                 $"Workflow plan has no stage map for stage '{stageDescriptor.Stage}' " +
                 $"('{stageDescriptor.RequestContractName}'). Declare a StageMap for every mapped stage.");
-
-        if (previousStageResult is null)
-        {
-            throw new InvalidOperationException(
-                $"Workflow stage '{stageDescriptor.Stage}' requires mapped input from " +
-                $"'{map.SourceContractName}' but no source payload is available.");
-        }
 
         if (!map.SourceType.IsInstanceOfType(previousStageResult))
         {
@@ -60,7 +79,8 @@ public static class WorkflowPlanMapRuntime
         var context = new WorkflowContext(
             session.SessionId,
             session.TaskDescription,
-            session.WorktreePath);
+            session.WorktreePath,
+            session.RepositoryPath);
         var mappedInput = map.Map(previousStageResult, context);
         if (!stageDescriptor.RequestType.IsInstanceOfType(mappedInput))
         {

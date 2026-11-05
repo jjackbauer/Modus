@@ -1,4 +1,5 @@
 using Wip.Abstractions.Sessions;
+using Wip.Abstractions.Workflows;
 using Wip.Bones.Agents.Enhance;
 using Wip.Bones.Agents.Observe;
 using Wip.Bones.Agents.Play;
@@ -29,76 +30,82 @@ public static class BonesLearningWorkflowMapRuntime
 
         // Observe -> Ponder
         WorkflowStageMapAdapterRuntime.RegisterMapBinding<BonesObserveGamesResult, BonesPonderRequest>(
-            static (observe, session) =>
-            {
-                var parameters = RequireParameters(session);
-                var modelId = GetStageModelId(parameters, BonesStageKind.Ponder);
-                return modelId is null
-                    ? new BonesPonderRequest(
-                        parameters.LearningPlayerId,
-                        session.RepositoryPath,
-                        AllSeatsLearning: parameters.AllSeatsLearning,
-                        ObservedGameIds: observe.ObservedGameIds)
-                    : new BonesPonderRequest(
-                        parameters.LearningPlayerId,
-                        session.RepositoryPath,
-                        modelId,
-                        parameters.AllSeatsLearning,
-                        observe.ObservedGameIds);
-            });
+            static (observe, session) => CreatePonderRequest(observe, ToContext(session)));
 
         // Ponder -> PlayMatch
         WorkflowStageMapAdapterRuntime.RegisterMapBinding<BonesPonderResult, BonesPlayMatchRequest>(
-            static (ponder, session) =>
-            {
-                var parameters = RequireParameters(session);
-                var modelId = GetStageModelId(parameters, BonesStageKind.Play);
-                return modelId is null
-                    ? new BonesPlayMatchRequest(
-                        parameters.Seed,
-                        parameters.TargetScore,
-                        session.RepositoryPath,
-                        AllSeatsLearning: parameters.AllSeatsLearning)
-                    : new BonesPlayMatchRequest(
-                        parameters.Seed,
-                        parameters.TargetScore,
-                        session.RepositoryPath,
-                        ModelId: modelId,
-                        AllSeatsLearning: parameters.AllSeatsLearning);
-            });
+            static (ponder, session) => CreatePlayMatchRequest(ponder, ToContext(session)));
 
         // PlayMatch -> Enhance
         WorkflowStageMapAdapterRuntime.RegisterMapBinding<BonesPlayMatchResult, BonesEnhanceStrategyRequest>(
-            static (play, session) =>
-            {
-                var parameters = RequireParameters(session);
-                var modelId = GetStageModelId(parameters, BonesStageKind.Enhance);
-                return modelId is null
-                    ? new BonesEnhanceStrategyRequest(
-                        parameters.LearningPlayerId,
-                        session.RepositoryPath,
-                        play.GameId,
-                        EvaluationTargetScore: parameters.EvaluationTargetScore,
-                        AllSeatsLearning: parameters.AllSeatsLearning)
-                    : new BonesEnhanceStrategyRequest(
-                        parameters.LearningPlayerId,
-                        session.RepositoryPath,
-                        play.GameId,
-                        ModelId: modelId,
-                        EvaluationTargetScore: parameters.EvaluationTargetScore,
-                        AllSeatsLearning: parameters.AllSeatsLearning);
-            });
+            static (play, session) => CreateEnhanceRequest(play, ToContext(session)));
     }
 
-    public static void ResetRegistrationForTests()
-        => Interlocked.Exchange(ref _registered, 0);
-
-    private static object? TryCreateInitialStageRequest(Type requestType, SessionSnapshot session)
+    internal static BonesPonderRequest CreatePonderRequest(
+        BonesObserveGamesResult observe,
+        WorkflowContext context)
     {
-        if (requestType != typeof(BonesObserveGamesRequest))
-            return null;
+        var parameters = RequireParameters(context);
+        var modelId = GetStageModelId(parameters, BonesStageKind.Ponder);
+        return modelId is null
+            ? new BonesPonderRequest(
+                parameters.LearningPlayerId,
+                context.RepositoryPath,
+                AllSeatsLearning: parameters.AllSeatsLearning,
+                ObservedGameIds: observe.ObservedGameIds)
+            : new BonesPonderRequest(
+                parameters.LearningPlayerId,
+                context.RepositoryPath,
+                modelId,
+                parameters.AllSeatsLearning,
+                observe.ObservedGameIds);
+    }
 
-        var parameters = RequireParameters(session);
+    internal static BonesPlayMatchRequest CreatePlayMatchRequest(
+        BonesPonderResult ponder,
+        WorkflowContext context)
+    {
+        var parameters = RequireParameters(context);
+        var modelId = GetStageModelId(parameters, BonesStageKind.Play);
+        return modelId is null
+            ? new BonesPlayMatchRequest(
+                parameters.Seed,
+                parameters.TargetScore,
+                context.RepositoryPath,
+                AllSeatsLearning: parameters.AllSeatsLearning)
+            : new BonesPlayMatchRequest(
+                parameters.Seed,
+                parameters.TargetScore,
+                context.RepositoryPath,
+                ModelId: modelId,
+                AllSeatsLearning: parameters.AllSeatsLearning);
+    }
+
+    internal static BonesEnhanceStrategyRequest CreateEnhanceRequest(
+        BonesPlayMatchResult play,
+        WorkflowContext context)
+    {
+        var parameters = RequireParameters(context);
+        var modelId = GetStageModelId(parameters, BonesStageKind.Enhance);
+        return modelId is null
+            ? new BonesEnhanceStrategyRequest(
+                parameters.LearningPlayerId,
+                context.RepositoryPath,
+                play.GameId,
+                EvaluationTargetScore: parameters.EvaluationTargetScore,
+                AllSeatsLearning: parameters.AllSeatsLearning)
+            : new BonesEnhanceStrategyRequest(
+                parameters.LearningPlayerId,
+                context.RepositoryPath,
+                play.GameId,
+                ModelId: modelId,
+                EvaluationTargetScore: parameters.EvaluationTargetScore,
+                AllSeatsLearning: parameters.AllSeatsLearning);
+    }
+
+    internal static BonesObserveGamesRequest CreateInitialRequest(WorkflowContext context)
+    {
+        var parameters = RequireParameters(context);
         var observers = Enumerable
             .Range(BonesPlayerId.MinSeat, BonesTableConfig.FixedPlayerCount)
             .Select(seat => new BonesPlayerId(seat))
@@ -109,8 +116,23 @@ public static class BonesLearningWorkflowMapRuntime
             parameters.Seed,
             parameters.TargetScore,
             observers,
-            session.RepositoryPath);
+            context.RepositoryPath);
     }
+
+    public static void ResetRegistrationForTests()
+        => Interlocked.Exchange(ref _registered, 0);
+
+    private static object? TryCreateInitialStageRequest(Type requestType, SessionSnapshot session)
+        => requestType == typeof(BonesObserveGamesRequest)
+            ? CreateInitialRequest(ToContext(session))
+            : null;
+
+    private static WorkflowContext ToContext(SessionSnapshot session)
+        => new(
+            session.SessionId,
+            session.TaskDescription,
+            session.WorktreePath,
+            session.RepositoryPath);
 
     private static BonesLearningWorkflowParameters RequireParameters(SessionSnapshot session)
     {
@@ -118,6 +140,17 @@ public static class BonesLearningWorkflowMapRuntime
         {
             throw new InvalidOperationException(
                 $"Session '{session.SessionId.Value}' is missing bones learning workflow parameters in TaskDescription.");
+        }
+
+        return parameters;
+    }
+
+    private static BonesLearningWorkflowParameters RequireParameters(WorkflowContext context)
+    {
+        if (!BonesLearningWorkflowParameters.TryParse(context.Task, out var parameters))
+        {
+            throw new InvalidOperationException(
+                $"Session '{context.SessionId.Value}' is missing bones learning workflow parameters in TaskDescription.");
         }
 
         return parameters;

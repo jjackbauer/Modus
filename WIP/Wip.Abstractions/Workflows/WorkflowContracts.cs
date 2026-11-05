@@ -5,7 +5,8 @@ namespace Wip.Abstractions.Workflows;
 public sealed record WorkflowContext(
     SessionId SessionId,
     string Task,
-    string WorktreePath);
+    string WorktreePath,
+    string RepositoryPath = "");
 
 public interface IWorkflow<in TRequest, TResult>
     where TRequest : notnull

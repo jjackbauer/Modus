@@ -58,6 +58,28 @@ public sealed class BonesLearningWorkflowRegistrationTests
 
     [Fact]
     [Trait("ChecklistItem", WorkflowRegistrationChecklistItem)]
+    public void AddBonesLearningWorkflow_GivenBuilder_ExpectedRegistersDefinitionWithExplicitPlanAndInitialRequest()
+    {
+        var services = new ServiceCollection();
+        services.AddWipCapabilities().AddBonesLearningWorkflow();
+        using var provider = services.BuildServiceProvider();
+
+        var definition = Assert.Single(
+            provider.GetServices<IWorkflowDefinition>(),
+            candidate => candidate.WorkflowId == BonesLearningWorkflowIds.WorkflowId);
+        var plan = definition.Compile();
+
+        Assert.Equal(4, plan.Stages.Count);
+        Assert.Equal(3, plan.Maps.Count);
+        Assert.NotNull(plan.InitialRequest);
+        Assert.Equal(typeof(BonesObserveGamesResult), plan.Stages[0].ResultType);
+        Assert.Equal(typeof(BonesPonderRequest), plan.Maps[0].TargetType);
+        Assert.Equal(typeof(BonesPlayMatchRequest), plan.Maps[1].TargetType);
+        Assert.Equal(typeof(BonesEnhanceStrategyRequest), plan.Maps[2].TargetType);
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", WorkflowRegistrationChecklistItem)]
     public void CompileLinear_GivenBonesLearningWorkflow_ExpectedMapAdaptersPreserveTypedStageContracts()
     {
         ResetMapRuntimeForTests();
