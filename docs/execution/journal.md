@@ -759,3 +759,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Scope:** the `agent` model path needs a configured `IChatModel` and is covered separately by the shell streaming test and the real-adapter HTTP-boundary E2E; governance commands are covered by the contract tests. No release claim.
 - **Evidence:** `docs/execution/evidence/G5/golden-path-demo.md` (EVD-081). The G5 packet now contains the demo, security review, known limits, exact release steps and the explicit human decision request.
 - **Next:** human G5 decision (and the G2 re-review dated 2026-12-03 + external security sign-off). No release.
+
+## 2026-11-05T15:05:00-03:00 — Round 9: 2,000-game benchmark executed; all engineering evidence delivered
+
+- **Benchmark:** snapshot built from the stub dataset (2 sessions, 4 study strategies), then `champion --games 2000 --seeds 910001` on `Wip.Bones.Benchmark`: **exit 0**, 26,168 ms (~76 games/s), selected `initial-seat-2-v2@1f5136b3` (Promoted), **583/2000 wins (29.15%, LCB 27.2%)**, strategy library + `champion-result.json` written. Limitation: small stub corpus; the full 1,973-session library was not benchmarked.
+- **Still outstanding (G5 blockers):** 24-hour soak, full-corpus benchmark, formal three-green release freeze, G2/C1 sign-off, external security sign-off, signing authority, keyed live-model path.
+- **CI:** GitHub API rate limiting blocked confirmation of the latest docs HEAD; the last verified code HEAD remains `9dc8a56` (Tests CI `42059745946` and Modus CI `42059745863` green). No green claim is made for unqueried HEADs.
+- **Next:** request the human gates (G2 re-review, external security sign-off, G5 decision). No release claim; G5 not decided.

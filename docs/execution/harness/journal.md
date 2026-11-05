@@ -606,3 +606,21 @@
 - **Result**: Supported
 - **Conclusion**: The operator golden path works end to end at the current commit; no release claim follows from it.
 - **Related**: EVD-081, OBS-027
+
+### OBS-028: A 2,000-game champion benchmark executes; the domain data is small
+
+- **Source**: `.tmp/bench/wp61/history.json`, `.tmp/bench/wp61/champion/`; `docs/execution/evidence/WP-6.1/stabilization.md`
+- **Fact**: `champion --games 2000 --seeds 910001` on a snapshot built from the 2-session stub dataset exited 0 in 26,168 ms, selected `initial-seat-2-v2@1f5136b3` (Promoted), 583/2000 wins (29.15%, LCB 27.2%), and wrote the strategy library + champion result. The full 1,973-session corpus was not benchmarked; the 24-hour soak remains unexecuted.
+- **Implications**: The benchmark path is real and fast enough for CI-like runs, but the statistical evidence is limited by the input corpus; the G5 packet keeps soak/freeze as blockers.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-082, OBS-026
+
+### VAL-017: Benchmark evidence reproduced and scoped honestly
+
+- **Target**: OBS-028
+- **Method**: built the history snapshot from a stub dataset, ran the champion benchmark with a fixed seed, measured duration and read the result artifacts.
+- **Evidence examined**: console output (exit 0, 2000 games), `champion-result.json`, `seat-1.json`.
+- **Result**: Supported (with the small-corpus limitation recorded)
+- **Conclusion**: The 2,000-game benchmark requirement is met in execution, not in statistical scale; the limitation is in the G5 packet.
+- **Related**: EVD-082

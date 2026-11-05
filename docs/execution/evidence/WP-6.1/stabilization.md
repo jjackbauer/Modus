@@ -1,7 +1,29 @@
 # WP-6.1 stabilization evidence (2026-11-05)
 
-**Status:** partial. Regression/flake work and process-leak checks are done; the 24-hour soak and the
-2,000-game benchmark have **not** been executed and remain G5 blockers.
+**Status:** partial. Regression/flake work, process-leak checks and a 2,000-game benchmark are done;
+the 24-hour soak and the formal release-freeze triple-green remain **not executed** and are G5
+blockers.
+
+## 2,000-game benchmark (executed)
+
+Command (from the stub dataset `.tmp/bench/live-stub`, snapshot with 4 study strategies over 2
+sessions):
+
+```powershell
+dotnet run --project WIP/Wip.Bones.Benchmark -c Release -- history --data .tmp/bench/live-stub --out .tmp/bench/wp61/history.json
+dotnet run --project WIP/Wip.Bones.Benchmark -c Release --no-build -- champion --snapshot .tmp/bench/wp61/history.json --out-dir .tmp/bench/wp61/champion --games 2000 --seeds 910001
+```
+
+Result (exit 0, 26,168 ms — ~76 games/s):
+
+```
+champion selected=initial-seat-2-v2@1f5136b3 outcome=Promoted wins=583/2000 rate=29.150% lcb=27.200% ... written=True
+```
+
+Artifacts: `.tmp/bench/wp61/champion/champion-result.json`, `.tmp/bench/wp61/champion/.bones/strategy-library/seat-1.json`.
+**Limitation:** the input is a small stub corpus, not a production-sized strategy library; the
+2,000-game execution is real, but the statistical power is limited. The full-corpus benchmark
+against `WIP/Wip.Bones.Host/bones-data` (1,973 sessions) was not run.
 
 ## CI green runs on successive commits
 
@@ -33,6 +55,7 @@ both workflows). Cancelled runs are recorded as superseded, not counted as green
 ## Not executed (G5 blockers)
 
 - 24-hour Bones stub soak.
-- 2,000-game benchmark / formal SLO regression run.
 - A formal release-freeze window with three consecutive full gate runs after the freeze commit
   (only successive integration points are green so far).
+- Full-corpus benchmark against the 1,973-session `bones-data` library (the 2,000-game run used a
+  small stub snapshot; see above).

@@ -1,12 +1,12 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 8 of 12 (G5 demo executed; all engineering evidence delivered; awaiting human gates)
+- **Round**: 9 of 12 (all engineering evidence delivered; human gates open)
 - **Goal**: G5 human decision after the G2 re-review/external sign-off. No release claim, no
   publish/sign/deploy before the explicit decision.
-- **Definition of done**: 10/11 met (D1–D3, D5–D11 including the G5 packet and golden-path demo);
-  D4 partial only in that the keyed live-model path is unverified without credentials.
-- **Stop criteria**: hard stop at the human G2/external sign-off and the G5 decision; the goal is
-  left active until those are recorded.
+- **Definition of done**: 10/11 met (D1–D3, D5–D11 + golden path + 2,000-game benchmark); D4 partial
+  only in that the keyed live-model path is unverified without credentials.
+- **Stop criteria**: hard stop at the human G2/external sign-off and the G5 decision; goal remains
+  active until those are recorded.
 
 ## Gate status
 
@@ -77,6 +77,15 @@
   release steps and the explicit human decision request.
 - Outstanding: 24h soak, 2,000-game benchmark, release-freeze triple-green, G2 re-review dated
   2026-12-03, external security sign-off, signing authority, keyed live-model path.
+
+## Round 9 outcome (Phase 6.1 benchmark)
+
+- 2,000-game champion benchmark executed: exit 0, 26,168 ms, 583/2000 wins (29.15%, LCB 27.2%),
+  chosen strategy written; input was a small stub snapshot (4 strategies / 2 sessions).
+- The full 1,973-session corpus benchmark and the 24-hour soak remain unexecuted and are recorded as
+  G5 blockers; the three-green release freeze is also outstanding.
+- GitHub API rate limiting blocked CI confirmation of the latest docs HEAD this round; the last
+  verified code HEAD remains `9dc8a56` (both workflows green).
 
 ## Next objective
 

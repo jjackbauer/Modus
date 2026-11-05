@@ -26,9 +26,10 @@ The human G5 decision is the only path to a release; **no publish/sign/deploy ha
    no upgrade without human sign-off.
 2. **External/independent security sign-off is not obtained.** The WP-5.5 packet is internal +
    adversarial evidence, not an approval.
-3. **Phase 6 verification items not executed:** a 24-hour soak, a 2,000-game benchmark, and a
-   formal three-consecutive-green-run release freeze. The local dry-run and rollback controls are
-   performed; the stress/soak evidence is not.
+3. **Phase 6 verification items:** a 2,000-game champion benchmark **was executed** (exit 0, 583/2000
+   wins, 29.15%, 26 s) but on a small stub snapshot rather than the 1,973-session library; the
+   24-hour soak and the formal three-consecutive-green release freeze are **not executed**. The local
+   dry-run and rollback controls are performed.
 4. **Signing credentials/publication authority** are human-owned and not available; no signature or
    publication exists.
 5. **The opt-in live DeepSeek path is unverified** without an API key.
