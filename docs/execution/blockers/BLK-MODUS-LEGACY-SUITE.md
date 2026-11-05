@@ -35,4 +35,5 @@ The two release-relevant gates (migration regression, plugin curl probe) are **h
 - Modus CI gained workflow-level concurrency and the legacy suite step is no longer `continue-on-error`; its failure report emits `::error`.
 - The root `Makefile` regained the solution-level `build` / `test` / `test-no-build` / `run-host` targets the meta-tests require.
 - The timer autonomous-loop test's initial wait was widened to a bounded 10 s (loaded runners starved it).
-- Local Linux: 355/362 pass; the remaining 7 are WSL-only gaps (`pwsh`, `make`) that GitHub's ubuntu image provides. Modus CI run ids are recorded in `docs/execution/state.json`.
+- Local Linux: 355/362 pass; the remaining 7 are WSL-only gaps (`pwsh`, `make`) that GitHub's ubuntu image provides.
+- **Confirmed green:** Modus CI run `42056809397` on `6453c38` succeeded with the full legacy suite as a blocking step (the earlier `4e9c11d` run failed only in the failure-reporting step on a green TRX; fixed in `6453c38`).
