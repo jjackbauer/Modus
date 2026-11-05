@@ -133,6 +133,8 @@ jobs:
           dotnet build Wip.slnx --configuration Release --no-restore
       - name: Run sandbox hostile/protocol suite
         run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
+      - name: Run agent safety suite
+        run: dotnet test WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~AgentSafetyTests" --results-directory artifacts/security-test-results --logger "trx;LogFileName=AgentSafetyTests.trx"
       - name: Dump containment diagnostics
         if: always()
         shell: pwsh
@@ -183,6 +185,8 @@ jobs:
           dotnet build Wip.slnx --configuration Release --no-restore
       - name: Run sandbox hostile/protocol suite
         run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results-linux --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
+      - name: Run agent safety suite
+        run: dotnet test WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~AgentSafetyTests" --results-directory artifacts/security-test-results-linux --logger "trx;LogFileName=AgentSafetyTests.trx"
       - name: Upload security test results
         if: always()
         uses: actions/upload-artifact@v4

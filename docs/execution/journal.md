@@ -703,3 +703,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Verification:** focused tests 2/2 pass; full `Wip.Runtime.Tests` 134 discovered / 128 passed / 6 documented environment-or-waiver failures; removing the write tool's `File.WriteAllText` makes the E2E fail. `Wip.Runtime.Tests` total 132 → 134; waiver expected total updated.
 - **CI baseline:** records HEAD `9e03c98` is green (Tests CI `42043470844` six jobs, Modus CI `42043470827`). The round-3 commit's CI is the pending check.
 - **Next:** WP-3.7 safety remainder (prompt injection via tool output, self-approval/merge attempt, exfiltration via shell/search, oversized observations, model error, cancellation) wired into the Security/Agent CI job. No release claim.
+
+## 2026-11-05T11:40:00-03:00 — Round 3 (continued): WP-3.7 safety remainder complete and wired into security jobs
+
+- **Safety suite:** 3 fail-closed tests — prompt injection via tool output (the observation is data; no delete call; `.git/config` intact), self-approval via an unregistered `tool.session.approve` (`unknown-tool:`, session not Approved/Merged, no approval artifact), and exfiltration via traversal read plus out-of-worktree search (no secret returned).
+- **Control:** with **both** `WorktreePathGuard` throws removed, the traversal read returns the secret and the test fails. The first control attempt (removing only the prefix check) passed spuriously because the `..` segment guard still blocked it; the control and the secret path were corrected.
+- **CI wiring:** `.github/workflows/tests-ci.yml` runs `Wip.Runtime.Tests --filter "FullyQualifiedName~AgentSafetyTests"` in both `wip-security` (windows-latest) and `wip-security-linux`; the workflow parses as YAML.
+- **Totals:** `Wip.Runtime.Tests` 134 → **137**; full suite 137 discovered / 131 passed / 6 documented environment-or-waiver failures; waiver expected total updated.
+- **Next:** Phase 4 (legacy Modus meta-tests/CI truth, docs/runbooks), then Phase 5 security/privacy, Phase 6 release engineering, G2 re-review and G5. No release claim.

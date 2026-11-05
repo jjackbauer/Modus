@@ -498,3 +498,28 @@
 - **Rationale**: OBS-022 + EVD-057: the offline gate (Windows CI) has no credentials, and a live call must never make the gate network-dependent or flaky.
 - **Alternatives considered**: `[Fact(Skip=...)]` (rejected: static skip cannot honour an env key); filtering the test by category in CI (rejected: the gate would silently drop it; an env-gated early return keeps it discoverable and honest).
 - **Related**: OBS-022, EVD-057
+
+### OBS-023: The agent safety remainder is implemented and wired into the security jobs
+
+- **Source**: `WIP/Wip.Runtime.Tests/Repo/AgentSafetyTests.cs`; `.github/workflows/tests-ci.yml` (`wip-security` and `wip-security-linux` now run the filter); `.tmp/wp37/wp37-safety2.trx`
+- **Fact**: Three fail-closed tests cover prompt injection via tool output (observation is data; `.git/config` intact; no delete call), self-approval (unregistered `tool.session.approve` → `unknown-tool:`, session not Approved/Merged, no approval artifact) and exfiltration (`../../secret.txt` at the exact resolved path and an out-of-worktree search return no secret). The traversal control (both `WorktreePathGuard` throws removed) makes the test fail. The suite runs in both security jobs.
+- **Implications**: WP-3.7 is complete locally; the authoritative confirmation is the next Tests CI run (Windows security job plus offline gate at Runtime 137).
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-060, EVD-061, EVD-062
+
+### VAL-013: The safety controls fail closed
+
+- **Target**: OBS-023 / the WP-3.7 safety assertions
+- **Method**: positive suite run (3/3) and a clone-only removal of both worktree-guard throws, rebuild, rerun the traversal test.
+- **Evidence examined**: `.tmp/wp37/wp37-safety2.trx` (3/3); control `/tmp/wp37c-ctrl.log` (`CTRL_EXIT=1`).
+- **Result**: Supported
+- **Conclusion**: The exfiltration test detects a real escape, not a missing file; the injection and self-approval assertions hold.
+- **Related**: EVD-060, EVD-062
+
+### DEC-012: Run the agent safety suite in both security jobs
+
+- **Decision**: Add `--filter "FullyQualifiedName~AgentSafetyTests"` over `Wip.Runtime.Tests` to `wip-security` (Windows) and `wip-security-linux`, with TRX in the existing security artifacts.
+- **Rationale**: OBS-023: the agent-loop abuse cases belong to the security posture, not only to the offline suite; running on both OSes catches platform-specific guard behavior.
+- **Alternatives considered**: offline suite only (rejected: a security regression would not fail the security job); a separate workflow (rejected: more CI surface for no benefit).
+- **Related**: OBS-023, EVD-061
