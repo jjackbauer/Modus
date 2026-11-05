@@ -689,3 +689,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Controls:** replacing the runtime stream yield with a stub delta fails the runtime tests; removing the shell delta write fails the shell test. The first shell assertion also matched the final answer ("hello" in `Agent answer: hello`), so it was tightened to require `hello` immediately before `Agent status: Completed` — recorded as a falsified test-quality claim.
 - **CI baseline:** the records HEAD `3ea7086` is fully green — Tests CI `42037930950` all six jobs, Modus CI `42037930830`. The round-2 commit's own Tests CI run is the pending authoritative check (Runtime 132 / Shell 33).
 - **Next:** WP-3.6 real-model write-capable sample agent (fake DeepSeek server at the HTTP boundary + opt-in live test), then the WP-3.7 safety remainder. No release claim.
+
+## 2026-11-05T11:15:00-03:00 — Round 2 close: WP-3.5 verified green on `5b78a9e`
+
+- **Tests CI run `42040810159` on `5b78a9e`: all six jobs success**, including `wip-offline-tests` on windows-latest with `Wip.Runtime.Tests` 132 and `Wip.Shell.Tests` 33 (the full shell suite 33/33). **Modus CI run `42040810043`: success.**
+- **Delivered:** DeepSeek `IChatModel` adapter (previous round), `RunAgentStreamingAsync`, the shell `agent "<task>"` command with delta/tool rendering, the no-session/help/semantics contract updates, and three new tests with stub controls.
+- **Next round:** WP-3.6 real-model write-capable sample agent E2E at the DeepSeek HTTP boundary, then WP-3.7. No release claim; G5 not requested.

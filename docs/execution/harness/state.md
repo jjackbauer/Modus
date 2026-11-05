@@ -30,7 +30,10 @@
   rendering fails the shell test (the first assertion version was satisfied by the final answer
   alone and was tightened).
 - **Baseline CI:** the records HEAD `3ea7086` is fully green (Tests CI `42037930950` six jobs, Modus
-  CI `42037930830`). The round-2 commit's own CI is the pending check.
+  CI `42037930830`).
+- **Remote status:** **green on `5b78a9e`** — Tests CI `42040810159` all six jobs (windows-latest
+  offline gate with Runtime 132 / Shell 33) and Modus CI `42040810043` success. The round-2 records
+  commit is local and rides the next push; its own CI is the next round's first check.
 
 ## Objective ledger
 

@@ -8,8 +8,8 @@
   "work_package": "WP-3.6",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "phase3_wp35_complete_streaming_runtime_and_shell_wp36_next_ci_pending",
-  "last_ci_green_head": "3ea7086",
+  "gate_status": "phase3_wp35_complete_ci_green_head_5b78a9e_wp36_next",
+  "last_ci_green_head": "5b78a9ed0e9547f4e402bcab2df3605a954653c4",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
     "WP-0.1": 2,
@@ -34,7 +34,7 @@
     "WP-1.7": 1
   },
   "last_verified_at": "2026-11-05T10:55:00-03:00",
-  "next_action": "Push the WP-3.5 completion commit and confirm Tests CI wip-offline-tests on windows-latest (Runtime 132, Shell 33) plus Modus CI. Then WP-3.6: real-model write-capable sample agent E2E at the DeepSeek HTTP boundary with a fake server, opt-in live test, then the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
+  "next_action": "Confirm the round-2 records HEAD in CI, then WP-3.6: real-model write-capable sample agent E2E at the DeepSeek HTTP boundary with a fake server (repository answer + scoped worktree edit + artifacts/telemetry + never auto-merge), the opt-in live test, then the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
   "open_blockers": ["Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03). Phase 3: WP-3.5 complete locally (CI pending), WP-3.6 real-model sample agent and WP-3.7 safety remainder remain; then Phases 4-6 and G5."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
@@ -101,15 +101,15 @@
     "shell_tests_total": 33,
     "authoritative_gate": "Tests CI wip-offline-tests on windows-latest",
     "local_windows_vstest": "blocked_win32exception5_testhost_parent_callback; WSL runs are supplementary and not gate-equivalent",
-    "evidence": "HEAD 1b6d7cd is fully green: Tests CI run_42035300449 all six jobs success (windows-latest offline gate with Runtime.Tests 130 and the concurrency fix, architecture, both security jobs, both builds) and Modus CI run_42035300353 success (migration regression green). The 22bcdd5 Tests run failed only the offline count/waiver gate on two BonesLoopState concurrency flakes, fixed with bounded coordination. Local Windows VSTest is blocked; WSL runs are supplementary and not gate-equivalent. Runtime.Tests 130 (7 adapter tests); architecture 4/4 at 43 projects."
+    "evidence": "HEAD 5b78a9e is fully green: Tests CI run_42040810159 all six jobs success (windows-latest offline gate with Runtime.Tests 132 and Shell.Tests 33, architecture, both security jobs, both builds) and Modus CI run_42040810043 success. WP-3.5 is complete: DeepSeek IChatModel adapter, RunAgentStreamingAsync and the shell agent command are covered by falsifiable tests with stub controls. Local Windows VSTest is blocked; WSL runs are supplementary. Architecture 4/4 at 43 projects."
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "tests_ci_run_42035300449_success_head_1b6d7cd_all_six_jobs",
-    "remote_ci_note": "windows-latest offline gate green with Runtime.Tests 130 and the concurrency fix; the 8ab7ad5 Tests run was cancelled as superseded",
-    "modus_ci": "run_42035300353_success_head_1b6d7cd_migration_regression_green",
+    "remote_ci": "tests_ci_run_42040810159_success_head_5b78a9e_all_six_jobs_runtime_132_shell_33",
+    "remote_ci_note": "windows-latest offline gate green with the streaming runtime and shell command; Modus CI 42040810043 also green",
+    "modus_ci": "run_42040810043_success_head_5b78a9e",
     "modus_ci_fix": "docs/execution/evidence/CI-FIX/README.md (two iterations: registration-sample fix in 5cea565; reference-timer rate parity + TRX error annotations in the next commit; post-fix run pending push)",
     "modus_ci_diagnostics": "migration regression failures now emit the failing test's TRX error message as a GitHub annotation",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
