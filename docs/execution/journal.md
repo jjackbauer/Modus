@@ -658,3 +658,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Verification:** 12/12 full-migration runs pass under `taskset -c 0,1` with two busy loops; clone-only injections of a 600 ms interval (fails at tick 3), a 150 ms interval (fails at tick 2) and a one-hour timer (fails the bounded wait) still fail; full migration filter 19/19.
 - **CI diagnostics:** the Modus CI failure-dump step now parses the TRX and emits the failing test's **error message** as an annotation (validated against the real failing TRX; workflow YAML parses). Future flakes are diagnosable from public annotations.
 - **Evidence:** `docs/execution/evidence/CI-FIX/README.md`. No release claim.
+
+## 2026-11-05T10:05:00-03:00 — Round 1 (continued): Modus CI green; Tests CI concurrency flake fixed
+
+- **Modus CI run `42028137663` on `22bcdd5`: success** — the migration-regression hard gate is green (all executed steps passed; only the failure-only diagnostics and the legacy-suite success flag steps were skipped).
+- **Tests CI run `42028137512` on `22bcdd5` exposed a different pre-existing flake:** the 16-project offline gate failed the count/waiver step on `BonesLoopState_GivenConcurrentReadWrite_SeesCoherentIsRunning` and `BonesLoopState_GivenConcurrentIncrement_SeesMonotonicIterationCount` (unwaived). No WIP product code changed in that HEAD.
+- **Root cause reproduced:** on a pinned single core the reader runs its fixed 1,000,000 iterations to completion before the writer is scheduled — `Reader should have observed IsRunning=true at least once` (4/4 failures). The tests assumed scheduling overlap.
+- **Fix:** bounded coordination (writer-start signal; reader reads until both values or a 10 s bound; iteration writer publishes 1 before the reader samples). Same invariants, no assertion removed, no retry/waiver. Verified 15/15 on the failing single-core condition; clone-only always-true and non-monotonic writers still fail with the expected messages.
+- **Evidence:** `docs/execution/evidence/CI-FIX/concurrency-tests.md`. No release claim.

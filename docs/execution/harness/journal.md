@@ -373,3 +373,38 @@
 - **Rationale**: OBS-018 + EVD-032: the runtime's own `PeriodicTimer` bursts under CPU starvation (`Gaps=[935.5, 10.5, 959.1, 166.0]`, `ControlGaps=[1.5, 248.8, 304.0]`), so wall-clock precision is not a property of the host scheduler. EVD-033..036 show the replacement is stable and still catches slow, fast and dead schedulers.
 - **Alternatives considered**: widening tolerance (rejected: hides real defects); retry (rejected: forbidden at the gate); serializing the assembly (rejected: does not remove CPU starvation); keeping per-gap with an environment allowance (rejected: tried, still failed 1/12 because burst timings differ between the two timers).
 - **Related**: HYP-003, HYP-004, VAL-009, RISK-002
+
+### OBS-019: Tests CI exposed a separate concurrency-test flake
+
+- **Source**: Tests CI run `42028137512` on `22bcdd5`, job `wip-offline-tests`; annotations name `BonesLoopState_GivenConcurrentReadWrite_SeesCoherentIsRunning` and `BonesLoopState_GivenConcurrentIncrement_SeesMonotonicIterationCount`; `WIP/Wip.Bones.Host.Tests/BonesLoopStateConcurrencyTests.cs`
+- **Fact**: Both tests failed unwaived. They assumed the reader and writer overlap in time; on a loaded single-core runner the reader can finish its fixed 1,000,000 iterations before the writer is scheduled. Reproduced 4/4 on `taskset -c 0` with a busy loop; the failure message is `Reader should have observed IsRunning=true at least once`.
+- **Implications**: These are real test-design flakes (not product defects); no WIP product code changed in `22bcdd5`, and Tests CI was green on the previous HEAD.
+- **Confidence**: High
+- **Agent**: orchestrator (API + reproduction)
+- **Related**: EVD-039, EVD-040, HYP-005
+
+### HYP-005: Bounded writer/reader coordination makes the concurrency tests deterministic
+
+- **Claim**: Letting the reader wait (bounded) for the writer's first value and letting the writer run until both values are observed keeps the same invariants while removing the scheduling assumption.
+- **Supporting OBS**: OBS-019
+- **Why it matters**: Restores the authoritative Tests CI gate without weakening the coherence/monotonicity assertions.
+- **Falsification strategy**: 15 runs on one core with a busy loop (expect 0 failures); inject an always-true writer and a non-monotonic writer and confirm both fail; then run the full Host suite and the 16-project gate.
+- **Status**: Supported
+- **Confidence**: High
+- **Related**: OBS-019, VAL-010
+
+### VAL-010: HYP-005 supported — coordinated tests stable and still falsifiable
+
+- **Target**: HYP-005
+- **Method**: rewrote the two tests' coordination (bounded waits + yield), ran 15 repetitions under the failing single-core condition, then two clone-only violation injections.
+- **Evidence examined**: `.tmp/concurrency-fix/cfix-1..15.trx` (15/15 pass); `.tmp/concurrency-controls/always-true.trx` (`Reader should have observed IsRunning=false at least once`); `.tmp/concurrency-controls/non-monotonic.trx` (`Assert.Equal() Failure`).
+- **Result**: Supported
+- **Conclusion**: Same invariants, deterministic scheduling; the tests still fail on a coherence or monotonicity violation. No waiver, no retry.
+- **Related**: EVD-041, EVD-042
+
+### DEC-008: Coordinate the concurrency tests instead of retrying or waiving them
+
+- **Decision**: Add bounded coordination to the two `BonesLoopStateConcurrencyTests` cases (writer-start signal; reader reads until both values or a 10 s bound; iteration writer publishes 1 before the reader samples).
+- **Rationale**: EVD-040/041/042 — the failures are test scheduling assumptions, the invariants are unchanged, and the fixed tests still fail on injected violations.
+- **Alternatives considered**: retry at the gate (rejected); waive the two tests (rejected: they are meaningful assurances); reduce the iteration count (rejected: does not remove the race).
+- **Related**: OBS-019, HYP-005, RISK-002

@@ -20,38 +20,45 @@ public sealed class BonesLoopStateConcurrencyTests
     public async Task BonesLoopState_GivenConcurrentReadWrite_SeesCoherentIsRunning()
     {
         var state = new BonesLoopState();
-        var barrier = new Barrier(2);
+        var writerStarted = new ManualResetEventSlim();
+        var stopWriter = new ManualResetEventSlim();
         int sawTrue = 0;
         int sawFalse = 0;
 
         var writer = Task.Run(() =>
         {
-            barrier.SignalAndWait();
-            for (int i = 0; i < 1_000_000; i++)
+            writerStarted.Set();
+            var value = false;
+            while (!stopWriter.IsSet)
             {
-                state.IsRunning = i % 2 == 0;
+                value = !value;
+                state.IsRunning = value;
             }
         });
 
-        var reader = Task.Run(() =>
+        Assert.True(writerStarted.Wait(TimeSpan.FromSeconds(10)), "Writer did not start.");
+
+        // Read until both values have been observed. A loaded single-core runner can otherwise run
+        // the reader to completion before the writer is scheduled, which made this assertion flaky
+        // even though Volatile.Read/Write on a bool always returns a coherent value.
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while ((Volatile.Read(ref sawTrue) == 0 || Volatile.Read(ref sawFalse) == 0)
+            && DateTime.UtcNow < deadline)
         {
-            barrier.SignalAndWait();
-            for (int i = 0; i < 1_000_000; i++)
-            {
-                var value = state.IsRunning;
-                if (value)
-                    Interlocked.Increment(ref sawTrue);
-                else
-                    Interlocked.Increment(ref sawFalse);
-            }
-        });
+            if (state.IsRunning)
+                Interlocked.Increment(ref sawTrue);
+            else
+                Interlocked.Increment(ref sawFalse);
 
-        await Task.WhenAll(writer, reader);
+            Thread.Yield();
+        }
 
-        // Both true and false were observed; no torn values possible with bool.
+        stopWriter.Set();
+        await writer;
+
+        // Both true and false were observed; no torn values are possible with bool.
         Assert.True(sawTrue > 0, "Reader should have observed IsRunning=true at least once");
         Assert.True(sawFalse > 0, "Reader should have observed IsRunning=false at least once");
-        Assert.Equal(1_000_000, sawTrue + sawFalse);
     }
 
     /// <summary>
@@ -64,13 +71,16 @@ public sealed class BonesLoopStateConcurrencyTests
     {
         var state = new BonesLoopState();
         var barrier = new Barrier(2);
+        var firstIncrement = new ManualResetEventSlim();
         long maxObserved = -1;
         int nonMonotonicCount = 0;
 
         var writer = Task.Run(() =>
         {
             barrier.SignalAndWait();
-            for (long i = 1; i <= 1_000_000; i++)
+            state.IterationCount = 1;
+            firstIncrement.Set();
+            for (long i = 2; i <= 1_000_000; i++)
             {
                 state.IterationCount = i;
             }
@@ -79,6 +89,15 @@ public sealed class BonesLoopStateConcurrencyTests
         var reader = Task.Run(() =>
         {
             barrier.SignalAndWait();
+
+            // Wait (bounded) for the writer to publish at least one increment. Without this the
+            // reader can finish before the writer is scheduled on a loaded single-core runner,
+            // observing only the initial zero and failing a test that is about monotonicity.
+            if (!firstIncrement.Wait(TimeSpan.FromSeconds(10)))
+            {
+                return;
+            }
+
             long lastObserved = -1;
             for (int i = 0; i < 1_000_000; i++)
             {

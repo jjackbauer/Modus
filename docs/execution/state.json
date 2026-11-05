@@ -95,14 +95,15 @@
     "bones_tests": 396,
     "architecture_tests": 4,
     "architecture_projects": 43,
-    "evidence": "Tests CI run_42003337898 on 4dc6559: all six jobs success (16-project offline gate, architecture 4/4 at 43 projects, security); Modus CI run_42003338267 on 4dc6559 failed only the migration-regression cadence hard gate (fixed locally, see evidence/CI-FIX, remote run pending); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123"
+    "evidence": "Tests CI run_42028137512 on 22bcdd5 failed only the offline count/waiver gate on two BonesLoopState concurrency flakes (no product change in that HEAD); Tests CI 42003337898 on 4dc6559 and 42022906370 on 5cea565 were 6/6 green; Modus CI 42028137663 on 22bcdd5 is green (migration regression hard gate fixed); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123 + 7 new adapter tests"
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_42003337898_success_head_4dc6559",
-    "modus_ci": "run_42003338267_failure_head_4dc6559_migration_regression_cadence",
+    "remote_ci": "tests_ci_run_42028137512_failure_head_22bcdd5_bones_loop_state_concurrency_flakes",
+    "remote_ci_note": "fixed in this change with bounded writer/reader coordination; post-fix run pending; Modus CI is green on 22bcdd5",
+    "modus_ci": "run_42028137663_success_head_22bcdd5_migration_regression_green",
     "modus_ci_fix": "docs/execution/evidence/CI-FIX/README.md (two iterations: registration-sample fix in 5cea565; reference-timer rate parity + TRX error annotations in the next commit; post-fix run pending push)",
     "modus_ci_diagnostics": "migration regression failures now emit the failing test's TRX error message as a GitHub annotation",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
