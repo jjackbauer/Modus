@@ -1727,6 +1727,57 @@ public sealed class WipRuntimeOrchestratorTests
             ]);
     }
 
+    [Fact]
+    public async Task RunWorkflowAsync_GivenCustomExecutor_ExpectedExecutorOwnsTheRun()
+    {
+        // WP-2.3: a registered IWorkflowExecutor replaces the default linear executor.
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var builder = CreateBuilderWithWorkflows();
+        var executor = new RecordingWorkflowExecutor();
+        builder.Services.AddSingleton<IWorkflowExecutor>(executor);
+        await using var provider = builder.Services.BuildServiceProvider();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            workflowId: new WorkflowId("workflow.linear"),
+            repositoryPath: TestRepositoryPaths.RepositoryRoot,
+            worktreePath: TestRepositoryPaths.Worktree("custom-executor"),
+            cancellationToken: CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.linear"),
+            services: provider,
+            cancellationToken: CancellationToken.None);
+
+        Assert.True(executor.WasCalled);
+        Assert.Equal(1, executor.CallCount);
+        Assert.Equal("workflow.linear", result.WorkflowId.Value);
+        Assert.Single(result.Stages);
+        Assert.Equal(WorkflowStageKind.Plan, result.Stages[0].Descriptor.Stage);
+    }
+
+    private sealed class RecordingWorkflowExecutor : IWorkflowExecutor
+    {
+        public int CallCount { get; private set; }
+
+        public bool WasCalled => CallCount > 0;
+
+        public ValueTask<WorkflowExecutionResult> ExecuteAsync(
+            WorkflowExecutionContext context,
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+            var stage = new WorkflowStageExecution(
+                context.Compilation.StageDescriptors[0],
+                context.Session.State,
+                AppliedTransition: false);
+            return ValueTask.FromResult(new WorkflowExecutionResult(context.WorkflowId, [stage]));
+        }
+    }
+
     private sealed class RecordingServiceProvider(IServiceProvider inner) : IServiceProvider
     {
         public List<Type> RequestedTypes { get; } = [];

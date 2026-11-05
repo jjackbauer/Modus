@@ -507,3 +507,13 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Migration regression and plugin curl probe are now green on Linux and Windows. The remaining full-suite failures are stale meta-tests from the pre-G0 unified workflow (`wip_linux_gate`, mainline-only triggers, pre-split command order) plus WSL-only tooling gaps (`make`/`zip`/`pwsh`).
 - Policy: keep the two release-relevant gates hard; run the legacy suite with `continue-on-error`, report failed test names as warnings, and only publish the `ci-tests-success` flag when the legacy suite is green. Tracked in `docs/execution/blockers/BLK-MODUS-LEGACY-SUITE.md`; reconciliation is Phase 4 work (WP-4.3/4.5).
 - Also retargeted 8 legacy meta-test classes to `modus-ci.yml` (where the `tests` job now lives), reducing the full-suite failures from 27 to 15 (9 CI-relevant).
+## 2026-11-04T20:40:00-03:00 - Modus CI green; WP-2.3 part 2 executor extraction implemented
+
+- **Modus CI:** run [41933143670](https://github.com/jjackbauer/Modus/actions/runs/41933143670) on `b850946` concluded **success**. Migration regression and plugin curl probe (the previously failing unit-test gate) are hard-green on Linux; the legacy full suite runs non-blocking with warnings and withholds the `ci-tests-success` flag. Tracked in `BLK-MODUS-LEGACY-SUITE` for Phase 4.
+- **WP-2.3 part 2:** added `IWorkflowExecutor`/`WorkflowExecutionContext`/`IWorkflowRunAuthority`; `LinearWorkflowExecutor` owns the stage loop; the orchestrator implements the authority and delegates; a registered custom executor takes over the run. New recording-executor test; Runtime.Tests 75 (74 pass + 1 waived). `IWorkflow` obsolete marker deferred to WP-2.5.
+- **Gate:** running.
+## 2026-11-04T21:40:00-03:00 - WP-2.3 complete: executor extracted; custom executors
+
+- **Delivered:** `IWorkflowExecutor`/`WorkflowExecutionContext`/`IWorkflowRunAuthority`; `LinearWorkflowExecutor` owns the stage loop; the orchestrator implements the authority and delegates; an executor registered in the run provider replaces the default. New recording-executor test; declarative-plan test from part 1 stays green. Legacy `IWorkflow` path unchanged (obsolete marker lands with WP-2.5).
+- **Gate:** 16 projects, 1,105 executed / 1,080 passed / 25 failed — 23 waived plus the two known environment-bound Playwright viewer waits (`BonesHostViewerLearningLoopStatus`, 30 s fixed waits under this machine's ~10 s first-compile). All other suites clean; Runtime.Tests 75 (74 pass + 1 waived). CI is the authoritative verification for this commit.
+- **Next:** WP-2.4 — explicit plan maps for all workflows and delete `WorkflowStageMapAdapterRuntime` (registry + heuristics), then WP-2.5 Bones migration.

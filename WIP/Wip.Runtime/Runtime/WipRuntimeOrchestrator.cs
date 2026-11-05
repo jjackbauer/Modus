@@ -18,7 +18,7 @@ using Wip.Abstractions.Workflows;
 
 namespace Wip.Runtime.Runtime;
 
-public sealed class WipRuntimeOrchestrator
+public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
 {
     private const string SessionStateFileName = "session-state.json";
     private const string SessionEventJournalFileName = "event-journal.ndjson";
@@ -261,93 +261,28 @@ public sealed class WipRuntimeOrchestrator
             // The host owns composition and the run scope; the runtime never builds a provider.
             // Callers pass the scoped provider for this run and dispose the scope when it ends.
             artifactStore ??= services.GetService<IArtifactStore>();
-            var dispatcher = new WorkflowStageCapabilityDispatcher(services, builder.CapabilityDescriptors);
-            dispatcher.EnsureDispatchCapabilitiesRegistered(compilation.StageDescriptors);
 
-            var dispatchContext = new WorkflowStageDispatchContext(
-                Session: current,
-                Builder: builder,
-                CorrelationId: correlationId,
-                ArtifactStore: artifactStore);
+            WorkflowStageInputMapper mapStageInput = definitionPlan is null
+                ? (stage, session, previous) => WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
+                    stage, compilation, session, previous)
+                : (stage, session, previous) => WorkflowPlanMapRuntime.ApplyMappedStageInput(
+                    stage, definitionPlan, session, previous);
 
-            var stageExecutions = new List<WorkflowStageExecution>(compilation.StageDescriptors.Count);
-            var stageArtifactReferences = new List<SessionEventArtifactReference>();
-            object? previousStageResult = null;
+            var context = new WorkflowExecutionContext(
+                workflow.WorkflowId,
+                current,
+                builder,
+                services,
+                artifactStore,
+                correlationId,
+                compilation,
+                mapStageInput,
+                this);
 
-            foreach (var stageDescriptor in compilation.StageDescriptors)
-            {
-                WorkflowStageDispatchResult? dispatchResult = null;
+            var executor = services.GetService(typeof(IWorkflowExecutor)) as IWorkflowExecutor
+                ?? new LinearWorkflowExecutor();
 
-                if (dispatcher.ShouldDispatchStage(stageDescriptor))
-                {
-                    if (artifactStore is null)
-                    {
-                        throw new InvalidOperationException(
-                            $"Workflow stage '{stageDescriptor.Stage}' requires an artifact store to persist stage execution artifacts during run.");
-                    }
-
-                    var mappedInputEvidence = definitionPlan is null
-                        ? WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
-                            stageDescriptor,
-                            compilation,
-                            current,
-                            previousStageResult)
-                        : WorkflowPlanMapRuntime.ApplyMappedStageInput(
-                            stageDescriptor,
-                            definitionPlan,
-                            current,
-                            previousStageResult);
-
-                    dispatchResult = await dispatcher.ExecuteStageAsync(
-                        stageDescriptor,
-                        mappedInputEvidence.MappedInputPayload,
-                        dispatchContext,
-                        mappedInputEvidence,
-                        cancellationToken);
-
-                    previousStageResult = dispatchResult.Result;
-
-                    if (dispatchResult.ExecutionArtifact is ArtifactDescriptor executionArtifact)
-                    {
-                        stageArtifactReferences.Add(CreateArtifactReference("stage-execution", executionArtifact));
-                    }
-                }
-
-                var advancementTarget = WorkflowStageStateMapper.ResolveRunAdvancementTarget(stageDescriptor.Stage);
-                var appliedTransition = false;
-
-                if (advancementTarget is SessionState targetState
-                    && current.State != targetState
-                    && !IsRunBackwardAdvancement(current.State, targetState))
-                {
-                    current = await AdvanceToStateUnderAuthorityAsync(current, targetState, cancellationToken);
-                    appliedTransition = true;
-                }
-
-                stageExecutions.Add(new WorkflowStageExecution(stageDescriptor, current.State, appliedTransition)
-                {
-                    MappedInputContractName = compilation.ResolveMappedInputContractName(stageDescriptor),
-                    ProducerCapabilityId = dispatchResult?.ProducerCapabilityId,
-                    CorrelationId = dispatchResult is null ? null : correlationId,
-                    ExecutionArtifact = dispatchResult?.ExecutionArtifact
-                });
-            }
-
-            await PublishAndJournalSessionEventAsync(
-                new SessionEvent(
-                    Kind: SessionEventKind.WorkflowExecuted,
-                    SessionId: current.SessionId,
-                    CurrentState: current.State,
-                    PreviousState: null,
-                    OccurredAtUtc: DateTimeOffset.UtcNow,
-                    Message: $"Workflow '{workflow.WorkflowId.Value}' executed for session '{current.SessionId}'.",
-                    CorrelationId: correlationId,
-                    Diagnostics: BuildGovernanceDiagnostics("run", "succeeded", current),
-                    ArtifactReferences: stageArtifactReferences),
-                current.RepositoryPath,
-                cancellationToken);
-
-            return new WorkflowExecutionResult(workflow.WorkflowId, stageExecutions);
+            return await executor.ExecuteAsync(context, cancellationToken);
         }
         finally
         {
@@ -1702,6 +1637,37 @@ public sealed class WipRuntimeOrchestrator
         await File.AppendAllTextAsync(journalPath, serialized + Environment.NewLine, cancellationToken);
     }
 
+    bool IWorkflowRunAuthority.IsRunBackwardAdvancement(SessionState currentState, SessionState targetState)
+        => IsRunBackwardAdvancement(currentState, targetState);
+
+    ValueTask<SessionSnapshot> IWorkflowRunAuthority.AdvanceAsync(
+        SessionSnapshot snapshot,
+        SessionState targetState,
+        CancellationToken cancellationToken)
+        => AdvanceToStateUnderAuthorityAsync(snapshot, targetState, cancellationToken);
+
+    SessionEventArtifactReference IWorkflowRunAuthority.CreateStageExecutionReference(ArtifactDescriptor artifact)
+        => CreateArtifactReference("stage-execution", artifact);
+
+    ValueTask IWorkflowRunAuthority.PublishWorkflowExecutedAsync(
+        SessionSnapshot snapshot,
+        WorkflowId workflowId,
+        string correlationId,
+        IReadOnlyList<SessionEventArtifactReference> artifactReferences,
+        CancellationToken cancellationToken)
+        => PublishAndJournalSessionEventAsync(
+            new SessionEvent(
+                Kind: SessionEventKind.WorkflowExecuted,
+                SessionId: snapshot.SessionId,
+                CurrentState: snapshot.State,
+                PreviousState: null,
+                OccurredAtUtc: DateTimeOffset.UtcNow,
+                Message: $"Workflow '{workflowId.Value}' executed for session '{snapshot.SessionId}'.",
+                CorrelationId: correlationId,
+                Diagnostics: BuildGovernanceDiagnostics("run", "succeeded", snapshot),
+                ArtifactReferences: artifactReferences),
+            snapshot.RepositoryPath,
+            cancellationToken);
     private static WorkflowPlan? ResolveDefinitionPlan(IServiceProvider services, WorkflowId workflowId)
     {
         if (services.GetService(typeof(IEnumerable<IWorkflowDefinition>)) is not IEnumerable<IWorkflowDefinition> definitions)

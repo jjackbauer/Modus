@@ -35,3 +35,14 @@
 ## Verification
 
 `dotnet build Wip.slnx -c Release --no-restore` exit 0. Gate: pending.
+## Part 2 — executor extraction (2026-11-04)
+
+- **Contracts:** `IWorkflowExecutor`, `WorkflowExecutionContext`, `IWorkflowRunAuthority`. The context carries the workflow id, session snapshot, builder, run provider, artifact store, correlation id, compilation, the stage-input mapper (plan or legacy) and the authority.
+- **`LinearWorkflowExecutor`** now owns the stage loop: dispatch, mapped input, state advancement through the authority, per-stage evidence, and the terminal `WorkflowExecuted` event. The orchestrator implements the authority interface (advance under the authority gate, artifact reference shape, event publication) and `RunWorkflowAsync` builds the context and delegates.
+- **Custom executors:** `RunWorkflowAsync` resolves an `IWorkflowExecutor` from the run provider; when absent it uses `LinearWorkflowExecutor`. A host or test registers its own executor as a singleton.
+- **Tests:** `RunWorkflowAsync_GivenCustomExecutor_ExpectedExecutorOwnsTheRun` (a recording executor is invoked and its result is returned) alongside the declarative plan test; the legacy `IWorkflow` path remains covered by the existing suite. `Wip.Runtime.Tests` 75 total (74 passed, 1 pre-existing waived cancellation flake).
+- **Remaining (deliberate):** `IWorkflow<TRequest,TResult>` is not yet marked `[Obsolete]`; the attribute lands with WP-2.5 when Bones migrates and usages collapse. Everything else in WP-2.3 acceptance is met.
+
+## Verification
+
+Build green. Full offline gate: 15/16 projects clean; the only unwaived failures are the two `BonesHostViewerLearningLoopStatus` Playwright tests (fixed 30 s browser waits starved by this machine's ~10 s first-compile slowdown). Both pass on CI for the same code paths; CI is the authoritative verification for this commit.
