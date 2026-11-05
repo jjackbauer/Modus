@@ -94,13 +94,17 @@ jobs:
             echo "::warning title=ModusLegacySuite::No TRX was produced for the legacy integration suite."
             exit 0
           fi
-          failed=$(grep -E 'outcome="Failed"' "$trx" | grep -oE 'testName="[^"]+"' | head -20)
+          # GitHub runs bash with -e -o pipefail: a green TRX makes grep exit 1, which must not fail
+          # the reporting step. Treat "no failures" as the normal case.
+          failed=$(grep -E 'outcome="Failed"' "$trx" | grep -oE 'testName="[^"]+"' | head -20 || true)
           count=$(printf '%s\n' "$failed" | grep -c 'testName=' || true)
           if [ "$count" -gt 0 ]; then
             echo "::error title=ModusLegacySuite::${count} failures in the blocking legacy suite."
             printf '%s\n' "$failed" | while IFS= read -r line; do
               echo "::error title=ModusLegacySuite::${line}"
             done
+          else
+            echo "::notice title=ModusLegacySuite::No failures in the blocking legacy suite."
           fi
       - name: Upload test results and logs
         if: always()
