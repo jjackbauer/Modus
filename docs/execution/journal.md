@@ -751,3 +751,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Rollback rehearsal:** ScriptHost flag/fail-closed tests 9/9 and permission Enforce/Audit tests pass locally; the WSL-only worker-execution handshake failure is recorded as an environment gap (the worker suite is green on Linux CI and the Windows gate covers it).
 - **Transfer gate:** G2 re-review packet prepared for 2026-12-03 (conditional/trusted-only, C1 unclaimed, no upgrade); G5 packet rewritten as **not release-ready** with blockers, exact unexecuted release steps and the human decision request.
 - **Explicitly outstanding:** 24h soak, 2,000-game benchmark, three-green release freeze, G2/C1 sign-off, external security sign-off, signing authority, keyed live-model path. No release claim; G5 not requested.
+
+## 2026-11-05T14:45:00-03:00 — Round 8: G5 golden-path demo executed on the real shell host
+
+- **Demo:** clean Linux clone at `977a600`, Release build of `Wip.ShellHost`, real process with scripted stdin at the solution root. Commands: `init`, `use workflow workflow.linear`, `session start`, `plan`, `run`, `status`, `artifacts`, `retention status`, `exit`.
+- **Result:** **exit 0**; session `772bfee8…`; plan/run/status artifacts produced and listed (12 files, 9,195 bytes); `retention status` reports the 30-day default. The host printed the governance guidance — `validate`/`review`/`approve`/`merge` remain required and nothing was auto-merged.
+- **Scope:** the `agent` model path needs a configured `IChatModel` and is covered separately by the shell streaming test and the real-adapter HTTP-boundary E2E; governance commands are covered by the contract tests. No release claim.
+- **Evidence:** `docs/execution/evidence/G5/golden-path-demo.md` (EVD-081). The G5 packet now contains the demo, security review, known limits, exact release steps and the explicit human decision request.
+- **Next:** human G5 decision (and the G2 re-review dated 2026-12-03 + external security sign-off). No release.

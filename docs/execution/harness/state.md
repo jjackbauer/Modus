@@ -1,13 +1,12 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 7 of 12 (Phase 6 docs/dry-run prepared; CI confirmation pending)
-- **Goal**: finish Phase 6 verification, run the full G2 re-review, deliver the G5 packet and human
-  decision. No release claim, no publish/sign/deploy before an explicit human G5 decision.
-- **Definition of done**: 9/11 met (D1, D2, D3, D5, D6, D7, D8 release-engineering dry-run,
-  D9 G2 packet prepared, D11); D4 live keyed path partial; D10 G5 packet partial (human decision
-  open; golden-path smoke not executed).
-- **Stop criteria**: only the human G5 decision remains as a hard stop; soak/benchmark and the G2
-  re-review are still outstanding.
+- **Round**: 8 of 12 (G5 demo executed; all engineering evidence delivered; awaiting human gates)
+- **Goal**: G5 human decision after the G2 re-review/external sign-off. No release claim, no
+  publish/sign/deploy before the explicit decision.
+- **Definition of done**: 10/11 met (D1–D3, D5–D11 including the G5 packet and golden-path demo);
+  D4 partial only in that the keyed live-model path is unverified without credentials.
+- **Stop criteria**: hard stop at the human G2/external sign-off and the G5 decision; the goal is
+  left active until those are recorded.
 
 ## Gate status
 
@@ -69,8 +68,17 @@
 - Explicitly outstanding: 24h soak, 2,000-game benchmark, three-green release freeze, G2/C1 human
   sign-off, external security sign-off, signing authority, keyed live-model path.
 
+## Round 8 outcome (G5 demo)
+
+- Real shell host golden path on a clean clone at `977a600`: init → workflow → session → plan → run →
+  status → artifacts → retention, **exit 0**, 12 artifacts (9,195 bytes), governance guidance printed
+  (no auto-merge). Agent model path covered by the shell streaming test and the HTTP-boundary E2E.
+- G5 packet now contains the golden-path demo, the internal security review, known limits, exact
+  release steps and the explicit human decision request.
+- Outstanding: 24h soak, 2,000-game benchmark, release-freeze triple-green, G2 re-review dated
+  2026-12-03, external security sign-off, signing authority, keyed live-model path.
+
 ## Next objective
 
-Confirm CI on the Phase 6 records commit, then request the human gates: G2 re-review (2026-12-03),
-external security sign-off and the G5 release decision. Before that, execute the outstanding Phase 6
-stress/soak verification where feasible. No release.
+Request the human gates: the G2 re-review decision (C1), the external/independent security
+sign-off, and the explicit G5 release decision. No release, no publish, no sign, no deploy.

@@ -588,3 +588,21 @@
 - **Rationale**: OBS-026 + the hard constraints: no publish/sign/deploy before an explicit human G5 decision; credentials are human-owned.
 - **Alternatives considered**: self-signed test signing (rejected: not the release signature and could confuse evidence); publishing a pre-release (rejected by the constraints).
 - **Related**: OBS-026, EVD-076, EVD-080
+
+### OBS-027: The G5 golden path works on the real shell host
+
+- **Source**: `.tmp/golden/demo-repo.log`; `docs/execution/evidence/G5/golden-path-demo.md`
+- **Fact**: On a clean clone at `977a600` with a Release build, the real `Wip.ShellHost` process ran `init` → workflow selection → session start → plan → run → status → artifacts → retention status and exited 0. It created 12 artifacts (9,195 bytes), listed them, and printed the governance guidance requiring explicit validate/review/approve/merge (no auto-merge). The agent model path was not exercised because no `IChatModel` was configured; it is covered by the shell streaming test and the HTTP-boundary E2E.
+- **Implications**: The G5 packet now has a reproducible golden-path demo. It is evidence, not an approval; G2/C1 and external sign-off remain human gates.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-081
+
+### VAL-016: Golden-path demo reproduced by the orchestrator
+
+- **Target**: OBS-027 / G5 demo
+- **Method**: built the host from the clean clone, ran the real process with scripted stdin, captured the transcript and exit code.
+- **Evidence examined**: `.tmp/golden/demo-repo.log` (exit 0, session id, 12 artifacts, retention status).
+- **Result**: Supported
+- **Conclusion**: The operator golden path works end to end at the current commit; no release claim follows from it.
+- **Related**: EVD-081, OBS-027

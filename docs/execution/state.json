@@ -5,10 +5,10 @@
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
   "phase": 6,
-  "work_package": "WP-6.5",
+  "work_package": "G5",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "phase6_release_pack_prepared_g2_g5_packets_not_release_ready",
+  "gate_status": "g5_packet_complete_golden_path_demo_awaiting_human_decision",
   "last_ci_green_head": "9dc8a56afca15eab6242c998fd7e5891eff4bbb2",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
@@ -33,8 +33,8 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T14:30:00-03:00",
-  "next_action": "Confirm CI on the Phase 6 records commit. Then request the human gates: G2 re-review (2026-12-03, C1 decision), external/independent security sign-off, and the explicit G5 release decision. Before G5, execute the outstanding Phase 6 stress/soak and benchmark evidence where feasible. No release, no publish, no sign, no deploy.",
+  "last_verified_at": "2026-11-05T14:50:00-03:00",
+  "next_action": "G5 packet is complete with the golden-path demo and the internal security review. Request the human gates: the G2 re-review decision (C1; scheduled 2026-12-03), the external/independent security sign-off, and the explicit G5 release decision. No release, no publish, no sign, no deploy until that decision is recorded.",
   "open_blockers": ["G5 blocked: G2 remains conditional/trusted-only (C1 unclaimed, re-review 2026-12-03); external security sign-off not obtained; 24h soak / 2,000-game benchmark / release-freeze triple-green not executed; signing authority human-owned; live DeepSeek path unverified without a key."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {

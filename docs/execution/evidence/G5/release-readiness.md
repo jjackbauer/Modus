@@ -16,6 +16,7 @@ The human G5 decision is the only path to a release; **no publish/sign/deploy ha
 | Phase 4 CI truth | legacy Modus suite reconciled and **blocking** and green in Modus CI; operator guide; truthful test-status page |
 | Phase 5 privacy/security | redaction + retention/purge (WP-5.2); internal + adversarial security packet (WP-5.5; external sign-off open) |
 | Phase 6 release engineering (local draft) | release notes, packaging/signing plan, compatibility/upgrade, rollback, post-release verification; local publish dry-run + checksums |
+| G5 golden-path demo | real shell host run: init → workflow → session → plan → run → status → artifacts → retention, exit 0; see `docs/execution/evidence/G5/golden-path-demo.md` |
 | Gates | Tests CI `42059745946` on `9dc8a56` all six jobs (Runtime 146 / Shell 34; both security jobs; architecture 4/4 at 43 projects); Modus CI `42059745863` success with the blocking legacy suite |
 
 ## Blockers to a WIP 1.0 release (G5)
