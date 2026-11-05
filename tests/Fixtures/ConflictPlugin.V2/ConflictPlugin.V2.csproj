@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>Conflict.Plugin.V2</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ConflictDependency.V2\ConflictDependency.V2.csproj" />
+    <ProjectReference Include="..\..\..\WIP\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\..\..\WIP\Wip.Modus\Wip.Modus.csproj" />
+    <ProjectReference Include="..\..\..\src\Modus.Core\Modus.Core.csproj" />
+  </ItemGroup>
+</Project>

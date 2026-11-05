@@ -60,6 +60,7 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     private const string AssemblyLoadStage = "assembly-load";
     private const string ActivationStage = "activation";
     private const string LifecycleStartStage = "lifecycle-start";
+    private const string UnloadStage = "unload";
 
     private readonly IReadOnlyList<string> _pluginDiscoveryPaths;
     private readonly IReadOnlyList<WorkflowRegistration> _workflowRegistrations;
@@ -124,13 +125,24 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (!TryLoadAssembly(assemblyPath, out var assembly, out var loadError))
+                if (!TryLoadAssembly(assemblyPath, out var assembly, out var loadContext, out var loadError))
                 {
                     AddLoadDiagnostic(AssemblyLoadStage, $"Failed to load assembly '{assemblyPath}': {loadError}");
                     continue;
                 }
 
-                foreach (var pluginType in ResolvePluginTypes(assembly))
+                var pluginTypes = ResolvePluginTypes(assembly).ToArray();
+                if (pluginTypes.Length == 0)
+                {
+                    loadContext!.Unload();
+                    continue;
+                }
+
+                AddLoadDiagnostic(
+                    AssemblyLoadStage,
+                    $"Loaded assembly '{assemblyPath}' into collectible context '{loadContext!.Name}'.");
+
+                foreach (var pluginType in pluginTypes)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -156,7 +168,7 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
                         lifecycle?.Start(new PluginStartContext(plugin.PluginId, cancellationToken));
 
                         var metadata = BuildPluginMetadata(plugin, pluginType.Assembly);
-                        _loadedPlugins.Add(new PluginRuntime(plugin, lifecycle, metadata));
+                        _loadedPlugins.Add(new PluginRuntime(plugin, lifecycle, metadata, loadContext));
                         pluginAssemblyPathById[plugin.PluginId.Value] = assemblyPath;
                     }
                     catch (Exception ex)
@@ -189,21 +201,39 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     public ValueTask StopPluginsAsync(CancellationToken cancellationToken)
     {
         var unloadDeadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        var unloadedContexts = new HashSet<PluginAssemblyLoadContext>();
 
         for (var index = _loadedPlugins.Count - 1; index >= 0; index--)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var runtime = _loadedPlugins[index];
-            if (runtime.Lifecycle is null)
-                continue;
+            if (runtime.Lifecycle is not null)
+            {
+                runtime.Lifecycle.Stop(new PluginStopContext(runtime.Plugin.PluginId, cancellationToken));
+                runtime.Lifecycle.Unload(new PluginUnloadContext(
+                    runtime.Plugin.PluginId,
+                    PluginUnloadReason.GracefulShutdown,
+                    unloadDeadline,
+                    cancellationToken));
+            }
 
-            runtime.Lifecycle.Stop(new PluginStopContext(runtime.Plugin.PluginId, cancellationToken));
-            runtime.Lifecycle.Unload(new PluginUnloadContext(
-                runtime.Plugin.PluginId,
-                PluginUnloadReason.GracefulShutdown,
-                unloadDeadline,
-                cancellationToken));
+            if (runtime.LoadContext is not null && unloadedContexts.Add(runtime.LoadContext))
+            {
+                try
+                {
+                    runtime.LoadContext.Unload();
+                    AddLoadDiagnostic(
+                        UnloadStage,
+                        $"Unloaded collectible context '{runtime.LoadContext.Name}' for assembly '{runtime.LoadContext.PluginAssemblyPath}'.");
+                }
+                catch (Exception ex)
+                {
+                    AddLoadDiagnostic(
+                        UnloadStage,
+                        $"Failed to unload context '{runtime.LoadContext.Name}' for assembly '{runtime.LoadContext.PluginAssemblyPath}': {ex.Message}");
+                }
+            }
         }
 
         _loadedPlugins.Clear();
@@ -268,17 +298,34 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     private RunManifest CreateUnloadedRunManifest()
         => new(DateTimeOffset.UtcNow, Array.Empty<PluginManifestEntry>(), BuildWorkflowEntries());
 
-    private static bool TryLoadAssembly(string assemblyPath, out Assembly assembly, out string? error)
+    private static bool TryLoadAssembly(
+        string assemblyPath,
+        out Assembly assembly,
+        out PluginAssemblyLoadContext? loadContext,
+        out string? error)
     {
+        PluginAssemblyLoadContext? context = null;
         try
         {
-            assembly = Assembly.LoadFrom(assemblyPath);
+            context = new PluginAssemblyLoadContext(assemblyPath);
+            assembly = context.LoadPluginAssembly();
+            loadContext = context;
             error = null;
             return true;
         }
         catch (Exception ex)
         {
+            try
+            {
+                context?.Unload();
+            }
+            catch
+            {
+                // A failed context must not mask the load error.
+            }
+
             assembly = null!;
+            loadContext = null;
             error = ex.Message;
             return false;
         }
@@ -361,7 +408,11 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
             RequiredPermissions: requiredPermissions);
     }
 
-    private sealed record PluginRuntime(IWipHostPluginContract Plugin, IPluginLifecycle? Lifecycle, PluginManifestEntry Metadata);
+    private sealed record PluginRuntime(
+        IWipHostPluginContract Plugin,
+        IPluginLifecycle? Lifecycle,
+        PluginManifestEntry Metadata,
+        PluginAssemblyLoadContext? LoadContext);
 
     private static IReadOnlyList<string> NormalizePluginDiscoveryPaths(IReadOnlyList<string> pluginDiscoveryPaths)
     {

@@ -16,5 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Samples.TodoApp.WipAgents\Samples.TodoApp.WipAgents.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.Modus\Wip.Modus.csproj" />
+    <ProjectReference Include="..\..\tests\Fixtures\ConflictPlugin.V1\ConflictPlugin.V1.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\tests\Fixtures\ConflictPlugin.V2\ConflictPlugin.V2.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>
