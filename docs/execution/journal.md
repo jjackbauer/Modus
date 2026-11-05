@@ -585,3 +585,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - The orchestrator maps every stage input through `WorkflowPlanMapRuntime` for definitions and legacy registrations alike; `WorkflowStageMapAdapterRuntime` and its heuristics are deleted. Three test registrations gained explicit factories.
 - **CI flake hardened:** `BonesHostFeed_GivenRunningLoopAndOpenView_ExpectedScrubMidMatchReturnsCoherentFrames` raced the advancing loop between the snapshot and frame requests; it now re-reads both until revisions match (30 s bound). Failing test from run 41983095045; class passes locally.
 - Gate running; CI to follow.
+## 2026-11-05T04:55:00-03:00 - G4 accepted: Phase 2 complete
+
+- **Gate:** offline gate green — 16/16 projects, 1,112 executed / 1,089 passed / 23 waived, **zero unwaived**, verifier exit 0. Architecture 4/4 over 42 projects with an empty waiver file; sandbox 18/18; Release build green.
+- **G4 packet:** `docs/execution/evidence/G4/gate-packet.md`; decision `decision-2026-11-05.md` — accepted (internal engineering gate; G5 is the human release gate).
+- **Phase 2 closed:** WP-2.1 host-managed DI, WP-2.2 pool removal, WP-2.3 definitions/executor, WP-2.4 explicit plans (global registry + heuristics deleted), WP-2.5 Bones definition, WP-2.6 Shell/Bones decoupling, WP-2.7 collectible plugin ALC.
+- **Carried risks:** Windows OS containment unclaimed (G2 conditional until 2026-12-03); legacy Modus CI full suite non-blocking (BLK-MODUS-LEGACY-SUITE).
+- **Next:** WP-1.7 permission model and G3, then Phase 3 (autonomy + streaming + write-capable repo agent).
