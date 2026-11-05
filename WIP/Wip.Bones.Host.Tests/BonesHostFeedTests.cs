@@ -141,14 +141,31 @@ public sealed class BonesHostFeedTests
         Assert.Contains("viewer-main", viewBody, StringComparison.Ordinal);
         Assert.Contains("id=\"bones-board\"", viewBody, StringComparison.Ordinal);
 
-        var midTurn = Math.Max(1, snapshot.FrameCount / 2);
-        var frameResponse = await client.GetAsync(
-            $"/bones/sessions/{sessionId}/matches/{matchId}/frames/{midTurn}");
-        Assert.Equal(HttpStatusCode.OK, frameResponse.StatusCode);
+        // The learning loop advances while this test runs; re-read the snapshot and frame until
+        // they describe the same revision instead of assuming the revision is frozen between the
+        // two requests (CI runners are slow enough to lose that race).
+        var midTurn = 0;
+        BonesMatchFrame? frame = null;
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
+        do
+        {
+            snapshot = await WaitForScrubbableSnapshotAsync(client, sessionId, matchId);
+            midTurn = Math.Max(1, snapshot.FrameCount / 2);
 
-        var frame = await frameResponse.Content.ReadFromJsonAsync<BonesMatchFrame>(BonesWebHost.JsonOptions);
-        Assert.NotNull(frame);
-        Assert.Equal(snapshot.Revision, frame.Revision);
+            var frameResponse = await client.GetAsync(
+                $"/bones/sessions/{sessionId}/matches/{matchId}/frames/{midTurn}");
+            Assert.Equal(HttpStatusCode.OK, frameResponse.StatusCode);
+
+            frame = await frameResponse.Content.ReadFromJsonAsync<BonesMatchFrame>(BonesWebHost.JsonOptions);
+            Assert.NotNull(frame);
+            if (frame.Revision == snapshot.Revision)
+            {
+                break;
+            }
+        }
+        while (DateTimeOffset.UtcNow < deadline);
+
+        Assert.Equal(snapshot.Revision, frame!.Revision);
         Assert.Equal(midTurn, frame.TurnIndex);
     }
 

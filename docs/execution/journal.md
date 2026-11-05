@@ -579,3 +579,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Tests CI on `318d864` passed the fixture fix but failed `BonesSubAgentDelegatorTests.DelegateMoveDecision_GivenSubAgentReturnsFast_RecordsAccurateLatency` (latency < 1s under CI scheduling noise with a 50 ms delay). This is a pre-existing timing flake.
 - The bound is now >= 40 ms (timer granularity) and < 5 s (the delegation timeout), so it still proves the sub-agent path was recorded and cannot silently be the fallback. Class green locally (11/11).
 - WP-2.7 product code unchanged; CI verification pending on the next run.
+## 2026-11-05T04:25:00-03:00 - WP-2.4 complete: explicit plans for legacy linear workflows
+
+- `WorkflowRegistration` now carries `CreateRunRequest`; `AddWorkflow` accepts an optional typed factory with a documented default (task via string ctor, else parameterless). `LinearWorkflowPlanFactory` declares all six governance stages and five maps explicitly (Plan->Run via the registration factory; Validate/Review/Approval/Merge from the session id).
+- The orchestrator maps every stage input through `WorkflowPlanMapRuntime` for definitions and legacy registrations alike; `WorkflowStageMapAdapterRuntime` and its heuristics are deleted. Three test registrations gained explicit factories.
+- **CI flake hardened:** `BonesHostFeed_GivenRunningLoopAndOpenView_ExpectedScrubMidMatchReturnsCoherentFrames` raced the advancing loop between the snapshot and frame requests; it now re-reads both until revisions match (30 s bound). Failing test from run 41983095045; class passes locally.
+- Gate running; CI to follow.
