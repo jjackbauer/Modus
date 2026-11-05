@@ -49,6 +49,10 @@
   redactor and age-ignoring purge controls both fail; waiver totals updated.
 - **WP-5.5:** internal + adversarial security review packet with 9 findings and controls; external
   independent sign-off is **not obtained** and G2 stays conditional/trusted-only.
+- **Remote status:** **green on `9dc8a56`** — Tests CI `42059745946` all six jobs (windows-latest
+  offline gate at Runtime 146 / Shell 34; both security jobs ran the agent safety suite) and Modus
+  CI `42059745863` success (blocking legacy suite). The records commit that carries this line is
+  local and rides the next push.
 
 ## Next objective
 

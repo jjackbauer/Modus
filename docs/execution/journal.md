@@ -737,3 +737,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Tests/controls:** 5 redactor tests, 3 retention tests, 1 memory-redaction test, 1 shell retention test; full suites `Wip.Runtime.Tests` **146** (140 passed; 6 documented environment/waiver failures) and `Wip.Shell.Tests` **34/34**. A no-op redactor and an age-ignoring purge both make the suite fail. Waiver expected totals updated.
 - **Security review (WP-5.5):** internal + adversarial packet written (`docs/execution/evidence/WP-5.5/security-review.md`) with 9 findings, controls and residual risks; **external/independent sign-off is explicitly NOT obtained** and G2 stays conditional/trusted-only. Data classification documented in `docs/security/data-classification.md`.
 - **Next:** push and confirm Tests CI; then Phase 6 release engineering, the G2 re-review packet and the G5 human decision. No release claim.
+
+## 2026-11-05T13:55:00-03:00 — Round 6 close: Phase 5 verified green on `9dc8a56`
+
+- **Tests CI run `42059745946` on `9dc8a56`: all six jobs success** — windows-latest offline gate at `Wip.Runtime.Tests` 146 and `Wip.Shell.Tests` 34, architecture, both builds, and both security jobs (agent safety suite green). **Modus CI run `42059745863`: success** with the blocking legacy suite.
+- **Phase 5 state:** WP-5.2 (privacy/retention) complete and CI-verified; WP-5.5 internal + adversarial packet complete, **external/independent sign-off not obtained** — an explicit human gate. G2 stays conditional/trusted-only; C1 unclaimed.
+- **Next:** Phase 6 release engineering (versioning, packaging dry-run, signing plan as a human gate, compatibility/upgrade notes, post-release verification, rollback) with no publish/sign/deploy, then the G2 re-review packet and the G5 decision. No release claim.
