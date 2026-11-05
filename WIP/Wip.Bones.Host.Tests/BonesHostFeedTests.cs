@@ -33,21 +33,9 @@ public sealed class BonesHostFeedTests
         var sessionId = segments[2];
         var matchId = segments[4];
 
-        HttpResponseMessage snapshotResponse = new(HttpStatusCode.NotFound);
-        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
-        while (DateTime.UtcNow < deadline)
-        {
-            snapshotResponse = await client.GetAsync($"/bones/sessions/{sessionId}/matches/{matchId}");
-            if (snapshotResponse.StatusCode == HttpStatusCode.OK)
-                break;
-
-            await Task.Delay(100);
-        }
-
-        snapshotResponse.EnsureSuccessStatusCode();
-
-        var snapshot = await snapshotResponse.Content.ReadFromJsonAsync<BonesMatchViewModel>(BonesWebHost.JsonOptions);
-        Assert.NotNull(snapshot);
+        // Wait for frames to be published: under CI load the match snapshot endpoint can answer
+        // before the loop has played its first move.
+        var snapshot = await WaitForScrubbableSnapshotAsync(client, sessionId, matchId);
         Assert.True(snapshot.FrameCount > 0);
     }
 
