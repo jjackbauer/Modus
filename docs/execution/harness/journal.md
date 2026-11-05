@@ -211,3 +211,11 @@
 - **Result**: Supported
 - **Conclusion**: The pool is a single DI singleton; web routes, status, agents and tests resolve it explicitly.
 - **Related**: EVD-016
+### VAL-005: WP-2.4/2.5 increment supported — Bones runs from an explicit plan
+
+- **Target**: Bones definition with plan-scoped maps and an initial request; production resolves the definition before the legacy path.
+- **Method**: shape test on the registered definition (4 stages, 3 maps, initial request), seven workflow-run tests, the full 396-test Bones suite, and full Tests CI.
+- **Evidence examined**: `.tmp/gate-check/Wip.Bones.Tests.trx` (396/394/2 waived); Tests CI run 41954106076 (all six jobs green).
+- **Result**: Supported
+- **Conclusion**: Bones executes through explicit plan maps in production; the legacy registry remains only for legacy/default-linear test fixtures (tracked as remaining WP-2.4 work).
+- **Related**: EVD-017

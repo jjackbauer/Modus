@@ -534,3 +534,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 
 - **Gate:** 16 projects, 1,106 executed / 1,081 passed / 25 failed — 23 waived plus the same two environment-bound Playwright viewer tests (`BonesHostViewerLearningLoopStatus`, 30 s browser waits under this machine's ~10 s first-compile). The Bones suite itself is 396 total / 394 passed / 2 waived, including the new definition-plan test and all workflow-run tests; no definition-path regression.
 - **Decision:** commit with the documented environment caveat; Tests CI (which passes these tests) is the authoritative verification for the workflow change.
+## 2026-11-04T23:35:00-03:00 - Bones definition verified in CI
+
+- Tests CI run [41954106076](https://github.com/jjackbauer/Modus/actions/runs/41954106076) on `e15711e`: **all six jobs success**, including the 16-project offline gate and count/waiver checks. Modus CI on the same commit: success.
+- Bones now executes through its declarative plan (four stages, three explicit maps, initial Observe request) in CI; the two local Playwright viewer waits passed again on CI, confirming the environment-bound nature.
+- **Next round:** finish WP-2.4 (delete the legacy map registry and migrate default-linear test fixtures), then WP-2.6 shell decoupling, WP-2.7 plugin ALC, G4.
