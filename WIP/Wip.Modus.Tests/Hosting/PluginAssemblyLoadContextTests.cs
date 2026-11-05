@@ -134,14 +134,8 @@ public sealed class PluginAssemblyLoadContextTests
     [Fact]
     public async Task LoadPluginsAsync_GivenTwoPluginsWithConflictingDependencyVersions_ExpectedEachResolvesItsOwnVersion()
     {
-        var configuration = AppContext.BaseDirectory.Contains(
-            $"{Path.DirectorySeparatorChar}Release{Path.DirectorySeparatorChar}",
-            StringComparison.Ordinal)
-            ? "Release"
-            : "Debug";
-        var repositoryRoot = FindRepositoryRoot();
-        var firstPath = CopyPluginFolder(Path.Combine(repositoryRoot, "tests", "Fixtures", "ConflictPlugin.V1", "bin", configuration, "net10.0"));
-        var secondPath = CopyPluginFolder(Path.Combine(repositoryRoot, "tests", "Fixtures", "ConflictPlugin.V2", "bin", configuration, "net10.0"));
+        var firstPath = CopyPluginFolder(ResolveFixtureDirectory("ConflictPlugin.V1", "Conflict.Plugin.V1"));
+        var secondPath = CopyPluginFolder(ResolveFixtureDirectory("ConflictPlugin.V2", "Conflict.Plugin.V2"));
         try
         {
             var first = new ModusWipBridge(firstPath);
@@ -166,6 +160,23 @@ public sealed class PluginAssemblyLoadContextTests
             DeleteWithRetry(firstPath);
             DeleteWithRetry(secondPath);
         }
+    }
+
+    private static string ResolveFixtureDirectory(string projectDirectoryName, string assemblyName)
+    {
+        var fixturesRoot = Path.Combine(FindRepositoryRoot(), "tests", "Fixtures", projectDirectoryName, "bin");
+        var candidates = Directory.Exists(fixturesRoot)
+            ? Directory
+                .EnumerateFiles(fixturesRoot, $"{assemblyName}.dll", SearchOption.AllDirectories)
+                .OrderByDescending(File.GetLastWriteTimeUtc)
+                .ToArray()
+            : [];
+
+        Assert.True(
+            candidates.Length > 0,
+            $"No build output for '{assemblyName}' under '{fixturesRoot}'. Build Wip.slnx or Wip.Modus.Tests before running this test.");
+
+        return Path.GetDirectoryName(candidates[0])!;
     }
 
     private static string FindRepositoryRoot()
