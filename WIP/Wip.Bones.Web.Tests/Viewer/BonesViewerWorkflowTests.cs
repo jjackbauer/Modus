@@ -34,8 +34,6 @@ public sealed class BonesViewerWorkflowTests
     [Trait("ChecklistItem", ChecklistItem)]
     public async Task BonesViewerWorkflow_GivenLearningRun_ExpectedShellStdoutContainsViewerUrl()
     {
-        BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
-
         var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-bones-viewer-{Guid.NewGuid():N}");
         Directory.CreateDirectory(repositoryPath);
 
@@ -145,7 +143,6 @@ public sealed class BonesViewerWorkflowTests
             if (Directory.Exists(repositoryPath))
                 Directory.Delete(repositoryPath, recursive: true);
 
-            BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
         }
     }
 

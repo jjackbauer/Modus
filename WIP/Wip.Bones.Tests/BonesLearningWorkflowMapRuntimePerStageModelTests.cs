@@ -10,7 +10,6 @@ using Xunit;
 
 namespace Wip.Bones.Tests;
 
-[Collection(BonesWorkflowMapRuntimeCollection.Name)]
 public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
 {
     private const string StageKindEnumItem =
@@ -32,9 +31,6 @@ public sealed class BonesLearningWorkflowMapRuntimePerStageModelTests
     [Trait("ChecklistItem", StageKindEnumItem)]
     public void BonesLearningWorkflowMapRuntime_GivenPonderModelIdSet_ExpectedPonderRequestUsesPonderModel()
     {
-        BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
-        BonesLearningWorkflowMapRuntime.Register();
-
         var description = BonesLearningWorkflowParameters.FormatTaskDescription(
             gameCount: 1,
             seed: 42,

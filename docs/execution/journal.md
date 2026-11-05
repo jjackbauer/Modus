@@ -539,3 +539,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Tests CI run [41954106076](https://github.com/jjackbauer/Modus/actions/runs/41954106076) on `e15711e`: **all six jobs success**, including the 16-project offline gate and count/waiver checks. Modus CI on the same commit: success.
 - Bones now executes through its declarative plan (four stages, three explicit maps, initial Observe request) in CI; the two local Playwright viewer waits passed again on CI, confirming the environment-bound nature.
 - **Next round:** finish WP-2.4 (delete the legacy map registry and migrate default-linear test fixtures), then WP-2.6 shell decoupling, WP-2.7 plugin ALC, G4.
+## 2026-11-05T00:00:00-03:00 - WP-2.4 increment 2: process-wide map registry deleted
+
+- **Registry gone:** `WorkflowStageMapAdapterRuntime` has no mutable lists or Register/Reset APIs; Bones' `Register`/`ResetRegistrationForTests` and legacy `CompileLinearStages` are deleted. The P1-03 race source is removed, not just serialized away.
+- **Tests migrated to plans:** reliability agent tests apply `WorkflowPlanMapRuntime` with `BonesLearningWorkflow.Compile()`; the registration test asserts the plan (4 stages, 3 maps); per-stage model tests are pure parameter parsing; viewer tests lost the reset calls. The non-parallel collection is deleted and its classes run in parallel again.
+- **Pre-existing finding:** `BonesViewerWorkflowTests.BonesViewerWorkflow_GivenLearningRun...` fails at HEAD too ("Model response did not contain a compilable IBonesPlayerSlot script"); `Wip.Bones.Web.Tests` is not in the 16-project gate nor in CI. Recorded, not caused by this change.
+- **Remaining WP-2.4:** the stateless legacy adapter (default-linear heuristics) still serves ~15 test-fixture `IWorkflow` classes; migrating them to explicit maps lets it be deleted. Tracked in the WP-2.4 notes.
+- **Gate:** running.

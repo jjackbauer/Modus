@@ -15,8 +15,6 @@ public static class BonesLearningWorkflowExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        BonesLearningWorkflowMapRuntime.Register();
-
         builder.AddWorkflow<BonesLearningWorkflow, BonesLearningWorkflowRequest, BonesLearningWorkflowResult>(
             BonesLearningWorkflowIds.WorkflowId,
             "Bones learning workflow");

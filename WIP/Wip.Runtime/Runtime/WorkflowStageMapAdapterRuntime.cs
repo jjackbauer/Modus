@@ -15,28 +15,6 @@ public sealed record WorkflowStageMappedInputEvidence(
 public static class WorkflowStageMapAdapterRuntime
 {
     private static readonly JsonSerializerOptions PayloadJsonOptions = new(JsonSerializerDefaults.Web);
-    private static readonly List<Func<Type, SessionSnapshot, object?>> InitialRequestFactories = [];
-    private static readonly List<(Type SourceType, Type TargetType, Func<object, SessionSnapshot, object> Map)> CustomMapBindings = [];
-
-    public static void RegisterInitialRequestFactory(Func<Type, SessionSnapshot, object?> factory)
-    {
-        ArgumentNullException.ThrowIfNull(factory);
-        InitialRequestFactories.Add(factory);
-    }
-
-    public static void RegisterMapBinding<TSource, TTarget>(Func<TSource, SessionSnapshot, TTarget> map)
-        where TSource : notnull
-        where TTarget : notnull
-    {
-        ArgumentNullException.ThrowIfNull(map);
-        CustomMapBindings.Add((typeof(TSource), typeof(TTarget), (source, session) => map((TSource)source, session)));
-    }
-
-    public static void ResetRegisteredBindingsForTests()
-    {
-        InitialRequestFactories.Clear();
-        CustomMapBindings.Clear();
-    }
 
     public static WorkflowStageMapAdapterDescriptor? ResolveMapAdapter(
         LinearWorkflowStageCompilation compilation,
@@ -130,13 +108,6 @@ public static class WorkflowStageMapAdapterRuntime
         if (mapAdapter.TargetType == typeof(MergeStageRequest))
             return new MergeStageRequest(session.SessionId.Value);
 
-        var customBinding = CustomMapBindings.FirstOrDefault(
-            binding => binding.SourceType == mapAdapter.SourceType && binding.TargetType == mapAdapter.TargetType);
-        if (customBinding.Map is not null
-            && customBinding.SourceType == mapAdapter.SourceType
-            && customBinding.TargetType == mapAdapter.TargetType)
-            return customBinding.Map(sourcePayload, session);
-
         var stringConstructor = mapAdapter.TargetType.GetConstructor(
             BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
             binder: null,
@@ -192,13 +163,6 @@ public static class WorkflowStageMapAdapterRuntime
 
     private static object CreateStageRequestInstance(Type requestType, SessionSnapshot session)
     {
-        foreach (var factory in InitialRequestFactories)
-        {
-            var created = factory(requestType, session);
-            if (created is not null)
-                return created;
-        }
-
         var task = string.IsNullOrWhiteSpace(session.TaskDescription) ? "workflow-run" : session.TaskDescription;
 
         if (requestType == typeof(PlanStageRequest))

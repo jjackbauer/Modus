@@ -16,19 +16,14 @@ using Xunit;
 
 namespace Wip.Bones.Tests.Agents;
 
-[Collection(BonesWorkflowMapRuntimeCollection.Name)]
 public sealed class BonesLearningLoopReliabilityAgentTests
 {
     [Fact]
     [Trait("ChecklistItem", BonesLearningLoopReliabilityRequirementsChecklistItems.TargetScoreParity)]
     public void BonesLearningWorkflowMapRuntime_GivenExplicitEvaluationTargetScore_ExpectedEnhanceRequestUsesIt()
     {
-        WorkflowStageMapAdapterRuntime.ResetRegisteredBindingsForTests();
-        BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
-        BonesLearningWorkflowMapRuntime.Register();
-
-        var compilation = BonesLearningWorkflow.CompileLinearStages();
-        var enhanceDescriptor = compilation.StageDescriptors.Single(
+        var plan = new BonesLearningWorkflow().Compile();
+        var enhanceDescriptor = plan.Stages.Single(
             stage => stage.RequestType == typeof(BonesEnhanceStrategyRequest));
 
         var repositoryPath = Path.Combine(Path.GetTempPath(), $"bones-map-{Guid.NewGuid():N}");
@@ -51,9 +46,9 @@ public sealed class BonesLearningLoopReliabilityAgentTests
 
         var playResult = CreateMinimalPlayResult();
 
-        var mapped = WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
+        var mapped = WorkflowPlanMapRuntime.ApplyMappedStageInput(
             enhanceDescriptor,
-            compilation,
+            plan,
             session,
             playResult);
 
@@ -65,12 +60,8 @@ public sealed class BonesLearningLoopReliabilityAgentTests
     [Trait("ChecklistItem", BonesLearningLoopReliabilityRequirementsChecklistItems.TargetScoreParity)]
     public void BonesLearningWorkflowMapRuntime_GivenMissingEvaluationTargetScore_ExpectedEnhanceRequestUsesNullForAgentDefault()
     {
-        WorkflowStageMapAdapterRuntime.ResetRegisteredBindingsForTests();
-        BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
-        BonesLearningWorkflowMapRuntime.Register();
-
-        var compilation = BonesLearningWorkflow.CompileLinearStages();
-        var enhanceDescriptor = compilation.StageDescriptors.Single(
+        var plan = new BonesLearningWorkflow().Compile();
+        var enhanceDescriptor = plan.Stages.Single(
             stage => stage.RequestType == typeof(BonesEnhanceStrategyRequest));
 
         var repositoryPath = Path.Combine(Path.GetTempPath(), $"bones-map-{Guid.NewGuid():N}");
@@ -90,9 +81,9 @@ public sealed class BonesLearningLoopReliabilityAgentTests
             UpdatedAtUtc: DateTimeOffset.UtcNow,
             TaskDescription: taskDescription);
 
-        var mapped = WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
+        var mapped = WorkflowPlanMapRuntime.ApplyMappedStageInput(
             enhanceDescriptor,
-            compilation,
+            plan,
             session,
             CreateMinimalPlayResult());
 

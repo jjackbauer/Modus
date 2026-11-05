@@ -57,15 +57,4 @@ public sealed class BonesLearningWorkflow
                 session.TaskDescription,
                 session.WorktreePath,
                 session.RepositoryPath)));
-
-    public static LinearWorkflowStageCompilation CompileLinearStages()
-        => TypedLinearWorkflowBuilder
-            .StartWith<BonesObserveGamesRequest, BonesObserveGamesResult>(WorkflowStageKind.Run)
-            .Then<BonesPonderRequest, BonesPonderResult>(WorkflowStageKind.Plan)
-            .Map<BonesObserveGamesResult, BonesPonderRequest>()
-            .UseTool<BonesPlayMatchRequest, BonesPlayMatchResult>()
-            .Map<BonesPonderResult, BonesPlayMatchRequest>()
-            .Then<BonesEnhanceStrategyRequest, BonesEnhanceStrategyResult>(WorkflowStageKind.Plan)
-            .Map<BonesPlayMatchResult, BonesEnhanceStrategyRequest>()
-            .Build();
 }

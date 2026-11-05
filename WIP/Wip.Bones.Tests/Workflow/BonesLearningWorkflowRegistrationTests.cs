@@ -21,7 +21,6 @@ using Xunit;
 
 namespace Wip.Bones.Tests.Workflow;
 
-[Collection(BonesWorkflowMapRuntimeCollection.Name)]
 public sealed class BonesLearningWorkflowRegistrationTests
 {
     private const string BuilderExtensionChecklistItem = BonesRequirementsChecklistItems.BuilderExtension;
@@ -32,8 +31,6 @@ public sealed class BonesLearningWorkflowRegistrationTests
     [Trait("ChecklistItem", BuilderExtensionChecklistItem)]
     public void AddBonesLearningWorkflow_GivenBuilder_ExpectedRegistersObservePonderPlayEnhanceCapabilities()
     {
-        ResetMapRuntimeForTests();
-
         var services = new ServiceCollection();
         var builder = services.AddWipCapabilities().AddBonesLearningWorkflow();
 
@@ -80,20 +77,13 @@ public sealed class BonesLearningWorkflowRegistrationTests
 
     [Fact]
     [Trait("ChecklistItem", WorkflowRegistrationChecklistItem)]
-    public void CompileLinear_GivenBonesLearningWorkflow_ExpectedMapAdaptersPreserveTypedStageContracts()
+    public void Compile_GivenBonesLearningWorkflow_ExpectedPlanPreservesTypedStageContractsAndMaps()
     {
-        ResetMapRuntimeForTests();
+        var plan = new BonesLearningWorkflow().Compile();
 
-        var builder = new ServiceCollection().AddWipCapabilities().AddBonesLearningWorkflow();
-        var workflowRegistration = Assert.Single(
-            builder.WorkflowRegistrations,
-            registration => registration.WorkflowId.Value == "workflow.bones.learning");
-
-        var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflowRegistration);
-
-        Assert.Equal(4, compilation.StageDescriptors.Count);
+        Assert.Equal(4, plan.Stages.Count);
         Assert.Collection(
-            compilation.StageDescriptors,
+            plan.Stages,
             stage =>
             {
                 Assert.Equal(WorkflowStageKind.Run, stage.Stage);
@@ -120,7 +110,7 @@ public sealed class BonesLearningWorkflowRegistrationTests
             });
 
         Assert.Collection(
-            compilation.MapAdapters,
+            plan.Maps,
             map =>
             {
                 Assert.Equal(typeof(BonesObserveGamesResult), map.SourceType);
@@ -137,19 +127,16 @@ public sealed class BonesLearningWorkflowRegistrationTests
                 Assert.Equal(typeof(BonesEnhanceStrategyRequest), map.TargetType);
             });
 
-        Assert.All(compilation.MapAdapters, map =>
+        Assert.All(plan.Maps, map =>
         {
             Assert.NotEqual(typeof(object), map.SourceType);
             Assert.NotEqual(typeof(object), map.TargetType);
         });
     }
-
     [Fact]
     [Trait("ChecklistItem", WorkflowRegistrationChecklistItem)]
     public async Task RunWorkflowAsync_GivenBonesLearningWorkflow_ExpectedDispatchesAllStagesInOrderWithArtifacts()
     {
-        ResetMapRuntimeForTests();
-
         var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-bones-learning-workflow-{Guid.NewGuid():N}");
         Directory.CreateDirectory(repositoryPath);
 
@@ -261,8 +248,6 @@ public sealed class BonesLearningWorkflowRegistrationTests
     [Trait("ChecklistItem", WorkflowRegistrationChecklistItem)]
     public async Task RunWorkflowAsync_GivenMissingBonesCapability_ExpectedDeterministicFailureBeforePartialStageArtifacts()
     {
-        ResetMapRuntimeForTests();
-
         var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-bones-learning-missing-{Guid.NewGuid():N}");
         Directory.CreateDirectory(repositoryPath);
 
@@ -321,12 +306,6 @@ public sealed class BonesLearningWorkflowRegistrationTests
         }
     }
 
-    private static void ResetMapRuntimeForTests()
-    {
-        WorkflowStageMapAdapterRuntime.ResetRegisteredBindingsForTests();
-        BonesLearningWorkflowMapRuntime.ResetRegistrationForTests();
-    }
-
     private static WipBuilder CreateFullBonesLearningBuilder(
         IServiceCollection services,
         IArtifactStore artifactStore,
@@ -358,12 +337,11 @@ public sealed class BonesLearningWorkflowRegistrationTests
             playTurnModelProvider,
             enhancementModelProvider);
 
-        BonesLearningWorkflowMapRuntime.Register();
-
         var builder = services.AddWipCapabilities();
         builder.AddWorkflow<BonesLearningWorkflow, BonesLearningWorkflowRequest, BonesLearningWorkflowResult>(
             BonesLearningWorkflowIds.WorkflowId,
             "Bones learning workflow");
+        builder.AddWorkflowDefinition<BonesLearningWorkflow>();
         builder.AddAgent<BonesPonderAgent, BonesPonderRequest, BonesPonderResult>(
             BonesPonderCapability.Id,
             "Bones ponder agent");

@@ -19,28 +19,6 @@ internal enum BonesStageKind
 
 public static class BonesLearningWorkflowMapRuntime
 {
-    private static int _registered;
-
-    public static void Register()
-    {
-        if (Interlocked.Exchange(ref _registered, 1) == 1)
-            return;
-
-        WorkflowStageMapAdapterRuntime.RegisterInitialRequestFactory(TryCreateInitialStageRequest);
-
-        // Observe -> Ponder
-        WorkflowStageMapAdapterRuntime.RegisterMapBinding<BonesObserveGamesResult, BonesPonderRequest>(
-            static (observe, session) => CreatePonderRequest(observe, ToContext(session)));
-
-        // Ponder -> PlayMatch
-        WorkflowStageMapAdapterRuntime.RegisterMapBinding<BonesPonderResult, BonesPlayMatchRequest>(
-            static (ponder, session) => CreatePlayMatchRequest(ponder, ToContext(session)));
-
-        // PlayMatch -> Enhance
-        WorkflowStageMapAdapterRuntime.RegisterMapBinding<BonesPlayMatchResult, BonesEnhanceStrategyRequest>(
-            static (play, session) => CreateEnhanceRequest(play, ToContext(session)));
-    }
-
     internal static BonesPonderRequest CreatePonderRequest(
         BonesObserveGamesResult observe,
         WorkflowContext context)
@@ -118,33 +96,6 @@ public static class BonesLearningWorkflowMapRuntime
             observers,
             context.RepositoryPath);
     }
-
-    public static void ResetRegistrationForTests()
-        => Interlocked.Exchange(ref _registered, 0);
-
-    private static object? TryCreateInitialStageRequest(Type requestType, SessionSnapshot session)
-        => requestType == typeof(BonesObserveGamesRequest)
-            ? CreateInitialRequest(ToContext(session))
-            : null;
-
-    private static WorkflowContext ToContext(SessionSnapshot session)
-        => new(
-            session.SessionId,
-            session.TaskDescription,
-            session.WorktreePath,
-            session.RepositoryPath);
-
-    private static BonesLearningWorkflowParameters RequireParameters(SessionSnapshot session)
-    {
-        if (!BonesLearningWorkflowParameters.TryParse(session, out var parameters))
-        {
-            throw new InvalidOperationException(
-                $"Session '{session.SessionId.Value}' is missing bones learning workflow parameters in TaskDescription.");
-        }
-
-        return parameters;
-    }
-
     private static BonesLearningWorkflowParameters RequireParameters(WorkflowContext context)
     {
         if (!BonesLearningWorkflowParameters.TryParse(context.Task, out var parameters))

@@ -25,6 +25,21 @@ static map registry is retained only for legacy/default-linear test fixtures.
   asserts the definition is registered with 4 stages, 3 maps, an initial request and the expected
   target types; the existing workflow-run tests (7/7) still pass.
 
+## Increment 2 — process-wide registry deleted (2026-11-04)
+
+- `WorkflowStageMapAdapterRuntime` no longer exposes `RegisterInitialRequestFactory` /
+  `RegisterMapBinding` / `ResetRegisteredBindingsForTests` and holds no mutable lists. The P1-03
+  race source is gone.
+- `BonesLearningWorkflowMapRuntime` is now only the shared request-builder helper; `Register`,
+  `ResetRegistrationForTests`, the initial-request factory and the legacy `CompileLinearStages`
+  were removed from Bones.
+- Tests migrated to the plan: the reliability agent tests call
+  `WorkflowPlanMapRuntime.ApplyMappedStageInput` with `BonesLearningWorkflow.Compile()`; the
+  registration test asserts the plan stages/maps; the per-stage model tests no longer touch the
+  registry; the viewer workflow tests dropped their reset calls.
+- The serialized `BonesWorkflowMapRuntimeCollection` and its `DisableParallelization` were deleted;
+  the affected classes run in the normal parallel schedule again.
+
 ## Remaining for WP-2.4 (explicitly tracked)
 
 `WorkflowStageMapAdapterRuntime` still holds the legacy fallback (string-constructor/property-name
