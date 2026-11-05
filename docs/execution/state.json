@@ -8,7 +8,7 @@
   "work_package": "WP-3.6",
   "status": "in_progress",
   "gate": "G5",
-  "phase3_wp36_core_done_wp34_wp35_wp37_remaining",
+  "gate_status": "phase3_wp36_core_done_wp34_wp35_wp37_remaining",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
     "WP-0.1": 2,
@@ -93,8 +93,8 @@
     "sandbox_worker_tests": 18,
     "bones_tests": 396,
     "architecture_tests": 4,
-    "architecture_projects": 42,
-    "evidence": "Tests CI run_41964635848 on af089e6: all six jobs success (16-project offline gate, architecture 42-project graph, security); two local Playwright viewer failures pass on CI"
+    "architecture_projects": 43,
+    "evidence": "Green local gate 2026-11-05 (1,112/1,089/23 waived, zero unwaived); architecture 4/4 at 43 projects; Runtime.Tests 112 with the agent runtime"
   },
   "test_gate": {
     "offline_projects": 16,
@@ -110,10 +110,10 @@
     "scripts": ["tools/run-wip-tests.ps1", "tools/verify-test-results.ps1"]
   },
   "remaining": [
-    "Phase 2 complete and G4 accepted; next WP-1.7 permissions/G3, Phase 3+",
+    "Phase 2 complete and G4 accepted; WP-1.7/G3 complete; Phase 3 in progress (contracts, tool invoker, executor, write-capable repo tools)",
     "WP-1.1 security review acceptance / G2 full (re-review 2026-12-03)",
     "C1 OS file/network/native containment on Windows",
-    "WP-1.7 permissions / G3",
+    "WP-3.4 memory, WP-3.5 streaming/adapter, WP-3.6 real-model sample agent, WP-3.7 safety remainder",
     "Phase 3 agent runtime (autonomy + streaming + write-capable sample agent)",
     "Phases 4-6, G5",
     "WIP 1.0 release and post-release verification"
