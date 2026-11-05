@@ -1,11 +1,13 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 6 of 12 (WP-5.2 complete locally; WP-5.5 internal packet written; CI confirmation pending)
-- **Goal**: finish Phases 5–6, run the full G2 re-review, deliver the G5 packet and human decision.
-  No release claim, no publish/sign/deploy before an explicit human G5 decision.
-- **Definition of done**: 7/11 met (D1, D2, D3, D5, D6, D7 privacy/retention, D11);
-  2 partial (D4 live keyed path unverified, D9/D10 packets stale); D8 not started (Phase 6).
-- **Stop criteria**: D1–D11 unmet; G5 human decision not requested yet.
+- **Round**: 7 of 12 (Phase 6 docs/dry-run prepared; CI confirmation pending)
+- **Goal**: finish Phase 6 verification, run the full G2 re-review, deliver the G5 packet and human
+  decision. No release claim, no publish/sign/deploy before an explicit human G5 decision.
+- **Definition of done**: 9/11 met (D1, D2, D3, D5, D6, D7, D8 release-engineering dry-run,
+  D9 G2 packet prepared, D11); D4 live keyed path partial; D10 G5 packet partial (human decision
+  open; golden-path smoke not executed).
+- **Stop criteria**: only the human G5 decision remains as a hard stop; soak/benchmark and the G2
+  re-review are still outstanding.
 
 ## Gate status
 
@@ -54,9 +56,21 @@
   CI `42059745863` success (blocking legacy suite). The records commit that carries this line is
   local and rides the next push.
 
+## Round 7 outcome (Phase 6)
+
+- Release engineering drafted: release notes, packaging/signing plan, compatibility/upgrade, rollback,
+  post-release verification, on-call triage.
+- Local dry-run: both host publishes exit 0 (99 DLLs, 36,775,200 bytes, version 1.0.0.0 /
+  `1.0.0+e3fee2d`), SHA-256 checksums recorded; nothing signed/published/deployed.
+- Rollback controls: ScriptHost flag/fail-closed tests 9/9; permission Enforce/Audit tests pass; the
+  WSL-only worker-execution failure is recorded as an environment gap.
+- G2 re-review packet (2026-12-03) prepared with no status upgrade; G5 packet updated as
+  **not release-ready** with blockers and exact (unexecuted) release steps.
+- Explicitly outstanding: 24h soak, 2,000-game benchmark, three-green release freeze, G2/C1 human
+  sign-off, external security sign-off, signing authority, keyed live-model path.
+
 ## Next objective
 
-Push the Phase 5 commit and confirm Tests CI. Then complete Phase 6 release engineering (versioning,
-packaging dry-run, signing plan, compatibility/upgrade notes, post-release verification), assemble
-the G2 re-review packet (2026-12-03, C1 unclaimed) and deliver the G5 packet with the explicit human
-decision request.
+Confirm CI on the Phase 6 records commit, then request the human gates: G2 re-review (2026-12-03),
+external security sign-off and the G5 release decision. Before that, execute the outstanding Phase 6
+stress/soak verification where feasible. No release.

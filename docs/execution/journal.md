@@ -743,3 +743,11 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Tests CI run `42059745946` on `9dc8a56`: all six jobs success** — windows-latest offline gate at `Wip.Runtime.Tests` 146 and `Wip.Shell.Tests` 34, architecture, both builds, and both security jobs (agent safety suite green). **Modus CI run `42059745863`: success** with the blocking legacy suite.
 - **Phase 5 state:** WP-5.2 (privacy/retention) complete and CI-verified; WP-5.5 internal + adversarial packet complete, **external/independent sign-off not obtained** — an explicit human gate. G2 stays conditional/trusted-only; C1 unclaimed.
 - **Next:** Phase 6 release engineering (versioning, packaging dry-run, signing plan as a human gate, compatibility/upgrade notes, post-release verification, rollback) with no publish/sign/deploy, then the G2 re-review packet and the G5 decision. No release claim.
+
+## 2026-11-05T14:30:00-03:00 — Round 7: Phase 6 release engineering prepared; G2/G5 packets updated
+
+- **Release docs:** `docs/release/release-notes-1.0.md`, `packaging-and-signing.md`, `compatibility-and-upgrade.md`, `rollback.md`, `post-release-verification.md`; `docs/runbooks/on-call-triage.md`; Phase 6.1 stabilization evidence.
+- **Dry-run:** both host publishes succeeded locally (99 DLLs, 36,775,200 bytes, `FileVersion 1.0.0.0`, product `1.0.0+e3fee2d`); SHA-256 for `Wip.ShellHost.dll` and `Wip.Bones.Host.dll` recorded. Nothing signed, published or deployed.
+- **Rollback rehearsal:** ScriptHost flag/fail-closed tests 9/9 and permission Enforce/Audit tests pass locally; the WSL-only worker-execution handshake failure is recorded as an environment gap (the worker suite is green on Linux CI and the Windows gate covers it).
+- **Transfer gate:** G2 re-review packet prepared for 2026-12-03 (conditional/trusted-only, C1 unclaimed, no upgrade); G5 packet rewritten as **not release-ready** with blockers, exact unexecuted release steps and the human decision request.
+- **Explicitly outstanding:** 24h soak, 2,000-game benchmark, three-green release freeze, G2/C1 sign-off, external security sign-off, signing authority, keyed live-model path. No release claim; G5 not requested.

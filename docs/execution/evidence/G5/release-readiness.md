@@ -1,36 +1,53 @@
 # G5 release-readiness — **not requested; no release claim**
 
 **Date:** 2026-11-05
-**Branch / HEAD:** `WIP` @ the commit carrying this packet.
-**Status:** **WIP 1.0 is not release-ready.** G5 (the human release decision) has not been requested
-and no release is claimed. This packet records what is done, what passed verification, and the
-concrete blockers that remain.
+**Branch / HEAD:** `WIP` @ `9dc8a56` (last fully green code HEAD; records commits follow)
+**Status:** **WIP 1.0 is not release-ready.** G5 has not been requested and no release is claimed.
+The human G5 decision is the only path to a release; **no publish/sign/deploy has been performed.**
 
 ## Ready and verified
 
 | Area | State |
 |---|---|
-| Phase 0 (baseline, decisions, G0, ADR) | done |
-| Phase 1 isolation (WP-1.1..1.6) | worker process, resource limits, hostile tests, feature flag; G2 conditional/trusted-only |
-| WP-1.7 permissions + G3 | catalog, evaluator Enforce/Audit, enforcement at dispatcher/tool gateway/plugin load/model invocation, grants, manifest surfacing; G3 accepted |
-| Phase 2 runtime seams (WP-2.1..2.7) + G4 | host-managed DI, no static pool, declarative plans + executor, explicit maps (registry/heuristics deleted), Bones definition, shell decoupled from Bones, collectible plugin ALC with a conflicting-version proof; G4 accepted |
-| Phase 3 agent runtime core | chat/tool contracts, permission-aware tool invoker (timeouts/truncation/errors/artifacts), executor loop with budgets/cancellation, artifact memory (cross-turn E2E), streaming execution (delta/tool events), write-capable worktree-confined repo tools, `RunAgentAsync` + `AgentExecutorTool`, worktree-escape/delete/permission/loop safety cases |
-| Gates | 16-project offline gate green (last full run 1,112/1,089/23 waived, zero unwaived); architecture 4/4 over 43 projects with an empty waiver file; security jobs green; Tests CI green on `4509e04`; Modus CI hard gates green |
+| Phase 0 (baseline, decisions, G0, ADR) | complete |
+| Phase 1 isolation (WP-1.1..1.7) | worker process, resource limits, hostile tests, ScriptHost flag, permissions + G3 |
+| Phase 2 runtime seams (WP-2.1..2.7) + G4 | host-managed DI, no static pool, declarative plans, explicit maps, Bones definition, shell decoupling, collectible plugin ALC |
+| Phase 3 agent runtime (WP-3.1..3.7) | chat/tool contracts, invoker, executor + streaming, memory, DeepSeek `IChatModel` adapter (SSE), write-capable repo tools, real-model HTTP-boundary sample agent, safety suite, shell `agent` progress |
+| Phase 4 CI truth | legacy Modus suite reconciled and **blocking** and green in Modus CI; operator guide; truthful test-status page |
+| Phase 5 privacy/security | redaction + retention/purge (WP-5.2); internal + adversarial security packet (WP-5.5; external sign-off open) |
+| Phase 6 release engineering (local draft) | release notes, packaging/signing plan, compatibility/upgrade, rollback, post-release verification; local publish dry-run + checksums |
+| Gates | Tests CI `42059745946` on `9dc8a56` all six jobs (Runtime 146 / Shell 34; both security jobs; architecture 4/4 at 43 projects); Modus CI `42059745863` success with the blocking legacy suite |
 
 ## Blockers to a WIP 1.0 release (G5)
 
-1. **Phase 3 completion**
-   - DeepSeek `IChatModel` adapter (non-streaming + SSE) with mock tests; the streaming contract and executor path exist but no vendor adapter is wired.
-   - Shell/status progress rendering of stream events.
-   - A **real-model** write-capable sample agent E2E (the current E2E uses a scripted model over the real tools/invoker/executor) plus an answer-a-repository-question demonstration.
-   - Remaining WP-3.7 safety fixtures: prompt injection via tool output, self-approval/merge attempt, exfiltration via shell/search, and Agent/Security job wiring.
-2. **Phases 4–6**
-   - Phase 4 CI truth: reconcile the legacy Modus full-suite meta-tests (`BLK-MODUS-LEGACY-SUITE`) and make that suite blocking; docs/runbooks/operator guide.
-   - Phase 5 security review (WP-5.5) of sandbox, permissions, plugin ALC, prompt/artifact handling, approval/merge boundary; privacy/retention (WP-5.2).
-   - Phase 6 release engineering: versioning/signing, packaging, upgrade/compatibility notes, post-release verification plan.
-3. **G2 full re-review** is scheduled for 2026-12-03 (currently conditional/trusted-only); Windows OS containment (C1) remains unclaimed (AppContainer helper error 5).
-4. **Human gates**: G5 is the human release decision. G4/G3 were accepted as internal engineering gates; G2 remains conditional.
+1. **G2 remains conditional/trusted-only** and **Windows OS containment (C1) is unclaimed**. The
+   re-review is scheduled for 2026-12-03 (`docs/execution/evidence/G2/re-review-packet-2026-12-03.md`);
+   no upgrade without human sign-off.
+2. **External/independent security sign-off is not obtained.** The WP-5.5 packet is internal +
+   adversarial evidence, not an approval.
+3. **Phase 6 verification items not executed:** a 24-hour soak, a 2,000-game benchmark, and a
+   formal three-consecutive-green-run release freeze. The local dry-run and rollback controls are
+   performed; the stress/soak evidence is not.
+4. **Signing credentials/publication authority** are human-owned and not available; no signature or
+   publication exists.
+5. **The opt-in live DeepSeek path is unverified** without an API key.
+
+## Exact release steps (not executed)
+
+1. Human G5 decision after reviewing this packet, the G2 re-review, and the external security
+   sign-off.
+2. Freeze the release commit; re-run Tests CI (all six jobs) and Modus CI on it; record run ids.
+3. Sign and pack using the owner-supplied credentials; publish host artifacts + NuGet packages.
+4. Publish release notes, compatibility/upgrade notes, support matrix and checksums.
+5. Run `docs/release/post-release-verification.md`; record results; open follow-ups.
+
+## Known limits
+
+C1 unclaimed; G2 conditional; external sign-off open; shell tool privileged; pattern-based
+redaction; operator-driven retention; live-model path unverified without credentials.
 
 ## Recommendation
 
-Do **not** release. Continue Phase 3 (adapter, real-model sample, safety) and Phases 4–6, complete the G2 re-review, then bring G5 a packet with the golden-path demos and the security review. No release claim is made here.
+**Do not release.** Complete the G2 re-review and external security sign-off, decide C1, execute the
+Phase 6 stress/soak evidence, then bring the human G5 decision. Until then this packet remains
+evidence, not a release.

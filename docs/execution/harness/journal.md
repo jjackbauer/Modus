@@ -562,3 +562,29 @@
 - **Rationale**: OBS-025: covers the known credential shapes and gives operators a deterministic purge; documented limits are honest and extensible.
 - **Alternatives considered**: heuristic ML redaction (rejected: non-deterministic); automatic scheduled purge in-process (rejected: deployment concern; out of scope for 1.0).
 - **Related**: OBS-025, EVD-070..EVD-073
+
+### OBS-026: Phase 6 release engineering is drafted and locally rehearsed; no release performed
+
+- **Source**: `docs/release/` (release notes, packaging/signing, compatibility/upgrade, rollback, post-release verification); `docs/execution/evidence/WP-6.1/stabilization.md`, `WP-6.2/draft.md`, `G2/re-review-packet-2026-12-03.md`, `G5/release-readiness.md`
+- **Fact**: Local publish dry-run of both hosts succeeded (exit 0; 99 DLLs, 36,775,200 bytes; version 1.0.0.0 / `1.0.0+e3fee2d`); checksums recorded. Rollback flag/fail-closed tests are 9/9. Nothing was signed, published or deployed. The soak/benchmark/three-green-freeze items are explicitly not executed and remain G5 blockers. The G5 packet says **not release-ready**; G2 is conditional/trusted-only and external security sign-off is open.
+- **Implications**: Phase 6 documentation/dry-run is ready for the human decision, but release verification is incomplete by design (no soak/benchmark) and no release claim is made.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-076..EVD-080
+
+### HYP-010: The release dry-run and rollback controls are reproducible and truthful
+
+- **Claim**: The publish dry-run succeeds locally without signing/publishing, and the documented rollback controls are exercised by passing tests; the worker-execution failure on WSL is an environment gap, not a release-gate failure.
+- **Supporting OBS**: OBS-026
+- **Why it matters**: The G5 packet must distinguish "prepared" from "verified" and not hide an environment failure.
+- **Falsification strategy**: re-run the publish commands and the flag tests; inspect the worker TRX message; confirm no registry/signing side effects.
+- **Status**: Supported
+- **Confidence**: High
+- **Related**: EVD-076..EVD-078
+
+### DEC-015: Keep the release dry-run local; no signing or publish before G5
+
+- **Decision**: Produce local publish artifacts, checksums and documentation only. Signing/publishing remain human-gated because credentials/authority are not available.
+- **Rationale**: OBS-026 + the hard constraints: no publish/sign/deploy before an explicit human G5 decision; credentials are human-owned.
+- **Alternatives considered**: self-signed test signing (rejected: not the release signature and could confuse evidence); publishing a pre-release (rejected by the constraints).
+- **Related**: OBS-026, EVD-076, EVD-080

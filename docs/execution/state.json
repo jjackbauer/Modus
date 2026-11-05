@@ -4,11 +4,11 @@
   "baseline_freeze_commit": "99c0b087e8ad5b9993baef807bab92b4cd37aa0e",
   "baseline_tag": "wip-baseline-2026-11-02",
   "branch": "WIP",
-  "phase": 5,
-  "work_package": "WP-5.5",
+  "phase": 6,
+  "work_package": "WP-6.5",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "phase5_wp52_done_wp55_external_signoff_open_ci_green_head_9dc8a56_phase6_next",
+  "gate_status": "phase6_release_pack_prepared_g2_g5_packets_not_release_ready",
   "last_ci_green_head": "9dc8a56afca15eab6242c998fd7e5891eff4bbb2",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
@@ -33,9 +33,9 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T13:55:00-03:00",
-  "next_action": "Phase 6: release engineering (versioning, packaging dry-run, signing plan with credentials as a human gate, compatibility/upgrade notes, post-release verification plan, rollback) locally only — no publish/sign/deploy. Then assemble the G2 re-review packet (2026-12-03, C1 unclaimed) and the G5 packet with the explicit human decision request. WP-5.5 external sign-off remains an explicit human gate. No release claim.",
-  "open_blockers": ["Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03). Phase 3 complete and CI-verified; Phase 4 complete (legacy suite blocking+green, docs landed); Phase 5 in progress (WP-5.2 done, WP-5.5 external sign-off required). Phase 6, G2 re-review and G5 remain."],
+  "last_verified_at": "2026-11-05T14:30:00-03:00",
+  "next_action": "Confirm CI on the Phase 6 records commit. Then request the human gates: G2 re-review (2026-12-03, C1 decision), external/independent security sign-off, and the explicit G5 release decision. Before G5, execute the outstanding Phase 6 stress/soak and benchmark evidence where feasible. No release, no publish, no sign, no deploy.",
+  "open_blockers": ["G5 blocked: G2 remains conditional/trusted-only (C1 unclaimed, re-review 2026-12-03); external security sign-off not obtained; 24h soak / 2,000-game benchmark / release-freeze triple-green not executed; signing authority human-owned; live DeepSeek path unverified without a key."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
     "porcelain_entries": 0,
