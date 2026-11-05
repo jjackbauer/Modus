@@ -113,7 +113,8 @@ public sealed class ModusWipBridgeTests
                     WorkflowType: typeof(DemoWorkflow),
                     RequestType: typeof(DemoWorkflowRequest),
                     ResultType: typeof(DemoWorkflowResult),
-                    Descriptor: new WorkflowDescriptor<DemoWorkflowRequest, DemoWorkflowResult>(new WorkflowId("workflow.demo"), "Demo Workflow"))
+                    Descriptor: new WorkflowDescriptor<DemoWorkflowRequest, DemoWorkflowResult>(new WorkflowId("workflow.demo"), "Demo Workflow"),
+                    CreateRunRequest: context => new DemoWorkflowRequest(context.Task))
             };
 
             var bridge = new ModusWipBridge(pluginsPath, workflowRegistrations);

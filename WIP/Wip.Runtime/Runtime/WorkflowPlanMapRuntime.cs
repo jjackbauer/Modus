@@ -3,6 +3,12 @@ using Wip.Abstractions.Workflows;
 
 namespace Wip.Runtime.Runtime;
 
+public sealed record WorkflowStageMappedInputEvidence(
+    string MappedSourceContractName,
+    object MappedSourcePayload,
+    string MappedInputContractName,
+    object MappedInputPayload);
+
 /// <summary>
 /// Applies a declarative workflow plan's stage maps. Unlike the legacy registry path there is no
 /// process-global state, no property-name heuristic and no string-constructor fallback: a missing

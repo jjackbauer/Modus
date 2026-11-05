@@ -53,3 +53,20 @@ next WP-2.4 increment. Their serialized collection remains until then.
 ## Verification
 
 Build green; new test and the seven Bones workflow tests green; full offline gate: pending.
+## Increment 3 — legacy linear workflows run on explicit plans (2026-11-05)
+
+- **`WorkflowRegistration.CreateRunRequest`** (`Func<WorkflowContext, object>`) is now part of every
+  registration. `AddWorkflow<TWorkflow,TRequest,TResult>(...)` accepts an optional typed factory;
+  the default (documented convention) builds the request from the session task via its `string`
+  constructor, or its parameterless constructor, and fails with a clear message otherwise.
+- **`LinearWorkflowPlanFactory`** declares the six governance stages and all five maps explicitly:
+  Plan→Run uses the registration's factory, then Run→Validate, Validate→Review,
+  Review→RequireApproval and RequireApproval→Merge construct their governance requests from the
+  session id. No reflection property heuristics, no global registry.
+- **Orchestrator**: definitions keep their own plan; legacy `IWorkflow` registrations receive the
+  explicit default plan and every stage input flows through `WorkflowPlanMapRuntime`. The old
+  `WorkflowStageMapAdapterRuntime` is **deleted** (its evidence record moved to
+  `WorkflowPlanMapRuntime`). The typed builder/compiler remains for stage descriptors.
+- **Tests**: the three manual `WorkflowRegistration` constructions now pass explicit factories; all
+  existing workflow tests exercise the plan path for legacy registrations.
+- This closes WP-2.4: the only stage-mapping mechanism left is plan-scoped `StageMap` delegates.

@@ -251,9 +251,10 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
 
             var workflow = ResolveWorkflowSelection(current.WorkflowId, selectedWorkflowId, builder.WorkflowRegistrations);
 
-            // Declarative workflows (WP-2.3) compile to a plan with explicit stage maps. Legacy
-            // IWorkflow registrations keep the reflection/heuristic compiler for one release.
+            // Declarative workflows compile their own plan; legacy IWorkflow registrations get the
+            // explicit default linear plan (WP-2.4). Both execute through plan maps.
             var definitionPlan = ResolveDefinitionPlan(services, workflow.WorkflowId);
+            var plan = definitionPlan ?? LinearWorkflowPlanFactory.Create(workflow);
             var compilation = definitionPlan is null
                 ? WorkflowBuilderStageCompiler.CompileLinear(workflow)
                 : CreateCompilation(definitionPlan);
@@ -262,11 +263,8 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
             // Callers pass the scoped provider for this run and dispose the scope when it ends.
             artifactStore ??= services.GetService<IArtifactStore>();
 
-            WorkflowStageInputMapper mapStageInput = definitionPlan is null
-                ? (stage, session, previous) => WorkflowStageMapAdapterRuntime.ApplyMappedStageInput(
-                    stage, compilation, session, previous)
-                : (stage, session, previous) => WorkflowPlanMapRuntime.ApplyMappedStageInput(
-                    stage, definitionPlan, session, previous);
+            WorkflowStageInputMapper mapStageInput = (stage, session, previous) =>
+                WorkflowPlanMapRuntime.ApplyMappedStageInput(stage, plan, session, previous);
 
             var context = new WorkflowExecutionContext(
                 workflow.WorkflowId,

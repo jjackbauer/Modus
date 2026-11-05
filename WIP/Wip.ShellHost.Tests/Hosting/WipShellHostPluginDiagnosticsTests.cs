@@ -638,7 +638,8 @@ public sealed class WipShellHostPluginDiagnosticsTests : IDisposable
                 typeof(RuntimeAlphaResult),
                 new WorkflowDescriptor<RuntimeAlphaRequest, RuntimeAlphaResult>(
                     new WorkflowId("workflow.runtime.alpha"),
-                    "Runtime Alpha Workflow"))
+                    "Runtime Alpha Workflow"),
+                CreateRunRequest: context => new RuntimeAlphaRequest(context.Task))
         ];
 
     private static int CountOccurrences(string source, string value)

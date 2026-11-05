@@ -73,7 +73,8 @@ public sealed class TypedLinearWorkflowBuilderTests
             typeof(TypedLinearWorkflow),
             typeof(WorkflowRequest),
             typeof(WorkflowResult),
-            new WorkflowDescriptor<WorkflowRequest, WorkflowResult>(new WorkflowId("workflow.typed-linear"), "Typed linear"));
+            new WorkflowDescriptor<WorkflowRequest, WorkflowResult>(new WorkflowId("workflow.typed-linear"), "Typed linear"),
+            context => new WorkflowRequest(context.Task));
 
         var compilation = WorkflowBuilderStageCompiler.CompileLinear(workflow);
 

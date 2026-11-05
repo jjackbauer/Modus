@@ -14,7 +14,8 @@ public sealed record WorkflowRegistration(
     Type WorkflowType,
     Type RequestType,
     Type ResultType,
-    IWorkflowDescriptor Descriptor);
+    IWorkflowDescriptor Descriptor,
+    Func<WorkflowContext, object> CreateRunRequest);
 
 public sealed class WipBuilder
 {
@@ -215,7 +216,10 @@ public sealed class WipBuilder
         return this;
     }
 
-    public WipBuilder AddWorkflow<TWorkflow, TRequest, TResult>(WorkflowId workflowId, string displayName)
+    public WipBuilder AddWorkflow<TWorkflow, TRequest, TResult>(
+        WorkflowId workflowId,
+        string displayName,
+        Func<WorkflowContext, TRequest>? createRunRequest = null)
         where TWorkflow : class, IWorkflow<TRequest, TResult>
         where TRequest : notnull
         where TResult : notnull
@@ -231,9 +235,34 @@ public sealed class WipBuilder
             typeof(TWorkflow),
             typeof(TRequest),
             typeof(TResult),
-            descriptor));
-
+            descriptor,
+            createRunRequest is not null
+                ? context => createRunRequest(context)!
+                : context => CreateDefaultRunRequest<TRequest>(workflowId, context)));
         return this;
+    }
+
+    /// <summary>
+    /// Default run-request construction for legacy <see cref="IWorkflow{TRequest,TResult}"/>
+    /// registrations: the request receives the session task (or its parameterless instance). A
+    /// workflow whose request needs different input passes an explicit factory to
+    /// <see cref="AddWorkflow{TWorkflow,TRequest,TResult}"/>.
+    /// </summary>
+    private static TRequest CreateDefaultRunRequest<TRequest>(WorkflowId workflowId, WorkflowContext context)
+        where TRequest : notnull
+    {
+        if (typeof(TRequest).GetConstructor([typeof(string)]) is { } taskConstructor)
+        {
+            return (TRequest)taskConstructor.Invoke([context.Task])!;
+        }
+
+        if (typeof(TRequest).GetConstructor(Type.EmptyTypes) is { } defaultConstructor)
+        {
+            return (TRequest)defaultConstructor.Invoke(null)!;
+        }
+
+        throw new InvalidOperationException(
+            $"Workflow '{workflowId.Value}' requires an explicit run-request factory for '{typeof(TRequest).Name}'.");
     }
 
     /// <summary>
