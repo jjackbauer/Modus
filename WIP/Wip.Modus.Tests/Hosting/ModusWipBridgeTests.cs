@@ -5,6 +5,7 @@ using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Workflows;
 using Wip.Builder;
 using Wip.Modus.Hosting;
+using Wip.Abstractions.Permissions;
 using Xunit;
 
 namespace Wip.Modus.Tests.Hosting;
@@ -261,4 +262,100 @@ public sealed class ModusWipBridgeTests
     }
 
     private sealed class TestServiceCollection : List<ServiceDescriptor>, IServiceCollection;
+    [Fact]
+    public async Task LoadPluginsAsync_GivenPermissionEvaluatorWithoutGrant_ExpectedPluginDeniedAndNotLoaded()
+    {
+        var pluginsPath = CreatePluginsFolderWithAssembly(typeof(TodoAppWipPlugin).Assembly.Location);
+        try
+        {
+            var bridge = new ModusWipBridge(
+                pluginsPath,
+                permissionEvaluator: new PermissionEvaluator(PermissionMode.Enforce));
+
+            var loaded = await bridge.LoadPluginsAsync(CancellationToken.None);
+
+            Assert.Equal(0, loaded);
+            Assert.Empty(bridge.GetRunManifest().Plugins);
+            Assert.Contains(
+                bridge.GetLoadDiagnostics(),
+                static diagnostic => diagnostic.Contains("denied permission 'plugin.load'", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TryDelete(pluginsPath);
+        }
+    }
+
+    [Fact]
+    public async Task LoadPluginsAsync_GivenAuditEvaluator_ExpectedPluginLoadsAndDecisionIsAudited()
+    {
+        var pluginsPath = CreatePluginsFolderWithAssembly(typeof(TodoAppWipPlugin).Assembly.Location);
+        try
+        {
+            var bridge = new ModusWipBridge(
+                pluginsPath,
+                permissionEvaluator: new PermissionEvaluator(PermissionMode.Audit));
+
+            var loaded = await bridge.LoadPluginsAsync(CancellationToken.None);
+
+            Assert.Equal(1, loaded);
+            Assert.Contains(
+                bridge.GetLoadDiagnostics(),
+                static diagnostic => diagnostic.Contains("audit: would deny", StringComparison.Ordinal));
+        }
+        finally
+        {
+            TryDelete(pluginsPath);
+        }
+    }
+
+    [Fact]
+    public async Task LoadPluginsAsync_GivenGrantedPluginPermissions_ExpectedPluginLoadsWithGrantsInManifest()
+    {
+        var pluginsPath = CreatePluginsFolderWithAssembly(typeof(TodoAppWipPlugin).Assembly.Location);
+        try
+        {
+            var bridge = new ModusWipBridge(
+                pluginsPath,
+                permissionEvaluator: new PermissionEvaluator(
+                    PermissionMode.Enforce,
+                    [
+                        "samples.todoapp.wipagents:plugin.load",
+                        "samples.todoapp.wipagents:RegisterOperation",
+                        "samples.todoapp.wipagents:SubscribeEvents",
+                    ]));
+
+            var loaded = await bridge.LoadPluginsAsync(CancellationToken.None);
+
+            Assert.Equal(1, loaded);
+            var plugin = Assert.Single(bridge.GetRunManifest().Plugins);
+            Assert.Contains("plugin.load", plugin.GrantedPermissions!, StringComparer.Ordinal);
+            Assert.Contains("RegisterOperation", plugin.GrantedPermissions!, StringComparer.Ordinal);
+        }
+        finally
+        {
+            TryDelete(pluginsPath);
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        for (var attempt = 0; attempt < 5 && Directory.Exists(path); attempt++)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            try
+            {
+                Directory.Delete(path, recursive: true);
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(50);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Thread.Sleep(50);
+            }
+        }
+    }
 }

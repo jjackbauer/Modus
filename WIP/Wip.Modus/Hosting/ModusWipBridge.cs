@@ -1,5 +1,7 @@
 using System.Reflection;
 using Modus.Core.Plugins;
+using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Permissions;
 using Wip.Builder;
 
 namespace Wip.Modus.Hosting;
@@ -11,7 +13,8 @@ public sealed record PluginManifestEntry(
     string AssemblyName,
     string AssemblyVersion,
     IReadOnlyList<string> Capabilities,
-    IReadOnlyList<string> RequiredPermissions);
+    IReadOnlyList<string> RequiredPermissions,
+    IReadOnlyList<string>? GrantedPermissions = null);
 
 public sealed record WorkflowManifestEntry(
     string WorkflowId,
@@ -60,10 +63,12 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     private const string AssemblyLoadStage = "assembly-load";
     private const string ActivationStage = "activation";
     private const string LifecycleStartStage = "lifecycle-start";
+    private const string PermissionStage = "permission";
     private const string UnloadStage = "unload";
 
     private readonly IReadOnlyList<string> _pluginDiscoveryPaths;
     private readonly IReadOnlyList<WorkflowRegistration> _workflowRegistrations;
+    private readonly IPermissionEvaluator? _permissionEvaluator;
     private readonly List<PluginRuntime> _loadedPlugins = [];
     private readonly List<string> _loadDiagnostics = [];
     private readonly List<ModusDebugLogEntry> _debugLogs = [];
@@ -72,24 +77,32 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
     private DateTimeOffset _currentRunStartedAtUtc = DateTimeOffset.MinValue;
     private int _loaded;
 
-    public ModusWipBridge(string pluginsPath, IReadOnlyList<WorkflowRegistration>? workflowRegistrations = null)
-        : this([pluginsPath], workflowRegistrations)
+    public ModusWipBridge(
+        string pluginsPath,
+        IReadOnlyList<WorkflowRegistration>? workflowRegistrations = null,
+        IPermissionEvaluator? permissionEvaluator = null)
+        : this([pluginsPath], workflowRegistrations, permissionEvaluator)
     {
     }
 
     public ModusWipBridge(
         string repositoryPluginsPath,
         string userPluginsPath,
-        IReadOnlyList<WorkflowRegistration>? workflowRegistrations = null)
-        : this([repositoryPluginsPath, userPluginsPath], workflowRegistrations)
+        IReadOnlyList<WorkflowRegistration>? workflowRegistrations = null,
+        IPermissionEvaluator? permissionEvaluator = null)
+        : this([repositoryPluginsPath, userPluginsPath], workflowRegistrations, permissionEvaluator)
     {
     }
 
-    private ModusWipBridge(IReadOnlyList<string> pluginDiscoveryPaths, IReadOnlyList<WorkflowRegistration>? workflowRegistrations)
+    private ModusWipBridge(
+        IReadOnlyList<string> pluginDiscoveryPaths,
+        IReadOnlyList<WorkflowRegistration>? workflowRegistrations,
+        IPermissionEvaluator? permissionEvaluator)
     {
         ArgumentNullException.ThrowIfNull(pluginDiscoveryPaths);
         _pluginDiscoveryPaths = NormalizePluginDiscoveryPaths(pluginDiscoveryPaths);
         _workflowRegistrations = workflowRegistrations ?? Array.Empty<WorkflowRegistration>();
+        _permissionEvaluator = permissionEvaluator;
         _runManifest = CreateUnloadedRunManifest();
     }
 
@@ -160,6 +173,12 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
                         continue;
                     }
 
+                    var grantedPermissions = EvaluatePluginPermissions(plugin, pluginType);
+                    if (grantedPermissions is null)
+                    {
+                        continue;
+                    }
+
                     var lifecycle = plugin as IPluginLifecycle;
 
                     try
@@ -167,7 +186,7 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
                         lifecycle?.Load(new PluginLoadContext(plugin.PluginId, cancellationToken));
                         lifecycle?.Start(new PluginStartContext(plugin.PluginId, cancellationToken));
 
-                        var metadata = BuildPluginMetadata(plugin, pluginType.Assembly);
+                        var metadata = BuildPluginMetadata(plugin, pluginType.Assembly, grantedPermissions);
                         _loadedPlugins.Add(new PluginRuntime(plugin, lifecycle, metadata, loadContext));
                         pluginAssemblyPathById[plugin.PluginId.Value] = assemblyPath;
                     }
@@ -358,6 +377,58 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
         }
     }
 
+    /// <summary>
+    /// WP-1.7: plugins must be allowed to load and to use their declared permissions. Returns the
+    /// granted permission list, or null when the plugin is denied (Enforce) and must be skipped.
+    /// Without an evaluator the bridge keeps its historical load-everything behaviour.
+    /// </summary>
+    private IReadOnlyList<string>? EvaluatePluginPermissions(IPluginContract plugin, Type pluginType)
+    {
+        var declared = plugin is IPluginRegistrationPolicy registrationPolicy
+            ? registrationPolicy
+                .BuildRegistrationPlan(plugin)
+                .Select(static step => step.Kind.ToString())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray()
+            : Array.Empty<string>();
+
+        if (_permissionEvaluator is null)
+        {
+            return declared;
+        }
+
+        var origin = new PluginOrigin(
+            plugin.PluginId.Value,
+            new CapabilityVersion(plugin.ContractVersion.ToString()),
+            pluginType.Assembly.GetName().Name ?? "unknown");
+
+        var grants = new List<string>();
+        foreach (var permission in declared.Prepend(PermissionCatalog.PluginLoad))
+        {
+            var decision = _permissionEvaluator.Evaluate(new PermissionRequest(
+                permission,
+                CapabilityId: null,
+                PluginOrigin: origin,
+                SessionId: null,
+                IsBuiltIn: false));
+
+            if (!decision.Allowed)
+            {
+                AddLoadDiagnostic(PermissionStage, $"Plugin '{plugin.PluginId.Value}' denied permission '{permission}': {decision.Reason}");
+                return null;
+            }
+
+            if (decision.Audited)
+            {
+                AddLoadDiagnostic(PermissionStage, $"Plugin '{plugin.PluginId.Value}' audit: would deny '{permission}': {decision.Reason}");
+            }
+
+            grants.Add(permission);
+        }
+
+        return grants;
+    }
+
     private static IEnumerable<Type> ResolvePluginTypes(Assembly assembly)
     {
         Type[] types;
@@ -378,7 +449,7 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
             .OrderBy(static type => type.FullName, StringComparer.Ordinal);
     }
 
-    private static PluginManifestEntry BuildPluginMetadata(IPluginContract plugin, Assembly assembly)
+    private static PluginManifestEntry BuildPluginMetadata(IPluginContract plugin, Assembly assembly, IReadOnlyList<string>? grantedPermissions = null)
     {
         var assemblyName = assembly.GetName();
         var capabilities = plugin is IPluginOperationCatalog operationCatalog
@@ -405,7 +476,8 @@ public sealed class ModusWipBridge : IModusWipBridge, IModusWipDebugChannel
             AssemblyName: assemblyName.Name ?? plugin.GetType().Assembly.GetName().Name ?? "unknown",
             AssemblyVersion: (assemblyName.Version ?? new Version(0, 0, 0, 0)).ToString(),
             Capabilities: capabilities,
-            RequiredPermissions: requiredPermissions);
+            RequiredPermissions: requiredPermissions,
+            GrantedPermissions: grantedPermissions);
     }
 
     private sealed record PluginRuntime(

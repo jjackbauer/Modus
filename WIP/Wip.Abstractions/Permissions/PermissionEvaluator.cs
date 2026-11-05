@@ -1,7 +1,6 @@
 using Wip.Abstractions.Capabilities;
-using Wip.Abstractions.Permissions;
 
-namespace Wip.Runtime.Runtime;
+namespace Wip.Abstractions.Permissions;
 
 /// <summary>
 /// Default permission evaluator (WP-1.7). Built-in capabilities are trusted and allowed; plugin

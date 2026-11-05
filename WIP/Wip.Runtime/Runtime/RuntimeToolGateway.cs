@@ -1,6 +1,7 @@
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Descriptors;
 using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Permissions;
 
 namespace Wip.Runtime.Runtime;
 
@@ -42,6 +43,8 @@ public sealed class RuntimeToolGateway
             throw new InvalidOperationException(
                 $"Tool '{toolId.Value}' expects request/result '{descriptor.RequestType.Name}/{descriptor.ResultType.Name}' but received '{typeof(TRequest).Name}/{typeof(TResult).Name}'.");
         }
+
+        PermissionGuard.Ensure(_serviceProvider, descriptor, context.SessionId);
 
         var service = _serviceProvider.GetService(descriptor.CapabilityType);
         if (service is not ITool<TRequest, TResult> tool)

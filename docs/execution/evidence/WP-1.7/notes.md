@@ -29,6 +29,25 @@ load, model invocation and manifest surfacing follow.
 
 Focused run: 7/7.
 
+## Increment 2 — gateway, plugin load, manifests, host wiring (2026-11-05)
+
+- **Tool gateway**: `RuntimeToolGateway.InvokeAsync` evaluates the tool descriptor through the shared
+  `PermissionGuard` before resolving or executing the tool; denials never produce artifacts. Tests:
+  plugin-origin tool denied without a grant, granted plugin tool executes, and a denial leaves the
+  artifact store empty.
+- **Plugin load**: `ModusWipBridge` accepts an optional `IPermissionEvaluator`. With one, loading a
+  plugin requires `plugin.load` plus every declared permission for its plugin origin
+  (`pluginId:permission` grants); a denial is skipped with a `[permission]` diagnostic, audit mode
+  logs the would-be denial and loads. Without an evaluator the bridge keeps its historical
+  load-everything behaviour.
+- **Manifest**: `PluginManifestEntry.GrantedPermissions` surfaces the permissions that were granted
+  (or, with no evaluator, the declared permissions).
+- **Host wiring**: `services.AddWipPermissions(mode, grants, auditSink)` registers the evaluator with
+  the desired mode and grants.
+- **Moved** the default `PermissionEvaluator` to `Wip.Abstractions.Permissions` so hosts and the
+  plugin bridge can share it without depending on the runtime.
+- Tests: gateway deny/grant, bridge deny/audit/grant (manifest grants), evaluator unit tests.
+
 ## Remaining
 
 - Enforce `process`/`network` at `RuntimeToolGateway` and `model.invoke` at model-provider invocation.

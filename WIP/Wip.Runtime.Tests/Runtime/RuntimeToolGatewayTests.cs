@@ -4,6 +4,7 @@ using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Policies;
+using Wip.Abstractions.Permissions;
 using Wip.Builder;
 using Wip.Policy.LocalSafe;
 using Wip.Runtime.Runtime;
@@ -241,5 +242,61 @@ public sealed class RuntimeToolGatewayTests : IAsyncLifetime
         public ValueTask<IReadOnlyList<ArtifactDescriptor>> ListAsync(SessionId sessionId, CancellationToken cancellationToken)
             => ValueTask.FromResult<IReadOnlyList<ArtifactDescriptor>>(
                 _descriptors.Where(x => x.SessionId.Equals(sessionId)).ToArray());
+    }
+    [Fact]
+    public async Task InvokeAsync_GivenPluginToolWithoutGrant_ExpectedPermissionDeniedBeforeExecution()
+    {
+        var artifactStore = new InMemoryArtifactStore();
+        var gateway = BuildPermissionGateway(artifactStore, permissionEvaluator: null);
+
+        var exception = await Assert.ThrowsAsync<PermissionDeniedException>(() => gateway.InvokeAsync<ShellCommandRequest, ShellCommandResult>(
+            new CapabilityId("tool.shell.permission"),
+            new ShellCommandRequest(Command: EchoCommand("permission"), WorkflowId: new WorkflowId("workflow.shell")),
+            new CapabilityContext(new SessionId("session-permission-denied"), _worktreePath),
+            CancellationToken.None).AsTask());
+
+        Assert.Equal(PermissionCatalog.Network, exception.Permission);
+        Assert.Empty(artifactStore.Payloads);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_GivenGrantedPluginTool_ExpectedExecutionProceeds()
+    {
+        var artifactStore = new InMemoryArtifactStore();
+        var gateway = BuildPermissionGateway(
+            artifactStore,
+            new PermissionEvaluator(PermissionMode.Enforce, ["plugin.shell:network"]));
+
+        var result = await gateway.InvokeAsync<ShellCommandRequest, ShellCommandResult>(
+            new CapabilityId("tool.shell.permission"),
+            new ShellCommandRequest(Command: EchoCommand("permission-granted"), WorkflowId: new WorkflowId("workflow.shell")),
+            new CapabilityContext(new SessionId("session-permission-granted"), _worktreePath),
+            CancellationToken.None);
+
+        Assert.False(result.IsBlocked);
+        Assert.Equal(0, result.ExitCode);
+    }
+
+    private RuntimeToolGateway BuildPermissionGateway(InMemoryArtifactStore artifactStore, IPermissionEvaluator? permissionEvaluator)
+    {
+        var services = new ServiceCollection();
+        var builder = services.AddWipBuilder();
+
+        services.AddSingleton<IArtifactStore>(artifactStore);
+        services.AddSingleton<LocalSafePolicy>();
+        services.AddSingleton<IPolicy<ShellCommandPolicyRequest>, LocalSafeShellCommandPolicyAdapter>();
+        if (permissionEvaluator is not null)
+        {
+            services.AddSingleton(permissionEvaluator);
+        }
+
+        builder.AddTool<ShellCommandTool, ShellCommandRequest, ShellCommandResult>(
+            new CapabilityId("tool.shell.permission"),
+            displayName: "Permission probe shell tool",
+            requiredPermissions: [new CapabilityPermission(PermissionCatalog.Network)],
+            pluginOrigin: new PluginOrigin("plugin.shell", new CapabilityVersion("1.0.0"), "Plugin.Shell"));
+
+        var provider = services.BuildServiceProvider(validateScopes: true);
+        return new RuntimeToolGateway(provider, builder.CapabilityDescriptors);
     }
 }
