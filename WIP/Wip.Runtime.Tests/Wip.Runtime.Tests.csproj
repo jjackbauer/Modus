@@ -21,5 +21,6 @@
     <ProjectReference Include="..\..\WIP\Wip.Runtime\Wip.Runtime.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.Shell\Wip.Shell.csproj" />
     <ProjectReference Include="..\..\WIP\Wip.Tools.Shell\Wip.Tools.Shell.csproj" />
+    <ProjectReference Include="..\..\WIP\Wip.Tools.Repo\Wip.Tools.Repo.csproj" />
   </ItemGroup>
 </Project>

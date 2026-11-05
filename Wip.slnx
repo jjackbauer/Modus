@@ -43,6 +43,7 @@
     <Project Path="WIP/Wip.Shell.E2E/Wip.Shell.E2E.csproj" />
     <Project Path="WIP/Wip.Shell.Tests/Wip.Shell.Tests.csproj" />
     <Project Path="WIP/Wip.ShellHost.Tests/Wip.ShellHost.Tests.csproj" />
+    <Project Path="WIP/Wip.Tools.Repo/Wip.Tools.Repo.csproj" />
     <Project Path="WIP/Wip.Tools.Shell.Tests/Wip.Tools.Shell.Tests.csproj" />
     <Project Path="WIP/Wip.Validation.DotNet.Tests/Wip.Validation.DotNet.Tests.csproj" />
     <Project Path="WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj" />

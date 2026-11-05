@@ -14,6 +14,9 @@ using Wip.Workspaces.Git;
 using DotNetValidationRequest = Wip.Validation.DotNet.DotNet.DotNetValidationRequest;
 using DotNetValidationValidator = Wip.Validation.DotNet.DotNet.DotNetValidationValidator;
 using Wip.Abstractions.Workflows;
+using Wip.Abstractions.Agents;
+using Wip.Abstractions.Chat;
+using Wip.Abstractions.Tools;
 
 
 namespace Wip.Runtime.Runtime;
@@ -286,6 +289,37 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         {
             _authorityGate.Release();
         }
+    }
+
+    /// <summary>
+    /// WP-3.6: runs the provider-neutral agent loop for a session. The host supplies the
+    /// <see cref="IChatModel"/>; a custom <see cref="IToolInvoker"/>/<see cref="IAgentExecutor"/> may
+    /// be registered, otherwise the defaults compose the builder's capability descriptors.
+    /// </summary>
+    public async ValueTask<AgentExecutionResult> RunAgentAsync(
+        AgentExecutionRequest request,
+        WipBuilder builder,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(services);
+
+        var session = await _sessionStore.LoadAsync(request.SessionId, cancellationToken)
+            ?? throw new InvalidOperationException($"Session '{request.SessionId.Value}' was not found.");
+
+        var chatModel = services.GetService(typeof(IChatModel)) as IChatModel
+            ?? throw new InvalidOperationException("No IChatModel is registered in the run provider.");
+
+        var toolInvoker = services.GetService(typeof(IToolInvoker)) as IToolInvoker
+            ?? new RuntimeToolInvoker(services, builder.CapabilityDescriptors);
+
+        var executor = services.GetService(typeof(IAgentExecutor)) as IAgentExecutor
+            ?? new AgentExecutor(chatModel, toolInvoker);
+
+        var context = new CapabilityContext(session.SessionId, session.WorktreePath);
+        return await executor.ExecuteAsync(request, context, cancellationToken);
     }
 
     public async ValueTask<SessionDiffResult> GenerateDiffAsync(
