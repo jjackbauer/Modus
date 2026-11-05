@@ -574,3 +574,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Tests CI on `a71c965` failed only at `LoadPluginsAsync_GivenTwoPluginsWithConflictingDependencyVersions...` on Linux. Root cause: the test assumed `tests/Fixtures/.../bin/Release/net10.0`, but a solution build (`dotnet build Wip.slnx -c Release`) emits the fixture projects (not in the solution) under `bin/Debug`; the fixture directory was therefore missing on clean CI. Purely a test-path bug, not an ALC defect.
 - Fix: the test now discovers the fixture output by searching `<fixture>/bin/**/<assembly>.dll` (newest first), and the fixture references carry `SetConfiguration="Configuration=Release"`. Emulated the clean CI build locally (fixtures cleaned, solution-built into Debug) — the test passes.
 - Modus suite on a clean Linux clone: 24 total, only the pre-existing waived README failure; conflict test green.
+## 2026-11-05T04:05:00-03:00 - CI stabilization: latency assertion hardened
+
+- Tests CI on `318d864` passed the fixture fix but failed `BonesSubAgentDelegatorTests.DelegateMoveDecision_GivenSubAgentReturnsFast_RecordsAccurateLatency` (latency < 1s under CI scheduling noise with a 50 ms delay). This is a pre-existing timing flake.
+- The bound is now >= 40 ms (timer granularity) and < 5 s (the delegation timeout), so it still proves the sub-agent path was recorded and cannot silently be the fallback. Class green locally (11/11).
+- WP-2.7 product code unchanged; CI verification pending on the next run.

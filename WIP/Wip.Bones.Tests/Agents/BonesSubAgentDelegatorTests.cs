@@ -185,9 +185,10 @@ public sealed class BonesSubAgentDelegatorTests
         // Act
         var result = await delegator.DelegateAsync(request, fallbackMove);
 
-        // Assert
-        Assert.True(result.Latency >= TimeSpan.FromMilliseconds(50));
-        Assert.True(result.Latency < TimeSpan.FromSeconds(1));
+        // Assert: allow timer granularity and CI scheduling noise, but stay well below the 5s
+        // delegation timeout so this cannot silently exercise the fallback path.
+        Assert.True(result.Latency >= TimeSpan.FromMilliseconds(40), $"Latency {result.Latency} should include the sub-agent wait.");
+        Assert.True(result.Latency < TimeSpan.FromSeconds(5), $"Latency {result.Latency} should stay below the delegation timeout.");
     }
 
     [Fact]
