@@ -73,8 +73,8 @@
   },
   "test_inventory": {
     "executed": 1105,
-    "passed": 1080,
-    "failed": 25,
+    "passed": 1082,
+    "failed": 23,
     "waived_failures_registered": 27,
     "ci_exposed_failed": 6,
     "known_failed_total": 23,
@@ -86,13 +86,13 @@
     "bones_tests": 395,
     "architecture_tests": 4,
     "architecture_projects": 41,
-    "evidence": ".tmp/gate-check (16 TRX files); 2 unwaived Playwright viewer timing failures under the environment compile slowdown (pass on CI)"
+    "evidence": "CI run_41943047685 (16-project offline gate success, all six jobs); local .tmp/gate-check had the 2 environment-bound Playwright viewer failures that CI passes"
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_41886092310_success_head_6803eef",
+    "remote_ci": "run_41943047685_success_head_3553f30",
     "modus_ci": "run_41933143670_success_hard_gates_legacy_suite_nonblocking",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
     "security_ci": "run_41655112634_invalidated_helper_not_installed",

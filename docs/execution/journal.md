@@ -517,3 +517,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Delivered:** `IWorkflowExecutor`/`WorkflowExecutionContext`/`IWorkflowRunAuthority`; `LinearWorkflowExecutor` owns the stage loop; the orchestrator implements the authority and delegates; an executor registered in the run provider replaces the default. New recording-executor test; declarative-plan test from part 1 stays green. Legacy `IWorkflow` path unchanged (obsolete marker lands with WP-2.5).
 - **Gate:** 16 projects, 1,105 executed / 1,080 passed / 25 failed — 23 waived plus the two known environment-bound Playwright viewer waits (`BonesHostViewerLearningLoopStatus`, 30 s fixed waits under this machine's ~10 s first-compile). All other suites clean; Runtime.Tests 75 (74 pass + 1 waived). CI is the authoritative verification for this commit.
 - **Next:** WP-2.4 — explicit plan maps for all workflows and delete `WorkflowStageMapAdapterRuntime` (registry + heuristics), then WP-2.5 Bones migration.
+## 2026-11-04T21:55:00-03:00 - WP-2.3 green in CI
+
+- Tests CI run [41943047685](https://github.com/jjackbauer/Modus/actions/runs/41943047685) on `3553f30`: **all six jobs success**, including the 16-project offline suite and the count/waiver gate. The two Playwright viewer tests that failed locally passed on CI, confirming they were environment-bound.
+- Modus CI on the same commit: **success** (hard gates green; legacy suite non-blocking per BLK-MODUS-LEGACY-SUITE).
+- **Next:** WP-2.4 — explicit plan maps for all workflows, delete `WorkflowStageMapAdapterRuntime`, then WP-2.5 Bones migration.
