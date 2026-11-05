@@ -1,3 +1,26 @@
+# ── Repository (solution) targets ──
+# Generic build/test/run targets for the whole Modus solution, used by operators and
+# CI tooling documentation. `make <target>` prints no secrets.
+SOLUTION=Modus.slnx
+HOST_PROJECT=src/Modus.Host/Modus.Host.csproj
+PLUGINS_PATH=$(CURDIR)/plugins
+
+.PHONY: build
+build: ## Build the whole solution
+	dotnet build $(SOLUTION)
+
+.PHONY: test
+test: ## Run every test project in the solution
+	dotnet test $(SOLUTION)
+
+.PHONY: test-no-build
+test-no-build: ## Run tests without rebuilding (fast validation after build)
+	dotnet test $(SOLUTION) --no-build
+
+.PHONY: run-host
+run-host: ## Start the Modus host with the repository plugins folder
+	dotnet run --project $(HOST_PROJECT) -- $(PLUGINS_PATH)
+
 # ── Bones Learning Loop ──
 # Usage: make <target>
 #
