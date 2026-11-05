@@ -8,7 +8,7 @@
   "work_package": "WP-3.5",
   "status": "in_progress",
   "gate": "G5",
-  "phase3_wp34_done_wp35_streaming_core_done_remaining_adapter_safety",
+  "gate_status": "phase3_wp34_done_wp35_streaming_core_done_remaining_adapter_safety",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
     "WP-0.1": 2,
