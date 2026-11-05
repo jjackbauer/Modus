@@ -463,3 +463,38 @@
 - **Rationale**: OBS-021 + EVD-050..053: this is the user-visible surface for WP-3.5 and it is covered by a falsifiable test.
 - **Alternatives considered**: decorating the existing `run` command (rejected: `run` is workflow execution with different governance semantics); only logging stream events (rejected: not user-visible progress).
 - **Related**: OBS-021, EVD-050, EVD-053
+
+### OBS-022: The real-model write-capable sample agent works at the HTTP boundary
+
+- **Source**: `WIP/Wip.Runtime.Tests/Repo/AgentRealModelHttpBoundaryE2ETests.cs`; run `.tmp/wp36/wp36-e2e-3.trx`; `WIP/Wip.Runtime.Tests/Runtime/DeepSeekChatModelLiveTests.cs`
+- **Fact**: A local `HttpListener` fake DeepSeek server (search tool call → write tool call → final answer) drives the real adapter/tool invoker/executor/`RunAgentAsync` end to end. The test passes 3 requests: the search result contains `needle`, `docs/agent-note.md` is written inside the worktree with exact content (nothing outside), memory records the task and answer, session-state telemetry is persisted, usage is recorded, and the session is neither `Merged` nor `Approved` with no merge artifact.
+- **Implications**: The G1 non-negotiable ("the harness must be able to work on itself") is demonstrated at the HTTP boundary with real tool/executor code. The worktree guard is exercised by the real write path.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-056, EVD-057, EVD-058, EVD-059
+
+### HYP-007: The sample-agent E2E depends on the real write tool, not on a fake file
+
+- **Claim**: The `docs/agent-note.md` assertion fails if the repository write tool stops writing.
+- **Supporting OBS**: OBS-022
+- **Why it matters**: Otherwise the E2E could pass while the write capability is stubbed.
+- **Falsification strategy**: comment out `File.WriteAllText` in `RepoAgentTools` on the clone; rebuild and run the E2E (expect failure); restore.
+- **Status**: Supported
+- **Confidence**: High
+- **Related**: EVD-059
+
+### VAL-012: HYP-007 supported — removing the write fails the E2E
+
+- **Target**: HYP-007
+- **Method**: clone-only removal of the write call, rebuild, run the E2E.
+- **Evidence examined**: `/tmp/wp36-ctrl.log` (`CTRL_EXIT=1`); restored build.
+- **Result**: Supported
+- **Conclusion**: The E2E's edit assertion depends on the real worktree-confined write tool.
+- **Related**: EVD-059
+
+### DEC-011: Keep the live DeepSeek test opt-in and offline-gate safe
+
+- **Decision**: `DeepSeekChatModelLiveTests` performs a real call only when `DEEPSEEK_API_KEY` is set; otherwise it returns immediately without network access.
+- **Rationale**: OBS-022 + EVD-057: the offline gate (Windows CI) has no credentials, and a live call must never make the gate network-dependent or flaky.
+- **Alternatives considered**: `[Fact(Skip=...)]` (rejected: static skip cannot honour an env key); filtering the test by category in CI (rejected: the gate would silently drop it; an env-gated early return keeps it discoverable and honest).
+- **Related**: OBS-022, EVD-057

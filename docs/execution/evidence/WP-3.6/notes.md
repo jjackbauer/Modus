@@ -1,8 +1,8 @@
-# WP-3.6 — runtime agent entry point and write-capable repository tools (core)
+# WP-3.6 — runtime agent entry point, write-capable repository tools and real-model sample agent
 
-**Status:** in progress 2026-11-05. Write-capable tools, runtime `RunAgentAsync` and an agent E2E
-are in; memory-backed and real-model sample flows plus the `AgentExecutorTool` workflow capability
-remain.
+**Status:** complete 2026-11-05 (local verification; authoritative Tests CI confirmation on the
+commit that carries this file). The real-model, write-capable sample agent is proven at the HTTP
+boundary, and the opt-in live test is gated by `DEEPSEEK_API_KEY`.
 
 ## Delivered
 
@@ -30,5 +30,22 @@ remain.
 
 ## Remaining
 
-- Artifact memory (WP-3.4) and a sample agent that answers a repository question with a
-  real/DeepSeek chat model; `AgentExecutorTool` capability so workflows can run the agent loop.
+- None for WP-3.6.
+
+## Increment 3 — real-model sample agent at the HTTP boundary (2026-11-05)
+
+- `WIP/Wip.Runtime.Tests/Repo/AgentRealModelHttpBoundaryE2ETests.cs`: a local
+  `HttpListener`-based fake DeepSeek server (3 responses: search tool call, write tool call, final
+  answer) drives the real `DeepSeekChatModel`, `RuntimeToolInvoker`, `AgentExecutor`,
+  `RunAgentAsync` and `WorktreePathGuard` end to end.
+- Asserts: the repository question is answered through the real search tool (`needle` in the tool
+  result); the agent writes `docs/agent-note.md` inside the isolated worktree with the exact content
+  and no file is created outside it; agent memory records the task and final answer; the persisted
+  session-state telemetry exists; token usage is recorded; the session is neither `Merged` nor
+  `Approved` and no merge artifact exists; the fake server served exactly 3 requests.
+- Control: commenting out the tool's `File.WriteAllText` makes the E2E fail, so the edit assertion
+  depends on the real write tool.
+- `WIP/Wip.Runtime.Tests/Runtime/DeepSeekChatModelLiveTests.cs`: opt-in live test. With
+  `DEEPSEEK_API_KEY` unset it returns immediately (no network, no failure, offline-gate safe); with
+  the key set it calls the real DeepSeek endpoint and asserts a non-empty `deepseek-chat` answer.
+- `Wip.Runtime.Tests` total 132 → 134; the waiver expected total is updated.

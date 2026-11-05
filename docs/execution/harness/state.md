@@ -1,51 +1,51 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 2 of 12 (local complete; authoritative CI pending the push)
+- **Round**: 3 of 12 (local complete; authoritative CI pending the push)
 - **Goal**: Phase 3 completion (adapter, real-model write-capable agent, safety) → Phases 4–6 → G2
   re-review → G5 packet and human decision; no release.
-- **Definition of done**: 3/11 met (D1 adapter, D2 host+shell progress, D11 verification); 3 partial
-  (D5 tool-level safety only, D9 G2 packet predates Phase 3, D10 G5 packet stale); 5 not started
-  (D3, D4, D6, D7, D8)
+- **Definition of done**: 4/11 met (D1 adapter, D2 host+shell progress, D3 real-model write-capable
+  E2E, D11 verification); 4 partial (D4 live test gated but the keyed path is unverified without a
+  key, D5 tool-level safety only, D9 G2 packet predates Phase 3, D10 G5 packet stale); 3 not started
+  (D6, D7, D8)
 - **Stop criteria**: D1–D11 unmet; G5 human decision not requested yet.
 
 ## Gate status
 
 | Gate | Status | Detail |
 |---|---|---|
-| G1 Evidence | PASS | every claim resolves to a file:line, a TRX or a command output (EVD-020..053) |
-| G2 Falsification | PASS | 0 open falsified rows; HYP-003 falsified, superseded by HYP-004/005; the weak shell assertion was exposed by control B and tightened |
-| G3 Coverage | PASS | no dimension regressed; D2 moved to met with WP-3.5 complete |
-| G4 Reproduction | PASS | every fix/suite re-run by the orchestrator; stub controls for the streaming tests (EVD-050..053) |
-| G5 Honesty | PASS | Windows-only gate, blocked local VSTest, missing CI logs and the cancelled run are recorded (OBS-012/014/020, EVD-043/049) |
+| G1 Evidence | PASS | every claim resolves to a file:line, a TRX or a command output (EVD-020..059) |
+| G2 Falsification | PASS | 0 open falsified rows; the write-tool control and the earlier streaming controls all fail as required |
+| G3 Coverage | PASS | no dimension regressed; D3 moved to met with WP-3.6 complete |
+| G4 Reproduction | PASS | E2E, full suite and the write-tool control were run by the orchestrator (EVD-056..059) |
+| G5 Honesty | PASS | the live keyed path is explicitly unverified without credentials; the Windows-only gate and blocked local VSTest remain recorded |
 
-## Round 2 outcome
+## Round 3 outcome
 
-- **Objective:** finish WP-3.5 (shell/status progress) and keep the authoritative gate green.
-- **Result:** `WipRuntimeOrchestrator.RunAgentStreamingAsync` streams adapter events and appends
-  session memory; the shell command `agent "<task>"` renders deltas, tool calls/results and the
-  final status/answer; help text, no-session guidance and the command-semantics contract include it.
-- **Tests:** 2 runtime streaming tests, 1 shell command test, contract tests updated;
-  `Wip.Runtime.Tests` 130 → **132**, `Wip.Shell.Tests` 32 → **33**; the full shell suite is 33/33.
-- **Controls:** stubbing the runtime stream fails the runtime tests; removing the shell delta
-  rendering fails the shell test (the first assertion version was satisfied by the final answer
-  alone and was tightened).
-- **Baseline CI:** the records HEAD `3ea7086` is fully green (Tests CI `42037930950` six jobs, Modus
-  CI `42037930830`).
-- **Remote status:** **green on `5b78a9e`** — Tests CI `42040810159` all six jobs (windows-latest
-  offline gate with Runtime 132 / Shell 33) and Modus CI `42040810043` success. The round-2 records
-  commit is local and rides the next push; its own CI is the next round's first check.
+- **Objective:** WP-3.6 — a real-model, write-capable sample agent proven at the DeepSeek HTTP
+  boundary, plus the opt-in live test.
+- **Result:** a local `HttpListener` fake DeepSeek server (search → write → final answer) drives the
+  real adapter, tool invoker, executor, `RunAgentAsync` and worktree guard. The agent answers from
+  the search result, writes `docs/agent-note.md` only inside the worktree, records memory, persists
+  session telemetry, records usage, and never merges or self-approves.
+- **Tests:** `Wip.Runtime.Tests` 132 → **134** (2 new: HTTP-boundary E2E + opt-in live test); the
+  waiver expected total is updated. Full suite: 134 discovered, 128 passed, 6 documented
+  environment/waiver failures.
+- **Control:** removing the write tool's `File.WriteAllText` makes the E2E fail.
+- **Baseline CI:** the round-2 records HEAD `9e03c98` is fully green (Tests CI `42043470844`, Modus
+  CI `42043470827`). The round-3 commit's CI is the pending check.
 
 ## Objective ledger
 
 | Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
 |---|---|---|---|---|---|---|---|
 | 1 | Fix the red Modus CI hard gate at HEAD deterministically | Probe + measured self-implementation | 0 | 30 | 1 (HYP-003) | all PASS | converged: Modus + Tests CI green on `1b6d7cd` |
-| 2 | Finish WP-3.5: runtime streaming entry + shell progress | Probe + measured self-implementation | 0 | 4 | 0 | all PASS | local green; push → Tests CI `windows-latest` |
+| 2 | Finish WP-3.5: runtime streaming entry + shell progress | Probe + measured self-implementation | 0 | 4 | 0 | all PASS | verified green on `5b78a9e` |
+| 3 | WP-3.6: real-model write-capable sample agent at the HTTP boundary | Probe + measured self-implementation | 0 | 4 | 0 | all PASS | local green; push → Tests CI `windows-latest` |
 | — | (prior run) Phase 0–3 core, G3/G4 accepted | — | — | EVD-001..019 | — | — | carried |
 
 ## Next objective
 
-Push the round-2 commit and confirm Tests CI `wip-offline-tests` on `windows-latest` with Runtime 132
-and Shell 33; then **WP-3.6**: a real-model, write-capable sample agent E2E at the DeepSeek HTTP
-boundary (fake server) plus the opt-in live test gated by an API key, then the WP-3.7 safety
-remainder.
+Push the round-3 commit and confirm Tests CI `wip-offline-tests` on `windows-latest` with Runtime 134;
+then **WP-3.7**: the safety-suite remainder (prompt injection via tool output, self-approval/merge
+attempt, exfiltration via shell/search, oversized observations, model error, cancellation) wired into
+the Security/Agent CI job.
