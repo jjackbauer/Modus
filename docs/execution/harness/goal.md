@@ -20,7 +20,7 @@ exact release steps — with no release, publish, sign or deploy performed.
 | D8 | Phase 6: versioning, packaging dry-run, signing plan, compatibility/upgrade notes, post-release verification plan; no publish/sign/deploy | pack dry-run exit 0 into a local folder; docs exist; no registry push |
 | D9 | G2 re-review packet assembled: conditional/trusted-only preserved, C1 unclaimed, evidence cited | packet exists; status not upgraded without human sign-off |
 | D10 | G5 packet: golden-path demos, security review, known limits, exact release steps, explicit decision request | `docs/execution/evidence/G5/release-readiness.md` updated with EVD ids and the decision request |
-| D11 | Verification at the committed HEAD: 16-project offline gate with zero unwaived failures, architecture 4/4, security green, Tests CI six jobs green | `tools/run-wip-tests.ps1` + `tools/verify-test-results.ps1` exit 0; CI run id recorded in `docs/execution/state.json` |
+| D11 | Verification at the committed HEAD: 16-project offline gate with zero unwaived failures, architecture 4/4, security green, Tests CI six jobs green | Tests CI `wip-offline-tests` on **windows-latest** green with expected counts (the authoritative gate); Modus CI green; run ids recorded in `docs/execution/state.json`. Windows-local VSTest is blocked in this session (`Win32Exception 5`) and WSL is not equivalent, so WSL runs are supplementary evidence only |
 
 ## Hard constraints
 

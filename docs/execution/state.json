@@ -32,8 +32,8 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T09:30:00-03:00",
-  "next_action": "Push the reference-timer cadence fix (second iteration) and confirm Modus CI + Tests CI on the new HEAD. Then commit WP-3.5 increment 1 (DeepSeek IChatModel adapter, 7 local tests green) and add shell stream progress; then the real-model write-capable sample agent, the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
+  "last_verified_at": "2026-11-05T10:20:00-03:00",
+  "next_action": "Push the WP-3.5 adapter commit (DeepSeek IChatModel, 7 tests, host registration, Runtime.Tests total 130) and confirm Tests CI wip-offline-tests on windows-latest plus Modus CI. Then shell/status stream progress, the real-model write-capable sample agent at the DeepSeek HTTP boundary, the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
   "open_blockers": ["Modus CI hard gate was red at HEAD 4dc6559 (migration-regression cadence test); deterministic fix landed locally, remote run pending. Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-3.5/3.6/3.7, Phases 4-6 and G5 remain."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
@@ -95,6 +95,10 @@
     "bones_tests": 396,
     "architecture_tests": 4,
     "architecture_projects": 43,
+    "runtime_tests_total": 130,
+    "deepseek_chat_adapter_tests": 7,
+    "authoritative_gate": "Tests CI wip-offline-tests on windows-latest",
+    "local_windows_vstest": "blocked_win32exception5_testhost_parent_callback; WSL runs are supplementary and not gate-equivalent",
     "evidence": "Tests CI run_42028137512 on 22bcdd5 failed only the offline count/waiver gate on two BonesLoopState concurrency flakes (no product change in that HEAD); Tests CI 42003337898 on 4dc6559 and 42022906370 on 5cea565 were 6/6 green; Modus CI 42028137663 on 22bcdd5 is green (migration regression hard gate fixed); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123 + 7 new adapter tests"
   },
   "test_gate": {
@@ -147,7 +151,7 @@
     "WP-3.2": "done",
     "WP-3.3": "done",
     "WP-3.4": "done",
-    "WP-3.5": "in_progress",
+    "WP-3.5": "in_progress_adapter_done_shell_stream_progress_remaining",
     "WP-3.6": "in_progress",
     "WP-3.7": "in_progress",
     "G4": "accepted",

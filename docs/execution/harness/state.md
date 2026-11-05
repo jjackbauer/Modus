@@ -30,8 +30,17 @@
 - (3) Tests CI `42028137512` on `22bcdd5` exposed two unwaived `BonesLoopStateConcurrencyTests`
   flakes (reader outruns writer on a pinned core). Fixed with bounded writer/reader coordination:
   15/15 on the failing condition, and always-true / non-monotonic injections still fail.
+- (4) The authoritative 16-project gate runs on `windows-latest`, and this session's Windows VSTest
+  is blocked; a WSL run is not equivalent (platform-only failures). Gate evidence therefore comes
+  from Tests CI `wip-offline-tests`; WSL runs cover the Linux Modus suite and adapter unit tests.
 - **Remote status:** post-fix Modus CI and Tests CI runs are recorded in
   `docs/execution/state.json` once the push completes.
+
+## Next objective
+
+Push the WP-3.5 increment 1 commit (DeepSeek `IChatModel` adapter, 7 tests, host registration,
+`Runtime.Tests` total 130) and confirm Tests CI `wip-offline-tests` on `windows-latest`; then
+implement shell/status stream progress and start the real-model write-capable sample agent.
 
 ## Objective ledger
 

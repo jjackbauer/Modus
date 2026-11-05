@@ -8,6 +8,7 @@ using Wip.Abstractions.Sessions;
 using Wip.Abstractions.Workflows;
 using Wip.Builder;
 using Wip.Modus.Hosting;
+using Wip.Runtime;
 using Wip.Runtime.Runtime;
 using Wip.Shell.Interactive;
 
@@ -169,11 +170,10 @@ public static class WipShellHostFactory
         }
 
         var deepSeek = providerConfig.DeepSeek;
-        builder.Services.AddSingleton(new DeepSeekModelProviderOptions(
+        builder.Services.AddDeepSeekChatModel(new DeepSeekModelProviderOptions(
             baseUrl: new Uri(deepSeek.BaseUrl, UriKind.Absolute),
             apiKey: $"env:{deepSeek.KeySourceReference}",
             timeout: deepSeek.Timeout));
-        builder.Services.AddSingleton(static _ => new HttpClient());
 
         builder.AddModelProvider<DeepSeekModelProvider, DeepSeekChatCompletionRequest, DeepSeekChatCompletionResult>(
             capabilityId: new CapabilityId("model-provider.deepseek.chat"),

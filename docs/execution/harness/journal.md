@@ -408,3 +408,19 @@
 - **Rationale**: EVD-040/041/042 — the failures are test scheduling assumptions, the invariants are unchanged, and the fixed tests still fail on injected violations.
 - **Alternatives considered**: retry at the gate (rejected); waive the two tests (rejected: they are meaningful assurances); reduce the iteration count (rejected: does not remove the race).
 - **Related**: OBS-019, HYP-005, RISK-002
+
+### OBS-020: The authoritative offline gate is Windows, so a WSL run cannot validate it
+
+- **Source**: `.github/workflows/tests-ci.yml:76-94` (`wip-offline-tests` has `runs-on: windows-latest` and runs `tools/run-wip-tests.ps1`); WSL run `.tmp/gate-r1/*.trx`
+- **Fact**: The 16-project gate is executed on Windows. A WSL run of the same projects produced platform-only failures: 30 `dotnet.cmd` execution failures in `Wip.Validation.DotNet.Tests`, a backslash path-guard expectation in `Wip.Artifacts.Local.Tests`, and a line-ending hash expectation in `Wip.Workspaces.Git.Tests`. With the adapter added, `Wip.Runtime.Tests` discovered 130 tests and all 7 adapter tests passed; its only non-environment failure is the pre-existing waived cancellation test.
+- **Implications**: Local Windows VSTest is blocked (`Win32Exception 5`), so no local run of this session can be the authoritative gate. Tests CI `wip-offline-tests` (windows-latest) is the only authoritative evidence; WSL runs are supplementary. This must be stated in every gate claim.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-043, EVD-044, DEC-009
+
+### DEC-009: Authoritative gate evidence comes from Tests CI windows-latest
+
+- **Decision**: Record the 16-project offline gate result only from Tests CI's `wip-offline-tests` job on `windows-latest`; WSL runs are used for targeted Linux-relevant suites (for example the Modus migration test) and for adapter unit tests, never as the authoritative gate.
+- **Rationale**: OBS-020 + EVD-043: the gate is Windows-only; the session's Windows testhost is blocked, and WSL semantics differ on Windows-specific tests. Claiming a WSL result as the gate would be false.
+- **Alternatives considered**: claiming the WSL pass (rejected: false); excluding the Windows-only tests (rejected: weakens the gate); creating a Windows scheduled task to bypass the testhost restriction (rejected: containment-sensitive and out of scope).
+- **Related**: OBS-020, EVD-043
