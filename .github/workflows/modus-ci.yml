@@ -49,13 +49,30 @@ jobs:
         shell: bash
         run: |
           trx=$(find tests/Modus.Host.IntegrationTests -name 'MigrationRegressionSuite.trx' | head -1)
-          if [ -n "$trx" ]; then
-            grep -E 'outcome="Failed"' "$trx" | grep -oE 'testName="[^"]+"' | head -20 | while IFS= read -r line; do
-              echo "::error title=MigrationRegression::${line}"
-            done
-          else
+          if [ -z "$trx" ]; then
             echo "::warning title=MigrationRegression::No TRX was produced for the migration regression gate."
+            exit 0
           fi
+          python3 - "$trx" <<'PY'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          ns = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
+          tree = ET.parse(sys.argv[1])
+          failed = 0
+          for result in tree.getroot().findall(".//t:UnitTestResult", ns):
+              if result.get("outcome") != "Failed":
+                  continue
+              failed += 1
+              name = result.get("testName", "unknown")
+              message = ""
+              info = result.find(".//t:Output/t:ErrorInfo/t:Message", ns)
+              if info is not None and info.text:
+                  message = " ".join(info.text.split())[:1500]
+              line = "::error title=MigrationRegression::" + name + " :: " + message
+              print(line.replace("%", "%25"))
+          print("::notice title=MigrationRegression::failed tests=" + str(failed))
+          PY
       - name: Gate plugin endpoint curl probe (Release, no build, TRX)
         run: dotnet test tests/Modus.Host.IntegrationTests/Modus.Host.IntegrationTests.csproj --configuration Release --no-build --filter "FullyQualifiedName~PluginEndpointCurlGateTests" --logger "trx;LogFileName=PluginEndpointCurlGateTests.trx"
       # The legacy Modus integration suite still contains meta-tests written against the pre-G0

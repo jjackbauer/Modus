@@ -649,3 +649,12 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Verification:** fixed test 10/10 pass under the same 2-core contention; clone-only `600 ms` interval injection fails at run 1 → 2 (`597.4609 ms`); clone-only no-tick injection fails on the 5-execution wait; full migration filter 19/19 on the clone.
 - **Environment:** local Windows VSTest is blocked in this session (`Win32Exception (5)` in the testhost parent-process callback), so tests ran on the WSL clone at the same commit and TRX were read from Windows. Not a waiver; CI stays authoritative.
 - **Evidence:** `docs/execution/evidence/CI-FIX/README.md`. **No release claim; G5 not requested.**
+
+## 2026-11-05T09:30:00-03:00 — Round 1 (continued): first fix insufficient; cadence gate rewritten to rate parity
+
+- **Modus CI on `5cea565` failed again** at the same hard gate (annotation: the same test). A first fix that only excluded the registration sample was therefore necessary but not sufficient.
+- **Second root cause (reproduced):** under CPU starvation the runtime's own `PeriodicTimer` delivers catch-up bursts. Instrumented job gaps `[935.5, 10.5, 959.1, 166.0] ms` against a 300 ms interval; a reference `PeriodicTimer` in the same process showed `[1.5, 248.8, 304.0] ms`. Per-gap wall-clock precision is not a property the runtime provides on a loaded runner.
+- **Final fix:** the gate now starts a reference `PeriodicTimer(300 ms)` and requires every recurring job tick to be within **one tick** of the reference count at that instant; the first-tick bound (≤ 5 s), the ≥ 5-execution liveness check, the one-time assertion and every diagnostics assertion stay. No nominal tolerance, retry or waiver was added.
+- **Verification:** 12/12 full-migration runs pass under `taskset -c 0,1` with two busy loops; clone-only injections of a 600 ms interval (fails at tick 3), a 150 ms interval (fails at tick 2) and a one-hour timer (fails the bounded wait) still fail; full migration filter 19/19.
+- **CI diagnostics:** the Modus CI failure-dump step now parses the TRX and emits the failing test's **error message** as an annotation (validated against the real failing TRX; workflow YAML parses). Future flakes are diagnosable from public annotations.
+- **Evidence:** `docs/execution/evidence/CI-FIX/README.md`. No release claim.

@@ -19,10 +19,13 @@
 ## Round 1 outcome
 
 - **Objective:** make the red Modus CI hard gate at HEAD deterministic and green.
-- **Result:** root cause reproduced (registration execution counted as a cadence interval; 649.5 ms
-  startup gap under 2-core contention); fixed by bounding first-tick latency and asserting cadence
-  between periodic ticks. 10/10 pass after the fix under the failing condition; two negative
-  controls still fail; migration filter 19/19; no tolerance/waiver/retry change.
+- **Result:** two root causes found and fixed. (1) The registration-time execution was counted as a
+  cadence interval (649.5 ms startup gap under 2-core contention) — necessary but not sufficient.
+  (2) Under CPU starvation the runtime's own `PeriodicTimer` delivers catch-up bursts (job gaps
+  `[935.5, 10.5, 959.1, 166.0] ms`, reference gaps `[1.5, 248.8, 304.0] ms`), so per-gap wall-clock
+  assertions are not observable. The gate now requires the job's tick count to keep pace with a
+  same-process reference timer (±1 tick); 12/12 loaded runs pass, while 600 ms, 150 ms and dead
+  scheduler injections all fail; the full migration filter is 19/19.
 - **Remote status:** post-fix Modus CI and Tests CI runs are recorded in
   `docs/execution/state.json` once the push completes.
 

@@ -32,8 +32,8 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T09:00:00-03:00",
-  "next_action": "Push the cadence-gate fix and Phase 0 records, confirm Modus CI + Tests CI on the new HEAD, then WP-3.5: DeepSeek IChatModel adapter (CompleteAsync + SSE StreamAsync) with mock-HttpMessageHandler tests, host registration, and shell/status stream progress. Then the real-model write-capable sample agent, the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
+  "last_verified_at": "2026-11-05T09:30:00-03:00",
+  "next_action": "Push the reference-timer cadence fix (second iteration) and confirm Modus CI + Tests CI on the new HEAD. Then commit WP-3.5 increment 1 (DeepSeek IChatModel adapter, 7 local tests green) and add shell stream progress; then the real-model write-capable sample agent, the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
   "open_blockers": ["Modus CI hard gate was red at HEAD 4dc6559 (migration-regression cadence test); deterministic fix landed locally, remote run pending. Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-3.5/3.6/3.7, Phases 4-6 and G5 remain."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
@@ -103,7 +103,8 @@
     "known_aborts": 2,
     "remote_ci": "run_42003337898_success_head_4dc6559",
     "modus_ci": "run_42003338267_failure_head_4dc6559_migration_regression_cadence",
-    "modus_ci_fix": "docs/execution/evidence/CI-FIX/README.md (fix landed, post-fix run pending push)",
+    "modus_ci_fix": "docs/execution/evidence/CI-FIX/README.md (two iterations: registration-sample fix in 5cea565; reference-timer rate parity + TRX error annotations in the next commit; post-fix run pending push)",
+    "modus_ci_diagnostics": "migration regression failures now emit the failing test's TRX error message as a GitHub annotation",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
     "security_ci": "run_41655112634_invalidated_helper_not_installed",
     "os_containment": "linux_verified_windows_helper_createprocess_error5",

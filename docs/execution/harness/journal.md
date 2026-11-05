@@ -297,7 +297,7 @@
 - **Supporting OBS**: OBS-013, EVD-025
 - **Why it matters**: If true, the Modus CI hard gate can be made green deterministically with a small test fix instead of a retry or waiver. If false, the scheduler itself is defective and a product fix is required.
 - **Falsification strategy**: Apply the fix; rerun 10 times under the same 2-core contention (expected 0 failures). Then inject a 600 ms interval into the scheduler and confirm the fixed test fails; also remove the scheduling loop and confirm the minimum-execution assertion fails.
-- **Status**: Supported
+- **Status**: Falsified
 - **Confidence**: High
 
 ### VAL-008: HYP-003 supported — cadence fix removes the environment sensitivity
@@ -338,3 +338,38 @@
 - **Rationale**: OBS-013 + EVD-025: the failing quantity measured startup latency, not cadence; EVD-028..031 show the corrected assertion is stable under load and still rejects a wrong interval and a dead scheduler.
 - **Alternatives considered**: retrying the job (rejected: masks the defect and violates the no-retry-at-the-gate rule); widening the tolerance or excluding all outlier gaps (rejected: would hide a real cadence defect); an adaptive control-timer tolerance (rejected: more machinery, and the measured failure is fully explained by the startup sample); serializing the whole assembly (rejected: no evidence it affects a thread-pool startup delay and it costs CI time).
 - **Related**: HYP-003, VAL-008, RISK-002
+
+### OBS-018: The first fix was necessary but not sufficient — a second failure mode appeared
+
+- **Source**: Modus CI run `42022906402` on `5cea565` (same test, hard gate); local reproduction under 2-core contention with an instrumented test: `.tmp/instrumented-2core/instr-4.trx`, `.tmp/control-timer-2core/ctl-1.trx`
+- **Fact**: After the first fix, the test still failed: job gaps `[935.5, 10.5, 959.1, 166.0] ms` against a 300 ms interval. A reference `PeriodicTimer` in the same process produced `[1.5, 248.8, 304.0] ms` in the same run, so the burst pattern is a runtime/CPU-starvation artifact, not a host-scheduler defect.
+- **Implications**: Per-gap wall-clock precision is not an observable property under starvation; the cadence gate must compare the job's rate with a reference that experiences the same starvation.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: OBS-013, HYP-003, VAL-009, EVD-032
+
+### HYP-004: Rate parity against a reference timer is deterministic and still detects scheduler defects
+
+- **Claim**: Requiring every recurring job tick to occur within one tick of a same-process reference `PeriodicTimer`'s count removes the burst/starvation flakiness while still failing for a wrong configured interval (slower or faster) or a dead scheduler.
+- **Supporting OBS**: OBS-018
+- **Why it matters**: This is the difference between a hard gate that blocks every push and one that measures the scheduler contract.
+- **Falsification strategy**: 12 full-migration runs under 2-core contention (expect 0 failures); clone-only injections of 600 ms, 150 ms and a one-hour timer (expect all three to fail); full migration filter must stay 19/19.
+- **Status**: Supported
+- **Confidence**: High
+- **Related**: OBS-018, VAL-009
+
+### VAL-009: HYP-003 falsified, HYP-004 supported
+
+- **Target**: HYP-003 (superseded sufficiency claim) and HYP-004 (rate parity)
+- **Method**: shipped the first fix, observed Modus CI still red at `5cea565`; reproduced the post-fix failure under 2-core contention with an instrumented gap list and a reference timer; then replaced per-gap assertions with rate parity and re-ran the matrix (12 loaded runs + three injected-defect controls + the full filter).
+- **Evidence examined**: Modus CI `42022906402`; `.tmp/instrumented-2core/instr-4.trx` (`Gaps=[935.5, 10.5, 959.1, 166.0]`); `.tmp/control-timer-2core/ctl-1.trx` (`ControlGaps=[1.5, 248.8, 304.0]`); `.tmp/rate-2core/rate-1..12.trx` (12/12 pass); `.tmp/rate-controls/slow-interval.trx`, `fast-interval.trx`, `no-ticks.trx` (all fail); `.tmp/rate-controls/migration-rate.trx` (19/19).
+- **Result**: HYP-003 Falsified (necessary but not sufficient); HYP-004 Supported
+- **Conclusion**: The permanent gate compares job tick rate with a reference timer under the same starvation, catches 600 ms/150 ms/dead-scheduler defects, and is stable across 12/12 loaded runs.
+- **Related**: EVD-032..EVD-037, DEC-007
+
+### DEC-007: Cadence gate measures rate parity, not wall-clock gaps
+
+- **Decision**: Replace the per-gap `300 ms ± 250 ms` assertion with a reference-timer rate-parity assertion (±1 tick), keeping the first-tick bound, the ≥5-execution liveness check, the one-time assertion and every diagnostics assertion.
+- **Rationale**: OBS-018 + EVD-032: the runtime's own `PeriodicTimer` bursts under CPU starvation (`Gaps=[935.5, 10.5, 959.1, 166.0]`, `ControlGaps=[1.5, 248.8, 304.0]`), so wall-clock precision is not a property of the host scheduler. EVD-033..036 show the replacement is stable and still catches slow, fast and dead schedulers.
+- **Alternatives considered**: widening tolerance (rejected: hides real defects); retry (rejected: forbidden at the gate); serializing the assembly (rejected: does not remove CPU starvation); keeping per-gap with an environment allowance (rejected: tried, still failed 1/12 because burst timings differ between the two timers).
+- **Related**: HYP-003, HYP-004, VAL-009, RISK-002
