@@ -609,3 +609,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - WP-1.7 is complete: catalog, evaluator, Enforce/Audit, grants, enforcement at dispatcher/gateway/plugin-load/model-invoke, manifest grants and load diagnostics, host wiring. 15 permission tests; affected suites green (Runtime 87/1 waived, Modus 27/1 waived, ShellHost 47, Shell 32/2 waived, Bones 396/2 waived).
 - **G3 accepted** (packet `docs/execution/evidence/G3/gate-packet.md`, decision `decision-2026-11-05.md`): internal engineering gate; external security review (WP-5.5) and G5 remain.
 - **Next:** Phase 3 — WP-3.1 chat/tool contracts, then WP-3.2 tool invoker, WP-3.3 executor, WP-3.4 memory, WP-3.5 streaming, WP-3.6 runtime + write-capable agent, WP-3.7 safety.
+## 2026-11-05T06:35:00-03:00 - Phase 3 start: WP-3.1 chat/tool contracts
+
+- Added provider-neutral chat contracts in `Wip.Abstractions.Chat`: ChatRole/ChatMessage (system/user/assistant/tool factories, tool calls and tool call ids), ToolDefinition/ToolCall/ToolResult with defensive JSON cloning, validated ChatRequest/ChatResponse, StreamingChunk, and `IChatModel` (CompleteAsync + StreamAsync). `IModelProvider<,>` stays for backward compatibility.
+- Contract tests (11) cover role factories, JSON lifetime safety, validation, immutability and response/chunk fields; `Wip.Abstractions.Tests` is 55/55.
+- **Remaining WP-3.1:** DeepSeek IChatModel adapter with SSE streaming and mock tests.
+- **G3** was accepted this round (packet + decision committed) and WP-1.7 is complete with 15 permission tests, including model.invoke enforcement.
