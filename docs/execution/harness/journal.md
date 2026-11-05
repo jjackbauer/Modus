@@ -624,3 +624,26 @@
 - **Result**: Supported (with the small-corpus limitation recorded)
 - **Conclusion**: The 2,000-game benchmark requirement is met in execution, not in statistical scale; the limitation is in the G5 packet.
 - **Related**: EVD-082
+
+### OBS-029: Human gates recorded and one viewer-stage flake hardened
+
+- **Source**: `docs/execution/evidence/G2/decision-2026-11-05-owner-review.md`; `docs/execution/evidence/G5/release-readiness.md`; Tests CI `42065481595`
+- **Fact**: The owner accepted the prepared G2 packet as the security review (no external expert; not claimed) and asked for a best-effort G5 outcome; no release/publish was performed or authorized. Tests CI on `4bba218` failed one unwaived Playwright stage test; the same commit passed 3/3 locally, and after widening the bounded observation window (240 s outer / 15 s inner DOM match) it passed 3/3 locally again. G2 stays conditional/trusted-only and C1 unclaimed.
+- **Implications**: The engineering objective and the human decision are complete; the only remaining item is the CI confirmation of the flake fix and the final records commit.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-083, EVD-084
+
+### DEC-016: Owner review replaces the unavailable external G2 reviewer
+
+- **Decision**: Record the owner's acceptance of the prepared G2 packet as the review, explicitly disclosing that no independent external expert was available; do not upgrade containment or claim C1.
+- **Rationale**: EVD-083: the owner chose this option; fabricating an external review is forbidden and would be false.
+- **Alternatives considered**: holding indefinitely for an external reviewer (declined by the owner); claiming independent review (rejected: false).
+- **Related**: OBS-029, EVD-083
+
+### DEC-017: Record the G5 decision as best-effort acceptance, not as a release
+
+- **Decision**: Record the owner's "best effort" answer as acceptance of the residual risk and completion of the decision gate, with no release claim and no publish/sign/deploy (no credentials supplied). Release execution remains a separate, credentialed action.
+- **Rationale**: EVD-083: the owner declined a human expert and asked for best effort; the hard constraints still forbid a release claim or unauthorized publication.
+- **Alternatives considered**: treating "best effort" as publication authorization (rejected: no credentials, and no explicit release instruction); holding the goal open indefinitely (declined by the owner).
+- **Related**: OBS-029, EVD-083

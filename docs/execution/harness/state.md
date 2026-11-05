@@ -1,12 +1,9 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 9 of 12 (all engineering evidence delivered; human gates open)
-- **Goal**: G5 human decision after the G2 re-review/external sign-off. No release claim, no
-  publish/sign/deploy before the explicit decision.
-- **Definition of done**: 10/11 met (D1–D3, D5–D11 + golden path + 2,000-game benchmark); D4 partial
-  only in that the keyed live-model path is unverified without credentials.
-- **Stop criteria**: hard stop at the human G2/external sign-off and the G5 decision; goal remains
-  active until those are recorded.
+- **Round**: 9 of 12 (human gates recorded; CI confirmation of the viewer-test hardening pending)
+- **Goal**: G5 decision recorded — best-effort acceptance, no release. No publish/sign/deploy performed.
+- **Definition of done**: 10/11 met (all but the keyed live-model path, which requires credentials).
+- **Stop criteria**: decision gate satisfied; final CI confirmation only.
 
 ## Gate status
 
@@ -87,7 +84,16 @@
 - GitHub API rate limiting blocked CI confirmation of the latest docs HEAD this round; the last
   verified code HEAD remains `9dc8a56` (both workflows green).
 
+## Decision outcome (2026-11-05)
+
+- The owner accepted the prepared G2 packet as the review (no external/independent expert; disclosed),
+  asked for a best-effort G5 outcome, and supplied no publication credentials.
+- Recorded as DEC-016/DEC-017: G2 stays conditional/trusted-only, C1 unclaimed; G5 is a best-effort
+  acceptance of residual risk. **No release claim, no publish/sign/deploy.**
+- Open CI item: the viewer-stage test flake was hardened (bounded 240 s/15 s; 3/3 local) and awaits
+  CI confirmation on the fix commit.
+
 ## Next objective
 
-Request the human gates: the G2 re-review decision (C1), the external/independent security
-sign-off, and the explicit G5 release decision. No release, no publish, no sign, no deploy.
+Confirm Tests CI + Modus CI on the final commit; if green, mark the goal complete with this decision
+record. No release is performed.

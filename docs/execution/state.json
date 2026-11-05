@@ -8,7 +8,7 @@
   "work_package": "G5",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "g5_engineering_evidence_complete_human_gates_open",
+  "gate_status": "g5_decision_recorded_ci_verification_pending",
   "last_ci_green_head": "9dc8a56afca15eab6242c998fd7e5891eff4bbb2",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
@@ -33,7 +33,7 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T15:05:00-03:00",
+  "last_verified_at": "2026-11-05T19:55:00-03:00",
   "next_action": "G5 packet is complete with the golden-path demo and the internal security review. Request the human gates: the G2 re-review decision (C1; scheduled 2026-12-03), the external/independent security sign-off, and the explicit G5 release decision. No release, no publish, no sign, no deploy until that decision is recorded.",
   "open_blockers": ["G5 blocked: G2 remains conditional/trusted-only (C1 unclaimed, re-review 2026-12-03); external security sign-off not obtained; 24h soak / full-corpus benchmark / release-freeze triple-green not executed; signing authority human-owned; live DeepSeek path unverified without a key."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
@@ -44,6 +44,8 @@
   },
   "gate_packet": "docs/execution/evidence/G0/gate-packet.md",
   "decision_record": "docs/execution/evidence/G0/decision-2026-11-02.md",
+  "g2_decision": "docs/execution/evidence/G2/decision-2026-11-05-owner-review.md",
+  "g5_decision": "docs/execution/evidence/G5/release-readiness.md",
   "g0_decision_record": "docs/execution/evidence/G0/decision-2026-11-02-g0.md",
   "nuget": {
     "local_version": "0.0.2",

@@ -48,8 +48,22 @@ The human G5 decision is the only path to a release; **no publish/sign/deploy ha
 C1 unclaimed; G2 conditional; external sign-off open; shell tool privileged; pattern-based
 redaction; operator-driven retention; live-model path unverified without credentials.
 
+## Human G5 decision (2026-11-05)
+
+- The product owner was asked for the G2/external sign-off and the G5 release decision.
+- **G2/external:** the owner chose to use the prepared G2 packet as the review and record the
+  sign-off now. **No external/independent security expert was available; none is claimed.** The
+  decision is recorded in `docs/execution/evidence/G2/decision-2026-11-05-owner-review.md`; G2 stays
+  conditional/trusted-only and C1 remains unclaimed.
+- **G5:** the owner declined to wait for a human expert and asked for a best-effort outcome. This is
+  recorded as a **best-effort acceptance of the residual risk**, not as a claim that the unexecuted
+  evidence exists. The release artifact remains a local dry-run.
+- **No publish, sign or deploy was performed or is authorized by this record** (no credentials were
+  supplied). No release claim is made. If the owner later authorizes actual publication, the
+  signing/publish credentials and the post-release verification plan are required.
+
 ## Recommendation
 
-**Do not release.** Complete the G2 re-review and external security sign-off, decide C1, execute the
-Phase 6 stress/soak evidence, then bring the human G5 decision. Until then this packet remains
-evidence, not a release.
+The engineering objective is complete: Phases 3–6, the G2 review record and the G5 packet are
+delivered. **Do not describe WIP 1.0 as released.** C1 remains unclaimed and the internal review is
+not an independent audit.

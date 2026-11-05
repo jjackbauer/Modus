@@ -766,3 +766,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Still outstanding (G5 blockers):** 24-hour soak, full-corpus benchmark, formal three-green release freeze, G2/C1 sign-off, external security sign-off, signing authority, keyed live-model path.
 - **CI:** GitHub API rate limiting blocked confirmation of the latest docs HEAD; the last verified code HEAD remains `9dc8a56` (Tests CI `42059745946` and Modus CI `42059745863` green). No green claim is made for unqueried HEADs.
 - **Next:** request the human gates (G2 re-review, external security sign-off, G5 decision). No release claim; G5 not decided.
+
+## 2026-11-05T19:45:00-03:00 — Human gates recorded: owner G2 review + best-effort G5 decision
+
+- **G2/external:** asked for the decision; the product owner chose to record the prepared packet as the review now. **No external/independent security expert is available and none is claimed.** Decision: `docs/execution/evidence/G2/decision-2026-11-05-owner-review.md`; G2 remains conditional/trusted-only, C1 unclaimed.
+- **G5:** the owner declined to wait for a human expert and asked for best effort. This is recorded as **best-effort acceptance of the residual risk**, not as evidence that the unexecuted soak/full-corpus benchmark exists. **No publish/sign/deploy was performed or authorized; no release claim.**
+- **Outcome:** the engineering objective is complete — Phases 3–6 delivered, the G2 review recorded, and the G5 packet carries the explicit human decision with its limitations. Release execution would still require credentials and a final go, neither of which was supplied.
+- **One open CI item:** Tests CI on `4bba218` failed on one unwaived Playwright viewer-stage test; the fix/verification is in progress before the goal is marked complete.
