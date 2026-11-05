@@ -55,7 +55,17 @@ public sealed class RuntimeAddedScheduledJobsAbsoluteGatesTests
             recurringExecutionTimes.Length >= minimumRecurringExecutions,
             $"Expected at least {minimumRecurringExecutions} recurring executions in window {observationWindow} for interval {recurringInterval}, but observed {recurringExecutionTimes.Length}.");
 
-        for (var index = 1; index < recurringExecutionTimes.Length; index++)
+        // Sample 0 is the synchronous registration-time execution from
+        // AssemblyLifecycleHost.RegisterAndRunSchedules, not a timer tick. Sample 1 is the first
+        // PeriodicTimer tick, so the 0 -> 1 gap includes Task.Run scheduling, timer construction,
+        // first-use JIT and DI resolution: it measures startup latency, not cadence. Bound that
+        // latency separately (generous but finite) and assert absolute cadence between ticks.
+        var firstTickLatency = recurringExecutionTimes[1] - recurringExecutionTimes[0];
+        Assert.True(
+            firstTickLatency <= TimeSpan.FromSeconds(5),
+            $"First recurring tick was not delivered within the 5 s startup bound: observed {firstTickLatency.TotalMilliseconds:F1}ms.");
+
+        for (var index = 2; index < recurringExecutionTimes.Length; index++)
         {
             var delta = recurringExecutionTimes[index] - recurringExecutionTimes[index - 1];
             var deviation = Math.Abs((delta - recurringInterval).TotalMilliseconds);

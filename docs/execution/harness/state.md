@@ -1,46 +1,40 @@
-# Harness state ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â WIP-IMPL-001 / phase 1 close-out
+# Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 2 of 12 (remote CI verification added; objectives 1-3 completed)
-- **Goal**: WP-1.3 coverage + WP-1.6 + G1 packet, then stop at G1
-- **Definition of done**: 8/8 dimensions verified
-- **Stop criteria**: G1 packet presented ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â **met**; human product decision outstanding
+- **Round**: 1 of 12 (complete locally; remote CI confirmation pending the push)
+- **Goal**: Phase 3 completion (adapter, real-model write-capable agent, safety) → Phases 4–6 → G2
+  re-review → G5 packet and human decision; no release.
+- **Definition of done**: 0/11 met, 5 partial (D1, D5, D9, D10, D11); 6 not started
+- **Stop criteria**: D1–D11 unmet; G5 human decision not requested yet.
 
 ## Gate status
 
 | Gate | Status | Detail |
 |---|---|---|
-| G1 Evidence | PASS | every claim resolves to a TRX, a file:line, or a reproduced command |
-| G2 Falsification | PASS | 0 open Falsified rows; the two gate-attempt failures were diagnosed and fixed |
-| G3 Coverage | PASS | D1-D8 all verified |
-| G4 Reproduction | PASS | build, architecture, sandbox, Bones, host suite and full 16-project gate re-run by the orchestrator |
-| G5 Honesty | PASS | OQ-001 (G1), OQ-002 (`IScriptExecutor` seam), OQ-003 (remote CI not run) and the environment notes are recorded |
+| G1 Evidence | PASS | every round-1 claim resolves to a file:line, a TRX or a command output (EVD-020..031) |
+| G2 Falsification | PASS | 0 falsified rows; the cadence hypothesis was tested with two negative controls |
+| G3 Coverage | PASS | no dimension regressed; D11 improved from red Modus CI to a fixed gate pending remote confirmation |
+| G4 Reproduction | PASS | the failure, the fix and both controls were re-run by the orchestrator (EVD-025, EVD-028..031) |
+| G5 Honesty | PASS | the missing CI log, the Windows VSTest block and the unverified remote confirmation are recorded (OBS-012, OBS-014, OBS-017) |
 
-## Definition-of-done evidence
+## Round 1 outcome
 
-| # | Check | Result |
-|---|---|---|
-| D1 | Worker-mode board/hands/legal-move theory | 4/4 passed |
-| D2 | Host never loads the model assembly in Worker mode | no `BonesStrategyScript_*` delta, compile counter 0, `WorkerBonesPlayerSlot`; InProcess positive control observes the load |
-| D3 | Public legality contract unchanged | illegal worker move falls back with the exact warning artifact |
-| D4 | Bones totals deliberate | 395 total / 393 passed / 2 waived; waiver register 395 |
-| D5 | Architecture | 3/3, graph 41 |
-| D6 | Offline gate | 16 projects, 1,103/1,080/23, verify exit 0 |
-| D7 | ScriptHost flag | 10/10 tests, docs, default InProcess, DEV-004 updated |
-| D8 | G1 packet | written, awaiting decision |
+- **Objective:** make the red Modus CI hard gate at HEAD deterministic and green.
+- **Result:** root cause reproduced (registration execution counted as a cadence interval; 649.5 ms
+  startup gap under 2-core contention); fixed by bounding first-tick latency and asserting cadence
+  between periodic ticks. 10/10 pass after the fix under the failing condition; two negative
+  controls still fail; migration filter 19/19; no tolerance/waiver/retry change.
+- **Remote status:** post-fix Modus CI and Tests CI runs are recorded in
+  `docs/execution/state.json` once the push completes.
 
 ## Objective ledger
 
 | Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
 |---|---|---|---|---|---|---|---|
-| 1 | Baseline confirmation | Probe | 0 | 5 | 0 | PASS | proceed |
-| 1 | WP-1.3 coverage + isolation proof | Probe + adversarial self-check | 0 | 3 | 0 | PASS | done |
-| 1 | WP-1.6 flag + docs + host E2E | Probe | 0 | 2 | 0 | PASS | done |
-| 1 | Gate attempt 1 | Survey | 0 | 1 | 2 (OBS-005, OBS-006 root causes) | G2 | re-dispatch after fixes |
-| 1 | Gate attempt 2 + G1 | Survey | 0 | 1 | 0 | PASS | converged at G1 |
-| 2 | Remote CI verification | Survey | 0 | 1 | 0 | PASS | green run 41839526456 |
-| 3 | WP-2.1 host-managed DI | Probe + gate | 0 | 2 | 0 | PASS | gate green; duplicate worker gone |
-| 4 | WP-2.2 remove StrategyPool.Instance | Probe + gate | 0 | 1 | 0 | PASS | gate green; static removed |
+| 1 | Fix the red Modus CI hard gate at HEAD deterministically | Probe + measured self-implementation | 0 | 12 | 0 | all PASS | fix landed locally; push next |
+| — | (prior run) Phase 0–3 core, G3/G4 accepted | — | — | EVD-001..019 | — | — | carried |
 
-## Next objective`n`nWP-2.3/2.4: workflow definition/executor and explicit stage maps (delete the process-global map registry). WP-2.2 is done and gated (16 projects, 1,104/1,081/23, verifier exit 0; `StrategyPool.Instance` references: 0).
+## Next objective
 
-None in this run. The next action is the human G1 decision; then Phase 2 (G4) -> G3 -> Phase 3 per the chosen option.
+Push the two commits, confirm Modus CI and Tests CI on the new HEAD, then start **WP-3.5**: the
+DeepSeek `IChatModel` adapter (`CompleteAsync` + SSE `StreamAsync`), mock-`HttpMessageHandler`
+tests, host registration, and shell/status rendering of stream events.

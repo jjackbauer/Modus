@@ -241,3 +241,100 @@
 - **Result**: Supported (not release-ready).
 - **Conclusion**: Phases 2-3 core, G3/G4 accepted; Phase 3 remainder, Phases 4-6, G2 re-review and G5 remain. No release claim.
 - **Related**: EVD-019
+
+---
+
+# Run 2 — Phase 3 completion through G5 (started 2026-11-05)
+
+### OBS-012: Modus CI is red at a hard gate on the current HEAD
+
+- **Source**: GitHub Actions API run `42003338267` (Modus CI) jobs and `check-runs/127163820471/annotations`; `.github/workflows/modus-ci.yml:45-46`
+- **Fact**: The `tests` job fails at "Gate migration regression suite"; the failure annotation names `RuntimeAddedScheduledJobsAbsoluteGatesTests.ScheduledJobs_GivenRuntimeAddedTimerPlugin_ExpectedDeterministicRegistrationAndAbsoluteCadenceGates`. The non-blocking legacy suite step is skipped. Tests CI (`42003337898`) on the same HEAD is fully green.
+- **Implications**: A CI hard gate is red on committed HEAD; per the run contract this must be fixed first, as its own commit, before Phase 3 feature work.
+- **Confidence**: High
+- **Agent**: orchestrator (API read)
+- **Related**: EVD-020, EVD-021, EVD-022, EVD-023
+
+### OBS-013: The failing gate is a timing test whose first sample is not a timer tick
+
+- **Source**: `tests/Modus.Host.IntegrationTests/RuntimeAddedScheduledJobsAbsoluteGatesTests.cs:47-65`; `src/Modus.Host/Domain/Plugins/Host/AssemblyLifecycleHost.cs:141-154`
+- **Fact**: `RegisterAndRunSchedules` executes the recurring operation synchronously at registration (line 141) and only then starts `PeriodicTimer` inside `Task.Run` (lines 147-154). The test records that registration execution as sample 0 and asserts every consecutive gap is within `interval ± max(250 ms, 20%)`.
+- **Implications**: The first measured gap is "registration → first timer tick", which includes task scheduling, timer construction, first-time JIT and DI resolution. It is not an interval between periodic ticks, so the assertion conflates startup latency with cadence.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: OBS-012, HYP-003, EVD-025
+
+### OBS-014: Local `dotnet test` is blocked by the session environment
+
+- **Source**: `dotnet test tests/Modus.Core.Tests ... --filter UnitTest1`; `dotnet vstest <dll>`; both abort with `Win32Exception (5)` in `Microsoft.VisualStudio.TestPlatform.TestHost.DefaultEngineInvoker.SetParentProcessExitCallback`
+- **Fact**: Every VSTest run in this session aborts before executing a test; opening the parent process from a direct child PowerShell succeeded, so this is a testhost/session interaction, not a repository defect.
+- **Implications**: All test execution this run is performed on the WSL Ubuntu clean clone; the unchanged PowerShell verifier still validates the produced TRX on Windows. Recorded as an environment fact, not a waiver.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-026, DEC-005
+
+### OBS-015: The Phase 3 vendor adapter is genuinely missing
+
+- **Source**: `WIP/Wip.Abstractions/Chat/ChatContracts.cs:209-220`; grep for `: IChatModel` across `WIP/**/*.cs`
+- **Fact**: `IChatModel` declares `CompleteAsync`/`StreamAsync`, and the only implementers are private test doubles in `WIP/Wip.Runtime.Tests`. No production adapter, host registration or shell rendering exists.
+- **Implications**: WP-3.5 remains the first Phase 3 work package after the CI fix.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-027
+
+### OBS-016: The harness records were stale at round start
+
+- **Source**: `docs/execution/harness/goal.md` (phase-1 close-out), `state.md` (round 2, double-encoded characters), `docs/execution/evidence/G5/release-readiness.md`
+- **Fact**: The prior run's goal/state stopped at the Phase-1 G1 gate and were not valid for this run; the G5 packet predates the Phase 3 completion work.
+- **Implications**: `goal.md` and `state.md` were replaced with this run's contract (Phase 0); the journal and evidence files remain append-only. The G5 packet will be regenerated at the end.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-020
+
+### HYP-003: Excluding the registration sample makes the cadence gate deterministic without weakening it
+
+- **Claim**: The 1/8 failure under 2-core contention is caused by the registration-time execution being treated as the first cadence sample; asserting cadence only between periodic ticks (and bounding first-tick latency separately) removes the environment sensitivity while still failing on a wrong interval or missing ticks.
+- **Supporting OBS**: OBS-013, EVD-025
+- **Why it matters**: If true, the Modus CI hard gate can be made green deterministically with a small test fix instead of a retry or waiver. If false, the scheduler itself is defective and a product fix is required.
+- **Falsification strategy**: Apply the fix; rerun 10 times under the same 2-core contention (expected 0 failures). Then inject a 600 ms interval into the scheduler and confirm the fixed test fails; also remove the scheduling loop and confirm the minimum-execution assertion fails.
+- **Status**: Supported
+- **Confidence**: High
+
+### VAL-008: HYP-003 supported — cadence fix removes the environment sensitivity
+
+- **Target**: HYP-003
+- **Method**: applied the fix, rebuilt the clone, ran 10 repetitions under the exact 2-core condition that produced the 1/8 failure; then two clone-only negative controls (600 ms interval; one-hour timer).
+- **Evidence examined**: `.tmp/ci-fix-runs/fixed-1..10.trx` (10/10 pass); `.tmp/ci-fix-controls/wrong-interval.trx` (`597.4609ms between run 1 and 2`); `.tmp/ci-fix-controls/no-ticks.trx` (`TimeoutException`); `.tmp/ci-fix-controls/migration-after-fix.trx` (19/19).
+- **Result**: Supported
+- **Conclusion**: The failure was the registration sample being counted as a cadence interval; cadence between periodic ticks is stable under load while the gate still detects a wrong interval and a dead scheduler. No tolerance widening, no retry, no waiver.
+- **Related**: EVD-028, EVD-029, EVD-030, EVD-031
+
+- **Decision**: For this run, run `dotnet test` on the WSL Ubuntu clone at the same commit and run the unchanged `tools/verify-test-results.ps1` on the produced TRX from Windows; do not claim a Windows-local gate.
+- **Rationale**: OBS-014 — VSTest is blocked in the Windows session, while CI (the authoritative gate) is Linux; the verifier and waiver register are unchanged, so the gate semantics are preserved.
+- **Alternatives considered**: retrying the gate (rejected: does not fix anything); a Windows waiver (rejected: no evidence and would weaken the gate); running tests directly with the xUnit runner (rejected: not the project's gate).
+- **Related**: OBS-014, EVD-026
+
+### RISK-002: A flaky hard gate blocks every Modus CI push
+
+- **Risk**: The absolute-cadence test fails intermittently on the CI runner, turning every push's Modus CI red even when the product is unchanged.
+- **Likelihood**: High (3 of the last 20 Modus CI runs, all on this test)
+- **Impact**: High (hard gate, blocks the release path and hides real regressions)
+- **Evidence**: EVD-022, EVD-023, EVD-025
+- **Mitigation**: Deterministic test fix (HYP-003), then a green Modus CI run on the pushed HEAD.
+- **Gate**: —
+
+### OBS-017: The fix is landed and locally proven; remote confirmation is pending the push
+
+- **Source**: `git diff` of `tests/Modus.Host.IntegrationTests/RuntimeAddedScheduledJobsAbsoluteGatesTests.cs`; `.tmp/ci-fix-runs`, `.tmp/ci-fix-controls`
+- **Fact**: The test now bounds sample 0 → 1 as first-tick latency and asserts cadence from index 2. All measurements listed in VAL-008 were run by the orchestrator on the clean Linux clone at the same commit with the patched file copied in.
+- **Implications**: The commit can be pushed; Modus CI on the new HEAD is the remaining confirmation.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: OBS-013, VAL-008
+
+### DEC-006: Fix the test's interval semantics, not the runner or the gate
+
+- **Decision**: Treat the synchronous registration execution as a liveness sample and assert absolute cadence between `PeriodicTimer` ticks; keep the 300 ms ± 250 ms tolerance, the ≥5-execution requirement and every diagnostics assertion unchanged.
+- **Rationale**: OBS-013 + EVD-025: the failing quantity measured startup latency, not cadence; EVD-028..031 show the corrected assertion is stable under load and still rejects a wrong interval and a dead scheduler.
+- **Alternatives considered**: retrying the job (rejected: masks the defect and violates the no-retry-at-the-gate rule); widening the tolerance or excluding all outlier gaps (rejected: would hide a real cadence defect); an adaptive control-timer tolerance (rejected: more machinery, and the measured failure is fully explained by the startup sample); serializing the whole assembly (rejected: no evidence it affects a thread-pool startup delay and it costs CI time).
+- **Related**: HYP-003, VAL-008, RISK-002

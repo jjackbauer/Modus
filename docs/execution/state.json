@@ -8,7 +8,7 @@
   "work_package": "WP-3.5",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "phase3_wp34_done_wp35_core_wp36_core_done_g5_not_requested",
+  "gate_status": "phase3_wp35_adapter_next_modus_ci_fix_pending_remote_run",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
     "WP-0.1": 2,
@@ -32,9 +32,9 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T10:20:00-03:00",
-  "next_action": "Not release-ready (see docs/execution/evidence/G5/release-readiness.md): DeepSeek chat/SSE adapter + shell progress, real-model sample agent, WP-3.7 safety remainder + Agent/Security job, Phase 4 CI truth, Phase 5 security/privacy, Phase 6 release engineering, G2 re-review, then G5 human decision. No release claim.",
-  "open_blockers": ["Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-1.1 formal review, G3 permissions, G4/Phases 2-6 remain."],
+  "last_verified_at": "2026-11-05T09:00:00-03:00",
+  "next_action": "Push the cadence-gate fix and Phase 0 records, confirm Modus CI + Tests CI on the new HEAD, then WP-3.5: DeepSeek IChatModel adapter (CompleteAsync + SSE StreamAsync) with mock-HttpMessageHandler tests, host registration, and shell/status stream progress. Then the real-model write-capable sample agent, the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
+  "open_blockers": ["Modus CI hard gate was red at HEAD 4dc6559 (migration-regression cadence test); deterministic fix landed locally, remote run pending. Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-3.5/3.6/3.7, Phases 4-6 and G5 remain."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
     "porcelain_entries": 0,
@@ -77,7 +77,8 @@
     "WP-2.7": "docs/execution/evidence/WP-2.7/",
     "G0": "docs/execution/evidence/G0/",
     "G1": "docs/execution/evidence/G1/",
-    "G2": "docs/execution/evidence/G2/"
+    "G2": "docs/execution/evidence/G2/",
+    "CI-FIX": "docs/execution/evidence/CI-FIX/"
   },
   "test_inventory": {
     "executed": 1112,
@@ -94,14 +95,15 @@
     "bones_tests": 396,
     "architecture_tests": 4,
     "architecture_projects": 43,
-    "evidence": "Tests CI run_41999885507 on 150b587: all six jobs success (16-project offline gate, architecture 4/4 at 43 projects, security); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123"
+    "evidence": "Tests CI run_42003337898 on 4dc6559: all six jobs success (16-project offline gate, architecture 4/4 at 43 projects, security); Modus CI run_42003338267 on 4dc6559 failed only the migration-regression cadence hard gate (fixed locally, see evidence/CI-FIX, remote run pending); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123"
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_41999885507_success_head_150b587",
-    "modus_ci": "run_41933143670_success_hard_gates_legacy_suite_nonblocking",
+    "remote_ci": "run_42003337898_success_head_4dc6559",
+    "modus_ci": "run_42003338267_failure_head_4dc6559_migration_regression_cadence",
+    "modus_ci_fix": "docs/execution/evidence/CI-FIX/README.md (fix landed, post-fix run pending push)",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
     "security_ci": "run_41655112634_invalidated_helper_not_installed",
     "os_containment": "linux_verified_windows_helper_createprocess_error5",
