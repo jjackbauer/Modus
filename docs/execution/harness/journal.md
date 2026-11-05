@@ -219,3 +219,11 @@
 - **Result**: Supported
 - **Conclusion**: Bones executes through explicit plan maps in production; the legacy registry remains only for legacy/default-linear test fixtures (tracked as remaining WP-2.4 work).
 - **Related**: EVD-017
+### VAL-006: WP-2.4 increment 2 and WP-2.6 supported
+
+- **Target**: no process-wide map registry; ShellHost free of Bones.
+- **Method**: full gate (1,106/1,081/25 with only env-bound viewer waits), architecture suite (42 projects, zero waivers), ShellHost suite 47/47, Bones E2E 3 passed / 7 pre-existing waived, and Tests CI.
+- **Evidence examined**: `.tmp/gate-check` TRX set; Tests CI run 41964635848 (six jobs green).
+- **Result**: Supported
+- **Conclusion**: the map registry is deleted (race source gone) and the ShellHost→Bones edge is removed and enforced by the architecture test.
+- **Related**: EVD-018

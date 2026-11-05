@@ -89,13 +89,13 @@
     "bones_tests": 396,
     "architecture_tests": 4,
     "architecture_projects": 41,
-    "evidence": "CI run_41954106076 (16-project offline gate + count/waiver gate success); the two local Playwright viewer failures pass on CI"
+    "evidence": "Tests CI run_41964635848 on af089e6: all six jobs success (16-project offline gate, architecture 42-project graph, security); two local Playwright viewer failures pass on CI"
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_41954106076_success_head_e15711e",
+    "remote_ci": "run_41964635848_success_head_af089e6",
     "modus_ci": "run_41933143670_success_hard_gates_legacy_suite_nonblocking",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
     "security_ci": "run_41655112634_invalidated_helper_not_installed",

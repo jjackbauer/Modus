@@ -552,3 +552,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - ADR-IMPL-07 is Superseded; both `shellhost-no-bones` waivers are deleted from the architecture waiver file and the project-graph assertion moved from 41 to 42 projects.
 - Verified: architecture 4/4, ShellHost 47/47, Bones E2E 3 passed / 7 pre-existing waived, full Release build green.
 - **Next:** WP-2.4 remainder (migrate default-linear test fixtures and delete the stateless legacy map adapter), then WP-2.7 plugin ALC, G4.
+## 2026-11-05T01:20:00-03:00 - Round close: WP-2.4 increment 2 + WP-2.6 green in CI
+
+- Tests CI run [41964635848](https://github.com/jjackbauer/Modus/actions/runs/41964635848) on `af089e6`: **all six jobs success**, including the 16-project offline gate and the 42-project architecture graph with no waivers.
+- **Modus CI flake:** run 41964636244 failed at the migration-regression step on the same commit, but the suite passes **19/19** on a clean Linux clone at `af089e6` (and Modus CI on `f8323ea` was green). Recorded as an infra flake; no code change made. If it recurs, the step's TRX annotations will name the failing test.
+- **Delivered this round:** WP-2.4 increment 2 (process-wide map registry deleted; Bones legacy compilation removed; map tests migrated to plans; parallel scheduling restored) and WP-2.6 (Bones E2E registration moved to the test-only `Wip.Bones.E2E.Host`, ShellHost has no Bones reference, ADR-IMPL-07 superseded, waivers deleted, graph 42).
+- **Next round:** WP-2.7 plugin ALC (collectible per-plugin load context, dependency isolation, unload diagnostics), then the WP-2.4 remainder (default-linear fixtures -> delete the stateless legacy adapter), G4.
