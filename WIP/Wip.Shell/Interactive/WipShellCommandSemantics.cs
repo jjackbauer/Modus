@@ -16,6 +16,7 @@ public static class WipShellCommandSemantics
             ["plan"] = "Prepares the active session for execution by advancing Created to Editing. Does not execute workflow stages or complete governance.",
             ["run"] = $"Executes registered workflow {RunExecutionBoundaryPhrase}. {CapitalizeFirst(RunDoesNotReplaceGovernancePhrase)} and does not complete the governance lifecycle.",
             ["agent"] = "Runs the streaming agent loop for the active session: model deltas are printed as they arrive, tool calls and results are shown, and the final answer is recorded in session memory. It does not replace validate, review, approve, or merge.",
+            ["retention"] = "Global privacy command: reports artifact counts/age, or purges session artifacts older than the given number of days (default 30) under .wip/sessions. Redaction is applied before agent memory is persisted.",
             ["validate"] = "Governance command: records validation evidence, updates ValidationStatus, and advances session state to Validating when prerequisites are met.",
             ["review"] = "Governance command: records review evidence for the current diff and advances session state toward approval.",
             ["approve"] = "Governance command: creates an approval-token artifact and sets ApprovalStatus when confirmation succeeds.",
@@ -27,12 +28,13 @@ public static class WipShellCommandSemantics
     {
         var lines = new List<string>
         {
-            "Available commands: help, init, repo, config, sessions, session start \"<task>\", session attach <session-id>, use workflow <id>, plan, run, agent \"<task>\", diff, checkpoint, validate, review, approve, merge, artifacts, status, detach, archive, abort, workflows, plugins [load|unload], debug-logs, exit, dotnet <restore|build|test|validate>",
+            "Available commands: help, init, repo, config, retention [status|purge [days]], sessions, session start \"<task>\", session attach <session-id>, use workflow <id>, plan, run, agent \"<task>\", diff, checkpoint, validate, review, approve, merge, artifacts, status, detach, archive, abort, workflows, plugins [load|unload], debug-logs, exit, dotnet <restore|build|test|validate>",
             string.Empty,
             "Command semantics (authoritative):",
             $"- plan: {LifecycleCommandDescriptions["plan"]}",
             $"- run: {LifecycleCommandDescriptions["run"]}",
             $"- agent: {LifecycleCommandDescriptions["agent"]}",
+            $"- retention: {LifecycleCommandDescriptions["retention"]}",
             $"- validate: {LifecycleCommandDescriptions["validate"]}",
             $"- review: {LifecycleCommandDescriptions["review"]}",
             $"- approve: {LifecycleCommandDescriptions["approve"]}",

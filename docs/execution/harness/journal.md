@@ -523,3 +523,42 @@
 - **Rationale**: OBS-023: the agent-loop abuse cases belong to the security posture, not only to the offline suite; running on both OSes catches platform-specific guard behavior.
 - **Alternatives considered**: offline suite only (rejected: a security regression would not fail the security job); a separate workflow (rejected: more CI surface for no benefit).
 - **Related**: OBS-023, EVD-061
+
+---
+
+# Run 3 — Phase 4 completion → Phase 5 (rounds 5–6)
+
+### OBS-025: Privacy/retention implemented with falsifiable controls; security packet written
+
+- **Source**: `WIP/Wip.Abstractions/Privacy/PrivacyContracts.cs`, `WIP/Wip.Runtime/Runtime/SecretRedactor.cs`, `SessionArtifactRetention.cs`, `ArtifactAgentMemory.cs`, `WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs`; tests under `WIP/Wip.Runtime.Tests/Privacy/` and the shell retention test
+- **Fact**: Message content and tool-call arguments are redacted before persistence and on load; `retention status|purge [days]` reports/purges artifacts under `<repo>/.wip/sessions/*/artifacts`; 5 redactor tests, 3 retention tests, 1 memory-redaction test and 1 shell test pass; full counts are Runtime 146 / Shell 34. The no-op redactor and age-ignoring purge controls both fail. The WP-5.5 packet records 9 findings (C1 unclaimed, shell privilege, pattern-based redaction limits) and explicitly states external sign-off is absent.
+- **Implications**: WP-5.2 is complete locally and WP-5.5 has its review packet; CI confirmation and the human G2/G5 gates remain.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-070..EVD-074
+
+### HYP-009: The privacy tests depend on the real redaction/purge behavior
+
+- **Claim**: Replacing the redactor with a no-op, or ignoring the retention age boundary, makes the privacy tests fail.
+- **Supporting OBS**: OBS-025
+- **Why it matters**: Otherwise the privacy suite could pass without enforcing anything.
+- **Falsification strategy**: clone-only no-op redactor and age-ignoring purge; both focused suites must fail; restore.
+- **Status**: Supported
+- **Confidence**: High
+- **Related**: EVD-070, EVD-071
+
+### VAL-015: HYP-009 supported
+
+- **Target**: HYP-009
+- **Method**: clone-only controls, rebuild, focused runs.
+- **Evidence examined**: `CTRL_A_EXIT=1` (redactor no-op), `CTRL_B_EXIT=1` (purge ignores age); restored builds.
+- **Result**: Supported
+- **Conclusion**: The privacy tests exercise the real behavior and fail closed under stubs.
+- **Related**: EVD-070, EVD-071
+
+### DEC-014: Pattern-based redaction plus operator-driven purge
+
+- **Decision**: Ship a deterministic pattern-based `SecretRedactor` (built-ins + optional patterns) and an explicit `retention status|purge` command; no background scheduler in this increment.
+- **Rationale**: OBS-025: covers the known credential shapes and gives operators a deterministic purge; documented limits are honest and extensible.
+- **Alternatives considered**: heuristic ML redaction (rejected: non-deterministic); automatic scheduled purge in-process (rejected: deployment concern; out of scope for 1.0).
+- **Related**: OBS-025, EVD-070..EVD-073

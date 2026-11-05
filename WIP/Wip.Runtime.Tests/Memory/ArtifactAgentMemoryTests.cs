@@ -85,6 +85,27 @@ public sealed class ArtifactAgentMemoryTests
         Assert.Contains("\"hello\"", content.Content, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Append_GivenMessageContainingApiKey_ExpectedPersistedArtifactIsRedacted()
+    {
+        var store = new InMemoryArtifactStore();
+        var session = new SessionId("session-redaction");
+
+        await new ArtifactAgentMemory(store).AppendAsync(
+            session,
+            ChatMessage.User("use sk-abcdef0123456789abcdef and Bearer abcdefghijklmnop1234 to call the API"),
+            CancellationToken.None);
+
+        var descriptor = Assert.Single(await store.ListAsync(session, CancellationToken.None));
+        var content = await store.LoadAsync(session, descriptor.ArtifactId, CancellationToken.None);
+        Assert.DoesNotContain("sk-abcdef0123456789abcdef", content.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Bearer abcdefghijklmnop1234", content.Content, StringComparison.Ordinal);
+        Assert.Contains("[REDACTED]", content.Content, StringComparison.Ordinal);
+
+        var snapshot = await new ArtifactAgentMemory(store).LoadAsync(session, CancellationToken.None);
+        Assert.DoesNotContain("sk-abcdef0123456789abcdef", snapshot.Messages[0].Content, StringComparison.Ordinal);
+    }
+
     private sealed class InMemoryArtifactStore : IArtifactStore
     {
         private readonly List<(ArtifactDescriptor Descriptor, ArtifactContent Content)> _items = [];

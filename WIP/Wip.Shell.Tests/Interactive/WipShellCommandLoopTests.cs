@@ -1421,6 +1421,43 @@ public sealed class WipShellCommandLoopTests
         }
     }
 
+    [Fact]
+    [Trait("ChecklistItem", "Add privacy classification, secret redaction, retention configuration and a purge command (WP-5.2)")]
+    public async Task RetentionCommand_GivenOldArtifact_ExpectedStatusAndPurgeInOutput()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-retention-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var artifacts = Path.Combine(repositoryPath, ".wip", "sessions", "session-1", "artifacts");
+            Directory.CreateDirectory(artifacts);
+            var oldArtifact = Path.Combine(artifacts, "old.json");
+            var recentArtifact = Path.Combine(artifacts, "recent.json");
+            await File.WriteAllTextAsync(oldArtifact, "{}");
+            await File.WriteAllTextAsync(recentArtifact, "{}");
+            File.SetLastWriteTimeUtc(oldArtifact, DateTime.UtcNow.AddDays(-40));
+
+            using var reader = new StringReader("init\nretention status\nretention purge 30\nexit\n");
+            using var writer = new StringWriter();
+            var loop = new WipShellCommandLoop(BuildOrchestrator(), reader, writer, repositoryRoot: repositoryPath);
+
+            var exitCode = await loop.RunAsync(CancellationToken.None);
+
+            var output = writer.ToString();
+            Assert.Equal(0, exitCode);
+            Assert.Contains("Retention status:", output, StringComparison.Ordinal);
+            Assert.Contains("deleted=1", output, StringComparison.Ordinal);
+            Assert.False(File.Exists(oldArtifact), "The expired artifact should have been purged.");
+            Assert.True(File.Exists(recentArtifact), "The recent artifact must be retained.");
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
     private sealed class ShellStreamingChatModel : IChatModel
     {
         public ValueTask<ChatResponse> CompleteAsync(

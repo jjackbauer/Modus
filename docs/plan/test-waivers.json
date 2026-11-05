@@ -5,7 +5,7 @@
                            "Wip.Validation.DotNet.Tests":  54,
                            "Wip.Bones.E2E.Tests":  10,
                            "Wip.Bones.Host.Tests":  251,
-                           "Wip.Shell.Tests":  33,
+                           "Wip.Shell.Tests":  34,
                            "Wip.Policy.LocalSafe.Tests":  40,
                            "Wip.ShellHost.Tests":  47,
                            "Wip.Bones.ModelProviders.DeepSeek.Tests":  48,
@@ -15,7 +15,7 @@
                            "Wip.Tools.Shell.Tests":  25,
                            "Wip.Bones.Tests":  396,
                            "Wip.Abstractions.Tests":  55,
-                           "Wip.Runtime.Tests":  137,
+                           "Wip.Runtime.Tests":  146,
                            "Wip.Builder.Tests":  32,
                            "Wip.Sandbox.Worker.Tests":  18
                        },

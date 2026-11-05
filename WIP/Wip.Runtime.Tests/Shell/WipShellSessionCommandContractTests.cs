@@ -161,7 +161,7 @@ public sealed class WipShellSessionCommandContractTests
             Assert.Contains("Start a session with: session start \"<task>\"", output, StringComparison.Ordinal);
             Assert.Contains("Attach a session with: session attach <session-id>", output, StringComparison.Ordinal);
             Assert.Contains("Session commands: plan, run, agent \"<task>\", diff, checkpoint, validate, review, approve, merge, artifacts, status, detach, archive, abort", output, StringComparison.Ordinal);
-            Assert.Contains("Global commands available without a session: help, init, repo, config, sessions, session start \"<task>\", session attach <session-id>, use workflow <id>, workflows, plugins [load|unload], debug-logs, exit", output, StringComparison.Ordinal);
+            Assert.Contains("Global commands available without a session: help, init, repo, config, retention [status|purge [days]], sessions, session start \"<task>\", session attach <session-id>, use workflow <id>, workflows, plugins [load|unload], debug-logs, exit", output, StringComparison.Ordinal);
             Assert.DoesNotContain("wip[", output, StringComparison.Ordinal);
         }
         finally

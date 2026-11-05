@@ -3,13 +3,15 @@ using Wip.Abstractions.Agents;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Privacy;
 
 namespace Wip.Runtime.Runtime;
 
 /// <summary>
 /// Artifact-backed session memory (WP-3.4). Each session has one JSON memory artifact
 /// (<c>agent-memory.json</c>); appends rewrite it with the retained tail so artifacts stay
-/// inspectable and retention is bounded.
+/// inspectable and retention is bounded. WP-5.2: message content and tool-call arguments are
+/// redacted before persistence and on load.
 /// </summary>
 public sealed class ArtifactAgentMemory : IAgentMemory
 {
@@ -21,11 +23,16 @@ public sealed class ArtifactAgentMemory : IAgentMemory
 
     private readonly IArtifactStore _artifactStore;
     private readonly AgentMemoryOptions _options;
+    private readonly ISecretRedactor _redactor;
 
-    public ArtifactAgentMemory(IArtifactStore artifactStore, AgentMemoryOptions? options = null)
+    public ArtifactAgentMemory(
+        IArtifactStore artifactStore,
+        AgentMemoryOptions? options = null,
+        ISecretRedactor? redactor = null)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
         _options = options ?? new AgentMemoryOptions();
+        _redactor = redactor ?? SecretRedactor.Default;
     }
 
     public async ValueTask<AgentMemorySnapshot> LoadAsync(SessionId sessionId, CancellationToken cancellationToken)
@@ -44,7 +51,10 @@ public sealed class ArtifactAgentMemory : IAgentMemory
 
         var content = await _artifactStore.LoadAsync(sessionId, memoryDescriptor.ArtifactId, cancellationToken);
         var document = JsonSerializer.Deserialize<AgentMemoryDocument>(content.Content, JsonOptions);
-        return new AgentMemorySnapshot(document?.Messages ?? Array.Empty<ChatMessage>());
+        var messages = (document?.Messages ?? Array.Empty<ChatMessage>())
+            .Select(Sanitize)
+            .ToArray();
+        return new AgentMemorySnapshot(messages);
     }
 
     public async ValueTask AppendAsync(SessionId sessionId, ChatMessage message, CancellationToken cancellationToken)
@@ -53,7 +63,7 @@ public sealed class ArtifactAgentMemory : IAgentMemory
 
         var snapshot = await LoadAsync(sessionId, cancellationToken);
         var messages = snapshot.Messages
-            .Append(message)
+            .Append(Sanitize(message))
             .TakeLast(Math.Max(1, _options.MaxMessages))
             .ToArray();
 
@@ -85,6 +95,42 @@ public sealed class ArtifactAgentMemory : IAgentMemory
         return omitted > 0
             ? $"[{omitted} earlier message(s) omitted]\n{summary}"
             : summary;
+    }
+
+    private ChatMessage Sanitize(ChatMessage message)
+    {
+        var content = _redactor.Redact(message.Content).Value;
+        if (message.ToolCalls.Count == 0)
+        {
+            return string.Equals(content, message.Content, StringComparison.Ordinal)
+                ? message
+                : new ChatMessage(message.Role, content, message.ToolCalls, message.ToolCallId);
+        }
+
+        var toolCalls = new List<ToolCall>(message.ToolCalls.Count);
+        foreach (var call in message.ToolCalls)
+        {
+            var rawArguments = call.Arguments.GetRawText();
+            var redactedArguments = _redactor.Redact(rawArguments).Value;
+            if (string.Equals(rawArguments, redactedArguments, StringComparison.Ordinal))
+            {
+                toolCalls.Add(call);
+                continue;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(redactedArguments);
+                toolCalls.Add(new ToolCall(call.Id, call.Name, document.RootElement.Clone()));
+            }
+            catch (JsonException)
+            {
+                // Redaction must never corrupt the persisted conversation; keep the original.
+                toolCalls.Add(call);
+            }
+        }
+
+        return new ChatMessage(message.Role, content, toolCalls, message.ToolCallId);
     }
 
     private sealed record AgentMemoryDocument(IReadOnlyList<ChatMessage> Messages);

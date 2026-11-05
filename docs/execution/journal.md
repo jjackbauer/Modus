@@ -730,3 +730,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Phase 4 docs:** added `docs/runbooks/operator-guide.md` (build/test, shell/session/agent usage, model configuration, isolation/permissions/sandbox, troubleshooting, known limits) and `docs/testing/test-status.md` (authoritative gate map, per-project expected totals, waiver policy, live/environment-bound categories, last verified CI run ids, known limitations).
 - **BLK-MODUS-LEGACY-SUITE is resolved** with the CI run as evidence.
 - **Next:** confirm Tests CI on the records commit, then Phase 5 (privacy/retention + security review packet, external sign-off as a human gate), Phase 6 release engineering, G2 re-review and G5. No release claim.
+
+## 2026-11-05T13:45:00-03:00 — Round 6: WP-5.2 privacy/retention implemented; WP-5.5 internal review packet
+
+- **Privacy/retention (WP-5.2):** `DataClassification`/`ISecretRedactor`/`RetentionPolicy` contracts; `SecretRedactor` (provider keys, bearer tokens, secret assignments, PEM blocks, optional patterns); `ArtifactAgentMemory` redacts content and tool-call arguments on write and on load; `SessionArtifactRetention` status/purge with resolved-path confinement; shell command `retention [status|purge [days]]` (default 30 days) with help/no-session guidance.
+- **Tests/controls:** 5 redactor tests, 3 retention tests, 1 memory-redaction test, 1 shell retention test; full suites `Wip.Runtime.Tests` **146** (140 passed; 6 documented environment/waiver failures) and `Wip.Shell.Tests` **34/34**. A no-op redactor and an age-ignoring purge both make the suite fail. Waiver expected totals updated.
+- **Security review (WP-5.5):** internal + adversarial packet written (`docs/execution/evidence/WP-5.5/security-review.md`) with 9 findings, controls and residual risks; **external/independent sign-off is explicitly NOT obtained** and G2 stays conditional/trusted-only. Data classification documented in `docs/security/data-classification.md`.
+- **Next:** push and confirm Tests CI; then Phase 6 release engineering, the G2 re-review packet and the G5 human decision. No release claim.

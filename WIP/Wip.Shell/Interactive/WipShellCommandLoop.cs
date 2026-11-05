@@ -22,6 +22,7 @@ using Wip.Shell.CommandSemantics;
 using Wip.Shell.History;
 using Wip.Shell.Prompting;
 using Wip.Abstractions.Workflows;
+using Wip.Abstractions.Privacy;
 
 
 namespace Wip.Shell.Interactive;
@@ -36,6 +37,7 @@ public sealed class WipShellCommandLoop : IDisposable
         "init",
         "repo",
         "config",
+        "retention [status|purge [days]]",
         "sessions",
         "session start \"<task>\"",
         "session attach <session-id>",
@@ -71,6 +73,7 @@ public sealed class WipShellCommandLoop : IDisposable
         "init",
         "repo",
         "config",
+        "retention [status|purge [days]]",
         "sessions",
         "session start \"<task>\"",
         "session attach <session-id>",
@@ -89,6 +92,7 @@ public sealed class WipShellCommandLoop : IDisposable
         ["init"] = CommandScope.Global,
         ["repo"] = CommandScope.Global,
         ["config"] = CommandScope.Global,
+        ["retention"] = CommandScope.Global,
         ["sessions"] = CommandScope.Global,
         ["session"] = CommandScope.Global,
         ["use"] = CommandScope.Global,
@@ -324,6 +328,10 @@ public sealed class WipShellCommandLoop : IDisposable
 
             case "config":
                 await HandleConfigAsync();
+                return false;
+
+            case "retention":
+                await HandleRetentionAsync(parts, cancellationToken);
                 return false;
 
             case "sessions":
@@ -734,6 +742,49 @@ public sealed class WipShellCommandLoop : IDisposable
         };
 
         await WriteDeterministicBlockAsync(lines);
+    }
+
+    private async Task HandleRetentionAsync(string[] parts, CancellationToken cancellationToken)
+    {
+        var retention = new SessionArtifactRetention();
+        var action = parts.Length > 1 ? parts[1].ToLowerInvariant() : "status";
+
+        if (string.Equals(action, "status", StringComparison.Ordinal))
+        {
+            var status = await retention.GetStatusAsync(_repositoryRoot, cancellationToken);
+            await WriteDeterministicBlockAsync(
+            [
+                $"Retention status: sessions={status.SessionDirectories} artifacts={status.ArtifactFiles} bytes={status.TotalBytes}",
+                $"Oldest artifact (UTC): {status.OldestArtifactUtc?.ToString("O") ?? "none"}",
+                "Default policy: 30 days. Run 'retention purge [days]' to delete older session artifacts."
+            ]);
+
+            return;
+        }
+
+        if (string.Equals(action, "purge", StringComparison.Ordinal))
+        {
+            var days = 30;
+            if (parts.Length > 2 && (!int.TryParse(parts[2], out days) || days <= 0))
+            {
+                await WriteLineAsync("Usage: retention [status|purge [days]]");
+                return;
+            }
+
+            var result = await retention.PurgeAsync(
+                _repositoryRoot,
+                new RetentionPolicy(TimeSpan.FromDays(days)),
+                cancellationToken);
+
+            await WriteDeterministicBlockAsync(
+            [
+                $"Retention purge: deleted={result.DeletedFiles} bytes={result.DeletedBytes} retained={result.RetainedFiles} olderThanDays={days} at={result.PurgedAtUtc:O}"
+            ]);
+
+            return;
+        }
+
+        await WriteLineAsync("Usage: retention [status|purge [days]]");
     }
 
     private async Task HandleConfigAsync()

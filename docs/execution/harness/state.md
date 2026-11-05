@@ -1,12 +1,10 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 5 of 12 (Phase 4 legacy-suite reconciliation verified green; Phase 4 docs landed;
-  Tests CI confirmation for the docs commit pending)
-- **Goal**: finish Phases 4–6, run the full G2 re-review, deliver the G5 packet and human decision.
+- **Round**: 6 of 12 (WP-5.2 complete locally; WP-5.5 internal packet written; CI confirmation pending)
+- **Goal**: finish Phases 5–6, run the full G2 re-review, deliver the G5 packet and human decision.
   No release claim, no publish/sign/deploy before an explicit human G5 decision.
-- **Definition of done**: 6/11 met (D1, D2, D3, D5, D6 legacy suite blocking+green, D11);
-  3 partial (D4 live keyed path unverified, D9 G2 packet stale, D10 G5 packet stale);
-  2 not started (D7 privacy/security review, D8 release engineering)
+- **Definition of done**: 7/11 met (D1, D2, D3, D5, D6, D7 privacy/retention, D11);
+  2 partial (D4 live keyed path unverified, D9/D10 packets stale); D8 not started (Phase 6).
 - **Stop criteria**: D1–D11 unmet; G5 human decision not requested yet.
 
 ## Gate status
@@ -42,9 +40,19 @@
 | 5 | Confirm blocking suite + Phase 4 docs | Probe + measured implementation | 0 | 1 | 0 | PASS | Modus CI green on `6453c38`; docs landed |
 | — | (prior run) Phase 0–3 core, G3/G4 accepted | — | — | EVD-001..019 | — | — | carried |
 
+## Round 6 outcome (Phase 5)
+
+- **WP-5.2 complete locally:** privacy contracts, `SecretRedactor` (keys, bearer, assignments, PEM,
+  extensions), agent-memory redaction on write/load, `SessionArtifactRetention` status/purge with
+  path confinement, shell `retention [status|purge [days]]`, data-classification doc.
+- **Tests:** Runtime 146 (140 passed; 6 documented env/waiver failures), Shell 34/34; no-op
+  redactor and age-ignoring purge controls both fail; waiver totals updated.
+- **WP-5.5:** internal + adversarial security review packet with 9 findings and controls; external
+  independent sign-off is **not obtained** and G2 stays conditional/trusted-only.
+
 ## Next objective
 
-Confirm Tests CI on the round-5 docs/CI commit, then **Phase 5**: WP-5.2 privacy/retention
-(classification, redaction, retention config, purge) and WP-5.5 security-review packet plus an
-adversarial self-review; external sign-off stays an explicit human gate. Then Phase 6 release
-engineering, the G2 re-review and the G5 decision.
+Push the Phase 5 commit and confirm Tests CI. Then complete Phase 6 release engineering (versioning,
+packaging dry-run, signing plan, compatibility/upgrade notes, post-release verification), assemble
+the G2 re-review packet (2026-12-03, C1 unclaimed) and deliver the G5 packet with the explicit human
+decision request.
