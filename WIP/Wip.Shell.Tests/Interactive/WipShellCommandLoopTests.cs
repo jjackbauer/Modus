@@ -1,8 +1,11 @@
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
+using Wip.Abstractions.Agents;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Policies;
 using Wip.Abstractions.Sessions;
@@ -1370,6 +1373,72 @@ public sealed class WipShellCommandLoopTests
         {
             if (Directory.Exists(repositoryPath))
                 Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", "Add shell/status streaming progress rendering for the agent loop (WP-3.5)")]
+    public async Task AgentCommand_GivenStreamingModel_ExpectedDeltasAndFinalAnswerInOutput()
+    {
+        var repositoryPath = Path.Combine(Path.GetTempPath(), $"modus-wip-shell-agent-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(repositoryPath);
+
+        try
+        {
+            var builder = CreateBuilderWithWorkflows();
+            var orchestrator = BuildOrchestrator();
+            var services = new ServiceCollection();
+            services.AddSingleton<IChatModel>(new ShellStreamingChatModel());
+            using var provider = services.BuildServiceProvider();
+
+            using var reader = new StringReader(
+                "init\n"
+                + "session start \"stream an answer\"\n"
+                + "agent \"Say hello\"\n"
+                + "exit\n");
+            using var writer = new StringWriter();
+            var loop = new WipShellCommandLoop(
+                orchestrator,
+                reader,
+                writer,
+                builder,
+                repositoryPath,
+                services: provider);
+
+            var exitCode = await loop.RunAsync(CancellationToken.None);
+
+            var output = writer.ToString();
+            Assert.Equal(0, exitCode);
+            Assert.Contains("Agent run started:", output, StringComparison.Ordinal);
+            // The deltas must be rendered before the status line; the final answer alone is not enough.
+            Assert.Matches("hello\\s+Agent status: Completed", output);
+            Assert.Contains("Agent answer: hello", output, StringComparison.Ordinal);
+        }
+        finally
+        {
+            if (Directory.Exists(repositoryPath))
+                Directory.Delete(repositoryPath, recursive: true);
+        }
+    }
+
+    private sealed class ShellStreamingChatModel : IChatModel
+    {
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+
+        public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            [EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            yield return new StreamingChunk("hel");
+            await Task.Yield();
+            yield return new StreamingChunk("lo");
+            await Task.Yield();
+            yield return new StreamingChunk(string.Empty, isFinal: true);
         }
     }
 

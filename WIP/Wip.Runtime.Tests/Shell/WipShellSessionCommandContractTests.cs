@@ -143,7 +143,7 @@ public sealed class WipShellSessionCommandContractTests
         try
         {
             var orchestrator = new WipRuntimeOrchestrator(new InMemorySessionStore(), new CollectingSessionEventPublisher());
-            using var reader = new StringReader("plan\nrun\ndiff\ncheckpoint\nvalidate\nreview\napprove\nmerge\nartifacts\nstatus\ndetach\narchive\nabort\nexit\n");
+            using var reader = new StringReader("plan\nrun\nagent\ndiff\ncheckpoint\nvalidate\nreview\napprove\nmerge\nartifacts\nstatus\ndetach\narchive\nabort\nexit\n");
             using var writer = new StringWriter();
             var loop = new WipShellCommandLoop(orchestrator, reader, writer, repositoryRoot: repositoryPath);
 
@@ -153,14 +153,14 @@ public sealed class WipShellSessionCommandContractTests
 
             Assert.Equal(0, exitCode);
 
-            foreach (var command in new[] { "plan", "run", "diff", "checkpoint", "validate", "review", "approve", "merge", "artifacts", "status", "detach", "archive", "abort" })
+            foreach (var command in new[] { "plan", "run", "agent", "diff", "checkpoint", "validate", "review", "approve", "merge", "artifacts", "status", "detach", "archive", "abort" })
             {
                 Assert.Contains($"Command '{command}' requires an active session.", output, StringComparison.Ordinal);
             }
 
             Assert.Contains("Start a session with: session start \"<task>\"", output, StringComparison.Ordinal);
             Assert.Contains("Attach a session with: session attach <session-id>", output, StringComparison.Ordinal);
-            Assert.Contains("Session commands: plan, run, diff, checkpoint, validate, review, approve, merge, artifacts, status, detach, archive, abort", output, StringComparison.Ordinal);
+            Assert.Contains("Session commands: plan, run, agent \"<task>\", diff, checkpoint, validate, review, approve, merge, artifacts, status, detach, archive, abort", output, StringComparison.Ordinal);
             Assert.Contains("Global commands available without a session: help, init, repo, config, sessions, session start \"<task>\", session attach <session-id>, use workflow <id>, workflows, plugins [load|unload], debug-logs, exit", output, StringComparison.Ordinal);
             Assert.DoesNotContain("wip[", output, StringComparison.Ordinal);
         }

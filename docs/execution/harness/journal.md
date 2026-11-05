@@ -424,3 +424,42 @@
 - **Rationale**: OBS-020 + EVD-043: the gate is Windows-only; the session's Windows testhost is blocked, and WSL semantics differ on Windows-specific tests. Claiming a WSL result as the gate would be false.
 - **Alternatives considered**: claiming the WSL pass (rejected: false); excluding the Windows-only tests (rejected: weakens the gate); creating a Windows scheduled task to bypass the testhost restriction (rejected: containment-sensitive and out of scope).
 - **Related**: OBS-020, EVD-043
+
+---
+
+# Run 2 — Phase 3 completion (started 2026-11-05, round 2)
+
+### OBS-021: Shell streaming progress is implemented and falsifiable
+
+- **Source**: `WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs` (`RunAgentStreamingAsync`); `WIP/Wip.Shell/Interactive/WipShellCommandLoop.cs` (`agent` command, delta rendering); `WIP/Wip.Shell/Interactive/WipShellCommandSemantics.cs`; tests `WIP/Wip.Runtime.Tests/Repo/AgentStreamingRuntimeTests.cs`, `WIP/Wip.Shell.Tests/Interactive/WipShellCommandLoopTests.cs`
+- **Fact**: The runtime streaming entry yields adapter events and appends memory; the shell `agent "<task>"` command renders deltas before the status line. Focused tests pass (2 runtime, 1 shell); the full shell suite is 33/33. Removing the delta-rendering line makes the shell test fail; the first version of that assertion was satisfied by the final answer alone ("hello" also appears in `Agent answer: hello`) and was tightened after the control exposed it.
+- **Implications**: WP-3.5 is complete locally; the authoritative Tests CI gate must confirm the new totals (Runtime 132, Shell 33) on the committed HEAD.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-050..EVD-053
+
+### HYP-006: The streaming tests fail when the streaming implementation is stubbed
+
+- **Claim**: The runtime and shell streaming tests depend on the actual streaming path, not on incidental output.
+- **Supporting OBS**: OBS-021
+- **Why it matters**: A green streaming test that passes with the stream path removed would not be evidence for WP-3.5.
+- **Falsification strategy**: In the clone, replace the runtime `yield return streamEvent` with a fixed stub delta and remove the shell delta write; both tests must fail.
+- **Status**: Supported
+- **Confidence**: High
+- **Related**: EVD-051
+
+### VAL-011: HYP-006 supported — both streaming tests fail under stubs
+
+- **Target**: HYP-006
+- **Method**: clone-only stub controls, rebuild, run the focused tests.
+- **Evidence examined**: runtime control `CTRL_A_EXIT=1`; shell control after tightening `CTRL_B_EXIT=1`; positive runs pass.
+- **Result**: Supported
+- **Conclusion**: The tests exercise the real streaming path; the shell assertion was strengthened after the first control passed spuriously.
+- **Related**: EVD-051
+
+### DEC-010: Implement shell progress as a first-class `agent` command
+
+- **Decision**: Add `agent "<task>"` to the session command surface, its no-session guidance, help text and semantics; it calls the new `RunAgentStreamingAsync` and renders deltas/tool events/final status.
+- **Rationale**: OBS-021 + EVD-050..053: this is the user-visible surface for WP-3.5 and it is covered by a falsifiable test.
+- **Alternatives considered**: decorating the existing `run` command (rejected: `run` is workflow execution with different governance semantics); only logging stream events (rejected: not user-visible progress).
+- **Related**: OBS-021, EVD-050, EVD-053

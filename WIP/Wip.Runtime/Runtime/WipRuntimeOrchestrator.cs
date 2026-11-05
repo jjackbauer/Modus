@@ -345,6 +345,74 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         return result;
     }
 
+    /// <summary>
+    /// WP-3.5: streaming variant of <see cref="RunAgentAsync"/>. Deltas, tool calls and tool results
+    /// are surfaced as they happen; the session memory is appended once the stream completes.
+    /// </summary>
+    public async IAsyncEnumerable<AgentStreamEvent> RunAgentStreamingAsync(
+        AgentExecutionRequest request,
+        WipBuilder builder,
+        IServiceProvider services,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(services);
+
+        var session = await _sessionStore.LoadAsync(request.SessionId, cancellationToken)
+            ?? throw new InvalidOperationException($"Session '{request.SessionId.Value}' was not found.");
+
+        var chatModel = services.GetService(typeof(IChatModel)) as IChatModel
+            ?? throw new InvalidOperationException("No IChatModel is registered in the run provider.");
+
+        var toolInvoker = services.GetService(typeof(IToolInvoker)) as IToolInvoker
+            ?? new RuntimeToolInvoker(services, builder.CapabilityDescriptors);
+
+        // A custom IAgentExecutor is only usable here when it also implements the streaming contract;
+        // otherwise compose the default streaming executor over the resolved model and invoker.
+        var streamingExecutor = services.GetService(typeof(IStreamingAgentExecutor)) as IStreamingAgentExecutor
+            ?? services.GetService(typeof(IAgentExecutor)) as IStreamingAgentExecutor
+            ?? new AgentExecutor(chatModel, toolInvoker);
+
+        var context = new CapabilityContext(session.SessionId, session.WorktreePath);
+        var memory = services.GetService(typeof(IAgentMemory)) as IAgentMemory;
+        var effectiveRequest = request;
+        if (memory is not null)
+        {
+            var snapshot = await memory.LoadAsync(request.SessionId, cancellationToken);
+            effectiveRequest = new AgentExecutionRequest(
+                request.SessionId,
+                request.Task,
+                request.ModelId,
+                request.SystemPrompt,
+                request.Tools,
+                snapshot.Messages.Concat(request.InitialMessages).ToArray(),
+                request.Options);
+        }
+
+        AgentExecutionResult? finalResult = null;
+        await foreach (var streamEvent in streamingExecutor
+            .ExecuteStreamingAsync(effectiveRequest, context, cancellationToken)
+            .WithCancellation(cancellationToken))
+        {
+            if (streamEvent.Kind == AgentStreamEventKind.Completed)
+            {
+                finalResult = streamEvent.Result;
+            }
+
+            yield return streamEvent;
+        }
+
+        if (memory is not null)
+        {
+            await memory.AppendAsync(request.SessionId, ChatMessage.User(request.Task), cancellationToken);
+            if (finalResult?.FinalMessage is not null)
+            {
+                await memory.AppendAsync(request.SessionId, finalResult.FinalMessage, cancellationToken);
+            }
+        }
+    }
+
     public async ValueTask<SessionDiffResult> GenerateDiffAsync(
         SessionId sessionId,
         SessionDiffRequest request,

@@ -1,4 +1,5 @@
 using Wip.Abstractions.Artifacts;
+using Wip.Abstractions.Agents;
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Policies;
@@ -50,6 +51,7 @@ public sealed class WipShellCommandLoop : IDisposable
     [
         "plan",
         "run",
+        "agent \"<task>\"",
         "diff",
         "checkpoint",
         "validate",
@@ -92,6 +94,7 @@ public sealed class WipShellCommandLoop : IDisposable
         ["use"] = CommandScope.Global,
         ["plan"] = CommandScope.Session,
         ["run"] = CommandScope.Session,
+        ["agent"] = CommandScope.Session,
         ["diff"] = CommandScope.Session,
         ["checkpoint"] = CommandScope.Session,
         ["validate"] = CommandScope.Session,
@@ -341,6 +344,10 @@ public sealed class WipShellCommandLoop : IDisposable
 
             case "run":
                 await HandleRunAsync(cancellationToken);
+                return false;
+
+            case "agent":
+                await HandleAgentAsync(parts, cancellationToken);
                 return false;
 
             case "diff":
@@ -1218,6 +1225,100 @@ public sealed class WipShellCommandLoop : IDisposable
         catch (Exception ex)
         {
             await WriteLineAsync($"Run failed: {ex.Message}");
+        }
+    }
+
+    private async Task HandleAgentAsync(string[] parts, CancellationToken cancellationToken)
+    {
+        const string modelId = "deepseek-chat";
+        const string systemPrompt = "You are a repository agent confined to the session worktree. Use the provided tools and make only scoped changes.";
+        const int observationLimit = 200;
+
+        if (parts.Length < 2 || string.IsNullOrWhiteSpace(parts[1]))
+        {
+            await WriteLineAsync("Usage: agent \"<task>\"");
+            return;
+        }
+
+        var task = string.Join(' ', parts.Skip(1)).Trim().Trim('"').Trim();
+        if (string.IsNullOrWhiteSpace(task))
+        {
+            await WriteLineAsync("Usage: agent \"<task>\"");
+            return;
+        }
+
+        var builder = _builder;
+        if (builder is null)
+        {
+            await WriteLineAsync("Cannot run agent: no active builder is configured for this shell instance.");
+            return;
+        }
+
+        var services = _services;
+        if (services is null)
+        {
+            await WriteLineAsync("Cannot run agent: no service provider is configured for this shell instance.");
+            return;
+        }
+
+        var snapshot = await RefreshActiveSessionAsync(cancellationToken)
+            ?? throw new InvalidOperationException("Active session became unavailable.");
+
+        try
+        {
+            await WriteLineAsync($"Agent run started: session={snapshot.SessionId}");
+            await using var runScope = services.CreateAsyncScope();
+            var request = new AgentExecutionRequest(snapshot.SessionId, task, modelId, systemPrompt);
+            AgentExecutionResult? result = null;
+
+            await foreach (var streamEvent in _orchestrator.RunAgentStreamingAsync(request, builder, runScope.ServiceProvider, cancellationToken))
+            {
+                switch (streamEvent.Kind)
+                {
+                    case AgentStreamEventKind.Delta:
+                        await _output.WriteAsync(streamEvent.Content);
+                        break;
+
+                    case AgentStreamEventKind.ToolCall:
+                        await WriteLineAsync($"{Environment.NewLine}[tool-call] {streamEvent.ToolCall?.Name}");
+                        break;
+
+                    case AgentStreamEventKind.ToolResult:
+                        var toolResult = streamEvent.ToolResult;
+                        var outcome = toolResult is { IsError: true } ? "error" : "ok";
+                        var observation = toolResult?.Content ?? string.Empty;
+                        if (observation.Length > observationLimit)
+                        {
+                            observation = observation[..observationLimit] + "...";
+                        }
+
+                        await WriteLineAsync($"[tool-result] {outcome} {observation}");
+                        break;
+
+                    case AgentStreamEventKind.Completed:
+                        result = streamEvent.Result;
+                        break;
+
+                    case AgentStreamEventKind.Failed:
+                        await WriteLineAsync($"{Environment.NewLine}[agent-failed] {streamEvent.Result?.Status} {streamEvent.Result?.Error}");
+                        break;
+                }
+            }
+
+            _activeSession = await _orchestrator.GetSessionAsync(snapshot.SessionId, cancellationToken) ?? snapshot;
+            if (result is not null)
+            {
+                var toolResultCount = result.Steps.Sum(static step => step.ToolResults.Count);
+                await WriteLineAsync($"{Environment.NewLine}Agent status: {result.Status} steps={result.Steps.Count} toolResults={toolResultCount}");
+                if (!string.IsNullOrWhiteSpace(result.FinalMessage?.Content))
+                {
+                    await WriteLineAsync($"Agent answer: {result.FinalMessage!.Content}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await WriteLineAsync($"Agent run failed: {ex.Message}");
         }
     }
 

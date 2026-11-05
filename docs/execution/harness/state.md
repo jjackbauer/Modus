@@ -1,59 +1,48 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 1 of 12 (complete locally; remote CI confirmation pending the push)
+- **Round**: 2 of 12 (local complete; authoritative CI pending the push)
 - **Goal**: Phase 3 completion (adapter, real-model write-capable agent, safety) → Phases 4–6 → G2
   re-review → G5 packet and human decision; no release.
-- **Definition of done**: 2/11 met (D1, D11); 3 partial (D2 host registration yes / shell rendering
-  no; D5 tool-level cases only; D10 G5 packet predates Phase 3); 6 not started (D3, D4, D6, D7, D8, D9)
+- **Definition of done**: 3/11 met (D1 adapter, D2 host+shell progress, D11 verification); 3 partial
+  (D5 tool-level safety only, D9 G2 packet predates Phase 3, D10 G5 packet stale); 5 not started
+  (D3, D4, D6, D7, D8)
 - **Stop criteria**: D1–D11 unmet; G5 human decision not requested yet.
 
 ## Gate status
 
 | Gate | Status | Detail |
 |---|---|---|
-| G1 Evidence | PASS | every round-1 claim resolves to a file:line, a TRX or a command output (EVD-020..049) |
-| G2 Falsification | PASS | 0 open falsified rows; HYP-003 was falsified and superseded by HYP-004 (rate parity), HYP-005 (concurrency coordination) |
-| G3 Coverage | PASS | no dimension regressed; D1 and D11 moved to met |
-| G4 Reproduction | PASS | every fix was re-run by the orchestrator under the failing condition, with negative controls (EVD-028..037, EVD-040..042) |
-| G5 Honesty | PASS | missing CI logs, the Windows-only gate, blocked local VSTest and the cancelled `8ab7ad5` run are recorded (OBS-012, OBS-014, OBS-020, EVD-043, EVD-049) |
+| G1 Evidence | PASS | every claim resolves to a file:line, a TRX or a command output (EVD-020..053) |
+| G2 Falsification | PASS | 0 open falsified rows; HYP-003 falsified, superseded by HYP-004/005; the weak shell assertion was exposed by control B and tightened |
+| G3 Coverage | PASS | no dimension regressed; D2 moved to met with WP-3.5 complete |
+| G4 Reproduction | PASS | every fix/suite re-run by the orchestrator; stub controls for the streaming tests (EVD-050..053) |
+| G5 Honesty | PASS | Windows-only gate, blocked local VSTest, missing CI logs and the cancelled run are recorded (OBS-012/014/020, EVD-043/049) |
 
-## Round 1 outcome
+## Round 2 outcome
 
-- **Objective:** make the red Modus CI hard gate at HEAD deterministic and green.
-- **Result:** three root causes found and fixed. (1) The registration-time execution was counted as a
-  cadence interval (649.5 ms startup gap under 2-core contention) — necessary but not sufficient.
-  (2) Under CPU starvation the runtime's own `PeriodicTimer` delivers catch-up bursts (job gaps
-  `[935.5, 10.5, 959.1, 166.0] ms`, reference gaps `[1.5, 248.8, 304.0] ms`), so per-gap wall-clock
-  assertions are not observable. The gate now requires the job's tick count to keep pace with a
-  same-process reference timer (±1 tick); 12/12 loaded runs pass, while 600 ms, 150 ms and dead
-  scheduler injections all fail; the full migration filter is 19/19. **Modus CI `42028137663` on
-  `22bcdd5` is green.**
-- (3) Tests CI `42028137512` on `22bcdd5` exposed two unwaived `BonesLoopStateConcurrencyTests`
-  flakes (reader outruns writer on a pinned core). Fixed with bounded writer/reader coordination:
-  15/15 on the failing condition, and always-true / non-monotonic injections still fail.
-- (4) The authoritative 16-project gate runs on `windows-latest`, and this session's Windows VSTest
-  is blocked; a WSL run is not equivalent (platform-only failures). Gate evidence therefore comes
-  from Tests CI `wip-offline-tests`; WSL runs cover the Linux Modus suite and adapter unit tests.
-- **Remote status:** **green on `1b6d7cd`** — Tests CI `42035300449` all six jobs success (including
-  the windows-latest offline gate with Runtime.Tests 130 and the concurrency fix), Modus CI
-  `42035300353` success (migration regression green). The docs-only round-close commit is local and
-  will ride the next push.
-
-## Next objective
-
-Push the WP-3.5 increment 1 commit (DeepSeek `IChatModel` adapter, 7 tests, host registration,
-`Runtime.Tests` total 130) and confirm Tests CI `wip-offline-tests` on `windows-latest`; then
-implement shell/status stream progress and start the real-model write-capable sample agent.
+- **Objective:** finish WP-3.5 (shell/status progress) and keep the authoritative gate green.
+- **Result:** `WipRuntimeOrchestrator.RunAgentStreamingAsync` streams adapter events and appends
+  session memory; the shell command `agent "<task>"` renders deltas, tool calls/results and the
+  final status/answer; help text, no-session guidance and the command-semantics contract include it.
+- **Tests:** 2 runtime streaming tests, 1 shell command test, contract tests updated;
+  `Wip.Runtime.Tests` 130 → **132**, `Wip.Shell.Tests` 32 → **33**; the full shell suite is 33/33.
+- **Controls:** stubbing the runtime stream fails the runtime tests; removing the shell delta
+  rendering fails the shell test (the first assertion version was satisfied by the final answer
+  alone and was tightened).
+- **Baseline CI:** the records HEAD `3ea7086` is fully green (Tests CI `42037930950` six jobs, Modus
+  CI `42037930830`). The round-2 commit's own CI is the pending check.
 
 ## Objective ledger
 
 | Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
 |---|---|---|---|---|---|---|---|
 | 1 | Fix the red Modus CI hard gate at HEAD deterministically | Probe + measured self-implementation | 0 | 30 | 1 (HYP-003) | all PASS | converged: Modus + Tests CI green on `1b6d7cd` |
+| 2 | Finish WP-3.5: runtime streaming entry + shell progress | Probe + measured self-implementation | 0 | 4 | 0 | all PASS | local green; push → Tests CI `windows-latest` |
 | — | (prior run) Phase 0–3 core, G3/G4 accepted | — | — | EVD-001..019 | — | — | carried |
 
 ## Next objective
 
-Push the two commits, confirm Modus CI and Tests CI on the new HEAD, then start **WP-3.5**: the
-DeepSeek `IChatModel` adapter (`CompleteAsync` + SSE `StreamAsync`), mock-`HttpMessageHandler`
-tests, host registration, and shell/status rendering of stream events.
+Push the round-2 commit and confirm Tests CI `wip-offline-tests` on `windows-latest` with Runtime 132
+and Shell 33; then **WP-3.6**: a real-model, write-capable sample agent E2E at the DeepSeek HTTP
+boundary (fake server) plus the opt-in live test gated by an API key, then the WP-3.7 safety
+remainder.
