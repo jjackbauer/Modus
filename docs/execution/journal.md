@@ -615,3 +615,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Contract tests (11) cover role factories, JSON lifetime safety, validation, immutability and response/chunk fields; `Wip.Abstractions.Tests` is 55/55.
 - **Remaining WP-3.1:** DeepSeek IChatModel adapter with SSE streaming and mock tests.
 - **G3** was accepted this round (packet + decision committed) and WP-1.7 is complete with 15 permission tests, including model.invoke enforcement.
+## 2026-11-05T07:30:00-03:00 - WP-3.2 done; WP-3.3 loop core done
+
+- **WP-3.2**: `IToolInvoker`/`RuntimeToolInvoker` — name+JSON tool calls, permission guard before execution, per-tool timeout, observation truncation, deterministic error codes (unknown-tool/invalid-arguments/timeout/permission-denied/tool-error/cancelled), and best-effort artifact recording. 8 tests.
+- **WP-3.3 (core)**: `AgentLoopOptions`/`AgentExecutionRequest`/`AgentExecutionResult`/`IAgentExecutor` and `AgentExecutor` — model turn → tool calls → observations loop with max steps, token budget, consecutive tool-failure limit, loop timeout, model-error handling and caller cancellation. 7 tests.
+- `Wip.Runtime.Tests` is now 102 total (1 pre-existing waived). Remaining Phase 3: streaming (WP-3.5), memory (WP-3.4), runtime contract + write-capable sample agent (WP-3.6), safety tests (WP-3.7), DeepSeek chat adapter.
