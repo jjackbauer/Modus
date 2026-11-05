@@ -1,4 +1,4 @@
-# WP-1.7 — permission model (increment 1)
+# WP-1.7 — permission model (done)
 
 **Status:** in progress 2026-11-05. Core model and dispatcher enforcement are in; gateway, plugin
 load, model invocation and manifest surfacing follow.
@@ -47,6 +47,21 @@ Focused run: 7/7.
 - **Moved** the default `PermissionEvaluator` to `Wip.Abstractions.Permissions` so hosts and the
   plugin bridge can share it without depending on the runtime.
 - Tests: gateway deny/grant, bridge deny/audit/grant (manifest grants), evaluator unit tests.
+
+## Increment 3 — model invocation (2026-11-05)
+
+- `PermissionGuardedModelProvider<TRequest,TResult>` wraps a model provider and evaluates
+  `model.invoke` before calling the inner provider. `services.AddPermissionGuardedModelProvider<...>()
+  ` registers the inner provider and exposes the guarded wrapper; a plugin origin makes the call
+  grant-dependent, a null origin keeps built-ins allowed.
+- Tests: built-in forwarded; plugin provider denied before invocation; audit mode invokes and
+  records the audited decision.
+
+## G3 status
+
+The permission model is complete for G3: catalog, evaluator modes, grants, enforcement at all four
+required points, manifest surfacing, and 15 permission tests. The external security review (WP-5.5)
+remains a later activity, and the model guard is opt-in host wiring.
 
 ## Remaining
 

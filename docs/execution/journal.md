@@ -603,3 +603,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - Tests: gateway deny/grant; bridge deny/audit/grant with manifest grants; all affected suites re-run (Runtime 84/83+1 waived, Modus 27/26+1 waived, ShellHost 47, Shell 32/30+2 waived, Bones 396/394+2 waived).
 - **CI flake hardened:** `BonesHostFeed_GivenRunningLoop_ExpectedViewerSnapshotFrameCountGreaterThanZero` now reuses the scrubbable-snapshot wait (frames >= 3) instead of asserting FrameCount immediately after the endpoint answered.
 - **Remaining WP-1.7:** model-provider `model.invoke` enforcement (decorator at the agent runtime invoker) and docs; then G3.
+## 2026-11-05T06:05:00-03:00 - WP-1.7 complete and G3 accepted
+
+- Added `PermissionGuardedModelProvider` + `AddPermissionGuardedModelProvider<...>()`, so `model.invoke` is enforced before the inner provider runs (built-ins allowed; plugin origin needs a grant; audit mode records). Tests 3/3.
+- WP-1.7 is complete: catalog, evaluator, Enforce/Audit, grants, enforcement at dispatcher/gateway/plugin-load/model-invoke, manifest grants and load diagnostics, host wiring. 15 permission tests; affected suites green (Runtime 87/1 waived, Modus 27/1 waived, ShellHost 47, Shell 32/2 waived, Bones 396/2 waived).
+- **G3 accepted** (packet `docs/execution/evidence/G3/gate-packet.md`, decision `decision-2026-11-05.md`): internal engineering gate; external security review (WP-5.5) and G5 remain.
+- **Next:** Phase 3 — WP-3.1 chat/tool contracts, then WP-3.2 tool invoker, WP-3.3 executor, WP-3.4 memory, WP-3.5 streaming, WP-3.6 runtime + write-capable agent, WP-3.7 safety.
