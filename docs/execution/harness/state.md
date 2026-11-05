@@ -3,18 +3,19 @@
 - **Round**: 1 of 12 (complete locally; remote CI confirmation pending the push)
 - **Goal**: Phase 3 completion (adapter, real-model write-capable agent, safety) → Phases 4–6 → G2
   re-review → G5 packet and human decision; no release.
-- **Definition of done**: 0/11 met, 5 partial (D1, D5, D9, D10, D11); 6 not started
+- **Definition of done**: 2/11 met (D1, D11); 3 partial (D2 host registration yes / shell rendering
+  no; D5 tool-level cases only; D10 G5 packet predates Phase 3); 6 not started (D3, D4, D6, D7, D8, D9)
 - **Stop criteria**: D1–D11 unmet; G5 human decision not requested yet.
 
 ## Gate status
 
 | Gate | Status | Detail |
 |---|---|---|
-| G1 Evidence | PASS | every round-1 claim resolves to a file:line, a TRX or a command output (EVD-020..031) |
-| G2 Falsification | PASS | 0 falsified rows; the cadence hypothesis was tested with two negative controls |
-| G3 Coverage | PASS | no dimension regressed; D11 improved from red Modus CI to a fixed gate pending remote confirmation |
-| G4 Reproduction | PASS | the failure, the fix and both controls were re-run by the orchestrator (EVD-025, EVD-028..031) |
-| G5 Honesty | PASS | the missing CI log, the Windows VSTest block and the unverified remote confirmation are recorded (OBS-012, OBS-014, OBS-017) |
+| G1 Evidence | PASS | every round-1 claim resolves to a file:line, a TRX or a command output (EVD-020..049) |
+| G2 Falsification | PASS | 0 open falsified rows; HYP-003 was falsified and superseded by HYP-004 (rate parity), HYP-005 (concurrency coordination) |
+| G3 Coverage | PASS | no dimension regressed; D1 and D11 moved to met |
+| G4 Reproduction | PASS | every fix was re-run by the orchestrator under the failing condition, with negative controls (EVD-028..037, EVD-040..042) |
+| G5 Honesty | PASS | missing CI logs, the Windows-only gate, blocked local VSTest and the cancelled `8ab7ad5` run are recorded (OBS-012, OBS-014, OBS-020, EVD-043, EVD-049) |
 
 ## Round 1 outcome
 
@@ -33,8 +34,10 @@
 - (4) The authoritative 16-project gate runs on `windows-latest`, and this session's Windows VSTest
   is blocked; a WSL run is not equivalent (platform-only failures). Gate evidence therefore comes
   from Tests CI `wip-offline-tests`; WSL runs cover the Linux Modus suite and adapter unit tests.
-- **Remote status:** post-fix Modus CI and Tests CI runs are recorded in
-  `docs/execution/state.json` once the push completes.
+- **Remote status:** **green on `1b6d7cd`** — Tests CI `42035300449` all six jobs success (including
+  the windows-latest offline gate with Runtime.Tests 130 and the concurrency fix), Modus CI
+  `42035300353` success (migration regression green). The docs-only round-close commit is local and
+  will ride the next push.
 
 ## Next objective
 
@@ -46,7 +49,7 @@ implement shell/status stream progress and start the real-model write-capable sa
 
 | Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
 |---|---|---|---|---|---|---|---|
-| 1 | Fix the red Modus CI hard gate at HEAD deterministically | Probe + measured self-implementation | 0 | 12 | 0 | all PASS | fix landed locally; push next |
+| 1 | Fix the red Modus CI hard gate at HEAD deterministically | Probe + measured self-implementation | 0 | 30 | 1 (HYP-003) | all PASS | converged: Modus + Tests CI green on `1b6d7cd` |
 | — | (prior run) Phase 0–3 core, G3/G4 accepted | — | — | EVD-001..019 | — | — | carried |
 
 ## Next objective

@@ -673,3 +673,10 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Tests:** 7 mock-`HttpMessageHandler` tests (mapping with tools, tool-call response parsing, transient retry, cancellation, SSE deltas + usage, split tool-call deltas, environment key resolution). `Wip.Runtime.Tests` 123 → **130**; waiver expected total updated.
 - **Gate environment clarified:** the authoritative 16-project offline gate runs on **windows-latest** (`.github/workflows/tests-ci.yml:76-94`). This session's Windows VSTest is blocked (`Win32Exception 5`), and a WSL run is not equivalent: it produced platform-only failures (`dotnet.cmd` execution, a backslash path guard, line-ending normalization). With the adapter, the Linux run still shows 130 Runtime tests and all 7 adapter tests green; the authoritative evidence must be Tests CI `wip-offline-tests`.
 - **No release claim; G5 not requested.**
+
+## 2026-11-05T10:45:00-03:00 — Round 1 close: both workflows green on `1b6d7cd`
+
+- **Tests CI run `42035300449` on `1b6d7cd`: all six jobs success**, including `wip-offline-tests` on windows-latest (Runtime.Tests 130 with the 7 adapter tests, the concurrency fix, the count/waiver gate) and both security jobs.
+- **Modus CI run `42035300353` on `1b6d7cd`: success** — the migration-regression hard gate is green on the committed adapter HEAD.
+- **Round 1 deliverables:** the cadence gate is deterministic (reference-timer rate parity, 12/12 loaded runs, slow/fast/dead controls fail); the two `BonesLoopState` concurrency tests are coordinated (15/15 on the failing core, violation controls fail); Modus CI now emits the failing TRX message as an annotation; the DeepSeek `IChatModel` adapter with SSE streaming is registered and covered by 7 tests; `Runtime.Tests` total 130; the Windows-only gate constraint is recorded.
+- **Next round:** shell/status stream progress (finish WP-3.5), then WP-3.6 real-model write-capable sample agent E2E and the opt-in live test, then WP-3.7 safety remainder. No release claim; G5 not requested.

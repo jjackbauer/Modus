@@ -8,7 +8,8 @@
   "work_package": "WP-3.5",
   "status": "in_progress",
   "gate": "G5",
-  "gate_status": "phase3_wp35_adapter_next_modus_ci_fix_pending_remote_run",
+  "gate_status": "phase3_wp35_adapter_done_shell_stream_progress_remaining_ci_green_head_1b6d7cd",
+  "last_ci_green_head": "1b6d7cd215ef1991be229a70488b54cdae024883",
   "goal_status": "phase2_runtime_seams",
   "attempts": {
     "WP-0.1": 2,
@@ -32,8 +33,8 @@
     "WP-2.7": 1,
     "WP-1.7": 1
   },
-  "last_verified_at": "2026-11-05T10:20:00-03:00",
-  "next_action": "Push the WP-3.5 adapter commit (DeepSeek IChatModel, 7 tests, host registration, Runtime.Tests total 130) and confirm Tests CI wip-offline-tests on windows-latest plus Modus CI. Then shell/status stream progress, the real-model write-capable sample agent at the DeepSeek HTTP boundary, the WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
+  "last_verified_at": "2026-11-05T10:45:00-03:00",
+  "next_action": "Round 2: shell/status progress rendering of stream events (finish WP-3.5), then WP-3.6 real-model write-capable sample agent E2E at the DeepSeek HTTP boundary plus the opt-in live test, then WP-3.7 safety remainder, Phases 4-6, the G2 re-review and the G5 human decision. No release claim.",
   "open_blockers": ["Modus CI hard gate was red at HEAD 4dc6559 (migration-regression cadence test); deterministic fix landed locally, remote run pending. Full G2/release blocked (Windows C1 residual accepted, re-review 2026-12-03); WP-3.5/3.6/3.7, Phases 4-6 and G5 remain."],
   "deviations": ["DEV-001", "DEV-002", "DEV-003", "DEV-004"],
   "dirty_tree": {
@@ -99,15 +100,15 @@
     "deepseek_chat_adapter_tests": 7,
     "authoritative_gate": "Tests CI wip-offline-tests on windows-latest",
     "local_windows_vstest": "blocked_win32exception5_testhost_parent_callback; WSL runs are supplementary and not gate-equivalent",
-    "evidence": "Tests CI run_42028137512 on 22bcdd5 failed only the offline count/waiver gate on two BonesLoopState concurrency flakes (no product change in that HEAD); Tests CI 42003337898 on 4dc6559 and 42022906370 on 5cea565 were 6/6 green; Modus CI 42028137663 on 22bcdd5 is green (migration regression hard gate fixed); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123 + 7 new adapter tests"
+    "evidence": "HEAD 1b6d7cd is fully green: Tests CI run_42035300449 all six jobs success (windows-latest offline gate with Runtime.Tests 130 and the concurrency fix, architecture, both security jobs, both builds) and Modus CI run_42035300353 success (migration regression green). The 22bcdd5 Tests run failed only the offline count/waiver gate on two BonesLoopState concurrency flakes, fixed with bounded coordination. Local Windows VSTest is blocked; WSL runs are supplementary and not gate-equivalent. Runtime.Tests 130 (7 adapter tests); architecture 4/4 at 43 projects."
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "tests_ci_run_42028137512_failure_head_22bcdd5_bones_loop_state_concurrency_flakes",
-    "remote_ci_note": "fixed in this change with bounded writer/reader coordination; post-fix run pending; Modus CI is green on 22bcdd5",
-    "modus_ci": "run_42028137663_success_head_22bcdd5_migration_regression_green",
+    "remote_ci": "tests_ci_run_42035300449_success_head_1b6d7cd_all_six_jobs",
+    "remote_ci_note": "windows-latest offline gate green with Runtime.Tests 130 and the concurrency fix; the 8ab7ad5 Tests run was cancelled as superseded",
+    "modus_ci": "run_42035300353_success_head_1b6d7cd_migration_regression_green",
     "modus_ci_fix": "docs/execution/evidence/CI-FIX/README.md (two iterations: registration-sample fix in 5cea565; reference-timer rate parity + TRX error annotations in the next commit; post-fix run pending push)",
     "modus_ci_diagnostics": "migration regression failures now emit the failing test's TRX error message as a GitHub annotation",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
