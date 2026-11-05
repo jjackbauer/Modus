@@ -1,6 +1,6 @@
 # BLK-MODUS-LEGACY-SUITE — stale legacy integration meta-tests
 
-**Status:** open, non-blocking in Modus CI; owner QA/tech lead; target Phase 4 (WP-4.3/WP-4.5).
+**Status:** resolved 2026-11-05 — the suite is blocking again in Modus CI; see the resolution section.
 **Date:** 2026-11-04
 **Evidence:** clean Linux clone (`git` WIP @ d5cc3ef), full `Modus.Host.IntegrationTests` suite: 347 passed / 15 failed of 362; 6 of the 15 are WSL-only (no `make`, `zip`, `pwsh`) and pass on GitHub's ubuntu image, leaving **9 CI-relevant failures**, all stale meta-tests written against the pre-G0 unified workflow layout.
 
@@ -27,3 +27,12 @@
 ## Interim policy
 
 The two release-relevant gates (migration regression, plugin curl probe) are **hard** and green. The full legacy suite runs with `continue-on-error` and reports failures as `::warning` annotations; the `ci-tests-success` flag is only published when the legacy suite is also green. The step becomes blocking again once these 9 meta-tests are reconciled with the current workflow split in Phase 4.
+
+## Resolution (2026-11-05)
+
+- `TestsCiWorkflowLinuxFirstWipGateTests` and `TestsCiWorkflowDotnetTestExecutionGateTests` were rewritten against the current Tests CI split (platform builds, `tools/run-wip-tests.ps1`, the verifier gate, both architecture projects, job-outcome simulation for the behavior-proof policy).
+- `TestsCiWorkflowTriggerPolicyTests` now expects `main` and `WIP`; `TestsCiWorkflowFailureIsolationTests` passes with the blocking step and `success()` success-flag conditions.
+- Modus CI gained workflow-level concurrency and the legacy suite step is no longer `continue-on-error`; its failure report emits `::error`.
+- The root `Makefile` regained the solution-level `build` / `test` / `test-no-build` / `run-host` targets the meta-tests require.
+- The timer autonomous-loop test's initial wait was widened to a bounded 10 s (loaded runners starved it).
+- Local Linux: 355/362 pass; the remaining 7 are WSL-only gaps (`pwsh`, `make`) that GitHub's ubuntu image provides. Modus CI run ids are recorded in `docs/execution/state.json`.

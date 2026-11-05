@@ -1,6 +1,6 @@
 # Harness State — WIP-IMPL-001 phases 3–6 / G5
 
-- **Round**: 3 of 12 (local complete; authoritative CI pending the push)
+- **Round**: 4 of 12 (code landed; Modus CI confirmation pending the API rate-limit reset)
 - **Goal**: Phase 3 completion (adapter, real-model write-capable agent, safety) → Phases 4–6 → G2
   re-review → G5 packet and human decision; no release.
 - **Definition of done**: 5/11 met (D1 adapter, D2 host+shell progress, D3 real-model write-capable
@@ -54,6 +54,16 @@
 
 ## Next objective
 
-Push the round-3 commit and confirm Tests CI (offline gate at Runtime 137 plus both security jobs
-running the agent safety suite); then **Phase 4**: reconcile the legacy Modus full-suite meta-tests
-(`BLK-MODUS-LEGACY-SUITE`), make the suite blocking, and produce the docs/runbooks/operator guide.
+Confirm Modus CI on `4e9c11d` once the GitHub API rate limit resets (the legacy suite is blocking);
+record the run ids. Then finish Phase 4 (docs/runbooks/operator guide and truthful test-status
+pages) and move to Phase 5 (privacy/retention, security review packet).
+
+## Round 4 outcome (Phase 4 — legacy suite)
+
+- Reconciled the 9 stale pre-G0 meta-tests with the current CI split, removed `continue-on-error`
+  from the legacy suite, added Modus CI concurrency, and restored the root `Makefile`
+  `build`/`test`/`test-no-build`/`run-host` targets.
+- Local Linux: 355/362; the 7 remaining failures are WSL-only environment gaps (`pwsh`/`make`).
+- Modus CI `42053856612` on `1ab952e` failed only the 3 Makefile-targets tests; fixed in `4e9c11d`
+  (focused tests pass locally). CI confirmation for `4e9c11d` is pending the API rate-limit reset —
+  no green claim is made for it yet.
