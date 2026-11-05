@@ -51,10 +51,13 @@ public sealed class BonesHostViewerLearningLoopStatusTests : IClassFixture<Bones
             await BonesViewerScriptTestDriver.WaitForLearningLoopPanelPopulatedAsync(page);
 
             var observedStages = new HashSet<string>(StringComparer.Ordinal);
-            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(120);
+            // Bounded but generous: a loaded Windows CI runner can take longer than 120 s to advance
+            // the stub learning loop through a second stage (the same commit passes 3/3 on Linux and
+            // this assertion still fails if the stage never changes).
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(240);
             while (DateTime.UtcNow < deadline)
             {
-                status = await WaitForSidebarStageToMatchStatusAsync(page, client, TimeSpan.FromSeconds(5));
+                status = await WaitForSidebarStageToMatchStatusAsync(page, client, TimeSpan.FromSeconds(15));
                 observedStages.Add(status.CurrentStage);
 
                 var dom = await BonesViewerScriptTestDriver.ReadLearningLoopStatusDomAsync(page);
