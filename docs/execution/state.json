@@ -94,13 +94,13 @@
     "bones_tests": 396,
     "architecture_tests": 4,
     "architecture_projects": 43,
-    "evidence": "Green local gate 2026-11-05 (1,112/1,089/23 waived, zero unwaived); architecture 4/4 at 43 projects; Runtime.Tests 112 with the agent runtime"
+    "evidence": "Tests CI run_41999885507 on 150b587: all six jobs success (16-project offline gate, architecture 4/4 at 43 projects, security); local gate 1,112/1,089/23 waived with zero unwaived; Runtime.Tests 123"
   },
   "test_gate": {
     "offline_projects": 16,
     "waived_failures": 27,
     "known_aborts": 2,
-    "remote_ci": "run_41989359785_success_head_f21771d",
+    "remote_ci": "run_41999885507_success_head_150b587",
     "modus_ci": "run_41933143670_success_hard_gates_legacy_suite_nonblocking",
     "modus_legacy_suite_blocker": "BLK-MODUS-LEGACY-SUITE",
     "security_ci": "run_41655112634_invalidated_helper_not_installed",
