@@ -4,6 +4,7 @@ using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Descriptors;
 using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Permissions;
 using Wip.Abstractions.Sessions;
 using Wip.Agent.Basic;
 using Wip.Builder;
@@ -145,6 +146,7 @@ public sealed class WorkflowStageCapabilityDispatcher
 
         if (TryResolveDescriptor(descriptor, out var capabilityDescriptor))
         {
+            EnsurePermissions(capabilityDescriptor, dispatchContext.Session.SessionId);
             result = await InvokeCapabilityAsync<TRequest, TResult>(
                 capabilityDescriptor,
                 typedRequest,
@@ -194,6 +196,35 @@ public sealed class WorkflowStageCapabilityDispatcher
             descriptor.ResultContractName,
             result,
             executionArtifact);
+    }
+
+    /// <summary>
+    /// WP-1.7: a capability's declared permissions are evaluated before invocation. Built-in
+    /// capabilities are allowed; plugin capabilities need a grant, and a denial is a deterministic
+    /// PermissionDeniedException (no partial execution, no artifact).
+    /// </summary>
+    private void EnsurePermissions(ICapabilityDescriptor capabilityDescriptor, SessionId sessionId)
+    {
+        if (capabilityDescriptor.RequiredPermissions.Count == 0)
+            return;
+
+        var evaluator = _serviceProvider.GetService(typeof(IPermissionEvaluator)) as IPermissionEvaluator
+            ?? PermissionEvaluator.EnforceAllowBuiltIns;
+
+        foreach (var permission in capabilityDescriptor.RequiredPermissions)
+        {
+            var decision = evaluator.Evaluate(new PermissionRequest(
+                permission.Value,
+                capabilityDescriptor.CapabilityId,
+                capabilityDescriptor.PluginOrigin,
+                sessionId,
+                IsBuiltIn: capabilityDescriptor.PluginOrigin is null));
+
+            if (!decision.Allowed)
+            {
+                throw new PermissionDeniedException(permission.Value, decision.Reason);
+            }
+        }
     }
 
     private bool TryResolveDescriptor(WorkflowStageDescriptor descriptor, out ICapabilityDescriptor capabilityDescriptor)

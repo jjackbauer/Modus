@@ -592,3 +592,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **Phase 2 closed:** WP-2.1 host-managed DI, WP-2.2 pool removal, WP-2.3 definitions/executor, WP-2.4 explicit plans (global registry + heuristics deleted), WP-2.5 Bones definition, WP-2.6 Shell/Bones decoupling, WP-2.7 collectible plugin ALC.
 - **Carried risks:** Windows OS containment unclaimed (G2 conditional until 2026-12-03); legacy Modus CI full suite non-blocking (BLK-MODUS-LEGACY-SUITE).
 - **Next:** WP-1.7 permission model and G3, then Phase 3 (autonomy + streaming + write-capable repo agent).
+## 2026-11-05T05:00:00-03:00 - WP-1.7 increment 1: permission catalog, evaluator, dispatcher enforcement
+
+- Added the canonical permission catalog, `IPermissionEvaluator`/`PermissionRequest`/`PermissionDecision`, `PermissionMode` (Enforce/Audit) and `PermissionDeniedException`. The default evaluator trusts built-ins and requires explicit grants (`*`, bare permission, or `pluginId:permission`) for plugin capabilities; audit mode allows but marks and reports would-be denials.
+- The workflow stage dispatcher evaluates every declared capability permission before invocation; denials are deterministic and happen before execution or artifact persistence. Tests: evaluator allow/deny/audit and dispatcher deny/audit/grant (7/7).
+- Remaining WP-1.7: tool gateway process/network, model.invoke, plugin.load + manifest surfacing, audit sink wiring, host configuration.

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
 using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Permissions;
 using Wip.Abstractions.Sessions;
 using Wip.Abstractions.Workflows;
 using Wip.Builder;
@@ -160,5 +161,98 @@ public sealed class WorkflowStageCapabilityDispatcherTests
         }
         public ValueTask<IReadOnlyList<ArtifactDescriptor>> ListAsync(SessionId sessionId, CancellationToken cancellationToken)
             => ValueTask.FromResult<IReadOnlyList<ArtifactDescriptor>>([]);
+    }
+    [Fact]
+    public async Task WorkflowStageCapabilityDispatcher_GivenPluginCapabilityWithoutGrant_ExpectedPermissionDenied()
+    {
+        var services = new ServiceCollection();
+        var builder = services.AddWipCapabilities();
+        builder.AddTool<DispatchProbeTool, DispatchProbeRequest, DispatchProbeResult>(
+            new CapabilityId("tool.dispatch.denied"),
+            "Denied probe tool",
+            requiredPermissions: [new CapabilityPermission(PermissionCatalog.WorkspaceWrite)],
+            pluginOrigin: new PluginOrigin("plugin.denied", new CapabilityVersion("1.0.0"), "Plugin.Denied"));
+        services.AddSingleton(new InvocationTracker());
+
+        using var provider = services.BuildServiceProvider();
+        var dispatcher = new WorkflowStageCapabilityDispatcher(provider, builder.CapabilityDescriptors);
+        var descriptor = WorkflowStageDescriptor.Create<DispatchProbeRequest, DispatchProbeResult>(WorkflowStageKind.Run);
+        var session = CreateSessionSnapshot();
+        var request = new DispatchProbeRequest("denied");
+
+        var exception = await Assert.ThrowsAsync<PermissionDeniedException>(() => dispatcher.ExecuteStageAsync(
+            descriptor,
+            request,
+            new WorkflowStageDispatchContext(session, builder, "corr-denied"),
+            new WorkflowStageMappedInputEvidence(descriptor.RequestContractName, request, descriptor.RequestContractName, request),
+            CancellationToken.None).AsTask());
+
+        Assert.Equal(PermissionCatalog.WorkspaceWrite, exception.Permission);
+    }
+
+    [Fact]
+    public async Task WorkflowStageCapabilityDispatcher_GivenAuditMode_ExpectedCapabilityRunsAndDecisionIsAudited()
+    {
+        var auditSink = new List<PermissionDecision>();
+        var services = new ServiceCollection();
+        var builder = services.AddWipCapabilities();
+        builder.AddTool<DispatchProbeTool, DispatchProbeRequest, DispatchProbeResult>(
+            new CapabilityId("tool.dispatch.audited"),
+            "Audited probe tool",
+            requiredPermissions: [new CapabilityPermission(PermissionCatalog.ModelInvoke)],
+            pluginOrigin: new PluginOrigin("plugin.audited", new CapabilityVersion("1.0.0"), "Plugin.Audited"));
+        services.AddSingleton(new InvocationTracker());
+        services.AddSingleton<IPermissionEvaluator>(
+            new PermissionEvaluator(PermissionMode.Audit, auditSink: decision => auditSink.Add(decision)));
+
+        var artifactStore = new InMemoryArtifactStore();
+        using var provider = services.BuildServiceProvider();
+        var dispatcher = new WorkflowStageCapabilityDispatcher(provider, builder.CapabilityDescriptors);
+        var descriptor = WorkflowStageDescriptor.Create<DispatchProbeRequest, DispatchProbeResult>(WorkflowStageKind.Run);
+        var session = CreateSessionSnapshot();
+        var request = new DispatchProbeRequest("audited");
+
+        var result = await dispatcher.ExecuteStageAsync(
+            descriptor,
+            request,
+            new WorkflowStageDispatchContext(session, builder, "corr-audited", ArtifactStore: artifactStore),
+            new WorkflowStageMappedInputEvidence(descriptor.RequestContractName, request, descriptor.RequestContractName, request),
+            CancellationToken.None);
+
+        Assert.Equal("tool.dispatch.audited", result.ProducerCapabilityId.Value);
+        var decision = Assert.Single(auditSink);
+        Assert.True(decision.Allowed);
+        Assert.True(decision.Audited);
+    }
+
+    [Fact]
+    public async Task WorkflowStageCapabilityDispatcher_GivenGrantedPluginCapability_ExpectedCapabilityRuns()
+    {
+        var services = new ServiceCollection();
+        var builder = services.AddWipCapabilities();
+        builder.AddTool<DispatchProbeTool, DispatchProbeRequest, DispatchProbeResult>(
+            new CapabilityId("tool.dispatch.granted"),
+            "Granted probe tool",
+            requiredPermissions: [new CapabilityPermission(PermissionCatalog.WorkspaceWrite)],
+            pluginOrigin: new PluginOrigin("plugin.granted", new CapabilityVersion("1.0.0"), "Plugin.Granted"));
+        services.AddSingleton(new InvocationTracker());
+        services.AddSingleton<IPermissionEvaluator>(
+            new PermissionEvaluator(PermissionMode.Enforce, ["plugin.granted:workspace.write"]));
+
+        var artifactStore = new InMemoryArtifactStore();
+        using var provider = services.BuildServiceProvider();
+        var dispatcher = new WorkflowStageCapabilityDispatcher(provider, builder.CapabilityDescriptors);
+        var descriptor = WorkflowStageDescriptor.Create<DispatchProbeRequest, DispatchProbeResult>(WorkflowStageKind.Run);
+        var session = CreateSessionSnapshot();
+        var request = new DispatchProbeRequest("granted");
+
+        var result = await dispatcher.ExecuteStageAsync(
+            descriptor,
+            request,
+            new WorkflowStageDispatchContext(session, builder, "corr-granted", ArtifactStore: artifactStore),
+            new WorkflowStageMappedInputEvidence(descriptor.RequestContractName, request, descriptor.RequestContractName, request),
+            CancellationToken.None);
+
+        Assert.Equal("tool.dispatch.granted", result.ProducerCapabilityId.Value);
     }
 }
