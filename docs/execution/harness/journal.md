@@ -227,3 +227,17 @@
 - **Result**: Supported
 - **Conclusion**: the map registry is deleted (race source gone) and the ShellHost→Bones edge is removed and enforced by the architecture test.
 - **Related**: EVD-018
+## 2026-11-05T10:35:00-03:00 - Round 12 close: AgentExecutorTool + G5 packet; run ends not release-ready
+
+- Added `AgentExecutorTool` (`tool.agent.run`) with tests; `Wip.Runtime.Tests` 123 total (1 pre-existing waived).
+- Wrote the honest G5 release-readiness packet: **no release**, G5 not requested. Remaining: DeepSeek chat/SSE adapter + shell progress; real-model sample agent; WP-3.7 safety remainder + Agent/Security job; Phase 4 CI truth; Phase 5 security/privacy; Phase 6 release engineering; G2 re-review 2026-12-03; Windows containment C1.
+- CI at the final HEAD: Modus CI green; Tests CI verified in the run record (see docs/execution/state.json). The 16-project offline gate was last fully green locally at 1,112/1,089/23 waived, zero unwaived; architecture 4/4 at 43 projects.
+- **Goal status:** objective not achieved within the 12-round budget; goal left active for a continuation. No release claim.
+### VAL-007: final run status supported
+
+- **Target**: honest close of the 12-round run.
+- **Method**: G5 packet review, full gate TRX set (last green), architecture run, CI run history, and the per-work-package evidence directories.
+- **Evidence examined**: `docs/execution/evidence/G5/release-readiness.md`; `.tmp/gate-check` (16 TRX); Tests CI runs `41997346243` (success) and the final HEAD run; `docs/execution/state.json`.
+- **Result**: Supported (not release-ready).
+- **Conclusion**: Phases 2-3 core, G3/G4 accepted; Phase 3 remainder, Phases 4-6, G2 re-review and G5 remain. No release claim.
+- **Related**: EVD-019
