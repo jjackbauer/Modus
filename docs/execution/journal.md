@@ -626,3 +626,8 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - `WipRuntimeOrchestrator.RunAgentAsync` loads the session, requires an `IChatModel`, composes `RuntimeToolInvoker` + `AgentExecutor` by default and runs the loop against the session worktree.
 - E2E with a scripted model and the real tool stack: the agent writes a scoped file in its worktree; traversal write, absolute write and `.git/config` deletion are blocked with error observations and no side effects. 8 new tests (repo tools + E2E/safety); Runtime.Tests 112 (1 pre-existing waived); architecture 4/4 at 43 projects.
 - **Remaining:** artifact memory (WP-3.4), streaming + DeepSeek chat adapter (WP-3.5), real-model sample agent + AgentExecutorTool (WP-3.6), prompt-injection/self-approval safety fixtures and Agent/Security job wiring (WP-3.7).
+## 2026-11-05T09:50:00-03:00 - WP-3.4 memory done; WP-3.5 streaming execution core
+
+- **WP-3.4**: `IAgentMemory`/`ArtifactAgentMemory` — one JSON memory artifact per session, append/retain-tail/summarize with an omitted marker, newest-artifact load, session isolation; `RunAgentAsync` prepends session memory and appends the task + final answer. 5 memory tests + a runtime E2E proving a second run sees the prior task/answer.
+- **WP-3.5 (core)**: `IStreamingAgentExecutor`/`AgentStreamEvent` and `AgentExecutor.ExecuteStreamingAsync` — delta events, tool-call events, tool-result events, Completed/Failed with the same budgets and limits. 3 streaming tests.
+- `Wip.Runtime.Tests` 121 total (1 pre-existing waived). Remaining Phase 3: DeepSeek SSE adapter, shell progress display, real-model sample agent + AgentExecutorTool, prompt-injection/self-approval safety + job wiring; then Phases 4-6 and G2 re-review.

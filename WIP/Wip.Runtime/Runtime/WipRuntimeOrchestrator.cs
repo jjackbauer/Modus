@@ -319,7 +319,30 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
             ?? new AgentExecutor(chatModel, toolInvoker);
 
         var context = new CapabilityContext(session.SessionId, session.WorktreePath);
-        return await executor.ExecuteAsync(request, context, cancellationToken);
+        var memory = services.GetService(typeof(IAgentMemory)) as IAgentMemory;
+        if (memory is null)
+        {
+            return await executor.ExecuteAsync(request, context, cancellationToken);
+        }
+
+        var snapshot = await memory.LoadAsync(request.SessionId, cancellationToken);
+        var merged = new AgentExecutionRequest(
+            request.SessionId,
+            request.Task,
+            request.ModelId,
+            request.SystemPrompt,
+            request.Tools,
+            snapshot.Messages.Concat(request.InitialMessages).ToArray(),
+            request.Options);
+
+        var result = await executor.ExecuteAsync(merged, context, cancellationToken);
+        await memory.AppendAsync(request.SessionId, ChatMessage.User(request.Task), cancellationToken);
+        if (result.FinalMessage is not null)
+        {
+            await memory.AppendAsync(request.SessionId, result.FinalMessage, cancellationToken);
+        }
+
+        return result;
     }
 
     public async ValueTask<SessionDiffResult> GenerateDiffAsync(

@@ -128,6 +128,84 @@ public sealed class AgentRuntimeE2ETests
         Assert.True(Assert.Single(result.Steps[0].ToolResults).IsError);
         Assert.False(File.Exists(outside));
     }
+    [Fact]
+    public async Task RunAgentAsync_GivenRegisteredMemory_ExpectedSecondRunSeesPriorTurns()
+    {
+        using var workspace = Workspace.Create();
+        var memory = new RecordingMemory();
+        var model = new CapturingChatModel("answer");
+        var services = new ServiceCollection();
+        var builder = services.AddWipCapabilities();
+        builder.AddRepoAgentTools();
+        services.AddSingleton<IChatModel>(model);
+        services.AddSingleton<IAgentMemory>(memory);
+
+        var provider = services.BuildServiceProvider();
+        await using var _ = provider;
+        var orchestrator = new WipRuntimeOrchestrator(new InMemorySessionStore(), new NoOpPublisher());
+        var session = await orchestrator.StartSessionAsync(
+            new SessionStartRequest(
+                WorkflowId: new WorkflowId("workflow.agent.memory"),
+                TaskDescription: "memory task",
+                RepositoryPath: workspace.RootPath,
+                WorktreePath: workspace.Path),
+            CancellationToken.None);
+
+        await orchestrator.RunAgentAsync(
+            new AgentExecutionRequest(session.SessionId, "first task", "model.test"),
+            builder,
+            provider,
+            CancellationToken.None);
+
+        await orchestrator.RunAgentAsync(
+            new AgentExecutionRequest(session.SessionId, "second task", "model.test"),
+            builder,
+            provider,
+            CancellationToken.None);
+
+        Assert.Equal(2, model.Requests.Count);
+        var second = model.Requests[1];
+        Assert.Contains(second.Messages, static message => message.Content == "first task");
+        Assert.Contains(second.Messages, static message => message.Content == "answer");
+        Assert.Equal(4, memory.Messages.Count);
+    }
+
+    private sealed class CapturingChatModel(string answer) : IChatModel
+    {
+        public List<ChatRequest> Requests { get; } = [];
+
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            Requests.Add(request);
+            return ValueTask.FromResult(new ChatResponse(ChatMessage.Assistant(answer), "model.test", "test"));
+        }
+
+        public IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+    }
+
+    private sealed class RecordingMemory : IAgentMemory
+    {
+        public List<ChatMessage> Messages { get; } = [];
+
+        public ValueTask<AgentMemorySnapshot> LoadAsync(SessionId sessionId, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new AgentMemorySnapshot(Messages.ToArray()));
+
+        public ValueTask AppendAsync(SessionId sessionId, ChatMessage message, CancellationToken cancellationToken)
+        {
+            Messages.Add(message);
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask<string> SummarizeAsync(SessionId sessionId, int maxMessages, CancellationToken cancellationToken)
+            => ValueTask.FromResult(string.Join("\n", Messages.TakeLast(maxMessages).Select(static message => message.Content)));
+    }
     private static async Task<(WipRuntimeOrchestrator Orchestrator, WipBuilder Builder, ServiceProvider Provider, SessionSnapshot Session)>
         CreateRuntimeAsync(IChatModel model, Workspace workspace)
     {
