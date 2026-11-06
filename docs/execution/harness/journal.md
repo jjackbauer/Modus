@@ -1064,3 +1064,28 @@
 - **Rationale**: VAL-026 and the pre-WP6 control; the runtime never calls `CreateRunRequest` when a definition plan exists (only `LinearWorkflowPlanFactory` does).
 - **Alternatives considered**: keeping the legacy `IWorkflow` registration (rejected: the user's WP6 explicitly retires it); making the declarative registration reuse the default request factory (rejected: it would hide a misuse).
 - **Related**: OBS-042, EVD-130
+
+### OBS-043: The final HEAD is green in both CI workflows
+
+- **Source**: GitHub Actions API: Tests CI run `42289775138` (six jobs) and Modus CI run `42289774965`, head `724d3a623fab91aae09095f31f8401fe9c97ec7b`; `.tmp/wp6-trx/*`; `docs/execution/harness/round-6/`
+- **Fact**: Tests CI run `42289775138` succeeded in all six jobs (wip-build windows/ubuntu, wip-architecture, wip-offline-tests, wip-security windows/ubuntu) and Modus CI run `42289774965` succeeded at the final code+docs HEAD `724d3a6`. The offline gate accepted the real counts (Bones 455, Runtime 153, Shell 34, Builder 34, provider 48, plus the other gate projects) with the pre-existing waivers.
+- **Implications**: D7 and D8 are met; the migration is verified on the authoritative windows-latest gate, not only locally. No release/publish/sign/deploy was performed.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-131, VAL-027, DEC-025
+
+### VAL-027: Final gate — D1–D8 met, both CI workflows green
+
+- **Target**: The goal's definition of done (D1–D8)
+- **Method**: map each D item to its evidence; reproduce the local suites; read the final CI run and every job conclusion; confirm no production reference to the provider; confirm the legacy grep is empty; confirm no release action was taken.
+- **Evidence examined**: D1 EVD-097..099/VAL-019; D2 EVD-102..107/VAL-021/022; D3 EVD-109..112/VAL-023; D4 EVD-114..120/VAL-024; D5 EVD-122..125/VAL-025; D6 EVD-127..130/VAL-026; D7/D8 EVD-131 and the final CI job list.
+- **Result**: Supported
+- **Conclusion**: All eight dimensions are met. Residual risks are recorded (RISK-008 thinking parameter, RISK-009 built-in-tool trust, the pre-existing viewer flake, the concurrent-session waiver hunk); none blocks the migration.
+- **Related**: OBS-043, EVD-131
+
+### DEC-025: Close the goal without touching the waiver floors or making a release claim
+
+- **Decision**: Close the migration goal. Leave `docs/plan/test-waivers.json` `expectedTotals` at their declared floors (Bones 396, Runtime 146, Shell 34) and record the real discovered counts (Bones 455, Runtime 153, Shell 34, Builder 34) in this evidence table; the floors are regression guards and the concurrent session still owns an uncommitted Tholdem hunk in that file. Make no release/publish/sign/deploy claim.
+- **Rationale**: OBS-043/VAL-027; raising the floors would require committing the concurrent hunk (which would demand a Tholdem TRX that does not exist in this tree) and is not needed for a green gate; recording the real counts keeps the evidence honest.
+- **Alternatives considered**: raising the floors to 455/153 (deferred to TODO-008 once the concurrent edit is resolved); adding the concurrent Tholdem hunk (rejected: it would break the gate).
+- **Related**: OBS-043, TODO-008, EVD-131
