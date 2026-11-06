@@ -771,7 +771,7 @@
 - **Task**: Same treatment; keep Observe/Play as deterministic tools; parity + controls; commit.
 - **Priority**: P0
 - **Depends on**: TODO-002
-- **Status**: Open
+- **Status**: Done
 
 ### TODO-004: WP4 — replace the provider and guard the boundary
 
@@ -938,3 +938,28 @@
 - **Depends on**: concurrent session's waiver edit resolution
 - **Status**: Open
 - **Related**: DEC-020, EVD-104, EVD-105
+
+### OBS-039: WP3 ports Enhance onto the runtime with parity, controls and the co-learning path distinct
+
+- **Source**: `WIP/Wip.Bones.Agents/Enhance/BonesEnhanceStrategyAgent.cs`; `Enhance/BonesEnhancePrompts.cs`; `WIP/Wip.Bones.Tests/Runtime/BonesEnhanceRuntimeTests.cs`; `.tmp/wp3-trx/*.trx`; `docs/execution/harness/round-3/`
+- **Fact**: The Enhance agent now has a 15-parameter production constructor over `IAgentExecutor` (turn-level `BonesAgentAdapter`) and keeps the 13-parameter legacy constructor source-compatible. `BonesEnhancePrompts` maps the existing `BonesEnhancePromptBuilder` messages to `AgentExecutionRequest`s (memory after the system prompt), the compile capability is the shared `ToolDefinition` through `RuntimeToolInvoker`, budgets come from `BonesAgentLoopOptions`, and memory is appended once on success. Focused tests **10/10**, all Enhance-related tests **49/49**; full Bones **433/430/3** (only the three pre-existing waived meta-tests fail). Both parity controls fail the parity test as required. The unchanged co-learning wrapper runs the new path for four seats and returns the last completed seat.
+- **Implications**: D3 is met. The WP4 provider swap can now target both Ponder and Enhance with the same agent-loop composition.
+- **Confidence**: High
+- **Agent**: orchestrator (reproducing the WP3 implementer)
+- **Related**: EVD-109..EVD-112, VAL-023, DEC-021
+
+### VAL-023: WP3 delivery validated — parity, controls and full-suite non-regression
+
+- **Target**: The WP3 delivery claims, HYP-011's Enhance clause, and the co-learning distinction
+- **Method**: overlaid the accepted WP3 files onto the isolated clone at `3e0087a`; ran the focused filter; ran the clone-only prompt/tool mutations and restored them; ran the full Bones suite; parsed the TRX counters and failed-test names; checked the changed-path set.
+- **Evidence examined**: `.tmp/wp3-trx/wp3-focused.trx` (10/10); `.tmp/wp3-trx/wp3-control-A.trx`/`-B.trx` (1 failed each); `.tmp/wp3-trx/wp3-full.trx` (433/430/3, all three waived); source and test diff.
+- **Result**: Supported
+- **Conclusion**: The Enhance paths produce identical domain/artifact outputs for the same inputs; the parity test is sensitive to a runtime-only prompt change and to dropped tool definitions; no existing test or production path outside the agent changed.
+- **Related**: OBS-039, HYP-011, EVD-109..EVD-112
+
+### DEC-021: Accept WP3 and move to the provider swap
+
+- **Decision**: Accept WP3 as delivered (new prompts mapper, dual-constructor agent, 10 focused tests) and proceed to WP4. The host composition in WP4 will use explicit factories over `IChatModel` + `IAgentExecutor` + `RuntimeToolInvoker` + `ArtifactAgentMemory` rather than registering `IAgentExecutor` globally, so the Bones tool set cannot leak into the generic shell agent path.
+- **Rationale**: VAL-023; the DI ambiguity risk (RISK-007) disappears when the host composes the agents explicitly; the generic runtime's own executor fallback stays untouched.
+- **Alternatives considered**: registering `IToolInvoker`/`IAgentExecutor` as global host services (rejected: the shell `agent` path would inherit the Bones compile-only tool set); solving the constructor ambiguity in the agent types (rejected: WP4 removes the provider registrations instead).
+- **Related**: OBS-039, RISK-007, TODO-004

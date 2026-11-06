@@ -1,12 +1,15 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Wip.Abstractions.Agents;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Budget;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Play;
 using Wip.Bones.Agents.Ponder;
+using Wip.Bones.Agents.Runtime;
 using Wip.Bones.Agents.Script;
 using Wip.Bones.Domain;
 using Wip.Bones.Engine;
@@ -26,7 +29,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
     private const double MaxTemperature = 2.0;
 
     private readonly IArtifactStore _artifactStore;
-    private readonly IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult> _modelProvider;
+    private readonly IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>? _modelProvider;
     private readonly BonesStrategyScriptHost _scriptHost;
     private readonly BonesStrategyPromotionEvaluator _promotionEvaluator;
     private readonly BonesStrategyPromotionOptions _promotionOptions;
@@ -36,7 +39,15 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
     private readonly int? _forcedEvaluationSeed;
     private readonly string _playModelId;
     private readonly ILogger<BonesEnhanceStrategyAgent>? _logger;
+    private readonly BonesAgentAdapter<EnhanceModelTurnRequest, EnhanceModelTurnResult>? _adapter;
+    private readonly IAgentMemory? _memory;
+    private readonly BonesAgentLoopOptions _loopOptions;
 
+    /// <summary>
+    /// Legacy compatibility path: calls <see cref="IModelProvider{TRequestPayload,TResultPayload}"/>
+    /// directly. Kept source-compatible for the existing tests and the current host wiring; the
+    /// runtime path is composed through <see cref="IAgentExecutor"/> by the production constructor.
+    /// </summary>
     public BonesEnhanceStrategyAgent(
         IArtifactStore artifactStore,
         IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult> modelProvider,
@@ -51,9 +62,88 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>? playModelProvider = null,
         string? playModelId = null,
         ILogger<BonesEnhanceStrategyAgent>? logger = null)
+        : this(
+            artifactStore,
+            modelProvider ?? throw new ArgumentNullException(nameof(modelProvider)),
+            executor: null,
+            scriptHost,
+            promotionEvaluator,
+            promotionOptions,
+            compileRetryOptions,
+            aggressiveIterationOptions,
+            gameBudget,
+            strategyLibrary,
+            forcedEvaluationSeed,
+            playModelProvider,
+            playModelId,
+            logger,
+            memory: null,
+            loopOptions: null)
+    {
+    }
+
+    /// <summary>
+    /// Production constructor: every enhancement model turn runs through the shared runtime agent
+    /// loop (<see cref="IAgentExecutor"/>) via the WP1 adapter, with prompts from
+    /// <see cref="BonesEnhancePrompts"/>, budgets from <see cref="BonesAgentLoopOptions"/> and
+    /// optional session memory.
+    /// </summary>
+    public BonesEnhanceStrategyAgent(
+        IArtifactStore artifactStore,
+        IAgentExecutor executor,
+        BonesStrategyScriptHost? scriptHost = null,
+        BonesStrategyPromotionEvaluator? promotionEvaluator = null,
+        BonesStrategyPromotionOptions? promotionOptions = null,
+        BonesCompileRetryOptions? compileRetryOptions = null,
+        BonesAggressiveIterationOptions? aggressiveIterationOptions = null,
+        BonesGameSimulationBudget? gameBudget = null,
+        BonesStrategyLibrary? strategyLibrary = null,
+        int? forcedEvaluationSeed = null,
+        IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>? playModelProvider = null,
+        string? playModelId = null,
+        ILogger<BonesEnhanceStrategyAgent>? logger = null,
+        IAgentMemory? memory = null,
+        BonesAgentLoopOptions? loopOptions = null)
+        : this(
+            artifactStore,
+            modelProvider: null,
+            executor ?? throw new ArgumentNullException(nameof(executor)),
+            scriptHost,
+            promotionEvaluator,
+            promotionOptions,
+            compileRetryOptions,
+            aggressiveIterationOptions,
+            gameBudget,
+            strategyLibrary,
+            forcedEvaluationSeed,
+            playModelProvider,
+            playModelId,
+            logger,
+            memory,
+            loopOptions)
+    {
+    }
+
+    private BonesEnhanceStrategyAgent(
+        IArtifactStore artifactStore,
+        IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>? modelProvider,
+        IAgentExecutor? executor,
+        BonesStrategyScriptHost? scriptHost,
+        BonesStrategyPromotionEvaluator? promotionEvaluator,
+        BonesStrategyPromotionOptions? promotionOptions,
+        BonesCompileRetryOptions? compileRetryOptions,
+        BonesAggressiveIterationOptions? aggressiveIterationOptions,
+        BonesGameSimulationBudget? gameBudget,
+        BonesStrategyLibrary? strategyLibrary,
+        int? forcedEvaluationSeed,
+        IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>? playModelProvider,
+        string? playModelId,
+        ILogger<BonesEnhanceStrategyAgent>? logger,
+        IAgentMemory? memory,
+        BonesAgentLoopOptions? loopOptions)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
-        _modelProvider = modelProvider ?? throw new ArgumentNullException(nameof(modelProvider));
+        _modelProvider = modelProvider;
         _scriptHost = scriptHost ?? new BonesStrategyScriptHost();
         _promotionEvaluator = promotionEvaluator
             ?? new BonesStrategyPromotionEvaluator(
@@ -68,6 +158,21 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         _forcedEvaluationSeed = forcedEvaluationSeed;
         _playModelId = string.IsNullOrWhiteSpace(playModelId) ? DefaultPlayModelId : playModelId;
         _logger = logger;
+        _memory = memory;
+        _loopOptions = loopOptions ?? new BonesAgentLoopOptions();
+
+        _adapter = executor is null
+            ? null
+            : new BonesAgentAdapter<EnhanceModelTurnRequest, EnhanceModelTurnResult>(
+                executor,
+                (turn, context) => BonesEnhancePrompts.CreateExecutionRequest(
+                    turn.Messages,
+                    turn.ModelId,
+                    context.SessionId,
+                    turn.MemoryMessages,
+                    _loopOptions.ToAgentLoopOptions()),
+                (_, _, executionResult, _) => ValueTask.FromResult(
+                    new EnhanceModelTurnResult(BonesEnhancePrompts.ReadCompletedMarkdown(executionResult))));
     }
 
     public async ValueTask<BonesEnhanceStrategyResult> ExecuteAsync(
@@ -112,6 +217,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
 
         var modelId = string.IsNullOrWhiteSpace(request.ModelId) ? DefaultModelId : request.ModelId;
         var correlationId = $"bones-enhance-seat-{request.PlayerId.Seat}-{context.SessionId.Value}";
+        var memoryMessages = await LoadMemorySnapshotAsync(context.SessionId, cancellationToken);
 
         // ---- F2: EnhanceIterationsPerMatch loop ----
         var totalIterations = Math.Max(1, _aggressiveIterationOptions.EnhanceIterationsPerMatch);
@@ -129,6 +235,8 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         ArtifactDescriptor? finalPromotionDecisionArtifact = null;
         ArtifactDescriptor? finalStrategyArtifact = null;
         ArtifactDescriptor? finalExecutionArtifact = null;
+        BonesStrategyEnhancementRequest? finalEnhancementRequest = null;
+        string? finalAssistantMarkdown = null;
         var lastIteration = 0;
 
         for (var iteration = 1; iteration <= totalIterations; iteration++)
@@ -177,15 +285,14 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
             {
                 compileAttempts = attempt;
 
-                var modelResponse = await _modelProvider.ExecuteAsync(
-                    new ModelProviderRequest<BonesStrategyEnhancementRequest>(
-                        payload: enhancementRequest,
-                        modelId: modelId,
-                        correlationId: $"{correlationId}-iter-{iteration}-attempt-{attempt}"),
+                lastModelResponseMarkdown = await ExecuteModelTurnAsync(
+                    enhancementRequest,
+                    modelId,
+                    $"{correlationId}-iter-{iteration}-attempt-{attempt}",
+                    memoryMessages,
                     context,
                     cancellationToken);
 
-                lastModelResponseMarkdown = modelResponse.Payload.Markdown;
                 scriptSource = BonesStrategyScriptResponseParser.TryParseScriptSource(lastModelResponseMarkdown);
 
                 if (scriptSource is null)
@@ -312,6 +419,8 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
 
             totalCompileAttempts += compileAttempts;
             finalScriptSource = scriptSource;
+            finalEnhancementRequest = enhancementRequest;
+            finalAssistantMarkdown = lastModelResponseMarkdown;
 
             var candidateArtifact = new BonesStrategyArtifact(
                 currentStrategyId,
@@ -427,6 +536,12 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
                     BonesPromotionStatus.Active);
             }
         }
+
+        await AppendMemoryExchangeAsync(
+            context.SessionId,
+            finalEnhancementRequest,
+            finalAssistantMarkdown,
+            cancellationToken);
 
         var strategyDocument = new BonesStrategyDocument(
             currentStrategyId,
@@ -610,6 +725,80 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
             cancellationToken);
     }
 
+    private async ValueTask<IReadOnlyList<ChatMessage>> LoadMemorySnapshotAsync(
+        SessionId sessionId,
+        CancellationToken cancellationToken)
+    {
+        if (_memory is null)
+            return Array.Empty<ChatMessage>();
+
+        var snapshot = await _memory.LoadAsync(sessionId, cancellationToken);
+        return snapshot.Messages;
+    }
+
+    private async ValueTask AppendMemoryExchangeAsync(
+        SessionId sessionId,
+        BonesStrategyEnhancementRequest? enhancementRequest,
+        string? assistantMarkdown,
+        CancellationToken cancellationToken)
+    {
+        if (_memory is null || enhancementRequest is null)
+            return;
+
+        var finalUserPrompt = enhancementRequest.Messages
+            .LastOrDefault(message => message.Role != "system");
+
+        if (finalUserPrompt is null)
+            return;
+
+        await _memory.AppendAsync(
+            sessionId,
+            ChatMessage.User(finalUserPrompt.Content),
+            cancellationToken);
+
+        if (!string.IsNullOrEmpty(assistantMarkdown))
+        {
+            await _memory.AppendAsync(
+                sessionId,
+                ChatMessage.Assistant(assistantMarkdown),
+                cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// The single enhancement model-call seam: the runtime path maps the turn through
+    /// <see cref="BonesAgentAdapter{TRequest,TResult}"/> and the provider-neutral executor, while the
+    /// legacy path keeps calling the provider directly. Compile/retry/persist logic is not forked.
+    /// </summary>
+    private async ValueTask<string> ExecuteModelTurnAsync(
+        BonesStrategyEnhancementRequest enhancementRequest,
+        string modelId,
+        string correlationId,
+        IReadOnlyList<ChatMessage> memoryMessages,
+        CapabilityContext context,
+        CancellationToken cancellationToken)
+    {
+        if (_adapter is not null)
+        {
+            var turnResult = await _adapter.ExecuteAsync(
+                new EnhanceModelTurnRequest(enhancementRequest.Messages, modelId, memoryMessages),
+                context,
+                cancellationToken);
+
+            return turnResult.Markdown;
+        }
+
+        var modelResponse = await _modelProvider!.ExecuteAsync(
+            new ModelProviderRequest<BonesStrategyEnhancementRequest>(
+                payload: enhancementRequest,
+                modelId: modelId,
+                correlationId: correlationId),
+            context,
+            cancellationToken);
+
+        return modelResponse.Payload.Markdown;
+    }
+
     private static int ResolveEvaluationSeed(CapabilityContext context, BonesStrategyId incumbentStrategyId)
     {
         var testSeed = Environment.GetEnvironmentVariable("WIP_BONES_TEST_PROMOTION_EVALUATION_SEED");
@@ -618,6 +807,13 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
 
         return BonesSeedDerivation.DeriveWithLabel(0, $"{context.SessionId.Value}|{incumbentStrategyId.Value}");
     }
+
+    private sealed record EnhanceModelTurnRequest(
+        IReadOnlyList<BonesStrategyEnhancementMessage> Messages,
+        string ModelId,
+        IReadOnlyList<ChatMessage> MemoryMessages);
+
+    private sealed record EnhanceModelTurnResult(string Markdown);
 
     private sealed record BonesEnhanceStrategyExecutionLog(
         SessionId SessionId,
