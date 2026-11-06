@@ -93,7 +93,18 @@
 - Open CI item: the viewer-stage test flake was hardened (bounded 240 s/15 s; 3/3 local) and awaits
   CI confirmation on the fix commit.
 
+## Final status (2026-11-06)
+
+- **Goal achieved through the G5 decision.** The owner accepted the prepared G2 packet as the review
+  (no external expert; disclosed) and asked for best effort; the G5 decision is recorded.
+- **Final HEAD `dc6b76c`: fully green** — Tests CI `42125309033` all six jobs (Runtime 146 / Shell 34,
+  architecture, both builds, both security jobs) and Modus CI `42125309034` (blocking legacy suite).
+  The viewer-stage flake fix is verified on this HEAD.
+- No release claim, no publish/sign/deploy. C1 remains unclaimed; G2 stays conditional/trusted-only;
+  the internal review is not an independent audit. Residual gaps accepted best-effort: 24h soak,
+  full-corpus benchmark, release-freeze triple-green, keyed live-model path.
+
 ## Next objective
 
-Confirm Tests CI + Modus CI on the final commit; if green, mark the goal complete with this decision
-record. No release is performed.
+None. The engineering objective and the G5 decision are complete; a future release would be a new,
+credentialed action requiring an explicit go.

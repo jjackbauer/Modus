@@ -773,3 +773,9 @@ Plan: `docs/WIP-Implementation-Plan.md` · Contract: `docs/WIP-Execution-Prompt.
 - **G5:** the owner declined to wait for a human expert and asked for best effort. This is recorded as **best-effort acceptance of the residual risk**, not as evidence that the unexecuted soak/full-corpus benchmark exists. **No publish/sign/deploy was performed or authorized; no release claim.**
 - **Outcome:** the engineering objective is complete — Phases 3–6 delivered, the G2 review recorded, and the G5 packet carries the explicit human decision with its limitations. Release execution would still require credentials and a final go, neither of which was supplied.
 - **One open CI item:** Tests CI on `4bba218` failed on one unwaived Playwright viewer-stage test; the fix/verification is in progress before the goal is marked complete.
+
+## 2026-11-06T08:40:00-03:00 — Final: both workflows green on `dc6b76c`; goal complete through the G5 decision
+
+- **Tests CI run `42125309033` on `dc6b76c`: all six jobs success** (offline gate Runtime 146 / Shell 34, architecture 4/4, both builds, both security jobs). **Modus CI `42125309034`: success** with the blocking legacy suite. The viewer-stage flake fix (`4bba218` failure → 3/3 local reproduction → bounded 240 s/15 s) is verified on this HEAD.
+- **Human gates recorded:** G2 owner review using the prepared packet (no external expert; disclosed; C1 unclaimed; conditional/trusted-only) and the G5 best-effort decision. **No release claim; no publish/sign/deploy was performed or authorized.**
+- **Objective complete:** Phase 3 runtime, Phases 4–6, the G2 review record and the G5 release-readiness packet are delivered. Residual gaps accepted best-effort: 24h soak, full-corpus benchmark, release-freeze triple-green, keyed live-model path.
