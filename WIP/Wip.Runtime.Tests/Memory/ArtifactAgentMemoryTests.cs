@@ -25,6 +25,33 @@ public sealed class ArtifactAgentMemoryTests
     }
 
     [Fact]
+    public async Task AppendThenLoad_GivenLocalStoreNormalizedFileName_ExpectedMessagesSurviveAcrossInstances()
+    {
+        var store = new InMemoryArtifactStore(useLocalStoreFileNames: true);
+        var session = new SessionId("session-memory-local-name");
+        var memory = new ArtifactAgentMemory(store);
+
+        await memory.AppendAsync(session, ChatMessage.User("first"), CancellationToken.None);
+
+        var firstDescriptor = Assert.Single(await store.ListAsync(session, CancellationToken.None));
+        Assert.StartsWith(
+            ".wip/artifacts/session-memory-local-name/agent-memory-agent-memory-",
+            firstDescriptor.RelativePath,
+            StringComparison.Ordinal);
+        Assert.EndsWith(".json", firstDescriptor.RelativePath, StringComparison.Ordinal);
+
+        await memory.AppendAsync(session, ChatMessage.Assistant("second"), CancellationToken.None);
+
+        var snapshot = await new ArtifactAgentMemory(store).LoadAsync(session, CancellationToken.None);
+
+        Assert.Equal(2, snapshot.Messages.Count);
+        Assert.Equal("first", snapshot.Messages[0].Content);
+        Assert.Equal(ChatRole.User, snapshot.Messages[0].Role);
+        Assert.Equal("second", snapshot.Messages[1].Content);
+        Assert.Equal(ChatRole.Assistant, snapshot.Messages[1].Role);
+    }
+
+    [Fact]
     public async Task Load_GivenOtherSession_ExpectedIsolation()
     {
         var store = new InMemoryArtifactStore();
@@ -109,17 +136,27 @@ public sealed class ArtifactAgentMemoryTests
     private sealed class InMemoryArtifactStore : IArtifactStore
     {
         private readonly List<(ArtifactDescriptor Descriptor, ArtifactContent Content)> _items = [];
+        private readonly bool _useLocalStoreFileNames;
+
+        public InMemoryArtifactStore(bool useLocalStoreFileNames = false)
+        {
+            _useLocalStoreFileNames = useLocalStoreFileNames;
+        }
 
         public ValueTask<ArtifactDescriptor> SaveAsync(
             SessionId sessionId,
             ArtifactContent artifact,
             CancellationToken cancellationToken)
         {
+            var fileName = _useLocalStoreFileNames
+                ? $"{Path.GetFileNameWithoutExtension(artifact.FileName)}-{artifact.ArtifactId.Value}{Path.GetExtension(artifact.FileName)}"
+                : artifact.FileName;
+
             var descriptor = new ArtifactDescriptor(
                 artifact.ArtifactId,
                 sessionId,
                 artifact.Kind,
-                $".wip/artifacts/{sessionId.Value}/{artifact.FileName}",
+                $".wip/artifacts/{sessionId.Value}/{fileName}",
                 artifact.ProducerType,
                 artifact.ProducerVersion,
                 artifact.ProducedAtUtc);

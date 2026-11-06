@@ -723,8 +723,8 @@
 - **Supporting OBS**: OBS-030, OBS-031
 - **Why it matters**: This is the core behavior-preservation gate; if false, the port changes game-learning behavior.
 - **Falsification strategy**: Build deterministic fixtures with a scripted fake `IChatModel` and a scripted fake `IModelProvider`; run both paths for the same request and compare every result field and artifact payload. A control that drops the tool call/turn from the new path or changes one prompt line must make the comparison fail.
-- **Status**: Proposed
-- **Confidence**: Medium
+- **Status**: Supported
+- **Confidence**: High
 
 ### HYP-012: The adapter can map every non-success executor status to the domain's existing exception semantics
 
@@ -732,8 +732,8 @@
 - **Supporting OBS**: OBS-031
 - **Why it matters**: Existing tests assert `InvalidOperationException` on retry exhaustion; the adapter must not leak a new exception type into those paths.
 - **Falsification strategy**: Run the existing Bones test suite unchanged after the port; additionally assert the adapter's exception type/message in new tests and verify a stubbed `IAgentExecutor` returning each status raises the mapped exception.
-- **Status**: Proposed
-- **Confidence**: Medium
+- **Status**: Supported
+- **Confidence**: High
 
 ### VAL-018: Starting-point verification — the seams are absent, but "calls DeepSeek directly" is falsified
 
@@ -764,7 +764,7 @@
 - **Task**: Prompts class, `ToolDefinition`s, `RuntimeToolInvoker` routing, `AgentLoopOptions` budgets, `ArtifactAgentMemory`; parity fixtures and negative controls; commit.
 - **Priority**: P0
 - **Depends on**: TODO-001
-- **Status**: Open
+- **Status**: Done
 
 ### TODO-003: WP3 — port Enhance (single-seat + co-learning)
 
@@ -887,3 +887,54 @@
 - **Rationale**: VAL-019 (behavior and control verified) and VAL-020 (starting point corrected). A minimal adapter keeps the domain-port diff reviewable; streaming is only valuable where the operator sees it, and the Bones workflow currently produces artifacts rather than a live token surface.
 - **Alternatives considered**: adding streaming to the adapter now (deferred: no consumer in WP1, dead surface); making the four agents directly `BonesAgentAdapter` registrations (rejected in DEC-018).
 - **Related**: OBS-037, VAL-019, TODO-002, TODO-003
+
+### OBS-038: WP2 ports Ponder onto the runtime with parity, controls and a real memory fix
+
+- **Source**: `WIP/Wip.Bones.Agents/Ponder/BonesPonderAgent.cs`; `Ponder/BonesPonderPrompts.cs`; `Runtime/BonesAgentTools.cs`; `Runtime/BonesAgentLoopOptions.cs`; `WIP/Wip.Bones.Tests/Runtime/BonesPonderRuntimeTests.cs`; `WIP/Wip.Runtime/Runtime/ArtifactAgentMemory.cs`; `WIP/Wip.Runtime.Tests/Memory/ArtifactAgentMemoryTests.cs`; `.tmp/wp2-trx/*.trx`; `docs/execution/harness/round-2/`
+- **Fact**: The Ponder agent now has a production constructor over `IAgentExecutor` (a `BonesAgentAdapter` per model turn) and keeps the 4-parameter legacy constructor byte-compatible. Prompts stay in `BonesPonderPromptBuilder` (single source), `BonesPonderPrompts` maps them to `AgentExecutionRequest`s, the compile capability is a `ToolDefinition` (`tool.bones.strategy-compile`) invoked through `RuntimeToolInvoker`, budgets come from `BonesAgentLoopOptions`, and `IAgentMemory` is loaded per execution and appended on success. Focused tests **13/13**; full Bones **423/420/3** (only the three pre-existing waived meta-tests fail); full Runtime **147/141/6** (5 Windows-only `dotnet.cmd` + 1 waiver; the new memory test passes). The memory defect (`ArtifactAgentMemory` could not reload a local-store-normalized `agent-memory-{id}.json`) was reproduced and fixed.
+- **Implications**: D2 is met and the production memory path is no longer hollow. WP3 can reuse the tool/options/prompt-mapping pattern.
+- **Confidence**: High
+- **Agent**: orchestrator (reproducing the WP2 implementer)
+- **Related**: EVD-101..EVD-107, VAL-021, VAL-022, DEC-020
+
+### VAL-021: WP2 delivery validated — parity, controls, and unchanged suites
+
+- **Target**: HYP-011, the WP2 delivery claims, and the memory-fix claim
+- **Method**: overlaid the accepted WP2 files onto the isolated clone; ran the focused filter; ran two clone-only mutations of the runtime prompt/tools and restored them; ran the full Bones and Runtime suites; parsed every TRX counter and failure name; compared against the round-1 baseline.
+- **Evidence examined**: `.tmp/wp2-trx/wp2-focused.trx` (13/13); `.tmp/wp2-trx/wp2-control-A.trx` and `-B.trx` (1 failed each, exit 1); `.tmp/wp2-trx/wp2-final-bones.trx` (423/420/3, all three waived); `.tmp/wp2-trx/wp2-final-runtime.trx` (147/141/6, the documented set); source and tests read.
+- **Result**: Supported
+- **Conclusion**: The Ponder paths produce identical domain outputs for the same inputs, the parity test fails when only the runtime prompt changes or the tool definitions are dropped, the negative controls behave deterministically, and the existing suites are unchanged apart from the intended additions.
+- **Related**: OBS-038, HYP-011, EVD-102..EVD-107
+
+### VAL-022: The pre-existing memory-load defect is falsified and fixed
+
+- **Target**: "memory via `ArtifactAgentMemory` works with the host's artifact store"
+- **Method**: read `ArtifactAgentMemory.LoadAsync` and `WipArtifactStoreLocal.NormalizeFileName`; reproduced the mismatch through the implementer's observed failure (first request had 2 messages instead of 3 with a hand-written exact-name store); applied the two-name discovery fix; re-ran the memory regression test and the Bones memory test against the real `WipArtifactStoreLocal`.
+- **Evidence examined**: `ArtifactAgentMemory.cs:104-115` (`IsMemoryArtifact`); `ArtifactAgentMemoryTests.cs` (7/7, new local-name test); `BonesPonderRuntimeTests.cs:381-438` (real local store, 1/1); full Runtime 147/141/6.
+- **Result**: Supported (defect real, fix verified)
+- **Conclusion**: The memory requirement is real in production, not hidden by a test store; redaction behaviour is unchanged.
+- **Related**: OBS-038, EVD-106
+
+### DEC-020: Accept WP2, keep the waiver floor, and constrain WP4's registration order
+
+- **Decision**: Accept WP2 including the shared memory fix. Keep `docs/plan/test-waivers.json` at its declared Bones floor (396) for now and record the real count (423) in the evidence; do not stage the concurrently edited waiver file. Carry the DI constraint into WP4: the host must retire the `IModelProvider` registrations when it adds `IAgentExecutor` (executor-only resolution is the supported production end state).
+- **Rationale**: VAL-021/VAL-022; the implementer observed an ambiguous-constructor failure when both registrations coexist, and the waiver file currently contains a concurrent session's unrelated uncommitted hunk that must not be committed under this work package.
+- **Alternatives considered**: raising the waiver floor to 423 now (rejected: would require committing the concurrent waiver hunk); making the executor parameter optional to force ctor selection (rejected: would hide the provider-only path and weaken the DI contract); keeping the memory workaround test store (rejected: hollow production memory).
+- **Related**: OBS-038, RISK-007, TODO-007
+
+### RISK-007: The two-registration transition can fail DI resolution
+
+- **Risk**: A host that registers both `IModelProvider<BonesStrategyAuthoringRequest,...>` (or the enhancement equivalent) and `IAgentExecutor` makes `BonesPonderAgent`/`BonesEnhanceStrategyAgent` constructors ambiguous; resolution throws at startup. WP4 must remove the provider registrations in the same change that adds the executor.
+- **Likelihood**: High during WP4, zero after
+- **Impact**: High (host startup failure)
+- **Evidence**: OBS-038; the implementer's observed `Unable to activate type ... constructors are ambiguous` message in `docs/execution/harness/round-2/implementation-wp2.md` §8
+- **Mitigation**: WP4 registers the executor only after deleting the DeepSeek/stub authoring & enhancement `IModelProvider` registrations; the E2E host must be updated in the same work package; add a host-composition test that resolves both agents.
+- **Gate**: G4
+
+### TODO-007: Raise the Bones waiver floor to the real count when the waiver file is clean
+
+- **Task**: Once the concurrent Tholdem waiver hunk is committed (or abandoned), update `docs/plan/test-waivers.json` `Wip.Bones.Tests` to 423 from `.tmp/wp2-trx/wp2-final-bones.trx`, and `Wip.Runtime.Tests` to 147 from `.tmp/wp2-trx/wp2-final-runtime.trx`, in a dedicated commit.
+- **Priority**: P2
+- **Depends on**: concurrent session's waiver edit resolution
+- **Status**: Open
+- **Related**: DEC-020, EVD-104, EVD-105

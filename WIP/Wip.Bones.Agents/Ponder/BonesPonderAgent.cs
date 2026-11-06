@@ -1,8 +1,11 @@
 using System.Text.Json;
+using Wip.Abstractions.Agents;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Knowledge;
+using Wip.Bones.Agents.Runtime;
 using Wip.Bones.Agents.Script;
 using Wip.Bones.Domain;
 using Wip.Bones.Engine;
@@ -17,20 +20,86 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
     private const string DefaultModelId = "bones-strategy-author";
 
     private readonly IArtifactStore _artifactStore;
-    private readonly IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult> _modelProvider;
+    private readonly IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>? _modelProvider;
     private readonly BonesStrategyScriptHost _scriptHost;
     private readonly BonesCompileRetryOptions _compileRetryOptions;
+    private readonly BonesAgentAdapter<PonderModelTurnRequest, PonderModelTurnResult>? _adapter;
+    private readonly IAgentMemory? _memory;
+    private readonly BonesAgentLoopOptions _loopOptions;
 
+    /// <summary>
+    /// Legacy compatibility path: calls <see cref="IModelProvider{TRequestPayload,TResultPayload}"/>
+    /// directly. Kept source-compatible for the existing tests and the current host wiring; the
+    /// runtime path is composed through <see cref="IAgentExecutor"/> by the production constructor.
+    /// </summary>
     public BonesPonderAgent(
         IArtifactStore artifactStore,
         IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult> modelProvider,
         BonesStrategyScriptHost? scriptHost = null,
         BonesCompileRetryOptions? compileRetryOptions = null)
+        : this(
+            artifactStore,
+            modelProvider ?? throw new ArgumentNullException(nameof(modelProvider)),
+            executor: null,
+            scriptHost,
+            compileRetryOptions,
+            memory: null,
+            loopOptions: null)
+    {
+    }
+
+    /// <summary>
+    /// Production constructor: every model turn runs through the shared runtime agent loop
+    /// (<see cref="IAgentExecutor"/>) via the WP1 adapter, with prompts from
+    /// <see cref="BonesPonderPrompts"/>, budgets from <see cref="BonesAgentLoopOptions"/> and
+    /// optional session memory.
+    /// </summary>
+    public BonesPonderAgent(
+        IArtifactStore artifactStore,
+        IAgentExecutor executor,
+        BonesStrategyScriptHost? scriptHost = null,
+        BonesCompileRetryOptions? compileRetryOptions = null,
+        IAgentMemory? memory = null,
+        BonesAgentLoopOptions? loopOptions = null)
+        : this(
+            artifactStore,
+            modelProvider: null,
+            executor ?? throw new ArgumentNullException(nameof(executor)),
+            scriptHost,
+            compileRetryOptions,
+            memory,
+            loopOptions)
+    {
+    }
+
+    private BonesPonderAgent(
+        IArtifactStore artifactStore,
+        IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>? modelProvider,
+        IAgentExecutor? executor,
+        BonesStrategyScriptHost? scriptHost,
+        BonesCompileRetryOptions? compileRetryOptions,
+        IAgentMemory? memory,
+        BonesAgentLoopOptions? loopOptions)
     {
         _artifactStore = artifactStore ?? throw new ArgumentNullException(nameof(artifactStore));
-        _modelProvider = modelProvider ?? throw new ArgumentNullException(nameof(modelProvider));
+        _modelProvider = modelProvider;
         _scriptHost = scriptHost ?? new BonesStrategyScriptHost();
         _compileRetryOptions = compileRetryOptions ?? new BonesCompileRetryOptions();
+        _memory = memory;
+        _loopOptions = loopOptions ?? new BonesAgentLoopOptions();
+
+        _adapter = executor is null
+            ? null
+            : new BonesAgentAdapter<PonderModelTurnRequest, PonderModelTurnResult>(
+                executor,
+                (turn, context) => BonesPonderPrompts.CreateExecutionRequest(
+                    turn.Messages,
+                    turn.ModelId,
+                    context.SessionId,
+                    turn.MemoryMessages,
+                    _loopOptions.ToAgentLoopOptions()),
+                (_, _, executionResult, _) => ValueTask.FromResult(
+                    new PonderModelTurnResult(BonesPonderPrompts.ReadCompletedMarkdown(executionResult))));
     }
 
     public async ValueTask<BonesPonderResult> ExecuteAsync(
@@ -73,6 +142,7 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
 
         var modelId = string.IsNullOrWhiteSpace(request.ModelId) ? DefaultModelId : request.ModelId;
         var correlationId = $"bones-ponder-seat-{request.PlayerId.Seat}-{context.SessionId.Value}";
+        var memoryMessages = await LoadMemorySnapshotAsync(context.SessionId, cancellationToken);
 
         var budget = new BonesDeepSeekPonderRetryBudget(_compileRetryOptions.MaxCompileRetries);
         string? scriptSource = null;
@@ -85,15 +155,13 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
             compileAttempts++;
             budget.Consume();
 
-            var modelResponse = await _modelProvider.ExecuteAsync(
-                new ModelProviderRequest<BonesStrategyAuthoringRequest>(
-                    payload: authoringRequest,
-                    modelId: modelId,
-                    correlationId: $"{correlationId}-attempt-{compileAttempts}"),
+            lastModelResponseMarkdown = await ExecuteModelTurnAsync(
+                authoringRequest,
+                modelId,
+                $"{correlationId}-attempt-{compileAttempts}",
+                memoryMessages,
                 context,
                 cancellationToken);
-
-            lastModelResponseMarkdown = modelResponse.Payload.Markdown;
             scriptSource = BonesStrategyScriptResponseParser.TryParseScriptSource(lastModelResponseMarkdown);
             if (scriptSource is null)
             {
@@ -152,6 +220,12 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
                     lastCompileFailureReason: null,
                     cancellationToken);
 
+                await AppendMemoryExchangeAsync(
+                    context.SessionId,
+                    authoringRequest,
+                    lastModelResponseMarkdown,
+                    cancellationToken);
+
                 return new BonesPonderResult(
                     strategyId,
                     strategyDocument,
@@ -186,6 +260,80 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
         throw new InvalidOperationException(
             lastCompileFailureReason
             ?? "Strategy script compilation failed before persistence.");
+    }
+
+    private async ValueTask<IReadOnlyList<ChatMessage>> LoadMemorySnapshotAsync(
+        SessionId sessionId,
+        CancellationToken cancellationToken)
+    {
+        if (_memory is null)
+            return Array.Empty<ChatMessage>();
+
+        var snapshot = await _memory.LoadAsync(sessionId, cancellationToken);
+        return snapshot.Messages;
+    }
+
+    private async ValueTask AppendMemoryExchangeAsync(
+        SessionId sessionId,
+        BonesStrategyAuthoringRequest authoringRequest,
+        string assistantMarkdown,
+        CancellationToken cancellationToken)
+    {
+        if (_memory is null)
+            return;
+
+        var finalUserPrompt = authoringRequest.Messages
+            .LastOrDefault(message => message.Role != "system");
+
+        if (finalUserPrompt is null)
+            return;
+
+        await _memory.AppendAsync(
+            sessionId,
+            ChatMessage.User(finalUserPrompt.Content),
+            cancellationToken);
+
+        if (!string.IsNullOrEmpty(assistantMarkdown))
+        {
+            await _memory.AppendAsync(
+                sessionId,
+                ChatMessage.Assistant(assistantMarkdown),
+                cancellationToken);
+        }
+    }
+
+    /// <summary>
+    /// The single model-call seam of the compile-retry loop: the runtime path maps the turn through
+    /// <see cref="BonesAgentAdapter{TRequest,TResult}"/> and the provider-neutral executor, while the
+    /// legacy path keeps calling the provider directly. Compile/persist logic is not forked.
+    /// </summary>
+    private async ValueTask<string> ExecuteModelTurnAsync(
+        BonesStrategyAuthoringRequest authoringRequest,
+        string modelId,
+        string correlationId,
+        IReadOnlyList<ChatMessage> memoryMessages,
+        CapabilityContext context,
+        CancellationToken cancellationToken)
+    {
+        if (_adapter is not null)
+        {
+            var turnResult = await _adapter.ExecuteAsync(
+                new PonderModelTurnRequest(authoringRequest.Messages, modelId, memoryMessages),
+                context,
+                cancellationToken);
+
+            return turnResult.Markdown;
+        }
+
+        var modelResponse = await _modelProvider!.ExecuteAsync(
+            new ModelProviderRequest<BonesStrategyAuthoringRequest>(
+                payload: authoringRequest,
+                modelId: modelId,
+                correlationId: correlationId),
+            context,
+            cancellationToken);
+
+        return modelResponse.Payload.Markdown;
     }
 
     private async ValueTask<BonesPonderResult> ReturnBootstrappedResultAsync(
@@ -314,6 +462,13 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
                 producedAtUtc: DateTimeOffset.UtcNow),
             cancellationToken);
     }
+
+    private sealed record PonderModelTurnRequest(
+        IReadOnlyList<BonesStrategyAuthoringMessage> Messages,
+        string ModelId,
+        IReadOnlyList<ChatMessage> MemoryMessages);
+
+    private sealed record PonderModelTurnResult(string Markdown);
 
     private sealed record BonesPonderExecutionLog(
         SessionId SessionId,

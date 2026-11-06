@@ -39,8 +39,7 @@ public sealed class ArtifactAgentMemory : IAgentMemory
     {
         var descriptors = await _artifactStore.ListAsync(sessionId, cancellationToken);
         var memoryDescriptor = descriptors
-            .Where(descriptor => descriptor.ProducerType == ProducerType
-                && descriptor.RelativePath.EndsWith(MemoryFileName, StringComparison.OrdinalIgnoreCase))
+            .Where(IsMemoryArtifact)
             .OrderByDescending(descriptor => descriptor.ProducedAtUtc)
             .FirstOrDefault();
 
@@ -95,6 +94,24 @@ public sealed class ArtifactAgentMemory : IAgentMemory
         return omitted > 0
             ? $"[{omitted} earlier message(s) omitted]\n{summary}"
             : summary;
+    }
+
+    /// <summary>
+    /// Memory discovery accepts both the exact <c>agent-memory.json</c> file name written by simple
+    /// stores and the artifact-id-suffixed name written by the local artifact store
+    /// (<c>agent-memory-{artifactId}.json</c>), while still requiring the memory producer type.
+    /// </summary>
+    private static bool IsMemoryArtifact(ArtifactDescriptor descriptor)
+    {
+        if (!string.Equals(descriptor.ProducerType, ProducerType, StringComparison.Ordinal))
+            return false;
+
+        var fileName = Path.GetFileName(descriptor.RelativePath.Replace('\\', '/'));
+        if (string.Equals(fileName, MemoryFileName, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+        return fileNameWithoutExtension.StartsWith("agent-memory-", StringComparison.OrdinalIgnoreCase);
     }
 
     private ChatMessage Sanitize(ChatMessage message)
