@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Budget;
 using Wip.Bones.Agents.Enhance;
@@ -111,19 +112,17 @@ public sealed class SeatStrategy : IBonesPlayerSlot
 
                 if (enhancementScriptSource is not null)
                 {
-                    services.RemoveAll<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>();
-                    services.AddSingleton<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>(
-                        new ScriptedEnhancementModelProvider(enhancementScriptSource));
+                    services.RemoveAll<IChatModel>();
+                    services.AddSingleton<IChatModel>(new ScriptedEnhancementChatModel(enhancementScriptSource));
                 }
 
                 services.RemoveAll<BonesEnhanceStrategyAgent>();
-                services.AddSingleton<BonesEnhanceStrategyAgent>(sp => new BonesEnhanceStrategyAgent(
-                    sp.GetRequiredService<IArtifactStore>(),
-                    sp.GetRequiredService<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>(),
-                    promotionOptions: promotionOptions,
-                    gameBudget: sp.GetRequiredService<BonesGameSimulationBudget>(),
-                    strategyLibrary: sp.GetRequiredService<BonesStrategyLibrary>(),
-                    forcedEvaluationSeed: promotionEvaluationSeed));
+                services.AddSingleton<BonesEnhanceStrategyAgent>(sp =>
+                    BonesHostServiceCollectionExtensions.CreateEnhanceStrategyAgent(
+                        sp,
+                        sp.GetRequiredService<BonesHostOptions>(),
+                        promotionOptions,
+                        promotionEvaluationSeed));
             });
 
     private static async Task<string> WaitForCompletedIterationSessionIdAsync(
@@ -232,19 +231,27 @@ public sealed class SeatStrategy : IBonesPlayerSlot
             scriptSource,
             BonesPromotionStatus.Active);
 
-    private sealed class ScriptedEnhancementModelProvider(string scriptSource)
-        : IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>
+    private sealed class ScriptedEnhancementChatModel(string scriptSource) : IChatModel
     {
-        public ValueTask<ModelProviderResponse<BonesStrategyEnhancementResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyEnhancementRequest> request,
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
             CapabilityContext context,
             CancellationToken cancellationToken)
-            => ValueTask.FromResult(
-                new ModelProviderResponse<BonesStrategyEnhancementResult>(
-                    payload: new BonesStrategyEnhancementResult($"```csharp\n{scriptSource}\n```"),
-                    providerId: "bones-enhance-test",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(64, 32),
-                    correlationId: request.CorrelationId));
+            => ValueTask.FromResult(new ChatResponse(
+                message: ChatMessage.Assistant($"```csharp\n{scriptSource}\n```"),
+                modelId: request.ModelId,
+                providerId: "bones-enhance-test",
+                usage: new ModelProviderUsage(64, 32),
+                correlationId: request.CorrelationId));
+
+        public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var response = await CompleteAsync(request, context, cancellationToken);
+            yield return new StreamingChunk(response.Message.Content);
+            yield return new StreamingChunk(string.Empty, isFinal: true, usage: response.Usage);
+        }
     }
 }

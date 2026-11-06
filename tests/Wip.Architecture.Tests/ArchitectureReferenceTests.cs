@@ -50,8 +50,9 @@ public sealed class ArchitectureReferenceTests
         var graph = new Dictionary<string, IReadOnlyCollection<string>>(StringComparer.Ordinal)
         {
             ["Wip.ShellHost"] = ["Wip.Bones.Agents"],
-            ["Wip.Bones.Agents"] = ["Wip.Bones"],
-            ["Wip.Bones"] = []
+            ["Wip.Bones.Agents"] = ["Wip.Bones", "Wip.Bones.ModelProviders.DeepSeek"],
+            ["Wip.Bones"] = [],
+            ["Wip.Bones.ModelProviders.DeepSeek"] = []
         };
 
         var violations = ArchitectureRules.Evaluate(graph);
@@ -61,6 +62,13 @@ public sealed class ArchitectureReferenceTests
             violation => violation.RuleId == "shellhost-no-bones"
                 && violation.Source == "Wip.ShellHost"
                 && violation.Target == "Wip.Bones");
+
+        // WP4: the domain agents must never reach back into the private DeepSeek provider stack.
+        Assert.Contains(
+            violations,
+            violation => violation.RuleId == "bones-agents-no-legacy-provider"
+                && violation.Source == "Wip.Bones.Agents"
+                && violation.Target == "Wip.Bones.ModelProviders.DeepSeek");
     }
 
     /// <summary>

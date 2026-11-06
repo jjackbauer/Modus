@@ -1,5 +1,9 @@
+using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Wip.Abstractions.Agents;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
 using Wip.Artifacts.Local;
@@ -8,122 +12,136 @@ using Wip.Bones.Agents.Enhance;
 using Wip.Bones.Agents.Observe;
 using Wip.Bones.Agents.Play;
 using Wip.Bones.Agents.Ponder;
+using Wip.Bones.Agents.Runtime;
 using Wip.Bones.Agents.Viewer;
 using Wip.Bones.Agents.Workflow;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Domain;
 using Wip.Bones.Engine;
-using Wip.Bones.ModelProviders.DeepSeek;
 using Wip.Bones.Web;
 using Wip.Bones.Web.Viewer;
 using Wip.Builder;
+using Wip.Runtime;
 using Wip.Runtime.Runtime;
 
 namespace Wip.Bones.Host;
 
-internal static class BonesHostStubModelProviders
+/// <summary>
+/// Stub <see cref="IChatModel"/> used when the host runs with
+/// <see cref="BonesModelProviderKind.Stub"/>. It returns the same canned authoring and enhancement
+/// scripts the retired per-stage stub model providers produced and selects a legal move id for
+/// play-turn prompts, so the stub path still drives the full learning loop without a network.
+/// </summary>
+internal sealed class StubBonesChatModel : IChatModel
 {
-    public static void Register(IServiceCollection services)
-    {
-        services.AddSingleton<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>, StubBonesStrategyModelProvider>();
-        services.AddSingleton<IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>, StubBonesPlayTurnModelProvider>();
-        services.AddSingleton<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>, StubBonesEnhancementModelProvider>();
-    }
+    private const string GameAwareStrategy = """
+        ```csharp
+        using Wip.Bones.Domain;
+        using Wip.Bones.Engine;
 
-    private sealed class StubBonesStrategyModelProvider
-        : IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>
-    {
-        private const string GameAwareStrategy = """
-            ```csharp
-            using Wip.Bones.Domain;
-            using Wip.Bones.Engine;
-
-            public sealed class SeatStrategy : IBonesPlayerSlot
+        public sealed class SeatStrategy : IBonesPlayerSlot
+        {
+            public BonesMove ChooseMove(BonesRoundState state, IReadOnlyList<BonesMove> legalMoves)
             {
-                public BonesMove ChooseMove(BonesRoundState state, IReadOnlyList<BonesMove> legalMoves)
+                var best = legalMoves[0];
+                var bestPips = 0;
+                foreach (var move in legalMoves)
                 {
-                    var best = legalMoves[0];
-                    var bestPips = 0;
-                    foreach (var move in legalMoves)
-                    {
-                        if (move.IsPass) continue;
-                        var tile = move.Tile!.Value;
-                        if (tile.TotalPips > bestPips) { best = move; bestPips = tile.TotalPips; }
-                    }
-                    return best;
+                    if (move.IsPass) continue;
+                    var tile = move.Tile!.Value;
+                    if (tile.TotalPips > bestPips) { best = move; bestPips = tile.TotalPips; }
                 }
+                return best;
             }
-            ```
-            """;
+        }
+        ```
+        """;
 
-        public ValueTask<ModelProviderResponse<BonesStrategyAuthoringResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyAuthoringRequest> request,
-            CapabilityContext context,
-            CancellationToken cancellationToken)
-            => ValueTask.FromResult(
-                new ModelProviderResponse<BonesStrategyAuthoringResult>(
-                    payload: new BonesStrategyAuthoringResult(GameAwareStrategy),
-                    providerId: "bones-strategy-stub",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(160, 64),
-                    correlationId: request.CorrelationId));
-    }
+    private const string GameAwareEnhancement = """
+        ```csharp
+        using Wip.Bones.Domain;
+        using Wip.Bones.Engine;
 
-    private sealed class StubBonesPlayTurnModelProvider
-        : IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>
-    {
-        public ValueTask<ModelProviderResponse<BonesPlayTurnResult>> ExecuteAsync(
-            ModelProviderRequest<BonesPlayTurnRequest> request,
-            CapabilityContext context,
-            CancellationToken cancellationToken)
-            => ValueTask.FromResult(
-                new ModelProviderResponse<BonesPlayTurnResult>(
-                    payload: new BonesPlayTurnResult(request.Payload.AllowedMoves[0].MoveId.Value),
-                    providerId: "bones-play-turn-stub",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(64, 16),
-                    correlationId: request.CorrelationId));
-    }
-
-    private sealed class StubBonesEnhancementModelProvider
-        : IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>
-    {
-        private const string GameAwareEnhancement = """
-            ```csharp
-            using Wip.Bones.Domain;
-            using Wip.Bones.Engine;
-
-            public sealed class SeatStrategy : IBonesPlayerSlot
+        public sealed class SeatStrategy : IBonesPlayerSlot
+        {
+            public BonesMove ChooseMove(BonesRoundState state, IReadOnlyList<BonesMove> legalMoves)
             {
-                public BonesMove ChooseMove(BonesRoundState state, IReadOnlyList<BonesMove> legalMoves)
+                var best = legalMoves[0];
+                var bestScore = int.MinValue;
+                foreach (var move in legalMoves)
                 {
-                    var best = legalMoves[0];
-                    var bestScore = int.MinValue;
-                    foreach (var move in legalMoves)
-                    {
-                        if (move.IsPass) continue;
-                        var tile = move.Tile!.Value;
-                        var score = tile.TotalPips;
-                        if (tile.IsDouble) score += 4;
-                        if (score > bestScore) { best = move; bestScore = score; }
-                    }
-                    return best;
+                    if (move.IsPass) continue;
+                    var tile = move.Tile!.Value;
+                    var score = tile.TotalPips;
+                    if (tile.IsDouble) score += 4;
+                    if (score > bestScore) { best = move; bestScore = score; }
                 }
+                return best;
             }
-            ```
-            """;
+        }
+        ```
+        """;
 
-        public ValueTask<ModelProviderResponse<BonesStrategyEnhancementResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyEnhancementRequest> request,
-            CapabilityContext context,
-            CancellationToken cancellationToken)
-            => ValueTask.FromResult(
-                new ModelProviderResponse<BonesStrategyEnhancementResult>(
-                    payload: new BonesStrategyEnhancementResult(GameAwareEnhancement),
-                    providerId: "bones-enhance-stub",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(180, 80),
-                    correlationId: request.CorrelationId));
+    private const string EnhancementPromptMarker = "Strategy script enhancement request";
+
+    private static readonly Regex MoveIdPattern = new(
+        @"\(move id:\s*(?<moveId>[^)]+)\)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    public ValueTask<ChatResponse> CompleteAsync(
+        ChatRequest request,
+        CapabilityContext context,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var lastUserMessage = request.Messages.LastOrDefault(message => message.Role == ChatRole.User);
+        var content = SelectResponse(lastUserMessage?.Content ?? string.Empty);
+
+        return ValueTask.FromResult(new ChatResponse(
+            message: ChatMessage.Assistant(content),
+            modelId: request.ModelId,
+            providerId: "bones-stub",
+            usage: new ModelProviderUsage(160, 64),
+            correlationId: request.CorrelationId));
+    }
+
+    public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+        ChatRequest request,
+        CapabilityContext context,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var response = await CompleteAsync(request, context, cancellationToken);
+        yield return new StreamingChunk(response.Message.Content);
+        yield return new StreamingChunk(string.Empty, isFinal: true, usage: response.Usage);
+    }
+
+    private static string SelectResponse(string userContent)
+    {
+        if (userContent.Contains(BonesPlayMatchPromptBuilder.AllowedMovesHeader, StringComparison.Ordinal)
+            || userContent.Contains("# Play turn request", StringComparison.Ordinal))
+        {
+            return SelectLegalMoveId(userContent);
+        }
+
+        if (userContent.Contains(EnhancementPromptMarker, StringComparison.Ordinal))
+        {
+            return GameAwareEnhancement;
+        }
+
+        return GameAwareStrategy;
+    }
+
+    private static string SelectLegalMoveId(string userContent)
+    {
+        var moveIds = MoveIdPattern
+            .Matches(userContent)
+            .Select(match => match.Groups["moveId"].Value.Trim())
+            .Where(moveId => !string.IsNullOrWhiteSpace(moveId))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return moveIds.Length == 0 ? string.Empty : moveIds[0];
     }
 }
 
@@ -233,7 +251,14 @@ public static class BonesHostServiceCollectionExtensions
         services.AddSingleton<BonesLearningLoopHost>();
         services.AddHostedService(sp => sp.GetRequiredService<BonesLearningLoopHost>());
 
-        return services.AddWipCapabilities().AddBonesLearningWorkflowWithViewer(options.ListenUrl);
+        var workflowBuilder = services.AddWipCapabilities().AddBonesLearningWorkflowWithViewer(options.ListenUrl);
+
+        // WP4: the host owns the runtime-agent composition. These explicit factories are the last
+        // registration for each agent type, so the co-learning wrappers registered by
+        // AddBonesLearningWorkflowWithViewer resolve the runtime-backed instances.
+        RegisterRuntimeAgents(services, options);
+
+        return workflowBuilder;
     }
 
     /// <summary>
@@ -277,20 +302,93 @@ public static class BonesHostServiceCollectionExtensions
         switch (options.ModelProvider)
         {
             case BonesModelProviderKind.DeepSeek:
-                services.AddBonesDeepSeekModelProviders(
-                    options.DeepSeekProviderOptions
+                var deepSeekOptions = options.DeepSeekProviderOptions
                     ?? throw new InvalidOperationException(
-                        "Bones host configuration is invalid: DeepSeek provider options are unavailable."),
-                    options.Resilience);
+                        "Bones host configuration is invalid: DeepSeek provider options are unavailable.");
+
+                services.AddDeepSeekChatModel(deepSeekOptions.ToDeepSeekModelProviderOptions());
+
+                // Decorate the concrete chat model with the Bones stage-model adapter: agent stage ids
+                // are rewritten to the configured DeepSeek model, supported ids pass through.
+                var configuredModelId = deepSeekOptions.Model.Value;
+                services.Replace(ServiceDescriptor.Singleton<IChatModel>(serviceProvider =>
+                    new BonesStageChatModel(
+                        serviceProvider.GetRequiredService<DeepSeekChatModel>(),
+                        configuredModelId)));
                 break;
             case BonesModelProviderKind.Stub:
-                BonesHostStubModelProviders.Register(services);
+                services.AddSingleton<IChatModel>(new StubBonesChatModel());
                 break;
             default:
                 throw new InvalidOperationException(
                     $"Bones host configuration is invalid: ModelProvider '{options.ModelProvider}' is not supported.");
         }
+
+        // Agent-loop tools are runtime capabilities, not workflow capabilities: the executor's
+        // RuntimeToolInvoker resolves the compile tool by its descriptor type.
+        services.AddSingleton(serviceProvider => new BonesStrategyCompileTool(
+            serviceProvider.GetRequiredService<BonesStrategyScriptHost>()));
+
+        // The play-turn stage now runs over the provider-neutral chat model.
+        services.AddSingleton<IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>>(serviceProvider =>
+            new BonesChatModelPlayTurnProvider(serviceProvider.GetRequiredService<IChatModel>()));
     }
+
+    private static void RegisterRuntimeAgents(IServiceCollection services, BonesHostOptions options)
+    {
+        services.RemoveAll<BonesPonderAgent>();
+        services.AddSingleton(serviceProvider => CreatePonderAgent(serviceProvider, options));
+
+        services.RemoveAll<BonesEnhanceStrategyAgent>();
+        services.AddSingleton(serviceProvider => CreateEnhanceStrategyAgent(serviceProvider, options));
+    }
+
+    /// <summary>
+    /// Host-owned Ponder composition: the shared runtime agent loop over the host <see cref="IChatModel"/>,
+    /// the Bones compile tool, artifact-backed session memory and the host loop budget.
+    /// </summary>
+    internal static BonesPonderAgent CreatePonderAgent(IServiceProvider serviceProvider, BonesHostOptions options)
+        => new(
+            serviceProvider.GetRequiredService<IArtifactStore>(),
+            CreateAgentExecutor(serviceProvider),
+            serviceProvider.GetRequiredService<BonesStrategyScriptHost>(),
+            options.Ponder,
+            CreateAgentMemory(serviceProvider),
+            options.AgentLoop);
+
+    /// <summary>
+    /// Host-owned Enhance composition: the shared runtime agent loop plus the promotion, aggressive
+    /// iteration, game-budget and strategy-library dependencies the enhancement stage owns.
+    /// </summary>
+    internal static BonesEnhanceStrategyAgent CreateEnhanceStrategyAgent(
+        IServiceProvider serviceProvider,
+        BonesHostOptions options,
+        BonesStrategyPromotionOptions? promotionOptions = null,
+        int? forcedEvaluationSeed = null)
+        => new(
+            serviceProvider.GetRequiredService<IArtifactStore>(),
+            CreateAgentExecutor(serviceProvider),
+            serviceProvider.GetRequiredService<BonesStrategyScriptHost>(),
+            promotionEvaluator: null,
+            promotionOptions: promotionOptions ?? options.Promotion,
+            compileRetryOptions: options.Ponder,
+            aggressiveIterationOptions: options.AggressiveIteration,
+            gameBudget: serviceProvider.GetRequiredService<BonesGameSimulationBudget>(),
+            strategyLibrary: serviceProvider.GetRequiredService<BonesStrategyLibrary>(),
+            forcedEvaluationSeed: forcedEvaluationSeed,
+            playModelProvider: serviceProvider.GetRequiredService<IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>>(),
+            playModelId: options.PlayModelId,
+            logger: serviceProvider.GetService<ILogger<BonesEnhanceStrategyAgent>>(),
+            memory: CreateAgentMemory(serviceProvider),
+            loopOptions: options.AgentLoop);
+
+    private static AgentExecutor CreateAgentExecutor(IServiceProvider serviceProvider)
+        => new(
+            serviceProvider.GetRequiredService<IChatModel>(),
+            new RuntimeToolInvoker(serviceProvider, BonesAgentToolDescriptors.Create()));
+
+    private static ArtifactAgentMemory CreateAgentMemory(IServiceProvider serviceProvider)
+        => new(serviceProvider.GetRequiredService<IArtifactStore>());
 
     private sealed class InMemorySessionStore : ISessionStore
     {

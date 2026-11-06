@@ -1,7 +1,6 @@
 using System.Text.Json;
-using Wip.Bones.Agents.Play;
 
-namespace Wip.Bones.ModelProviders.DeepSeek;
+namespace Wip.Bones.Agents.Play;
 
 public static class BonesPlayTurnResponseParser
 {

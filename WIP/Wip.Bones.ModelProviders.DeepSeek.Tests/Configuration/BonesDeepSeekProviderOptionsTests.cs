@@ -1,6 +1,7 @@
 using Wip.Bones.ModelProviders.DeepSeek;
 using Wip.Runtime.Runtime;
 using Xunit;
+using Wip.Bones.Agents.Configuration;
 
 namespace Wip.Bones.ModelProviders.DeepSeek.Tests.Configuration;
 

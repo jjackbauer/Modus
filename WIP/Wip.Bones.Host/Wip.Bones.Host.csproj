@@ -26,7 +26,6 @@
     <ProjectReference Include="..\Wip.Bones.Agents\Wip.Bones.Agents.csproj" />
     <ProjectReference Include="..\Wip.Bones.Web\Wip.Bones.Web.csproj" />
     <ProjectReference Include="..\Wip.Bones\Wip.Bones.csproj" />
-    <ProjectReference Include="..\Wip.Bones.ModelProviders.DeepSeek\Wip.Bones.ModelProviders.DeepSeek.csproj" />
     <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
     <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
   </ItemGroup>

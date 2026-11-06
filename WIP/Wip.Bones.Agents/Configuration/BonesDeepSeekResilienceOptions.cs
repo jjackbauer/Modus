@@ -1,4 +1,4 @@
-namespace Wip.Bones.ModelProviders.DeepSeek;
+namespace Wip.Bones.Agents.Configuration;
 
 public sealed class BonesDeepSeekResilienceOptions
 {

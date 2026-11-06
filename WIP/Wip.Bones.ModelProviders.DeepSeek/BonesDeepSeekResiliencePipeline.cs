@@ -5,6 +5,7 @@ using Polly.CircuitBreaker;
 using Polly.RateLimiting;
 using Polly.Retry;
 using Polly.Timeout;
+using Wip.Bones.Agents.Configuration;
 
 namespace Wip.Bones.ModelProviders.DeepSeek;
 

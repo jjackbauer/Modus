@@ -4,15 +4,17 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Sessions;
 using Wip.Bones.Agents.Enhance;
 using Wip.Bones.Agents.Play;
 using Wip.Bones.Agents.Ponder;
+using Wip.Bones.Agents.Runtime;
 using Wip.Bones.Agents.Workflow;
 using Wip.Bones.Host;
 using Wip.Bones.Identifiers;
-using Wip.Bones.ModelProviders.DeepSeek;
+using Wip.Runtime.Runtime;
 using Xunit;
 
 namespace Wip.Bones.Host.Tests;
@@ -27,37 +29,44 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
 
     [Fact]
     [Trait("ChecklistItem", RegistrationItem)]
-    public void BonesHostServiceCollection_GivenModelProviderDeepSeek_ExpectedRegistersDeepSeekAdaptersNotStubs()
+    public void BonesHostServiceCollection_GivenModelProviderDeepSeek_ExpectedRegistersChatModelStackNotLegacyProviders()
     {
         using var provider = BuildServiceProvider(BonesModelProviderKind.DeepSeek);
 
-        var strategyProvider = provider.GetRequiredService<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
+        var chatModel = provider.GetRequiredService<IChatModel>();
         var playTurnProvider = provider.GetRequiredService<IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>>();
-        var enhancementProvider = provider.GetRequiredService<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>();
+        var compileTool = provider.GetRequiredService<BonesStrategyCompileTool>();
 
-        Assert.IsType<DeepSeekBonesStrategyAuthoringProvider>(strategyProvider);
-        Assert.IsType<DeepSeekBonesPlayTurnProvider>(playTurnProvider);
-        Assert.IsType<DeepSeekBonesStrategyEnhancementProvider>(enhancementProvider);
+        // WP4: the host-owned IChatModel is the stage adapter decorating the concrete DeepSeek model.
+        Assert.IsType<BonesStageChatModel>(chatModel);
+        Assert.NotNull(provider.GetRequiredService<DeepSeekChatModel>());
+        Assert.IsType<BonesChatModelPlayTurnProvider>(playTurnProvider);
+        Assert.NotNull(compileTool);
+
+        // The retired per-stage IModelProvider registrations are gone.
+        Assert.Null(provider.GetService<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>());
+        Assert.Null(provider.GetService<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>());
     }
 
     [Fact]
     [Trait("ChecklistItem", RegistrationItem)]
-    public void BonesHostServiceCollection_GivenModelProviderStub_ExpectedRegistersStubProvidersOnly()
+    public void BonesHostServiceCollection_GivenModelProviderStub_ExpectedRegistersStubChatModelOnly()
     {
         using var provider = BuildServiceProvider(BonesModelProviderKind.Stub);
 
-        var strategyProvider = provider.GetRequiredService<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
+        var chatModel = provider.GetRequiredService<IChatModel>();
         var playTurnProvider = provider.GetRequiredService<IModelProvider<BonesPlayTurnRequest, BonesPlayTurnResult>>();
-        var enhancementProvider = provider.GetRequiredService<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>();
 
-        Assert.Contains("StubBonesStrategyModelProvider", strategyProvider.GetType().Name, StringComparison.Ordinal);
-        Assert.Contains("StubBonesPlayTurnModelProvider", playTurnProvider.GetType().Name, StringComparison.Ordinal);
-        Assert.Contains("StubBonesEnhancementModelProvider", enhancementProvider.GetType().Name, StringComparison.Ordinal);
+        Assert.IsType<StubBonesChatModel>(chatModel);
+        Assert.IsType<BonesChatModelPlayTurnProvider>(playTurnProvider);
+        Assert.Null(provider.GetService<DeepSeekChatModel>());
+        Assert.Null(provider.GetService<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>());
+        Assert.Null(provider.GetService<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>());
     }
 
     [Fact]
     [Trait("ChecklistItem", WorkflowModelIdItem)]
-    public async Task BonesHostServiceCollection_GivenDeepSeekConfig_ExpectedWorkflowUsesConfiguredModelIdInProviderRequests()
+    public async Task BonesHostServiceCollection_GivenDeepSeekConfig_ExpectedChatModelUsesConfiguredModelIdInHttpRequests()
     {
         const string configuredModel = "deepseek-v4-pro";
         ClearBonesHostEnvironment();
@@ -119,16 +128,14 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
             });
 
             await using var provider = services.BuildServiceProvider();
-            var strategyProvider = provider.GetRequiredService<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
-            var response = await strategyProvider.ExecuteAsync(
-                new ModelProviderRequest<BonesStrategyAuthoringRequest>(
-                    payload: new BonesStrategyAuthoringRequest(
-                        [
-                            new BonesStrategyAuthoringMessage("system", "system prompt"),
-                            new BonesStrategyAuthoringMessage("user", "user prompt"),
-                        ],
-                        []),
+            var chatModel = provider.GetRequiredService<IChatModel>();
+
+            // Agent stage ids are not DeepSeek model identifiers, so the stage adapter must rewrite
+            // them to the configured model before the HTTP boundary.
+            var response = await chatModel.CompleteAsync(
+                new ChatRequest(
                     modelId: ponderRequest.ModelId,
+                    messages: [ChatMessage.User("Strategy script authoring request")],
                     correlationId: "corr-model-id"),
                 new CapabilityContext(new SessionId("session-model-id"), iterationContext.WorktreePath),
                 CancellationToken.None);
@@ -138,9 +145,6 @@ public sealed class BonesHostDeepSeekServiceCollectionTests
             Assert.NotNull(handler.LastRequestBody);
             using var payload = JsonDocument.Parse(handler.LastRequestBody!);
             Assert.Equal(configuredModel, payload.RootElement.GetProperty("model").GetString());
-            Assert.Equal(
-                "disabled",
-                payload.RootElement.GetProperty("thinking").GetProperty("type").GetString());
         }
         finally
         {

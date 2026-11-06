@@ -1,6 +1,6 @@
 using Wip.Runtime.Runtime;
 
-namespace Wip.Bones.ModelProviders.DeepSeek;
+namespace Wip.Bones.Agents.Configuration;
 
 public enum BonesDeepSeekApiKeySourceKind
 {
@@ -149,6 +149,17 @@ public sealed record BonesDeepSeekProviderOptions
             temperature: temperature,
             thinking: thinking);
     }
+
+    /// <summary>
+    /// Projects this host-owned configuration onto the runtime's <see cref="DeepSeekModelProviderOptions"/>
+    /// so the host can register the chat-model adapter without referencing a provider project.
+    /// </summary>
+    public DeepSeekModelProviderOptions ToDeepSeekModelProviderOptions()
+        => new(
+            baseUrl: BaseUrl,
+            apiKey: ApiKeySource,
+            timeout: Timeout,
+            temperature: Temperature);
 
     private static bool TryParseEnvironmentKeySource(string value, out string variableName)
     {

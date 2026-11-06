@@ -6,7 +6,6 @@ using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Viewer;
 using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
-using Wip.Bones.ModelProviders.DeepSeek;
 using Wip.Bones.Web;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -65,7 +64,6 @@ public static class BonesHostApplication
             BonesStrategyLibrary strategyLibrary,
             BonesStrategyScriptHost scriptHost,
             IArtifactStore artifactStore,
-            [FromServices] BonesDeepSeekResiliencePipeline? resiliencePipeline,
             StrategyPool strategyPool,
             CancellationToken cancellationToken) =>
         {
@@ -275,17 +273,9 @@ public static class BonesHostApplication
                     apiKeySource = modelProvider.ApiKeySource,
                     thinking = modelProvider.Thinking,
                 },
-                resilience = resiliencePipeline is null
-                    ? null
-                    : new
-                    {
-                        circuitState = resiliencePipeline.CircuitState,
-                        bulkheadActive = resiliencePipeline.BulkheadActive,
-                        bulkheadMax = resiliencePipeline.BulkheadMax,
-                        rateLimitRemaining = resiliencePipeline.RateLimitRemaining,
-                        rateLimitReset = resiliencePipeline.RateLimitReset?.ToString("O"),
-                        rollingFailureRate = resiliencePipeline.RollingFailureRate,
-                    },
+                // WP4: the private DeepSeek provider stack (and its resilience pipeline) is retired
+                // from production; the field stays in the payload shape for status consumers.
+                resilience = (object?)null,
                 perStageModels = new
                 {
                     ponderModelId = (string?)hostOptions.PonderModelId,

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Bones.Agents.Budget;
 using Wip.Bones.Agents.Enhance;
@@ -60,9 +61,8 @@ public sealed class BonesLearningLoopReliabilityHostTests
         await using var factory = CreateReliabilityFactory(
             configureTestServices: services =>
             {
-                services.RemoveAll<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
-                services.AddSingleton<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>(
-                    new DelayedStrategyAuthoringProvider(TimeSpan.FromSeconds(3)));
+                services.RemoveAll<IChatModel>();
+                services.AddSingleton<IChatModel>(new DelayedChatModel(TimeSpan.FromSeconds(3)));
             });
         using var client = factory.CreateClient();
         var loopHost = factory.Services.GetRequiredService<BonesLearningLoopHost>();
@@ -194,9 +194,8 @@ public sealed class BonesLearningLoopReliabilityHostTests
         await using var factory = CreateReliabilityFactory(
             configureTestServices: services =>
             {
-                services.RemoveAll<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
-                services.AddSingleton<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>(
-                    new FailFirstPonderAuthoringProvider());
+                services.RemoveAll<IChatModel>();
+                services.AddSingleton<IChatModel>(new FailFirstChatModel());
             });
         using var client = factory.CreateClient();
         var loopHost = factory.Services.GetRequiredService<BonesLearningLoopHost>();
@@ -221,9 +220,8 @@ public sealed class BonesLearningLoopReliabilityHostTests
         await using var factory = CreateReliabilityFactory(
             configureTestServices: services =>
             {
-                services.RemoveAll<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
-                services.AddSingleton<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>(
-                    new FailFirstPonderAuthoringProvider());
+                services.RemoveAll<IChatModel>();
+                services.AddSingleton<IChatModel>(new FailFirstChatModel());
             });
         using var client = factory.CreateClient();
         var loopHost = factory.Services.GetRequiredService<BonesLearningLoopHost>();
@@ -250,9 +248,8 @@ public sealed class BonesLearningLoopReliabilityHostTests
         await using var factory = CreateReliabilityFactory(
             configureTestServices: services =>
             {
-                services.RemoveAll<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>();
-                services.AddSingleton<IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>>(
-                    new FailFirstPonderAuthoringProvider());
+                services.RemoveAll<IChatModel>();
+                services.AddSingleton<IChatModel>(new FailFirstChatModel());
             });
         using var client = factory.CreateClient();
         var loopHost = factory.Services.GetRequiredService<BonesLearningLoopHost>();
@@ -361,13 +358,12 @@ public sealed class BonesLearningLoopReliabilityHostTests
                 services.RemoveAll<BonesStrategyPromotionOptions>();
                 services.AddSingleton(promotionOptions);
                 services.RemoveAll<BonesEnhanceStrategyAgent>();
-                services.AddSingleton<BonesEnhanceStrategyAgent>(sp => new BonesEnhanceStrategyAgent(
-                    sp.GetRequiredService<IArtifactStore>(),
-                    sp.GetRequiredService<IModelProvider<BonesStrategyEnhancementRequest, BonesStrategyEnhancementResult>>(),
-                    promotionOptions: promotionOptions,
-                    gameBudget: sp.GetRequiredService<BonesGameSimulationBudget>(),
-                    strategyLibrary: sp.GetRequiredService<BonesStrategyLibrary>(),
-                    forcedEvaluationSeed: 4242));
+                services.AddSingleton<BonesEnhanceStrategyAgent>(sp =>
+                    BonesHostServiceCollectionExtensions.CreateEnhanceStrategyAgent(
+                        sp,
+                        sp.GetRequiredService<BonesHostOptions>(),
+                        promotionOptions,
+                        forcedEvaluationSeed: 4242));
             });
 
     private static async Task CorruptActiveStrategyPointerAsync(
@@ -421,53 +417,63 @@ public sealed class BonesLearningLoopReliabilityHostTests
         return null;
     }
 
-    private sealed class FailFirstPonderAuthoringProvider
-        : IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>
+    private sealed class FailFirstChatModel : IChatModel
     {
         private int _calls;
 
-        public ValueTask<ModelProviderResponse<BonesStrategyAuthoringResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyAuthoringRequest> request,
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
             CapabilityContext context,
             CancellationToken cancellationToken)
         {
-            if (Interlocked.Increment(ref _calls) <= 3)
-            {
-                return ValueTask.FromResult(
-                    new ModelProviderResponse<BonesStrategyAuthoringResult>(
-                        payload: new BonesStrategyAuthoringResult("```csharp\nthis is not valid C#\n```"),
-                        providerId: "bones-strategy-fail-once",
-                        modelId: request.ModelId,
-                        usage: new ModelProviderUsage(10, 5),
-                        correlationId: request.CorrelationId));
-            }
+            var content = Interlocked.Increment(ref _calls) <= 3
+                ? "```csharp\nthis is not valid C#\n```"
+                : ValidScript;
 
-            return ValueTask.FromResult(
-                new ModelProviderResponse<BonesStrategyAuthoringResult>(
-                    payload: new BonesStrategyAuthoringResult(ValidScript),
-                    providerId: "bones-strategy-fail-once",
-                    modelId: request.ModelId,
-                    usage: new ModelProviderUsage(10, 5),
-                    correlationId: request.CorrelationId));
+            return ValueTask.FromResult(new ChatResponse(
+                message: ChatMessage.Assistant(content),
+                modelId: request.ModelId,
+                providerId: "bones-strategy-fail-once",
+                usage: new ModelProviderUsage(10, 5),
+                correlationId: request.CorrelationId));
+        }
+
+        public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var response = await CompleteAsync(request, context, cancellationToken);
+            yield return new StreamingChunk(response.Message.Content);
+            yield return new StreamingChunk(string.Empty, isFinal: true, usage: response.Usage);
         }
     }
 
-    private sealed class DelayedStrategyAuthoringProvider(TimeSpan delay)
-        : IModelProvider<BonesStrategyAuthoringRequest, BonesStrategyAuthoringResult>
+    private sealed class DelayedChatModel(TimeSpan delay) : IChatModel
     {
-        public async ValueTask<ModelProviderResponse<BonesStrategyAuthoringResult>> ExecuteAsync(
-            ModelProviderRequest<BonesStrategyAuthoringRequest> request,
+        public async ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
             CapabilityContext context,
             CancellationToken cancellationToken)
         {
             await Task.Delay(delay, cancellationToken);
 
-            return new ModelProviderResponse<BonesStrategyAuthoringResult>(
-                payload: new BonesStrategyAuthoringResult(ValidScript),
-                providerId: "bones-strategy-delayed",
+            return new ChatResponse(
+                message: ChatMessage.Assistant(ValidScript),
                 modelId: request.ModelId,
+                providerId: "bones-strategy-delayed",
                 usage: new ModelProviderUsage(10, 5),
                 correlationId: request.CorrelationId);
+        }
+
+        public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var response = await CompleteAsync(request, context, cancellationToken);
+            yield return new StreamingChunk(response.Message.Content);
+            yield return new StreamingChunk(string.Empty, isFinal: true, usage: response.Usage);
         }
     }
 

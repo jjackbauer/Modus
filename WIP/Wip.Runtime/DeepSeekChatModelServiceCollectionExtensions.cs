@@ -18,10 +18,31 @@ public static class DeepSeekChatModelServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(options);
 
         services.AddSingleton(options);
+
+        return services.AddDeepSeekChatModelCore();
+    }
+
+    /// <summary>
+    /// Registers the DeepSeek <see cref="IChatModel"/> adapter resolving
+    /// <see cref="DeepSeekModelProviderOptions"/> from the service provider.
+    /// </summary>
+    public static IServiceCollection AddDeepSeekChatModel(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        return services.AddDeepSeekChatModelCore();
+    }
+
+    private static IServiceCollection AddDeepSeekChatModelCore(this IServiceCollection services)
+    {
         services.TryAddSingleton(static _ => new HttpClient());
-        services.TryAddSingleton<IChatModel>(static serviceProvider => new DeepSeekChatModel(
+        services.TryAddSingleton(static serviceProvider => new DeepSeekChatModel(
             serviceProvider.GetRequiredService<HttpClient>(),
             serviceProvider.GetRequiredService<DeepSeekModelProviderOptions>()));
+
+        // IChatModel resolves the same concrete singleton instance so hosts can decorate it.
+        services.TryAddSingleton<IChatModel>(static serviceProvider =>
+            serviceProvider.GetRequiredService<DeepSeekChatModel>());
 
         return services;
     }

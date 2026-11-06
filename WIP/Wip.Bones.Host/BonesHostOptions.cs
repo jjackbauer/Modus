@@ -1,9 +1,10 @@
+using Wip.Bones.Agents.Configuration;
 using Wip.Bones.Agents.Knowledge;
 using Wip.Bones.Agents.Ponder;
+using Wip.Bones.Agents.Runtime;
 using Wip.Bones.Agents.Workflow;
 using Wip.Bones.Engine;
 using Wip.Bones.Identifiers;
-using Wip.Bones.ModelProviders.DeepSeek;
 using Wip.Runtime.Runtime;
 
 namespace Wip.Bones.Host;
@@ -96,6 +97,8 @@ public sealed class BonesHostOptions
     public BonesStrategyScriptHostOptions ScriptHost { get; set; } = new();
 
     public BonesAggressiveIterationOptions AggressiveIteration { get; set; } = new();
+
+    public BonesAgentLoopOptions AgentLoop { get; set; } = new();
 
     public PopulationPoolOptions Population { get; set; } = PopulationPoolOptions.Default;
 

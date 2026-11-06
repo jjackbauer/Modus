@@ -21,7 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Wip.Bones.Host\Wip.Bones.Host.csproj" />
-    <ProjectReference Include="..\Wip.Bones.ModelProviders.DeepSeek\Wip.Bones.ModelProviders.DeepSeek.csproj" />
     <ProjectReference Include="..\Wip.Bones.Web.Tests\Wip.Bones.Web.Tests.csproj" />
     <ProjectReference Include="..\Wip.Shell.E2E\Wip.Shell.E2E.csproj" />
     <ProjectReference Include="..\Wip.ShellHost\Wip.ShellHost.csproj" />

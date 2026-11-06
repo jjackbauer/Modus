@@ -778,7 +778,7 @@
 - **Task**: Register `AddDeepSeekChatModel` with host DI; remove production DeepSeek provider call sites; mark the project test-only; add and prove the architecture rule; commit.
 - **Priority**: P0
 - **Depends on**: TODO-003
-- **Status**: Open
+- **Status**: Done
 
 ### TODO-005: WP5 — permissions, audit, safety negative controls
 
@@ -963,3 +963,45 @@
 - **Rationale**: VAL-023; the DI ambiguity risk (RISK-007) disappears when the host composes the agents explicitly; the generic runtime's own executor fallback stays untouched.
 - **Alternatives considered**: registering `IToolInvoker`/`IAgentExecutor` as global host services (rejected: the shell `agent` path would inherit the Bones compile-only tool set); solving the constructor ambiguity in the agent types (rejected: WP4 removes the provider registrations instead).
 - **Related**: OBS-039, RISK-007, TODO-004
+
+### OBS-040: WP4 retires the DeepSeek stack from production and composes both agents over the chat model
+
+- **Source**: `WIP/Wip.Bones.Host/BonesHostServiceCollectionExtensions.cs`; `Wip.Bones.Host.csproj`; `WIP/Wip.Bones.Agents/Configuration/`; `WIP/Wip.Bones.Agents/Runtime/BonesStageChatModel.cs`, `BonesChatModelPlayTurnProvider.cs`; `WIP/Wip.Runtime/DeepSeekChatModelServiceCollectionExtensions.cs`; `tests/Wip.Architecture.Tests/`; `.tmp/wp4-trx2/*.trx`; `.tmp/wp4-trx/*`; `docs/execution/harness/round-4/`
+- **Fact**: The host no longer references `Wip.Bones.ModelProviders.DeepSeek` and a production grep over Host+Agents returns zero DeepSeek `.cs` hits (only the provider's own test `InternalsVisibleTo` remains). `AddDeepSeekChatModel` registers the concrete `DeepSeekChatModel` and `IChatModel`; the host replaces `IChatModel` with `BonesStageChatModel` and composes both domain agents through explicit factories (`AgentExecutor` + `RuntimeToolInvoker` + `ArtifactAgentMemory`), with a stub chat model for the stub provider and a chat-model play-turn provider. Orchestrator reproduction: architecture 4/4 on the 43-project graph and the injected real edge fails with `bones-agents-no-legacy-provider`; Bones 446/443/3 (waived meta-tests), Runtime 150/144/6 (documented), provider 48/47/1 (waived), host composition 1/1, host loop classes 13/9/4 (all four failures already waived). The old `thinking` parameter is not carried by the new chat-model contract (default `disabled` unchanged).
+- **Implications**: D4 is met; the production stack is on `IChatModel -> IAgentExecutor -> RuntimeToolInvoker -> ArtifactAgentMemory`, and the provider project is test-only.
+- **Confidence**: High
+- **Agent**: orchestrator (reproducing the WP4 implementer)
+- **Related**: EVD-113..EVD-120, VAL-024, DEC-022, RISK-008
+
+### VAL-024: WP4 delivery validated — retirement, rule proof and suite non-regression
+
+- **Target**: The WP4 delivery claims and the production-retirement assertion
+- **Method**: read the host/provider/runtime diffs; ran the production grep; ran the architecture suite in a clean 43-project clone and injected a real Agents→provider reference as the control; ran the full Bones, Runtime and provider suites and the host composition + the two modified host loop classes; parsed every TRX counter and failure name; checked that the moved types and parser are used by both the Agents and provider assemblies.
+- **Evidence examined**: `.tmp/wp4-trx2/bones.trx` (446/443/3, all waived), `.tmp/wp4-trx2/runtime.trx` (150/144/6, documented), `.tmp/wp4-trx/provider.trx` (48/47/1 waived), `.tmp/wp4-trx/host-composition.trx` (1/1), `.tmp/wp4-trx/wp4-host-loops.trx` (13/9/4 all waived), `.tmp/wp4-architecture.log` (positive 4/4, control 1 failed with the exact rule message), and the host csproj/grep.
+- **Result**: Supported
+- **Conclusion**: Production no longer uses the private provider assembly; the architecture rule is real and detects a genuine edge; the suites show no unwaived regression. The `thinking` parameter is the one recorded behavior delta.
+- **Related**: OBS-040, EVD-114..EVD-120
+
+### DEC-022: Accept WP4 with explicit host factories, and stage the architecture files cleanly
+
+- **Decision**: Accept WP4 as delivered. The host keeps explicit agent factories instead of a global executor; the DeepSeek config types live in `Wip.Bones.Agents.Configuration`; the provider project stays for its own tests only. When committing, stage the architecture rule/test files reconstructed against the committed HEAD (without the concurrent session's Tholdem rules and 47-project count), because those uncommitted changes must not enter this work package. Record the lost `thinking` pass-through as a limitation rather than claiming behavior parity.
+- **Rationale**: OBS-040/VAL-024; the rule control proves the guard works; committing the concurrent architecture hunks would reference uncommitted Tholdem projects and break CI.
+- **Alternatives considered**: registering global `IAgentExecutor`/`IToolInvoker` (rejected in DEC-021); keeping the provider project referenced by the host for options only (rejected: that is still a production dependency); adding a thinking field to the generic chat contract (out of scope; recorded as RISK-008).
+- **Related**: OBS-040, RISK-008, TODO-004
+
+### RISK-008: The DeepSeek `thinking` setting is no longer applied
+
+- **Risk**: The retired per-stage DeepSeek providers sent a `thinking` parameter; `DeepSeekChatModel`'s `ChatRequest` has no thinking field, so a host configured with `Thinking=enabled/default` now gets the API's default reasoning behavior instead of the configured one. The default `disabled` matches the old default.
+- **Likelihood**: Certain for non-default configurations
+- **Impact**: Low/Medium (model behavior, not data or safety)
+- **Evidence**: OBS-040; `DeepSeekChatModel.cs` has no `thinking` mapping; `BonesHostOptions` still parses/diagnoses it
+- **Mitigation**: documented in the WP4 artifact and this entry; extend the `IChatModel`/`ChatRequest` contract with an optional thinking hint if the setting must be honored.
+- **Gate**: —
+
+### TODO-008: Refresh the waiver floors from the final counts
+
+- **Task**: When `docs/plan/test-waivers.json` no longer carries the concurrent session's uncommitted Tholdem hunk, update `Wip.Bones.Tests` to the observed final count (446 at WP4; may change at WP6) and `Wip.Runtime.Tests` to 150, using the final TRX counters, in a dedicated commit.
+- **Priority**: P2
+- **Depends on**: concurrent session's waiver edit resolution; WP6 final counts
+- **Status**: Open
+- **Related**: DEC-022, EVD-116, EVD-117

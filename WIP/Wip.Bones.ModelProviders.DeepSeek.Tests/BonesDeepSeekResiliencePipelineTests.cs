@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using Polly;
 using Xunit;
+using Wip.Bones.Agents.Configuration;
 
 namespace Wip.Bones.ModelProviders.DeepSeek.Tests;
 

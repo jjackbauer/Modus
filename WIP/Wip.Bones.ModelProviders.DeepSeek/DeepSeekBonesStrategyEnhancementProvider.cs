@@ -1,6 +1,7 @@
 using Wip.Abstractions.Capabilities;
 using Wip.Bones.Agents.Enhance;
 using Wip.Runtime.Runtime;
+using Wip.Bones.Agents.Configuration;
 
 namespace Wip.Bones.ModelProviders.DeepSeek;
 

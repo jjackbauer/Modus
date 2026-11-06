@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Wip.Abstractions.Capabilities;
+using Wip.Bones.Agents.Configuration;
 using Wip.Bones.Agents.Enhance;
 using Wip.Bones.Agents.Play;
 using Wip.Bones.Agents.Ponder;
@@ -20,7 +21,7 @@ public static class BonesDeepSeekServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(options);
 
         services.AddSingleton(options);
-        services.AddSingleton(CreateDeepSeekModelProviderOptions(options));
+        services.AddSingleton(options.ToDeepSeekModelProviderOptions());
         services.AddSingleton(static _ => new HttpClient());
         services.AddSingleton(resilienceOptions ?? new BonesDeepSeekResilienceOptions());
         services.AddSingleton<RateLimitAwareDelegatingHandler>();
@@ -89,13 +90,6 @@ public static class BonesDeepSeekServiceCollectionExtensions
 
         return services;
     }
-
-    private static DeepSeekModelProviderOptions CreateDeepSeekModelProviderOptions(BonesDeepSeekProviderOptions options) =>
-        new(
-            baseUrl: options.BaseUrl,
-            apiKey: options.ApiKeySource,
-            timeout: options.Timeout,
-            temperature: options.Temperature);
 
     private static HttpRequestMessage CreateFreshHttpRequestMessage(
         HttpMethod method,
