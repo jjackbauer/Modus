@@ -647,3 +647,243 @@
 - **Rationale**: EVD-083: the owner declined a human expert and asked for best effort; the hard constraints still forbid a release claim or unauthorized publication.
 - **Alternatives considered**: treating "best effort" as publication authorization (rejected: no credentials, and no explicit release instruction); holding the goal open indefinitely (declined by the owner).
 - **Related**: OBS-029, EVD-083
+
+---
+
+# Continuation run (2026-11-06): Bones agents on the generic WIP agent runtime
+
+> New goal contract in `goal.md`. Round numbering restarts; IDs continue from the prior run.
+
+### OBS-030: The runtime agent seams are absent from the Bones agent assembly
+
+- **Source**: `WIP/Wip.Bones.Agents/**/*.cs` (grep), `WIP/Wip.Bones/**/*.cs` (grep)
+- **Fact**: A ripgrep over `WIP/Wip.Bones.Agents` for `AgentExecutor|IChatModel|RuntimeToolInvoker|IAgentMemory|ArtifactAgentMemory|AgentStreamEvent|RunAgentStreamingAsync|PermissionCatalog|PermissionMode` returns **no matches**. The seams exist only under `WIP/Wip.Runtime` and `WIP/Wip.Abstractions`.
+- **Implications**: The migration is a real change, not a rename; the Bones assembly currently has no compile-time dependency on the generic loop.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-090, HYP-011
+
+### OBS-031: The four domain agents depend on `IModelProvider`, and the DeepSeek coupling is in the host
+
+- **Source**: `WIP/Wip.Bones.Agents/Ponder/BonesPonderAgent.cs:13,20,88`; `Ponder/BonesCoLearningPonderAgent.cs:17`; `Enhance/BonesEnhanceStrategyAgent.cs:17,29,180`; `Enhance/BonesCoLearningEnhanceAgent.cs:16`; `WIP/Wip.Bones.Host/BonesHostServiceCollectionExtensions.cs:275-293`; `WIP/Wip.Bones.ModelProviders.DeepSeek/BonesDeepSeekServiceCollectionExtensions.cs:86-88`
+- **Fact**: All four agents implement `IAgent<,>` and call `_modelProvider.ExecuteAsync(...)` through `IModelProvider<...>`. No Bones.Agents file references `Wip.Bones.ModelProviders.DeepSeek`. The production wiring (`AddBonesDeepSeekModelProviders`) lives in `Wip.Bones.Host` and registers the three DeepSeek providers, including `DeepSeekBonesPlayTurnProvider`.
+- **Implications**: The user's starting-point wording ("call Wip.Bones.ModelProviders.DeepSeek directly") is imprecise; the real coupling is the `IModelProvider` abstraction plus host registration. Porting must replace the abstraction in the agents and the registration in the host.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-089, EVD-094, VAL-018
+
+### OBS-032: The declarative workflow plan is the runtime-preferred path, and the legacy shim is still present
+
+- **Source**: `WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflow.cs:12-59`; `Workflow/BonesLearningWorkflowRegistration.cs:18-29`; `WIP/Wip.Runtime/Runtime/WipRuntimeOrchestrator.cs:255-263,1794-1802`
+- **Fact**: `BonesLearningWorkflow` implements both `IWorkflow<,>` (with a stub `ExecuteAsync` returning `workflow-dispatch` ids) and `IWorkflowDefinition` (4 stages, 3 `StageMap`s, initial request). It is registered twice — `AddWorkflow<...>` and `AddWorkflowDefinition<BonesLearningWorkflow>()`. `RunAsync` calls `ResolveDefinitionPlan` first and falls back to `LinearWorkflowPlanFactory` only when no definition exists.
+- **Implications**: WP6 can delete the legacy registration/implementation without changing execution, provided no consumer resolves `IWorkflow<BonesLearningWorkflowRequest,...>` directly.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-088, OQ-004
+
+### OBS-033: Baseline CI is green at `dc6b76c` but red at the current HEAD
+
+- **Source**: GitHub Actions API runs `42125309033`, `42125309034` (`dc6b76c`); run `42211927009` at `ba5debf`; job annotations for check run `127872411446`
+- **Fact**: Tests CI `42125309033` on `dc6b76c` succeeded in all six jobs and Modus CI `42125309034` succeeded. The current HEAD `ba5debf` (docs-only) has Tests CI run `42211927009` **failed** in `wip-offline-tests`: the gate annotation names `Wip.Bones.Host.Tests.BonesHostViewerLearningLoopStatusTests.BonesHostViewerLearningLoopStatus_GivenRunningLoop_ExpectedSidebarStageTracksStatusApi` as an unwaived failure.
+- **Implications**: The final green must be proven on the new HEAD; the pre-existing viewer-stage flake is a live risk and is not caused by this goal's changes.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-086, EVD-087, RISK-004
+
+### OBS-034: The project graph already enforces the key boundaries
+
+- **Source**: `WIP/Wip.Bones/Wip.Bones.csproj:12-13`; `WIP/Wip.Sandbox.Worker/Wip.Sandbox.Worker.csproj`; `WIP/Wip.ShellHost/Wip.ShellHost.csproj`; `tests/Wip.Architecture.Tests/ArchitectureRules.cs:13-24`; `ArchitectureReferenceTests.cs:16`
+- **Fact**: `Wip.Bones` references `Wip.Sandbox.BonesContracts` and `Wip.Sandbox.WorkerClient`; `Wip.Sandbox.Worker` references only `Wip.Sandbox.Protocol` + `Wip.Sandbox.BonesContracts`; `Wip.ShellHost` has no Bones reference. The architecture suite has 9 rules and asserts 43 projects; `RuntimeSource_GivenBuildServiceProvider_ExpectedNoNestedProvider` scans `Wip.Runtime` for `BuildServiceProvider`.
+- **Implications**: A new `bones-agents-no-legacy-provider` rule is the natural guard for WP4; no boundary relaxation is needed.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-091, EVD-094
+
+### OBS-035: Local Windows VSTest is blocked; WSL has an SDK but a separate NuGet cache
+
+- **Source**: `dotnet test WIP/Wip.Abstractions.Tests/... --filter ChatContractsTests` (exit 1, Win32Exception 5); `wsl -d Ubuntu -- ~/.dotnet/dotnet --version` = 10.0.103; WSL build without restore = `NETSDK1064: Package xunit.analyzers 1.18.0 was not found`
+- **Fact**: The Windows testhost aborts with `System.ComponentModel.Win32Exception (5): Access is denied` in `SetParentProcessExitCallback` both from pwsh and through WSL interop. WSL Ubuntu 24.04 has .NET SDK 10.0.103 but its package cache lacks the restored packages, so a Linux restore is required before any Linux test run.
+- **Implications**: Local verification must run on WSL after restore; Windows builds remain available for compile checks.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-092, RISK-003
+
+### OBS-036: The waiver register declares the baseline counts and 27 failures
+
+- **Source**: `docs/plan/test-waivers.json` (`expectedTotals`, `failures`)
+- **Fact**: `expectedTotals` declares `Wip.Bones.Tests` 396, `Wip.Runtime.Tests` 146, `Wip.Shell.Tests` 34; the `failures` array has 27 entries. These are the numbers the offline gate enforced in the green `dc6b76c` run.
+- **Implications**: Any change to discovered counts must be justified by real TRX counters, never by editing the waiver to hide a failure.
+- **Confidence**: High (file read) / Medium (the exact discovered counts are only indirectly evidenced by the passing gate)
+- **Agent**: orchestrator
+- **Related**: EVD-093, RISK-005
+
+### HYP-011: Moving Ponder/Enhance to the adapter preserves domain outputs for identical model markdown
+
+- **Claim**: If the prompt messages, parse/compile/persist logic and retry sequence are unchanged, then a scripted fake model returning the same markdown produces the same `BonesPonderResult`/`BonesEnhanceStrategyResult` (strategy ids, source, artifact kinds, promotion outcome) through the new `IAgentExecutor` path as through the legacy `IModelProvider` path.
+- **Supporting OBS**: OBS-030, OBS-031
+- **Why it matters**: This is the core behavior-preservation gate; if false, the port changes game-learning behavior.
+- **Falsification strategy**: Build deterministic fixtures with a scripted fake `IChatModel` and a scripted fake `IModelProvider`; run both paths for the same request and compare every result field and artifact payload. A control that drops the tool call/turn from the new path or changes one prompt line must make the comparison fail.
+- **Status**: Proposed
+- **Confidence**: Medium
+
+### HYP-012: The adapter can map every non-success executor status to the domain's existing exception semantics
+
+- **Claim**: Mapping `Failed`, `MaxStepsReached`, `ToolFailureLimitReached`, `TokenBudgetExhausted` and `TimedOut` to `InvalidOperationException` (with the executor error) preserves the existing tests' `Assert.ThrowsAsync<InvalidOperationException>` contract for model/compile failures while still surfacing the status deterministically.
+- **Supporting OBS**: OBS-031
+- **Why it matters**: Existing tests assert `InvalidOperationException` on retry exhaustion; the adapter must not leak a new exception type into those paths.
+- **Falsification strategy**: Run the existing Bones test suite unchanged after the port; additionally assert the adapter's exception type/message in new tests and verify a stubbed `IAgentExecutor` returning each status raises the mapped exception.
+- **Status**: Proposed
+- **Confidence**: Medium
+
+### VAL-018: Starting-point verification — the seams are absent, but "calls DeepSeek directly" is falsified
+
+- **Target**: round-0 starting-point claim batch (user-supplied)
+- **Method**: read the four agent files and their constructors; grepped the Bones assemblies for runtime and DeepSeek symbols; read the host registration and the provider project; read the workflow and runtime plan resolution; re-ran the local test commands; read the GitHub API run/job/annotation records.
+- **Evidence examined**: OBS-030..036, EVD-086..094.
+- **Result**: **Supported** for the workflow-plan preference, the absence of runtime seams, the project graph, the baseline counts, and the DeepSeek host registration. **Falsified** for the literal claim that the agents "call `Wip.Bones.ModelProviders.DeepSeek` directly (`DeepSeekBonesPlayTurnProvider`)": no Bones.Agents file references the provider project, and `DeepSeekBonesPlayTurnProvider` is the play-turn provider, not the Ponder/Enhance one. The corrected fact is that the agents depend on `IModelProvider` and the host wires the DeepSeek implementations.
+- **Conclusion**: The verified starting point stands with that correction; proceed.
+- **Related**: OBS-030, OBS-031, OBS-032, OBS-033, OBS-034, OBS-035, OBS-036
+
+### DEC-018: Adapter shape and test-compatibility strategy
+
+- **Decision**: Add a generic `BonesAgentAdapter<TRequest,TResult>` in `Wip.Bones.Agents` that implements `IAgent<TRequest,TResult>`, takes an `IAgentExecutor` plus a request-factory and a result-mapper, delegates exactly one `ExecuteAsync` and maps non-success statuses to a `BonesAgentExecutionException : InvalidOperationException`. Port the four agents by composition (primary public constructor takes `IAgentExecutor`; an `internal` compatibility constructor keeps the existing `IModelProvider` signature for the 396 tests and delegates through a test-only executor shim). Agent tools are registered as a Bones agent toolset distinct from `WipBuilder` capabilities so `BonesLearningWorkflowRegistrationTests`' "exactly 4 descriptors" assertion is untouched.
+- **Rationale**: OBS-031, OBS-036, HYP-012 — the migration must not rewrite the existing test corpus, and the builder descriptor count is itself a tested contract.
+- **Alternatives considered**: (a) replacing the agents with adapter-typed registrations only — rejected because it would force rewrites of 26 construction sites and lose the old-vs-new comparison surface; (b) expressing compile as a builder capability — rejected because it changes the tested descriptor set; (c) keeping the `IModelProvider` path public — rejected as it would leave the private stack as production API.
+- **Related**: HYP-011, HYP-012, TODO-001
+
+### TODO-001: WP1 — Bones-side adapter, tests, commit
+
+- **Task**: Implement `BonesAgentAdapter` + `BonesAgentExecutionException` + request/result mapping helpers and focused tests; build and run on WSL; commit one work package.
+- **Priority**: P0
+- **Depends on**: DEC-018, WSL restore
+- **Status**: Done
+- **Related**: DEC-018
+
+### TODO-002: WP2 — port Ponder (single-seat + co-learning)
+
+- **Task**: Prompts class, `ToolDefinition`s, `RuntimeToolInvoker` routing, `AgentLoopOptions` budgets, `ArtifactAgentMemory`; parity fixtures and negative controls; commit.
+- **Priority**: P0
+- **Depends on**: TODO-001
+- **Status**: Open
+
+### TODO-003: WP3 — port Enhance (single-seat + co-learning)
+
+- **Task**: Same treatment; keep Observe/Play as deterministic tools; parity + controls; commit.
+- **Priority**: P0
+- **Depends on**: TODO-002
+- **Status**: Open
+
+### TODO-004: WP4 — replace the provider and guard the boundary
+
+- **Task**: Register `AddDeepSeekChatModel` with host DI; remove production DeepSeek provider call sites; mark the project test-only; add and prove the architecture rule; commit.
+- **Priority**: P0
+- **Depends on**: TODO-003
+- **Status**: Open
+
+### TODO-005: WP5 — permissions, audit, safety negative controls
+
+- **Task**: CapabilityContext/grants on tool calls; denial + Audit-mode tests; injection/hidden-data/unbounded-loop fail-closed; redaction; commit.
+- **Priority**: P0
+- **Depends on**: TODO-004
+- **Status**: Open
+
+### TODO-006: WP6 — retire the legacy workflow shim and run full suites
+
+- **Task**: Remove `IWorkflow<,>` implementation/registration and stub `ExecuteAsync`; reconcile consumers; run Bones + Runtime + Shell suites; commit.
+- **Priority**: P0
+- **Depends on**: TODO-005
+- **Status**: Open
+
+### RISK-003: WSL/Linux verification differs from the authoritative Windows gate
+
+- **Risk**: Linux runs may fail/pass differently (Windows-only validation tests, path handling, worker handshake), and local Windows VSTest cannot run at all.
+- **Likelihood**: High
+- **Impact**: Medium
+- **Evidence**: OBS-035, EVD-092; prior EVD-043 recorded the same platform gap.
+- **Mitigation**: Use WSL for fast falsification; treat CI `wip-offline-tests` on windows-latest as the authoritative gate; record platform-only failures explicitly.
+- **Gate**: G4
+
+### RISK-004: The pre-existing viewer-stage flake may keep the final HEAD red
+
+- **Risk**: `BonesHostViewerLearningLoopStatus_GivenRunningLoop_ExpectedSidebarStageTracksStatusApi` failed at `ba5debf`; it may recur and make the final CI gate red for an unrelated reason.
+- **Likelihood**: Medium
+- **Impact**: High
+- **Evidence**: OBS-033
+- **Mitigation**: Re-read every job at the final HEAD; if the flake recurs, prove it with repeated local/CI evidence and harden the bounded wait without weakening the assertion (never waive it).
+- **Gate**: G2
+
+### RISK-005: Test counts change when the legacy workflow tests are reconciled
+
+- **Risk**: WP6 deletes the legacy registration, so a registration test may legitimately change; a careless edit could lower the discovered total to hide a failure.
+- **Likelihood**: Medium
+- **Impact**: High
+- **Evidence**: OBS-036
+- **Mitigation**: Keep test intent, replace legacy assertions with definition-plan assertions; update `expectedTotals` only from real TRX counters and record the delta.
+- **Gate**: G1
+
+### RISK-006: A concurrent session is writing to the same workspace
+
+- **Risk**: `docs/goal-tholdem/` appeared at 10:15 while this run was active, so another autonomous session may edit the same tree.
+- **Likelihood**: Low
+- **Impact**: Medium
+- **Evidence**: `git status` shows untracked `docs/goal-tholdem/`; timestamps 10:15.
+- **Mitigation**: Stage only explicit paths (never `git add -A`), re-read `git status` before every commit, and do not touch `docs/goal-tholdem/`.
+- **Gate**: —
+
+### OQ-004: Can the legacy `IWorkflow` registration be deleted without breaking a consumer?
+
+- **Question**: Besides `BonesLearningWorkflowRegistrationTests`, does any host, E2E harness or shell path resolve `IWorkflow<BonesLearningWorkflowRequest, BonesLearningWorkflowResult>` by type?
+- **Needed evidence**: grep for `BonesLearningWorkflow` and `IWorkflow<` consumers, plus the host integration tests that run the workflow.
+- **Priority**: P1
+- **Raised by**: round 0 (orchestrator)
+- **Related**: OBS-032
+
+### OQ-005: What is the exact old-vs-new parity surface for artifact payloads?
+
+- **Question**: Which result/artifact fields are byte-stable across runs (artifact ids contain GUIDs), and which must be normalized before comparison?
+- **Needed evidence**: inspect the artifact ids/paths produced by both paths in a fixture; define a normalizer.
+- **Priority**: P1
+- **Raised by**: round 0 (orchestrator)
+- **Related**: HYP-011
+
+### OQ-006: Does `AddDeepSeekChatModel` need a container-resolved overload for host DI?
+
+- **Question**: The current extension requires an options instance; the Bones host builds its options inside `AddBonesDeepSeekModelProviders`. Should the extension gain a factory overload instead of duplicating registrations?
+- **Needed evidence**: read both registration paths and the host options type; decide in WP4.
+- **Priority**: P1
+- **Raised by**: round 0 (orchestrator)
+- **Related**: TODO-004
+
+### OBS-037: WP1 adapter is delivered and its tests detect a swallowed failure
+
+- **Source**: `WIP/Wip.Bones.Agents/Runtime/BonesAgentAdapter.cs:12-51`; `WIP/Wip.Bones.Agents/Runtime/BonesAgentExecutionException.cs:11-37`; `WIP/Wip.Bones.Tests/Runtime/BonesAgentAdapterTests.cs`; `.tmp/wp1-trx/wp1-focused.trx`; `.tmp/wp1-trx/wp1-control.trx`; `WIP/Wip.Bones.Tests/TestResults/_Ricardo-PC_2026-11-06_11_02_48.trx`
+- **Fact**: The adapter implements `IAgent<,>`, builds the executor request once, awaits `IAgentExecutor.ExecuteAsync` once and translates every non-success `AgentExecutionResult` into `BonesAgentExecutionException : InvalidOperationException` with the status, steps and deterministic message; cancellation is not caught. Orchestrator reproduction in an isolated Linux clone: focused filter **14/14 passed**; with the control mutation `Succeeded || true` the same filter produced **6 failed / 8 passed** with `Assert.Throws() Failure: No exception was thrown ... Expected: BonesAgentExecutionException`. Full `Wip.Bones.Tests` after the change: **410 total, 409 passed, 1 failed**, the single failure being the pre-existing waived `BehaviorProofCompliance_GivenScriptStrategiesRequirements_RequiresExecutableRuntimeProofForEachItem`.
+- **Implications**: D1 is met; WP1 can be committed. The pre-existing corpus is unchanged (396 + 14 new = 410) and no existing test was edited.
+- **Confidence**: High
+- **Agent**: orchestrator (reproducing the WP1 implementer)
+- **Related**: EVD-096..EVD-099, VAL-019, DEC-019
+
+### VAL-019: WP1 delivery validated — adapter behavior and failing control
+
+- **Target**: HYP-012 and the WP1 delivery claims
+- **Method**: read both production files and the test file; re-ran the focused filter in an isolated Linux clone; ran a clone-only mutation that swallows non-success statuses; restored the original file (SHA-256 `D1182E1485483B1665C804B062196080564C09F2C668A0E798D32E731D8FB9A3`); ran the full Bones suite; diffed the changed-path set.
+- **Evidence examined**: `.tmp/wp1-trx/wp1-focused.trx` (14/14); `.tmp/wp1-trx/wp1-control.trx` (8 pass / 6 fail); `.tmp/wp1-control-clone.log`; full-suite TRX (410/409/1, single waived meta failure); `git status --porcelain`.
+- **Result**: Supported
+- **Conclusion**: The adapter delegates the loop, maps results and errors as specified, propagates cancellation, and the tests fail when the error translation is removed. No existing test or project file was modified by WP1.
+- **Related**: OBS-037, HYP-012, EVD-097, EVD-098, EVD-099
+
+### VAL-020: Independent falsification of the starting point agrees with VAL-018
+
+- **Target**: The five user-supplied starting-point claims, independently checked by the round-1 Falsifier
+- **Method**: read `docs/execution/harness/round-1/falsify-starting-point.md`; spot-checked its most surprising citations myself: the absence of any DeepSeek reference in `Wip.Bones.Agents` (EVD-089), the real HEAD vs `dc6b76c` (EVD-086), the 4-stage plan/registration (EVD-088), the zero-hit seam search (EVD-090) and the project edges (EVD-091).
+- **Evidence examined**: falsifier artifact (5 rows: 3 Supported, 2 Falsified, 0 NotCheckable) plus my own EVD rows.
+- **Result**: Supported for claims 1, 3, 4; Falsified for claim 2 ("calls DeepSeek directly" — the agents use `IModelProvider` and the host wires DeepSeek) and claim 5 (the current HEAD is `ba5debf`, not `dc6b76c`; the recorded green runs belong to `dc6b76c` and the current HEAD's offline gate is red on the pre-existing viewer flake). The falsifier's "notCheckable" note was only the offline CI API re-query, which I had already performed online (EVD-086/EVD-087).
+- **Conclusion**: No disagreement between the two independent checks; the two falsified clauses are corrections, not delivery failures. No WP1 claim is falsified.
+- **Related**: VAL-018, OBS-033, EVD-086, EVD-089, EVD-100
+
+### DEC-019: Accept WP1 and keep the adapter minimal
+
+- **Decision**: Accept WP1 as delivered (two production types plus 14 focused tests). Do not add streaming or a domain-agent shim to the adapter in WP1; the Ponder/Enhance ports in WP2/WP3 will compose the adapter and will decide streaming against the runtime's `IStreamingAgentExecutor` where a Bones operator surface actually consumes deltas.
+- **Rationale**: VAL-019 (behavior and control verified) and VAL-020 (starting point corrected). A minimal adapter keeps the domain-port diff reviewable; streaming is only valuable where the operator sees it, and the Bones workflow currently produces artifacts rather than a live token surface.
+- **Alternatives considered**: adding streaming to the adapter now (deferred: no consumer in WP1, dead surface); making the four agents directly `BonesAgentAdapter` registrations (rejected in DEC-018).
+- **Related**: OBS-037, VAL-019, TODO-002, TODO-003
