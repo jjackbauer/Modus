@@ -338,10 +338,9 @@ public sealed class BonesLearningWorkflowRegistrationTests
             enhancementModelProvider);
 
         var builder = services.AddWipCapabilities();
-        builder.AddWorkflow<BonesLearningWorkflow, BonesLearningWorkflowRequest, BonesLearningWorkflowResult>(
+        builder.AddDeclarativeWorkflow<BonesLearningWorkflow, BonesLearningWorkflowRequest, BonesLearningWorkflowResult>(
             BonesLearningWorkflowIds.WorkflowId,
             "Bones learning workflow");
-        builder.AddWorkflowDefinition<BonesLearningWorkflow>();
         builder.AddAgent<BonesPonderAgent, BonesPonderRequest, BonesPonderResult>(
             BonesPonderCapability.Id,
             "Bones ponder agent");

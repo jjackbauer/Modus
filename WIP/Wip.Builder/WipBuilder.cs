@@ -243,6 +243,38 @@ public sealed class WipBuilder
     }
 
     /// <summary>
+    /// Registers a declarative-only workflow: one selection registration for the runtime plus the
+    /// <see cref="IWorkflowDefinition"/> whose compiled plan supplies both the stages and the initial
+    /// request. No legacy <see cref="IWorkflow{TRequest,TResult}"/> service is registered, and the
+    /// registration's run-request factory is never used by the declarative execution path.
+    /// </summary>
+    public WipBuilder AddDeclarativeWorkflow<TDefinition, TRequest, TResult>(
+        WorkflowId workflowId,
+        string displayName)
+        where TDefinition : class, IWorkflowDefinition
+        where TRequest : notnull
+        where TResult : notnull
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(displayName));
+
+        Services.AddSingleton<TDefinition>();
+        Services.AddSingleton<IWorkflowDefinition>(provider => provider.GetRequiredService<TDefinition>());
+
+        var descriptor = new WorkflowDescriptor<TRequest, TResult>(workflowId, displayName);
+        _workflowRegistrations.Add(new WorkflowRegistration(
+            workflowId,
+            typeof(TDefinition),
+            typeof(TRequest),
+            typeof(TResult),
+            descriptor,
+            _ => throw new InvalidOperationException(
+                $"Workflow '{workflowId.Value}' is declarative; its initial request comes from the definition plan. " +
+                "The runtime never calls CreateRunRequest for a declarative workflow.")));
+        return this;
+    }
+
+    /// <summary>
     /// Default run-request construction for legacy <see cref="IWorkflow{TRequest,TResult}"/>
     /// registrations: the request receives the session task (or its parameterless instance). A
     /// workflow whose request needs different input passes an explicit factory to

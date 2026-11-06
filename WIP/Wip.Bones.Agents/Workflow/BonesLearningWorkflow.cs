@@ -5,26 +5,12 @@ using Wip.Bones.Agents.Observe;
 using Wip.Bones.Agents.Play;
 using Wip.Bones.Agents.Ponder;
 using Wip.Bones.Identifiers;
-using Wip.Runtime.Runtime;
 
 namespace Wip.Bones.Agents.Workflow;
 
-public sealed class BonesLearningWorkflow
-    : IWorkflow<BonesLearningWorkflowRequest, BonesLearningWorkflowResult>
-    , IWorkflowDefinition
+public sealed class BonesLearningWorkflow : IWorkflowDefinition
 {
     public WorkflowId WorkflowId => BonesLearningWorkflowIds.WorkflowId;
-
-    public ValueTask<BonesLearningWorkflowResult> ExecuteAsync(
-        BonesLearningWorkflowRequest request,
-        WorkflowContext context,
-        CancellationToken cancellationToken)
-        => ValueTask.FromResult(
-            new BonesLearningWorkflowResult(
-                GamesObserved: request.GameCount,
-                StrategyId: new BonesStrategyId("workflow-dispatch"),
-                MatchGameId: new BonesGameId("workflow-dispatch"),
-                EnhancedStrategyId: new BonesStrategyId("workflow-dispatch-enhanced")));
 
     /// <summary>
     /// Declarative plan (WP-2.5): the four Bones stages with explicit plan-scoped maps and an

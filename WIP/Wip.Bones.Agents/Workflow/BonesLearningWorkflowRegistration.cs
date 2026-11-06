@@ -15,13 +15,11 @@ public static class BonesLearningWorkflowExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.AddWorkflow<BonesLearningWorkflow, BonesLearningWorkflowRequest, BonesLearningWorkflowResult>(
+        // WP-6: the declarative definition is the only Bones workflow path. The registration supplies
+        // selection metadata; the definition plan supplies every stage, map and the initial request.
+        builder.AddDeclarativeWorkflow<BonesLearningWorkflow, BonesLearningWorkflowRequest, BonesLearningWorkflowResult>(
             BonesLearningWorkflowIds.WorkflowId,
             "Bones learning workflow");
-
-        // WP-2.5: the declarative definition carries the explicit four-stage plan and maps; the
-        // runtime prefers it over the legacy registry path.
-        builder.AddWorkflowDefinition<BonesLearningWorkflow>();
 
         builder.AddTool<BonesObserveGamesTool, BonesObserveGamesRequest, BonesObserveGamesResult>(
             BonesObserveGamesCapability.Id,

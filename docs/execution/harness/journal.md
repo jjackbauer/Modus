@@ -792,7 +792,7 @@
 - **Task**: Remove `IWorkflow<,>` implementation/registration and stub `ExecuteAsync`; reconcile consumers; run Bones + Runtime + Shell suites; commit.
 - **Priority**: P0
 - **Depends on**: TODO-005
-- **Status**: Open
+- **Status**: Done
 
 ### RISK-003: WSL/Linux verification differs from the authoritative Windows gate
 
@@ -1039,3 +1039,28 @@
 - **Evidence**: OBS-041; `PermissionEvaluator.Evaluate` returns `built-in capability` for built-ins
 - **Mitigation**: keep the model-facing tool set minimal and deterministic; register any sensitive tool with a plugin origin + required permission; add a review rule when expanding `BonesAgentToolDescriptors`.
 - **Gate**: —
+
+### OBS-042: WP6 retires the legacy Bones workflow shim and leaves the definition plan as the only path
+
+- **Source**: `WIP/Wip.Builder/WipBuilder.cs:245-275`; `WIP/Wip.Bones.Agents/Workflow/BonesLearningWorkflow.cs:11`; `BonesLearningWorkflowRegistration.cs:18-22`; `WIP/Wip.Bones.Tests/Workflow/BonesLearningWorkflowRegistrationTests.cs:340-343`; `.tmp/wp6-trx/*`; `.tmp/wp6-ctrl/viewer-pre.trx`; `docs/execution/harness/round-6/`
+- **Fact**: `WipBuilder.AddDeclarativeWorkflow` registers the definition singleton (same instance behind `IWorkflowDefinition`) plus one selection registration whose run-request factory throws because the definition plan supplies the initial request. `BonesLearningWorkflow` now implements only `IWorkflowDefinition`; the stub `ExecuteAsync` and `workflow-dispatch` ids are deleted; the Bones registration and its one test helper use the new method; two builder tests and one runtime declarative-only end-to-end test were added. The grep for `IWorkflow<BonesLearningWorkflow|AddWorkflow<BonesLearningWorkflow|AddWorkflowDefinition<BonesLearningWorkflow|workflow-dispatch` returns 0 hits. Reproduction: Bones 455/454/1 (the failure is a waived meta-test; the implementer's run had 455/455), Runtime 153/147/6 (documented), Shell 34/34, Builder 34/34, architecture 4/4 in a clean 43-project clone.
+- **Implications**: D6 is met; the declarative plan is the only Bones execution path. The `Wip.Bones.Web.Tests` viewer failure is pre-existing (it fails identically on the pre-WP6 clone at `7158280`) and outside the 16-project offline gate.
+- **Confidence**: High
+- **Agent**: orchestrator (reproducing the WP6 implementer)
+- **Related**: EVD-126..EVD-130, VAL-026, DEC-024
+
+### VAL-026: WP6 delivery validated — shim absent, declarative-only execution, suites non-regressed
+
+- **Target**: The WP6 removal claims and the declarative-only selection/execution claim
+- **Method**: read the builder/workflow/registration diffs; ran the legacy grep; ran the full Bones, Runtime, Shell and Builder suites; ran the architecture suite in a clean 43-project clone; ran the viewer workflow test on the pre-WP6 clone as the pre-existing-failure control.
+- **Evidence examined**: `.tmp/wp6-trx/bones.trx` (455/454/1, waived), `runtime.trx` (153/147/6, documented), `shell.trx` (34/34), `builder.trx` (34/34); `.tmp/wp6-ctrl/viewer-pre.trx` (1 failed pre-WP6); the grep (0 hits); the clone architecture run (4/4).
+- **Result**: Supported
+- **Conclusion**: The legacy implementation, registration and stub dispatch are gone; the new registration keeps selection working while the definition plan supplies all stages and the initial request; no unwaived regression in the gate projects.
+- **Related**: OBS-042, EVD-127..EVD-130
+
+### DEC-024: Accept WP6 and treat the viewer workflow failure as pre-existing
+
+- **Decision**: Accept WP6. Record the `BonesViewerWorkflowTests` failure as pre-existing (it reproduces on the pre-WP6 clone) and outside the offline gate, not as a WP6 regression. Keep the runtime `CreateRunRequest` throwing for declarative registrations so a wrong fallback fails loudly instead of silently constructing a default request.
+- **Rationale**: VAL-026 and the pre-WP6 control; the runtime never calls `CreateRunRequest` when a definition plan exists (only `LinearWorkflowPlanFactory` does).
+- **Alternatives considered**: keeping the legacy `IWorkflow` registration (rejected: the user's WP6 explicitly retires it); making the declarative registration reuse the default request factory (rejected: it would hide a misuse).
+- **Related**: OBS-042, EVD-130

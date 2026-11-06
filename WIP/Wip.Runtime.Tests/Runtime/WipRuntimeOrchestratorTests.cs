@@ -1697,6 +1697,83 @@ public sealed class WipRuntimeOrchestratorTests
         Assert.Equal(new CapabilityId("tool.workflow.run"), result.Stages[1].ProducerCapabilityId);
     }
 
+    [Fact]
+    public async Task RunWorkflowAsync_GivenWorkflowRegisteredOnlyAsDeclarative_ExpectedSelectsRegistrationAndExecutesDefinitionPlan()
+    {
+        var store = new InMemorySessionStore();
+        var publisher = new CollectingSessionEventPublisher();
+        var orchestrator = new WipRuntimeOrchestrator(store, publisher);
+        var artifactStore = new InMemoryArtifactStore();
+        var services = new ServiceCollection();
+        services.AddSingleton<IArtifactStore>(artifactStore);
+        var builder = new WipBuilder(services);
+
+        var registration = Assert.Single(
+            builder.AddDeclarativeWorkflow<DeclarativeRunThenPlanWorkflow, DeclarativeRunRequest, DeclarativeRunResult>(
+                workflowId: new WorkflowId("workflow.declarative.only"),
+                displayName: "Declarative only workflow")
+            .WorkflowRegistrations);
+
+        builder.AddTool<RecordingDeclarativeRunTool, DeclarativeRunRequest, DeclarativeRunResult>(
+            new CapabilityId("tool.declarative.run"),
+            displayName: "Declarative run tool");
+        builder.AddAgent<RecordingDeclarativeFollowUpAgent, DeclarativeFollowUpRequest, DeclarativeFollowUpResult>(
+            new CapabilityId("agent.declarative.follow-up"),
+            displayName: "Declarative follow-up agent");
+
+        await using var provider = builder.Services.BuildServiceProvider();
+
+        RecordingDeclarativeRunTool.Reset();
+        RecordingDeclarativeFollowUpAgent.Reset();
+
+        var snapshot = await orchestrator.StartSessionAsync(
+            new SessionStartRequest(
+                WorkflowId: new WorkflowId("workflow.declarative.only"),
+                TaskDescription: "declarative-only-task",
+                RepositoryPath: TestRepositoryPaths.RepositoryRoot,
+                WorktreePath: TestRepositoryPaths.Worktree("declarative-only")),
+            CancellationToken.None);
+
+        var result = await orchestrator.RunWorkflowAsync(
+            sessionId: snapshot.SessionId,
+            builder: builder,
+            selectedWorkflowId: new WorkflowId("workflow.declarative.only"),
+            services: provider,
+            cancellationToken: CancellationToken.None,
+            artifactStore: artifactStore);
+
+        Assert.Equal("workflow.declarative.only", result.WorkflowId.Value);
+        Assert.Equal(typeof(DeclarativeRunThenPlanWorkflow), registration.WorkflowType);
+        Assert.Equal(2, result.Stages.Count);
+        Assert.Collection(
+            result.Stages,
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Run, stage.Descriptor.Stage);
+                Assert.Equal(typeof(DeclarativeRunRequest), stage.Descriptor.RequestType);
+                Assert.Equal(new CapabilityId("tool.declarative.run"), stage.ProducerCapabilityId);
+                Assert.Null(stage.MappedInputContractName);
+                Assert.NotNull(stage.ExecutionArtifact);
+            },
+            stage =>
+            {
+                Assert.Equal(WorkflowStageKind.Plan, stage.Descriptor.Stage);
+                Assert.Equal(typeof(DeclarativeFollowUpRequest), stage.Descriptor.RequestType);
+                Assert.Equal(new CapabilityId("agent.declarative.follow-up"), stage.ProducerCapabilityId);
+                Assert.Equal(typeof(DeclarativeFollowUpRequest).FullName, stage.MappedInputContractName);
+                Assert.NotNull(stage.ExecutionArtifact);
+            });
+
+        Assert.DoesNotContain(result.Stages, stage => stage.Descriptor.Stage == WorkflowStageKind.Validate);
+        Assert.Equal(2, artifactStore.ListForSession(snapshot.SessionId).Count);
+        Assert.Equal("declarative-only-task", RecordingDeclarativeRunTool.LastRequest?.Task);
+        Assert.Equal("ran:declarative-only-task", RecordingDeclarativeFollowUpAgent.LastRequest?.Outcome);
+        Assert.Contains(
+            publisher.Events,
+            sessionEvent => sessionEvent.Kind == SessionEventKind.WorkflowExecuted
+                && sessionEvent.SessionId == snapshot.SessionId);
+    }
+
     private sealed class DeclarativeLinearWorkflowDefinition : IWorkflowDefinition
     {
         public WorkflowId WorkflowId => new("workflow.linear");
@@ -1725,6 +1802,64 @@ public sealed class WipRuntimeOrchestratorTests
                     WorkflowStageKind.Merge,
                     (result, context) => new MergeStageRequest(context.SessionId.Value)),
             ]);
+    }
+
+    private sealed class DeclarativeRunThenPlanWorkflow : IWorkflowDefinition
+    {
+        public WorkflowId WorkflowId => new("workflow.declarative.only");
+
+        public WorkflowPlan Compile() => new(
+            [
+                WorkflowStageDescriptor.Create<DeclarativeRunRequest, DeclarativeRunResult>(WorkflowStageKind.Run),
+                WorkflowStageDescriptor.Create<DeclarativeFollowUpRequest, DeclarativeFollowUpResult>(WorkflowStageKind.Plan),
+            ],
+            [
+                new StageMap<DeclarativeRunResult, DeclarativeFollowUpRequest>(
+                    WorkflowStageKind.Run,
+                    WorkflowStageKind.Plan,
+                    (result, context) => new DeclarativeFollowUpRequest(result.Outcome)),
+            ],
+            initialRequest: session => new DeclarativeRunRequest(session.TaskDescription));
+    }
+
+    private sealed record DeclarativeRunRequest(string Task);
+
+    private sealed record DeclarativeRunResult(string Outcome);
+
+    private sealed record DeclarativeFollowUpRequest(string Outcome);
+
+    private sealed record DeclarativeFollowUpResult(bool Planned);
+
+    private sealed class RecordingDeclarativeRunTool : ITool<DeclarativeRunRequest, DeclarativeRunResult>
+    {
+        public static DeclarativeRunRequest? LastRequest { get; private set; }
+
+        public static void Reset() => LastRequest = null;
+
+        public ValueTask<DeclarativeRunResult> ExecuteAsync(
+            DeclarativeRunRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return ValueTask.FromResult(new DeclarativeRunResult($"ran:{request.Task}"));
+        }
+    }
+
+    private sealed class RecordingDeclarativeFollowUpAgent : IAgent<DeclarativeFollowUpRequest, DeclarativeFollowUpResult>
+    {
+        public static DeclarativeFollowUpRequest? LastRequest { get; private set; }
+
+        public static void Reset() => LastRequest = null;
+
+        public ValueTask<DeclarativeFollowUpResult> ExecuteAsync(
+            DeclarativeFollowUpRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return ValueTask.FromResult(new DeclarativeFollowUpResult(true));
+        }
     }
 
     [Fact]

@@ -409,6 +409,61 @@ public sealed class WipBuilderExplicitRegistrationTests
         Assert.Equal(typeof(WorkflowResult), registration.Descriptor.ResultType);
     }
 
+    [Fact]
+    public void AddDeclarativeWorkflow_GivenWorkflowId_ExpectedRegistersDefinitionAndSingleSelectionRegistration()
+    {
+        var services = new ServiceCollection();
+        var builder = new WipBuilder(services);
+
+        var returned = builder.AddDeclarativeWorkflow<DeclarativeOnlyWorkflow, WorkflowRequest, WorkflowResult>(
+            workflowId: new WorkflowId("workflow.declarative"),
+            displayName: "Declarative workflow");
+
+        using var provider = services.BuildServiceProvider();
+        var definition = provider.GetRequiredService<DeclarativeOnlyWorkflow>();
+        var resolvedDefinition = Assert.Single(provider.GetServices<IWorkflowDefinition>());
+        var registration = Assert.Single(builder.WorkflowRegistrations);
+
+        Assert.Same(builder, returned);
+        Assert.Same(definition, resolvedDefinition);
+        Assert.Equal("workflow.declarative", registration.WorkflowId.Value);
+        Assert.Equal(typeof(DeclarativeOnlyWorkflow), registration.WorkflowType);
+        Assert.Equal(typeof(WorkflowRequest), registration.RequestType);
+        Assert.Equal(typeof(WorkflowResult), registration.ResultType);
+        Assert.Equal("Declarative workflow", registration.Descriptor.DisplayName);
+        Assert.Equal(typeof(WorkflowRequest), registration.Descriptor.RequestType);
+        Assert.Equal(typeof(WorkflowResult), registration.Descriptor.ResultType);
+    }
+
+    [Fact]
+    public void AddDeclarativeWorkflow_GivenWorkflowId_ExpectedNoLegacyWorkflowServiceAndRunRequestFactoryThrows()
+    {
+        var services = new ServiceCollection();
+        var builder = new WipBuilder(services);
+
+        builder.AddDeclarativeWorkflow<DeclarativeOnlyWorkflow, WorkflowRequest, WorkflowResult>(
+            workflowId: new WorkflowId("workflow.declarative"),
+            displayName: "Declarative workflow");
+
+        using var provider = services.BuildServiceProvider();
+        var registration = Assert.Single(builder.WorkflowRegistrations);
+
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IWorkflow<WorkflowRequest, WorkflowResult>));
+        Assert.Null(provider.GetService<IWorkflow<WorkflowRequest, WorkflowResult>>());
+        Assert.False(typeof(IWorkflow<WorkflowRequest, WorkflowResult>).IsAssignableFrom(registration.WorkflowType));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            registration.CreateRunRequest(new WorkflowContext(
+                new SessionId("session-declarative"),
+                "declarative task",
+                "/worktree",
+                "/repository")));
+
+        Assert.Contains("workflow.declarative", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("declarative", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("definition plan", exception.Message, StringComparison.Ordinal);
+    }
+
     private sealed record PlanRequest(string Task);
 
     private sealed record PlanResult(string Plan);
@@ -510,6 +565,15 @@ public sealed class WipBuilderExplicitRegistrationTests
 
         public ValueTask<WorkflowResult> ExecuteAsync(WorkflowRequest request, WorkflowContext context, CancellationToken cancellationToken)
             => ValueTask.FromResult(new WorkflowResult(request.Goal));
+    }
+
+    private sealed class DeclarativeOnlyWorkflow : IWorkflowDefinition
+    {
+        public WorkflowId WorkflowId => new("workflow.declarative");
+
+        public WorkflowPlan Compile() => new(
+            [WorkflowStageDescriptor.Create<WorkflowRequest, WorkflowResult>(WorkflowStageKind.Run)],
+            initialRequest: session => new WorkflowRequest(session.TaskDescription));
     }
 
     private sealed record PromptPayload(string Prompt);
