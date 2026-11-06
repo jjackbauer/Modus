@@ -6,6 +6,7 @@ using Wip.Abstractions.Chat;
 using Wip.Abstractions.Descriptors;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Permissions;
+using Wip.Abstractions.Privacy;
 using Wip.Abstractions.Tools;
 using Wip.Runtime.Runtime;
 using Xunit;
@@ -110,6 +111,49 @@ public sealed class RuntimeToolInvokerTests
         Assert.True(result.Content.Length < 60);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task InvokeAsync_GivenSecretInArgumentsAndResultWithRecordArtifacts_ExpectedRedactedArtifactAndRawObservation(
+        bool registerRedactor)
+    {
+        // Arrange — the invocation records artifacts into a real IArtifactStore implementation.
+        var artifactStore = new CapturingArtifactStore();
+        var (invoker, provider) = CreateInvoker(
+            new ToolInvocationOptions { RecordArtifacts = true },
+            artifactStore,
+            registerRedactor ? new SecretRedactor() : null);
+        await using var _ = provider;
+
+        const string secret = "Authorization: Bearer sk-live-tool-secret";
+        var result = await invoker.InvokeAsync(
+            new ToolCall("call-secret-1", "tool.secret", JsonSerializer.SerializeToElement(new { text = secret })),
+            CreateContext(),
+            CancellationToken.None);
+
+        // Assert — the model-visible observation stays raw: redaction is for persistence only.
+        Assert.False(result.IsError);
+        Assert.Contains(secret, result.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain(SecretRedactor.Replacement, result.Content, StringComparison.Ordinal);
+
+        // Assert — the recorded tool-call artifact redacts both arguments and result.
+        var artifact = Assert.Single(artifactStore.Saved);
+        Assert.Contains(SecretRedactor.Replacement, artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("sk-live-tool-secret", artifact.Content, StringComparison.Ordinal);
+
+        using var payload = JsonDocument.Parse(artifact.Content);
+        var recordedArguments = payload.RootElement.GetProperty("arguments").GetString();
+        var recordedResult = payload.RootElement.GetProperty("result").GetString();
+        Assert.NotNull(recordedArguments);
+        Assert.NotNull(recordedResult);
+        Assert.Contains(SecretRedactor.Replacement, recordedArguments!, StringComparison.Ordinal);
+        Assert.Contains(SecretRedactor.Replacement, recordedResult!, StringComparison.Ordinal);
+        Assert.DoesNotContain("sk-live-tool-secret", recordedArguments!, StringComparison.Ordinal);
+        Assert.DoesNotContain("sk-live-tool-secret", recordedResult!, StringComparison.Ordinal);
+        Assert.StartsWith("tool-call-", artifact.ArtifactId.Value, StringComparison.Ordinal);
+        Assert.Equal("RuntimeToolInvoker", artifact.ProducerType);
+    }
+
     [Fact]
     public async Task InvokeAsync_GivenCallerCancellation_ExpectedOperationCanceled()
     {
@@ -146,13 +190,25 @@ public sealed class RuntimeToolInvokerTests
         => new(new SessionId("session-tool-invoker"), WorktreePath: Path.GetTempPath());
 
     private static (RuntimeToolInvoker Invoker, ServiceProvider Provider) CreateInvoker(
-        ToolInvocationOptions? options = null)
+        ToolInvocationOptions? options = null,
+        IArtifactStore? artifactStore = null,
+        ISecretRedactor? secretRedactor = null)
     {
         var services = new ServiceCollection();
         services.AddSingleton<EchoTool>();
         services.AddSingleton<SlowTool>();
         services.AddSingleton<ThrowingTool>();
         services.AddSingleton<LongTool>();
+        services.AddSingleton<SecretEchoTool>();
+        if (artifactStore is not null)
+        {
+            services.AddSingleton<IArtifactStore>(artifactStore);
+        }
+
+        if (secretRedactor is not null)
+        {
+            services.AddSingleton<ISecretRedactor>(secretRedactor);
+        }
 
         var descriptors = new ICapabilityDescriptor[]
         {
@@ -176,6 +232,11 @@ public sealed class RuntimeToolInvokerTests
                 "Long",
                 CapabilityKind.Tool,
                 typeof(LongTool)),
+            new CapabilityDescriptor<SecretEchoRequest, SecretEchoResult>(
+                new CapabilityId("tool.secret"),
+                "Secret echo",
+                CapabilityKind.Tool,
+                typeof(SecretEchoTool)),
             new CapabilityDescriptor<EchoRequest, EchoResult>(
                 new CapabilityId("tool.plugin"),
                 "Plugin echo",
@@ -205,6 +266,10 @@ public sealed class RuntimeToolInvokerTests
 
     public sealed record LongResult(string Text);
 
+    public sealed record SecretEchoRequest(string Text);
+
+    public sealed record SecretEchoResult(string Output);
+
     private sealed class EchoTool : ITool<EchoRequest, EchoResult>
     {
         public ValueTask<EchoResult> ExecuteAsync(EchoRequest request, CapabilityContext context, CancellationToken cancellationToken)
@@ -230,5 +295,37 @@ public sealed class RuntimeToolInvokerTests
     {
         public ValueTask<LongResult> ExecuteAsync(LongRequest request, CapabilityContext context, CancellationToken cancellationToken)
             => ValueTask.FromResult(new LongResult(new string('x', request.Characters)));
+    }
+
+    private sealed class SecretEchoTool : ITool<SecretEchoRequest, SecretEchoResult>
+    {
+        public ValueTask<SecretEchoResult> ExecuteAsync(SecretEchoRequest request, CapabilityContext context, CancellationToken cancellationToken)
+            => ValueTask.FromResult(new SecretEchoResult($"echo:{request.Text}"));
+    }
+
+    private sealed class CapturingArtifactStore : IArtifactStore
+    {
+        public List<ArtifactContent> Saved { get; } = [];
+
+        public ValueTask<ArtifactDescriptor> SaveAsync(
+            SessionId sessionId,
+            ArtifactContent artifact,
+            CancellationToken cancellationToken)
+        {
+            Saved.Add(artifact);
+            return ValueTask.FromResult(new ArtifactDescriptor(
+                artifact.ArtifactId,
+                sessionId,
+                artifact.Kind,
+                $".wip/sessions/{sessionId.Value}/artifacts/{artifact.FileName}",
+                artifact.ProducerType,
+                artifact.ProducerVersion,
+                artifact.ProducedAtUtc));
+        }
+
+        public ValueTask<IReadOnlyList<ArtifactDescriptor>> ListAsync(
+            SessionId sessionId,
+            CancellationToken cancellationToken)
+            => ValueTask.FromResult<IReadOnlyList<ArtifactDescriptor>>(Array.Empty<ArtifactDescriptor>());
     }
 }

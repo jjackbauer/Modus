@@ -785,7 +785,7 @@
 - **Task**: CapabilityContext/grants on tool calls; denial + Audit-mode tests; injection/hidden-data/unbounded-loop fail-closed; redaction; commit.
 - **Priority**: P0
 - **Depends on**: TODO-004
-- **Status**: Open
+- **Status**: Done
 
 ### TODO-006: WP6 — retire the legacy workflow shim and run full suites
 
@@ -1005,3 +1005,37 @@
 - **Depends on**: concurrent session's waiver edit resolution; WP6 final counts
 - **Status**: Open
 - **Related**: DEC-022, EVD-116, EVD-117
+
+### OBS-041: WP5 proves the runtime permission/safety posture and closes the tool-artifact redaction gap
+
+- **Source**: `WIP/Wip.Bones.Tests/Runtime/BonesAgentRuntimeSafetyTests.cs`; `WIP/Wip.Runtime/Runtime/RuntimeToolInvoker.cs:203-217`; `WIP/Wip.Runtime.Tests/Runtime/RuntimeToolInvokerTests.cs`; `.tmp/wp5-trx/*`; `.tmp/wp5-trx2/*`; `docs/execution/harness/round-5/`
+- **Fact**: Nine safety tests prove: a plugin-origin compile tool without a grant returns the exact `permission-denied:` error before the tool body runs; repeated denials stop at `ToolFailureLimitReached`; Audit mode allows the call and records an `Allowed=true, Audited=true` decision; the tool receives the agent's `CapabilityContext` (session + worktree); session A's memory never enters session B's prompt/artifacts; prompt-injection text cannot register or execute a non-advertised tool; Ponder and Enhance stop at `MaxStepsReached`; and memory redaction keeps `[REDACTED]` with no raw secret in prompts/artifacts. The implementer's own residual-gap review found tool-call artifacts persisted raw arguments/results; `RuntimeToolInvoker` now redacts both through `ISecretRedactor` (DI or default) while the model-visible observation stays raw; a new red→green `[Theory]` covers it. Counts: safety 9/9, invoker 10/10, full Bones 455/454/1 (one waived meta-test), full Runtime 152/146/6 (the documented set).
+- **Implications**: D5 is met. The remaining design boundary is that the host's compile tool is a first-party built-in capability (trusted by design); plugin-origin tools are the denied/audited surface.
+- **Confidence**: High
+- **Agent**: orchestrator (reproducing the WP5 implementer)
+- **Related**: EVD-121..EVD-125, VAL-025, DEC-023, RISK-009
+
+### VAL-025: WP5 delivery validated — denial, Audit, context, isolation, loops and redaction
+
+- **Target**: The WP5 safety claims and the tool-artifact redaction fix
+- **Method**: read the safety tests and the invoker diff; ran the 9-test safety filter in the isolated clone; ran the invoker class (including the new theory) in the clone; ran the full Bones and Runtime suites in the main tree; parsed the TRX counters and failure names; checked the fix's red→green evidence in the implementer's artifact.
+- **Evidence examined**: `.tmp/wp5-trx/wp5-focused.trx` (9/9); `.tmp/wp5-trx/wp5-invoker.trx` (10/10); `.tmp/wp5-trx2/bones.trx` (455/454/1, waived); `.tmp/wp5-trx2/runtime2.trx` (152/146/6, documented); the invoker diff.
+- **Result**: Supported
+- **Conclusion**: Every requested safety property is exercised with concrete assertions, the denied path is deterministic and precedes execution, and the artifact-redaction gap is fixed and covered. No unwaived regression.
+- **Related**: OBS-041, EVD-122..EVD-125
+
+### DEC-023: Accept WP5; the built-in compile tool is a design boundary, not a bypass
+
+- **Decision**: Accept WP5. The production host keeps the compile capability built-in (trusted); the deny/audit behaviour is proven with a plugin-origin descriptor, which is the registration shape a third-party model tool would use. Record the per-executor step budget and the in-memory audit sink as documented limits.
+- **Rationale**: OBS-041/VAL-025; `PermissionGuard` is the single evaluation point and runs before every tool body, so the mechanism is real even though first-party capabilities are trusted by policy.
+- **Alternatives considered**: declaring a permission on the built-in compile tool (rejected: built-ins are trusted by the evaluator, so it would be a no-op and misleading); disabling artifact recording for Bones (rejected: the redaction fix preserves observability and protects the shell path too).
+- **Related**: OBS-041, RISK-009
+
+### RISK-009: First-party tools bypass grants by design
+
+- **Risk**: A built-in capability (including the Bones compile tool) is always allowed by `PermissionEvaluator`; only plugin-origin capabilities require grants. A future model-facing first-party tool that accesses sensitive data would not be gated unless registered as a plugin or the evaluator policy changes.
+- **Likelihood**: Low today (the only model tool is the deterministic compile capability)
+- **Impact**: Medium if a sensitive first-party tool is added
+- **Evidence**: OBS-041; `PermissionEvaluator.Evaluate` returns `built-in capability` for built-ins
+- **Mitigation**: keep the model-facing tool set minimal and deterministic; register any sensitive tool with a plugin origin + required permission; add a review rule when expanding `BonesAgentToolDescriptors`.
+- **Gate**: —

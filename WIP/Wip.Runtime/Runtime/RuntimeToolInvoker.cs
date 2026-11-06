@@ -6,6 +6,7 @@ using Wip.Abstractions.Chat;
 using Wip.Abstractions.Descriptors;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Permissions;
+using Wip.Abstractions.Privacy;
 using Wip.Abstractions.Tools;
 
 namespace Wip.Runtime.Runtime;
@@ -14,6 +15,7 @@ namespace Wip.Runtime.Runtime;
 /// Default <see cref="IToolInvoker"/> over capability tool descriptors (WP-3.2). Tool calls arrive as
 /// a name plus JSON arguments; the invoker deserializes, enforces permissions, applies a per-tool
 /// timeout, truncates observations and turns expected failures into deterministic ToolResults.
+/// Recorded tool-call artifacts are redacted (WP5); the returned observation is not.
 /// </summary>
 public sealed class RuntimeToolInvoker : IToolInvoker
 {
@@ -201,13 +203,16 @@ public sealed class RuntimeToolInvoker : IToolInvoker
 
         try
         {
+            var redactor = _serviceProvider.GetService(typeof(ISecretRedactor)) as ISecretRedactor
+                ?? SecretRedactor.Default;
+
             var payload = JsonSerializer.Serialize(
                 new
                 {
                     call.Id,
                     call.Name,
-                    Arguments = call.Arguments.GetRawText(),
-                    Result = content,
+                    Arguments = redactor.Redact(call.Arguments.GetRawText()).Value,
+                    Result = redactor.Redact(content).Value,
                 },
                 JsonOptions);
 
