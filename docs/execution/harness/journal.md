@@ -1123,3 +1123,12 @@
 - **Evidence**: OBS-044, `live3.log`
 - **Mitigation**: document the trade-off; if cost matters, narrow the compile-tool description/usage policy or make tool advertisement configurable per stage; re-measure with the production learning loop before scaling.
 - **Gate**: —
+
+### OBS-045: The live-fix CI gate hit the pre-existing viewer flake, not the fix
+
+- **Source**: GitHub Actions API: Tests CI run `42395854809` on `39258c0` (5/6 jobs success), check-run `128472941483` annotations; Modus CI run `42395854834` success
+- **Fact**: The only unwaived failure in the offline gate is `Wip.Bones.Host.Tests.BonesHostViewerLearningLoopStatusTests.BonesHostViewerLearningLoopStatus_GivenRunningLoop_ExpectedSidebarStageTracksStatusApi`, the same pre-existing Playwright/timing flake observed at `ba5debf`. The adapter unit tests, the new collision test, the full Runtime count (155) and the Bones suite passed the gate; Modus CI was green.
+- **Implications**: The live fix is not implicated. A CI retry is required to obtain a green final HEAD; the flake predates this work and is outside the migration diff.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-138, RISK-004

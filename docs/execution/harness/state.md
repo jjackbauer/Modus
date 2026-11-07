@@ -3,8 +3,10 @@
 - **Round**: 8 of 12 — live-model comparison and the production defect it exposed.
 - **Goal**: unchanged (agents on `IChatModel` → `IAgentExecutor` → `RuntimeToolInvoker` → `IAgentMemory`).
 - **Definition of done**: D1–D8 were met at `f1a26bb`; the requested **live** comparison then found a
-  real production defect in the new path. The fix is staged; D8 will be re-confirmed at the new HEAD.
-- **Stop criteria**: D1–D7 remain met; D8 is pending the CI run for the live-fix commit.
+  real production defect in the new path. The fix is committed as `39258c0`; its first CI run had
+  5/6 jobs green with only the pre-existing viewer-stage flake in the offline gate, so the records
+  commit triggers a retry (EVD-138). D8 will be re-confirmed on the retried run.
+- **Stop criteria**: D1–D7 remain met; D8 is pending a green run that does not hit the viewer flake.
 
 ## Live model comparison (2026-11-07)
 
@@ -35,7 +37,7 @@ the compile tool before answering — recorded as RISK-010.
 | G2 Falsification | PASS | the live comparison falsified the “offline-green means production-ready” assumption; the defect is fixed and re-tested live |
 | G3 Coverage | PASS | D1–D7 met; D8 pending the new CI run |
 | G4 Reproduction | PASS | pre-fix 400 and post-fix success reproduced; offline suites Runtime 155/149/6, Bones 455/454/1 |
-| G5 Honesty | PASS | the cost trade-off and the one-time credential use are disclosed; no release claim |
+| G5 Honesty | PASS | the cost trade-off and the one-time credential use are disclosed; the CI flake is recorded as pre-existing, not claimed as the fix's result |
 
 ## Objective ledger (new rows)
 
