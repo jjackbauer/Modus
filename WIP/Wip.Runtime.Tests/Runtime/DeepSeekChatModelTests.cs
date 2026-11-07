@@ -89,7 +89,9 @@ public sealed class DeepSeekChatModelTests
 
         var tool = root.GetProperty("tools")[0];
         Assert.Equal("function", tool.GetProperty("type").GetString());
-        Assert.Equal("tool.repo.read_file", tool.GetProperty("function").GetProperty("name").GetString());
+        // DeepSeek only accepts ^[a-zA-Z0-9_-]+$ function names; the dotted WIP id is sanitized on
+        // the wire and restored on tool-call responses.
+        Assert.Equal("tool_repo_read_file", tool.GetProperty("function").GetProperty("name").GetString());
         Assert.Equal("object", tool.GetProperty("function").GetProperty("parameters").GetProperty("type").GetString());
 
         Assert.Equal("Done.", response.Message.Content);
@@ -126,7 +128,7 @@ public sealed class DeepSeekChatModelTests
                                 "id": "call-1",
                                 "type": "function",
                                 "function": {
-                                  "name": "tool.repo.write_file",
+                                  "name": "tool_repo_write_file",
                                   "arguments": "{\"path\":\"docs/note.md\",\"content\":\"hello\"}"
                                 }
                               }
@@ -151,6 +153,13 @@ public sealed class DeepSeekChatModelTests
                     ChatMessage.User("Update the note."),
                     ChatMessage.Assistant("Reading first.", [priorCall]),
                     ChatMessage.Tool("call-0", "README contents"),
+                ],
+                tools:
+                [
+                    new ToolDefinition(
+                        "tool.repo.write_file",
+                        "Writes a file inside the worktree.",
+                        JsonSerializer.SerializeToElement(new { type = "object" })),
                 ]),
             new CapabilityContext(new SessionId("session-chat-tools"), TestRepositoryPaths.Worktree("chat-tools")),
             CancellationToken.None);
@@ -161,7 +170,7 @@ public sealed class DeepSeekChatModelTests
         Assert.Equal("assistant", assistant.GetProperty("role").GetString());
         Assert.Equal("call-0", assistant.GetProperty("tool_calls")[0].GetProperty("id").GetString());
         Assert.Equal(
-            "tool.repo.read_file",
+            "tool_repo_read_file",
             assistant.GetProperty("tool_calls")[0].GetProperty("function").GetProperty("name").GetString());
         Assert.Equal(
             "call-0",
@@ -285,7 +294,7 @@ public sealed class DeepSeekChatModelTests
         var model = CreateModel(
             handler: (_, _) => Task.FromResult(SseResponse(
                 """
-                data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call-1","type":"function","function":{"name":"tool.repo.write_file","arguments":"{\"path\":\"docs/note.md\","}}]}}]}
+                data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call-1","type":"function","function":{"name":"tool_repo_write_file","arguments":"{\"path\":\"docs/note.md\","}}]}}]}
                 """,
                 """
                 data: {"choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"content\":\"hello\"}"}}]}}]}
@@ -293,7 +302,16 @@ public sealed class DeepSeekChatModelTests
                 "data: [DONE]")));
 
         var chunks = await CollectAsync(model.StreamAsync(
-            new ChatRequest("deepseek-chat", [ChatMessage.User("Write the note.")]),
+            new ChatRequest(
+                "deepseek-chat",
+                [ChatMessage.User("Write the note.")],
+                tools:
+                [
+                    new ToolDefinition(
+                        "tool.repo.write_file",
+                        "Writes a file inside the worktree.",
+                        JsonSerializer.SerializeToElement(new { type = "object" })),
+                ]),
             new CapabilityContext(new SessionId("session-chat-stream-tools"), TestRepositoryPaths.Worktree("chat-stream-tools")),
             CancellationToken.None));
 
@@ -304,6 +322,60 @@ public sealed class DeepSeekChatModelTests
         Assert.Equal("docs/note.md", toolCall.Arguments.GetProperty("path").GetString());
         Assert.Equal("hello", toolCall.Arguments.GetProperty("content").GetString());
         Assert.Single(chunks.Where(static chunk => chunk.IsFinal));
+    }
+
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
+    public async Task CompleteAsync_GivenCollidingSanitizedToolNames_ExpectedDeterministicDistinctWireNamesAndRestoredCalls()
+    {
+        string? capturedBody = null;
+        var model = CreateModel(
+            handler: async (request, cancellationToken) =>
+            {
+                capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
+                return JsonResponse(
+                    """
+                    {
+                      "model": "deepseek-chat",
+                      "choices": [
+                        {
+                          "index": 0,
+                          "message": {
+                            "role": "assistant",
+                            "content": null,
+                            "tool_calls": [
+                              { "id": "call-1", "type": "function", "function": { "name": "a_b_2", "arguments": "{}" } }
+                            ]
+                          },
+                          "finish_reason": "tool_calls"
+                        }
+                      ]
+                    }
+                    """);
+            });
+
+        var response = await model.CompleteAsync(
+            new ChatRequest(
+                "deepseek-chat",
+                [ChatMessage.User("Use a tool.")],
+                tools:
+                [
+                    new ToolDefinition("a.b", "Dotted name.", JsonSerializer.SerializeToElement(new { type = "object" })),
+                    new ToolDefinition("a_b", "Underscored name.", JsonSerializer.SerializeToElement(new { type = "object" })),
+                ]),
+            new CapabilityContext(new SessionId("session-chat-tool-collision"), TestRepositoryPaths.Worktree("chat-tool-collision")),
+            CancellationToken.None);
+
+        using var document = JsonDocument.Parse(capturedBody!);
+        var wireNames = document.RootElement.GetProperty("tools")
+            .EnumerateArray()
+            .Select(static tool => tool.GetProperty("function").GetProperty("name").GetString())
+            .ToArray();
+        Assert.Equal(["a_b", "a_b_2"], wireNames);
+
+        var toolCall = Assert.Single(response.Message.ToolCalls);
+        Assert.Equal("a_b", toolCall.Name);
+        Assert.Equal("call-1", toolCall.Id);
     }
 
     [Fact]

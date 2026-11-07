@@ -1,44 +1,50 @@
-# Harness State — Bones agents on the generic WIP agent runtime (final)
+# Harness State — Bones agents on the generic WIP agent runtime
 
-- **Round**: 7 of 12 — complete. The goal is closed; no release claim was made.
-- **Goal**: The four Bones domain agents run on `IChatModel` → `IAgentExecutor` → `RuntimeToolInvoker` → `IAgentMemory`, with the private DeepSeek stack test-only, parity and fail-closed controls proven, the legacy workflow shim removed, and both CI workflows green.
-- **Definition of done**: **8/8 met** (D1–D8).
-- **Stop criteria**: **met** at code+docs HEAD `724d3a6` (then the final records commit, docs-only).
+- **Round**: 8 of 12 — live-model comparison and the production defect it exposed.
+- **Goal**: unchanged (agents on `IChatModel` → `IAgentExecutor` → `RuntimeToolInvoker` → `IAgentMemory`).
+- **Definition of done**: D1–D8 were met at `f1a26bb`; the requested **live** comparison then found a
+  real production defect in the new path. The fix is staged; D8 will be re-confirmed at the new HEAD.
+- **Stop criteria**: D1–D7 remain met; D8 is pending the CI run for the live-fix commit.
 
-## Final verification
+## Live model comparison (2026-11-07)
 
-| Item | Result |
-|---|---|
-| D1 adapter | `dad2a72` — 14/14 focused; control fails 6/14; CI green (`42233605796`) |
-| D2 Ponder | `3e0087a` — 13/13 focused; parity + both controls; full Bones 423/420/3 waived; CI green (`42242055107`) |
-| D3 Enhance | `409b6f9` — 10/10 focused; parity + both controls; full Bones 433/430/3 waived; CI green (`42249467590`) |
-| D4 provider retirement | `d7d9723` — production grep clean; architecture rule + real-edge control; host composition 1/1; CI green (`42267670768`) |
-| D5 safety | `7158280` — 9/9 safety; tool-artifact redaction red→green (10/10); full Bones 455/454/1 waived / Runtime 152/146/6 documented; CI green (`42277560560`) |
-| D6 legacy shim removal | `724d3a6` — legacy grep 0 hits; declarative-only runtime/builder tests; Shell 34/34, Builder 34/34, Bones 455/454/1 waived, Runtime 153/147/6 documented, architecture 4/4 |
-| D7 suites | Full Bones/Runtime/Shell/Builder + architecture reproduced; real counts recorded (Bones 455, Runtime 153, Shell 34, Builder 34, provider 48, host composition 1/1); waiver floors intentionally left at 396/146 (regression floors; the concurrent Tholdem hunk remains uncommitted) |
-| D8 CI | **Tests CI `42289775138` — all six jobs success; Modus CI `42289774965` — success at `724d3a6`** |
+| | Old provider path | New runtime path (pre-fix) | New runtime path (post-fix) |
+|---|---|---|---|
+| Live result | OK both rounds | **HTTP 400 both rounds** | OK both rounds |
+| API error | — | `Invalid 'tools[0].function.name': … '^[a-zA-Z0-9_-]+$'` | — |
+| First-call prompt | — | byte-identical to old | byte-identical to old |
+| Calls / tokens / time | 1 / ~1.8k / 5–20 s | — | 2–3 / 11.7k–13.5k / 63–68 s |
+| Generated script | compiles | — | compiles |
 
-Real counts vs declared floors: the offline gate enforced the declared floors (`Wip.Bones.Tests` 396,
-`Wip.Runtime.Tests` 146, `Wip.Shell.Tests` 34) and passed at the higher real counts (455 / 153 / 34);
-the counts are recorded in EVD-128/EVD-131. No waiver was added, removed or relaxed; the three
-Bones meta-tests and the documented platform failures are the pre-existing waived set.
+Root cause: WIP capability ids are dotted (`tool.bones.strategy-compile`, `tool.repo.*`) but DeepSeek
+function names allow only `[A-Za-z0-9_-]`. The fix lives in `DeepSeekChatModel`: sanitize outgoing
+names deterministically and restore the canonical dotted name on incoming tool calls; the model-visible
+observation is unchanged. This also repairs the shell's live `tool.repo.*` path.
 
-## Residual risks (recorded, non-blocking)
+Full report: `docs/execution/harness/round-7/live-comparison.md` (EVD-133..137). The credential was
+read from the machine credential store for the run only and appears nowhere in the repo or logs.
 
-- **RISK-008**: the DeepSeek `thinking` parameter is not part of the generic `IChatModel` contract, so
-  a non-default `Thinking` setting is parsed/diagnosed but not applied (default `disabled` unchanged).
-- **RISK-009**: first-party tools (the Bones compile capability) are trusted by the permission model;
-  the deny/audit mechanism is proven with a plugin-origin descriptor, which is the shape a third-party
-  tool would use.
-- The `BonesViewerWorkflowTests` failure is pre-existing (reproduced on the pre-WP6 clone) and outside
-  the 16-project offline gate; the viewer-stage flake remains a pre-existing CI risk.
-- The concurrent Tholdem session still has uncommitted changes in the shared tree; they were excluded
-  from every commit in this run.
+Residual: the new path uses ~6–7× the tokens and ~3–12× the wall time because the live model calls
+the compile tool before answering — recorded as RISK-010.
 
-## Final HEADs and records
+## Gate status
 
-- Code+docs: `724d3a623fab91aae09095f31f8401fe9c97ec7b` — both workflows green.
-- Work packages: `dad2a72` → `3e0087a` → `409b6f9` → `d7d9723` → `7158280` → `724d3a6`.
-- Evidence: `goal.md`, `journal.md` (OBS-030..043, VAL-018..027, DEC-018..025, TODO-001..008,
-  RISK-003..009), `evidence.md` (EVD-086..131), `deliverables.md` (ART-012..018), `round-1/`..`round-6/`.
-- **No release claim; no publish, sign or deploy was performed.**
+| Gate | Status | Detail |
+|---|---|---|
+| G1 Evidence | PASS | live comparison + fix evidence (EVD-133..137) |
+| G2 Falsification | PASS | the live comparison falsified the “offline-green means production-ready” assumption; the defect is fixed and re-tested live |
+| G3 Coverage | PASS | D1–D7 met; D8 pending the new CI run |
+| G4 Reproduction | PASS | pre-fix 400 and post-fix success reproduced; offline suites Runtime 155/149/6, Bones 455/454/1 |
+| G5 Honesty | PASS | the cost trade-off and the one-time credential use are disclosed; no release claim |
+
+## Objective ledger (new rows)
+
+| Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
+|---|---|---|---|---|---|---|---|
+| 7 | Final CI + records | Orchestrator | 0 | 2 | — | PASS | green at `f1a26bb` |
+| 8 | Live model comparison (old vs new) | Orchestrator + live API | 0 | 5 | 1 production defect (HTTP 400) | G2 PASS | fixed in the adapter; live re-run green; new commit/CI pending |
+
+## Next objective
+
+Commit the adapter fix + live tests + report, push, and verify Tests CI (six jobs) and Modus CI at the
+new HEAD. Then update the final records. No release claim.

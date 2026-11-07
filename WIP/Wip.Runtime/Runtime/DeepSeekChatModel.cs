@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -89,6 +90,8 @@ public sealed class DeepSeekChatModel : IChatModel
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(context);
 
+        var toolNames = ToolNameMap.Create(request);
+
         using var timeoutSource = CreateTimeoutSource(cancellationToken);
         using var response = await SendWithRetryAsync(
             request,
@@ -172,7 +175,7 @@ public sealed class DeepSeekChatModel : IChatModel
 
         foreach (var accumulator in toolCalls.Values)
         {
-            if (accumulator.TryBuild() is { } toolCall)
+            if (accumulator.TryBuild(toolNames) is { } toolCall)
             {
                 yield return new StreamingChunk(string.Empty, toolCall: toolCall);
             }
@@ -237,15 +240,20 @@ public sealed class DeepSeekChatModel : IChatModel
 
     private HttpRequestMessage BuildHttpRequest(ChatRequest request, bool stream)
     {
+        // DeepSeek requires function names to match ^[a-zA-Z0-9_-]+$; the WIP capability ids use
+        // dots (tool.repo.read_file). Sanitize on the wire and restore tool-call names on the
+        // response so the agent layer keeps its canonical ids.
+        var toolNames = ToolNameMap.Create(request);
+
         var payload = new DeepSeekChatHttpRequest(
             Model: request.ModelId,
-            Messages: request.Messages.Select(MapMessage).ToArray(),
+            Messages: request.Messages.Select(message => MapMessage(message, toolNames)).ToArray(),
             Tools: request.Tools.Count == 0
                 ? null
-                : request.Tools.Select(static tool => new DeepSeekToolPayload(
+                : request.Tools.Select(tool => new DeepSeekToolPayload(
                     Type: "function",
                     Function: new DeepSeekFunctionDefinition(
-                        Name: tool.Name,
+                        Name: toolNames.ToProvider(tool.Name),
                         Description: tool.Description,
                         Parameters: tool.ParametersSchema))).ToArray(),
             MaxTokens: request.MaxTokens,
@@ -292,7 +300,7 @@ public sealed class DeepSeekChatModel : IChatModel
         return value;
     }
 
-    private static DeepSeekMessagePayload MapMessage(ChatMessage message)
+    private static DeepSeekMessagePayload MapMessage(ChatMessage message, ToolNameMap toolNames)
     {
         var role = message.Role switch
         {
@@ -305,11 +313,11 @@ public sealed class DeepSeekChatModel : IChatModel
 
         var toolCalls = message.ToolCalls.Count == 0
             ? null
-            : message.ToolCalls.Select(static call => new DeepSeekToolCallPayload(
+            : message.ToolCalls.Select(call => new DeepSeekToolCallPayload(
                 Id: call.Id,
                 Type: "function",
                 Function: new DeepSeekFunctionCallPayload(
-                    Name: call.Name,
+                    Name: toolNames.ToProvider(call.Name),
                     Arguments: call.Arguments.GetRawText()))).ToArray();
 
         return new DeepSeekMessagePayload(
@@ -321,6 +329,7 @@ public sealed class DeepSeekChatModel : IChatModel
 
     private static ChatResponse MapCompleteResponse(ChatRequest request, JsonElement root)
     {
+        var toolNames = ToolNameMap.Create(request);
         var modelId = root.TryGetProperty("model", out var modelElement)
             && modelElement.ValueKind == JsonValueKind.String
             ? modelElement.GetString() ?? request.ModelId
@@ -347,7 +356,7 @@ public sealed class DeepSeekChatModel : IChatModel
 
         var toolCalls = messageElement.TryGetProperty("tool_calls", out var toolCallsElement)
             && toolCallsElement.ValueKind == JsonValueKind.Array
-            ? toolCallsElement.EnumerateArray().Select(MapToolCall).ToArray()
+            ? toolCallsElement.EnumerateArray().Select(element => MapToolCall(element, toolNames)).ToArray()
             : Array.Empty<ToolCall>();
 
         var usage = root.TryGetProperty("usage", out var usageElement)
@@ -363,7 +372,7 @@ public sealed class DeepSeekChatModel : IChatModel
             correlationId: request.CorrelationId);
     }
 
-    private static ToolCall MapToolCall(JsonElement element)
+    private static ToolCall MapToolCall(JsonElement element, ToolNameMap toolNames)
     {
         if (!element.TryGetProperty("id", out var idElement)
             || idElement.ValueKind != JsonValueKind.String
@@ -387,7 +396,7 @@ public sealed class DeepSeekChatModel : IChatModel
 
         return new ToolCall(
             idElement.GetString()!,
-            nameElement.GetString()!,
+            toolNames.FromProvider(nameElement.GetString()!),
             ParseToolArguments(argumentsJson));
     }
 
@@ -517,14 +526,108 @@ public sealed class DeepSeekChatModel : IChatModel
             }
         }
 
-        public ToolCall? TryBuild()
+        public ToolCall? TryBuild(ToolNameMap toolNames)
         {
             if (_id is null || _name is null)
             {
                 return null;
             }
 
-            return new ToolCall(_id, _name, ParseToolArguments(_arguments.ToString()));
+            return new ToolCall(_id, toolNames.FromProvider(_name), ParseToolArguments(_arguments.ToString()));
+        }
+    }
+
+    /// <summary>
+    /// Maps WIP tool ids (for example <c>tool.repo.read_file</c>) onto the provider's function-name
+    /// grammar <c>^[a-zA-Z0-9_-]+$</c> and back. The mapping is deterministic for a request: names
+    /// are sorted, sanitized and disambiguated with a numeric suffix on collision, so the same
+    /// domain name always reaches the wire under the same provider name.
+    /// </summary>
+    private sealed class ToolNameMap
+    {
+        private const int MaxProviderNameLength = 64;
+
+        private readonly Dictionary<string, string> _toProvider;
+        private readonly Dictionary<string, string> _fromProvider;
+
+        private ToolNameMap(
+            Dictionary<string, string> toProvider,
+            Dictionary<string, string> fromProvider)
+        {
+            _toProvider = toProvider;
+            _fromProvider = fromProvider;
+        }
+
+        public static ToolNameMap Create(ChatRequest request)
+        {
+            var originals = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var tool in request.Tools)
+            {
+                originals.Add(tool.Name);
+            }
+
+            foreach (var message in request.Messages)
+            {
+                foreach (var call in message.ToolCalls)
+                {
+                    originals.Add(call.Name);
+                }
+            }
+
+            var toProvider = new Dictionary<string, string>(StringComparer.Ordinal);
+            var fromProvider = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var original in originals)
+            {
+                var sanitized = Sanitize(original);
+                var candidate = sanitized;
+                var suffix = 1;
+                while (fromProvider.ContainsKey(candidate))
+                {
+                    suffix++;
+                    candidate = AppendSuffix(sanitized, suffix);
+                }
+
+                toProvider[original] = candidate;
+                fromProvider[candidate] = original;
+            }
+
+            return new ToolNameMap(toProvider, fromProvider);
+        }
+
+        public string ToProvider(string name)
+            => _toProvider.TryGetValue(name, out var mapped) ? mapped : name;
+
+        public string FromProvider(string name)
+            => _fromProvider.TryGetValue(name, out var mapped) ? mapped : name;
+
+        private static string Sanitize(string name)
+        {
+            var builder = new StringBuilder(name.Length);
+            foreach (var character in name)
+            {
+                builder.Append(char.IsAsciiLetterOrDigit(character) || character is '_' or '-'
+                    ? character
+                    : '_');
+            }
+
+            var sanitized = builder.ToString();
+            if (sanitized.Length == 0)
+            {
+                sanitized = "tool";
+            }
+
+            return sanitized.Length <= MaxProviderNameLength
+                ? sanitized
+                : sanitized[..MaxProviderNameLength];
+        }
+
+        private static string AppendSuffix(string name, int suffix)
+        {
+            var suffixText = "_" + suffix.ToString(CultureInfo.InvariantCulture);
+            var maxLength = MaxProviderNameLength - suffixText.Length;
+            var trimmed = name.Length <= maxLength ? name : name[..maxLength];
+            return trimmed + suffixText;
         }
     }
 

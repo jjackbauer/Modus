@@ -1089,3 +1089,37 @@
 - **Rationale**: OBS-043/VAL-027; raising the floors would require committing the concurrent hunk (which would demand a Tholdem TRX that does not exist in this tree) and is not needed for a green gate; recording the real counts keeps the evidence honest.
 - **Alternatives considered**: raising the floors to 455/153 (deferred to TODO-008 once the concurrent edit is resolved); adding the concurrent Tholdem hunk (rejected: it would break the gate).
 - **Related**: OBS-043, TODO-008, EVD-131
+
+### OBS-044: The live model comparison found a real 400 on the new path (dotted tool names)
+
+- **Source**: `docs/execution/harness/round-7/live-comparison.md`; `.tmp/live-compare/live.log` (pre-fix), `live3.log` (post-fix), `.tmp/live-compare-out/run-bf0eaff6dce54c34ae542304ca70b169/transcript.json`; `WIP/Wip.Runtime/Runtime/DeepSeekChatModel.cs`; `.tmp/live-compare/adapter-tests.log`; `.tmp/live-compare/live-tests3.log`
+- **Fact**: A live comparison against `https://api.deepseek.com` (`deepseek-flash`, same prompt/model, 2 rounds per path) showed the **old** provider path completing and the **new** runtime path failing with `HTTP 400`: `Invalid 'tools[0].function.name': string does not match pattern. Expected a string that matches the pattern '^[a-zA-Z0-9_-]+$'`. Both requests had identical prompts and model ids; the only difference was the advertised compile tool named `tool.bones.strategy-compile`. Root cause: WIP capability ids are dotted (also `tool.repo.*` in the shell path), while the provider restricts function names. Provider-specific name mangling now lives in `DeepSeekChatModel`: outgoing tool/assistant tool-call names are sanitized deterministically (invalid chars → `_`, collision suffix, 64-char cap) and incoming tool-call names are restored to the canonical dotted id. After the fix the live comparison re-ran: **both paths complete, both generated scripts compile**, first-call prompts are byte-identical, scripts differ as expected (stochastic). Cost delta: new path 2–3 calls / 11.7k–13.5k tokens / 63–68 s vs old 1 call / 1.7k–1.9k tokens / 5–20 s, because the live model uses the compile tool.
+- **Implications**: The migration was functionally broken against the real provider despite a green offline gate; the live comparison is the evidence that caught it. The fix is in the provider adapter, so it also repairs the shell's dotted `tool.repo.*` live path.
+- **Confidence**: High
+- **Agent**: orchestrator (live run) + implementer fix
+- **Related**: EVD-133..EVD-137, VAL-028, DEC-026, RISK-010
+
+### VAL-028: Live comparison validated — pre-fix failure, post-fix parity and cost delta
+
+- **Target**: The live-behavior claim of the migration, and the tool-name fix
+- **Method**: read the local DeepSeek credential from the machine credential store (never printed or persisted), ran a purpose-built .NET harness that drives both production paths against the real API with identical prompts, captured request/response bodies, usage and latency, and compiled each returned script; then re-ran after the adapter fix; ran the offline adapter unit tests and the opt-in live tests; re-ran the full Runtime and Bones suites offline.
+- **Evidence examined**: pre-fix `live.log` (new path 400, old OK); post-fix `live3.log` + transcript (both OK, calls/tokens/latency/script lengths, prompt equality); `adapter-tests.log` (8/8, including the new collision test); `live-tests3.log` (2/2 with the real key); `.tmp/live-fix-trx/runtime.trx` (155/149/6 documented) and `bones.trx` (455/454/1 waived).
+- **Result**: Supported
+- **Conclusion**: The new path is live-compatible after the fix; the comparison also exposed a real cost trade-off (the model uses the compile tool, ~6–7× tokens) that the offline parity fixtures could not show. No release claim.
+- **Related**: OBS-044, EVD-133..EVD-137
+
+### DEC-026: Fix dotted tool names in the provider adapter, not the domain
+
+- **Decision**: Keep WIP capability ids dotted (the stable domain/runtime identifiers) and map them to provider-safe wire names inside `DeepSeekChatModel`, restoring the canonical names on incoming tool calls. Add opt-in live tests (env-gated) for the basic answer and for a dotted tool name; correct the stale live-test model id to `deepseek-flash` and raise its token budget to 256 because `deepseek-flash` reserves completion budget for reasoning.
+- **Rationale**: The provider grammar is vendor-specific; changing the capability catalog to satisfy it would leak the vendor into the domain and would still break other names (`tool.repo.read_file`). The adapter is the correct boundary; it repairs the shell path too.
+- **Alternatives considered**: renaming only the Bones compile tool (rejected: does not fix the shell's dotted repo tools); adding a tool-name alias in the invoker (rejected: the invoker should not know provider grammars); making the live test part of the offline gate (rejected: no credentials/network in CI).
+- **Related**: OBS-044, VAL-028, RISK-010
+
+### RISK-010: The new path's live cost/latency is materially higher than the old one
+
+- **Risk**: With the compile tool advertised, the live `deepseek-flash` model calls it 1–2 times before the final answer, round-tripping the full script through the prompt. In the two live rounds the new path used 11.7k–13.5k tokens and 63–68 s vs the old path's 1.7k–1.9k tokens and 5–20 s.
+- **Likelihood**: High (observed in both rounds)
+- **Impact**: Medium (cost/throughput of the learning loop; no correctness impact)
+- **Evidence**: OBS-044, `live3.log`
+- **Mitigation**: document the trade-off; if cost matters, narrow the compile-tool description/usage policy or make tool advertisement configurable per stage; re-measure with the production learning loop before scaling.
+- **Gate**: —
