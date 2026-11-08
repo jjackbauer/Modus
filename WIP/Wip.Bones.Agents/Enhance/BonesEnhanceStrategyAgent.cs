@@ -170,7 +170,8 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
                     turn.ModelId,
                     context.SessionId,
                     turn.MemoryMessages,
-                    _loopOptions.ToAgentLoopOptions()),
+                    _loopOptions.ToAgentLoopOptions(),
+                    turn.IncludeTools),
                 (_, _, executionResult, _) => ValueTask.FromResult(
                     new EnhanceModelTurnResult(BonesEnhancePrompts.ReadCompletedMarkdown(executionResult))));
     }
@@ -223,6 +224,9 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         var totalIterations = Math.Max(1, _aggressiveIterationOptions.EnhanceIterationsPerMatch);
         var totalCompileAttempts = 0;
         var totalStagnationDetected = 0;
+        // Lazy tool advertisement: the compile tool is only offered after a parse/compile failure,
+        // so a first-try live answer looks exactly like the legacy path and costs the same.
+        var anyCompileFailure = false;
         BonesStrategyDocument currentPriorStrategy = priorStrategy;
         BonesStrategyArtifact currentPriorArtifact = priorArtifact;
         BonesStrategyId currentStrategyId = BonesStrategyVersioning.NextVersion(
@@ -290,6 +294,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
                     modelId,
                     $"{correlationId}-iter-{iteration}-attempt-{attempt}",
                     memoryMessages,
+                    includeTools: _loopOptions.AdvertiseToolsOnFirstTurn || anyCompileFailure,
                     context,
                     cancellationToken);
 
@@ -297,6 +302,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
 
                 if (scriptSource is null)
                 {
+                    anyCompileFailure = true;
                     lastCompileFailureReason = "Model response did not contain a compilable IBonesPlayerSlot script.";
                     if (attempt >= maxCompileRetries)
                     {
@@ -322,6 +328,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
                 if (_aggressiveIterationOptions.RequireDistinctOutput
                     && IsSourceIdentical(scriptSource, currentPriorStrategy.Markdown))
                 {
+                    anyCompileFailure = true;
                     stagnationCount++;
                     totalStagnationDetected++;
 
@@ -370,6 +377,7 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
 
                 lastCompileFailureReason = compileResult.FailureReason
                     ?? "Enhanced strategy script compilation failed before persistence.";
+                anyCompileFailure = true;
 
                 if (attempt >= maxCompileRetries)
                 {
@@ -775,13 +783,14 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
         string modelId,
         string correlationId,
         IReadOnlyList<ChatMessage> memoryMessages,
+        bool includeTools,
         CapabilityContext context,
         CancellationToken cancellationToken)
     {
         if (_adapter is not null)
         {
             var turnResult = await _adapter.ExecuteAsync(
-                new EnhanceModelTurnRequest(enhancementRequest.Messages, modelId, memoryMessages),
+                new EnhanceModelTurnRequest(enhancementRequest.Messages, modelId, memoryMessages, includeTools),
                 context,
                 cancellationToken);
 
@@ -811,7 +820,8 @@ public sealed class BonesEnhanceStrategyAgent : IAgent<BonesEnhanceStrategyReque
     private sealed record EnhanceModelTurnRequest(
         IReadOnlyList<BonesStrategyEnhancementMessage> Messages,
         string ModelId,
-        IReadOnlyList<ChatMessage> MemoryMessages);
+        IReadOnlyList<ChatMessage> MemoryMessages,
+        bool IncludeTools);
 
     private sealed record EnhanceModelTurnResult(string Markdown);
 

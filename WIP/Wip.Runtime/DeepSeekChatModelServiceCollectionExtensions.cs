@@ -23,6 +23,32 @@ public static class DeepSeekChatModelServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers the DeepSeek <see cref="IChatModel"/> adapter with an explicit thinking mode. Use
+    /// <see cref="DeepSeekThinkingMode.Disabled"/> to match the legacy Bones provider behavior.
+    /// </summary>
+    public static IServiceCollection AddDeepSeekChatModel(
+        this IServiceCollection services,
+        DeepSeekModelProviderOptions options,
+        DeepSeekThinkingMode thinking)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(options);
+
+        services.AddSingleton(options);
+
+        services.TryAddSingleton(static _ => new HttpClient());
+        services.TryAddSingleton(serviceProvider => new DeepSeekChatModel(
+            serviceProvider.GetRequiredService<HttpClient>(),
+            serviceProvider.GetRequiredService<DeepSeekModelProviderOptions>(),
+            thinking));
+
+        services.TryAddSingleton<IChatModel>(static serviceProvider =>
+            serviceProvider.GetRequiredService<DeepSeekChatModel>());
+
+        return services;
+    }
+
+    /// <summary>
     /// Registers the DeepSeek <see cref="IChatModel"/> adapter resolving
     /// <see cref="DeepSeekModelProviderOptions"/> from the service provider.
     /// </summary>

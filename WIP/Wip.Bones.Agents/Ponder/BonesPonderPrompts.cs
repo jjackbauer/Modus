@@ -21,7 +21,8 @@ internal static class BonesPonderPrompts
         string modelId,
         SessionId sessionId,
         IReadOnlyList<ChatMessage>? memoryMessages,
-        AgentLoopOptions loopOptions)
+        AgentLoopOptions loopOptions,
+        bool includeTools = true)
     {
         ArgumentNullException.ThrowIfNull(messages);
         ArgumentNullException.ThrowIfNull(loopOptions);
@@ -50,7 +51,7 @@ internal static class BonesPonderPrompts
             task: conversation[^1].Content,
             modelId: modelId,
             systemPrompt: systemMessage.Content,
-            tools: Tools,
+            tools: includeTools ? Tools : Array.Empty<ToolDefinition>(),
             initialMessages: initialMessages,
             options: loopOptions);
     }

@@ -97,7 +97,8 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
                     turn.ModelId,
                     context.SessionId,
                     turn.MemoryMessages,
-                    _loopOptions.ToAgentLoopOptions()),
+                    _loopOptions.ToAgentLoopOptions(),
+                    turn.IncludeTools),
                 (_, _, executionResult, _) => ValueTask.FromResult(
                     new PonderModelTurnResult(BonesPonderPrompts.ReadCompletedMarkdown(executionResult))));
     }
@@ -160,6 +161,7 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
                 modelId,
                 $"{correlationId}-attempt-{compileAttempts}",
                 memoryMessages,
+                includeTools: _loopOptions.AdvertiseToolsOnFirstTurn || compileAttempts > 1,
                 context,
                 cancellationToken);
             scriptSource = BonesStrategyScriptResponseParser.TryParseScriptSource(lastModelResponseMarkdown);
@@ -312,13 +314,14 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
         string modelId,
         string correlationId,
         IReadOnlyList<ChatMessage> memoryMessages,
+        bool includeTools,
         CapabilityContext context,
         CancellationToken cancellationToken)
     {
         if (_adapter is not null)
         {
             var turnResult = await _adapter.ExecuteAsync(
-                new PonderModelTurnRequest(authoringRequest.Messages, modelId, memoryMessages),
+                new PonderModelTurnRequest(authoringRequest.Messages, modelId, memoryMessages, includeTools),
                 context,
                 cancellationToken);
 
@@ -466,7 +469,8 @@ public sealed class BonesPonderAgent : IAgent<BonesPonderRequest, BonesPonderRes
     private sealed record PonderModelTurnRequest(
         IReadOnlyList<BonesStrategyAuthoringMessage> Messages,
         string ModelId,
-        IReadOnlyList<ChatMessage> MemoryMessages);
+        IReadOnlyList<ChatMessage> MemoryMessages,
+        bool IncludeTools);
 
     private sealed record PonderModelTurnResult(string Markdown);
 

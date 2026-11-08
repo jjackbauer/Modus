@@ -48,6 +48,8 @@ public sealed class BonesPonderRuntimeTests
 
     private const string ValidMarkdown = $"```csharp\n{ValidScriptSource}\n```";
 
+    private const string InvalidMarkdown = $"```csharp\n{InvalidScriptSource}\n```";
+
     private const string ObservationMarkdown =
         "# Observation\nSeat 2 watched open ends shift from 6-4 to 5-4 after a Left play.";
 
@@ -76,7 +78,7 @@ public sealed class BonesPonderRuntimeTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var legacyResult = await legacyAgent.ExecuteAsync(
@@ -245,7 +247,7 @@ public sealed class BonesPonderRuntimeTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(
@@ -312,7 +314,7 @@ public sealed class BonesPonderRuntimeTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions { MaxSteps = 2 });
+            new BonesAgentLoopOptions { MaxSteps = 2, AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -351,7 +353,7 @@ public sealed class BonesPonderRuntimeTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions { MaxConsecutiveToolFailures = 3 });
+            new BonesAgentLoopOptions { MaxConsecutiveToolFailures = 3, AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -399,7 +401,7 @@ public sealed class BonesPonderRuntimeTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         await agent.ExecuteAsync(
@@ -454,7 +456,7 @@ public sealed class BonesPonderRuntimeTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
         var coLearningAgent = new BonesCoLearningPonderAgent(
             singleSeatAgent,
             strategyLibrary: library,
@@ -522,7 +524,7 @@ public sealed class BonesPonderRuntimeTests
             new BonesStrategyScriptHost(),
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -663,6 +665,38 @@ public sealed class BonesPonderRuntimeTests
         Assert.Equal(new BonesStrategyId("initial-seat-2-v1"), result.StrategyId);
     }
 
+    [Fact]
+    public async Task ExecuteAsync_GivenFirstAttemptCompileFailure_ExpectedFirstTurnWithoutToolsAndRetryTurnWithTools()
+    {
+        // Adversarial-cost guard: the compile tool is only advertised after a failure, so a first-try
+        // live answer pays the same token cost as the legacy path and only retries get validation.
+        await using var fixture = await PonderFixture.CreateAsync(new SessionId("lazy-tools-ponder"));
+        var playerId = new BonesPlayerId(1);
+
+        var scriptHost = new BonesStrategyScriptHost();
+        using var tooling = new RuntimeTooling(scriptHost);
+        var model = new InvalidThenValidChatModel(InvalidMarkdown, ValidMarkdown);
+        var agent = new BonesPonderAgent(
+            fixture.Store,
+            tooling.CreateExecutor(model),
+            scriptHost,
+            new BonesCompileRetryOptions { MaxCompileRetries = 2 },
+            memory: null,
+            new BonesAgentLoopOptions());
+
+        var result = await agent.ExecuteAsync(
+            fixture.Request(playerId),
+            fixture.Context(),
+            CancellationToken.None);
+
+        Assert.Equal(2, model.CapturedRequests.Count);
+        Assert.Empty(model.CapturedRequests[0].Tools);
+        Assert.Single(model.CapturedRequests[1].Tools);
+        Assert.Contains("Compiler diagnostics", model.CapturedRequests[1].Messages[^1].Content, StringComparison.Ordinal);
+        Assert.Equal(BonesStrategyKind.Script, result.AuthoredStrategy.Kind);
+        Assert.Equal(ValidScriptSource, result.AuthoredStrategy.Source);
+    }
+
     private static IReadOnlyList<PromptLine> ToPromptLines(IReadOnlyList<BonesStrategyAuthoringMessage> messages)
         => messages.Select(message => new PromptLine(message.Role, message.Content)).ToArray();
 
@@ -747,6 +781,36 @@ public sealed class BonesPonderRuntimeTests
             }
 
             return mismatches;
+        }
+    }
+
+    private sealed class InvalidThenValidChatModel(string invalidMarkdown, string validMarkdown) : IChatModel
+    {
+        public List<ChatRequest> CapturedRequests { get; } = [];
+
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            CapturedRequests.Add(request);
+            var markdown = CapturedRequests.Count == 1 ? invalidMarkdown : validMarkdown;
+            return ValueTask.FromResult(new ChatResponse(
+                ChatMessage.Assistant(markdown),
+                request.ModelId,
+                "bones-lazy-tool-test",
+                new ModelProviderUsage(10, 5),
+                request.CorrelationId));
+        }
+
+        public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var response = await CompleteAsync(request, context, cancellationToken);
+            yield return new StreamingChunk(response.Message.Content);
+            yield return new StreamingChunk(string.Empty, isFinal: true, usage: response.Usage);
         }
     }
 

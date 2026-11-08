@@ -41,11 +41,27 @@ public sealed class DeepSeekChatModel : IChatModel
 
     private readonly HttpClient _httpClient;
     private readonly DeepSeekModelProviderOptions _options;
+    private readonly DeepSeekThinkingMode _thinking;
 
     public DeepSeekChatModel(HttpClient httpClient, DeepSeekModelProviderOptions options)
+        : this(httpClient, options, DeepSeekThinkingMode.Default)
+    {
+    }
+
+    /// <summary>
+    /// Creates the adapter with an explicit DeepSeek thinking mode. The legacy provider path sent
+    /// <see cref="DeepSeekThinkingMode.Disabled"/> by default for the Bones agents; the generic
+    /// <see cref="ChatRequest"/> has no thinking field, so hosts that need parity must opt in here
+    /// (otherwise a reasoning model spends completion tokens and latency on hidden reasoning).
+    /// </summary>
+    public DeepSeekChatModel(
+        HttpClient httpClient,
+        DeepSeekModelProviderOptions options,
+        DeepSeekThinkingMode thinking)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _thinking = thinking;
 
         if (_httpClient.BaseAddress is null)
         {
@@ -258,6 +274,12 @@ public sealed class DeepSeekChatModel : IChatModel
                         Parameters: tool.ParametersSchema))).ToArray(),
             MaxTokens: request.MaxTokens,
             Temperature: request.Temperature,
+            Thinking: _thinking switch
+            {
+                DeepSeekThinkingMode.Enabled => new DeepSeekThinkingPayload("enabled"),
+                DeepSeekThinkingMode.Disabled => new DeepSeekThinkingPayload("disabled"),
+                _ => null,
+            },
             Stream: stream ? true : null,
             StreamOptions: stream ? new DeepSeekStreamOptions(IncludeUsage: true) : null);
 
@@ -641,12 +663,17 @@ public sealed class DeepSeekChatModel : IChatModel
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
          JsonPropertyName("temperature")] double? Temperature,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
+         JsonPropertyName("thinking")] DeepSeekThinkingPayload? Thinking,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
          JsonPropertyName("stream")] bool? Stream,
         [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull),
          JsonPropertyName("stream_options")] DeepSeekStreamOptions? StreamOptions);
 
     private sealed record DeepSeekStreamOptions(
         [property: JsonPropertyName("include_usage")] bool IncludeUsage);
+
+    private sealed record DeepSeekThinkingPayload(
+        [property: JsonPropertyName("type")] string Type);
 
     private sealed record DeepSeekMessagePayload(
         [property: JsonPropertyName("role")] string Role,

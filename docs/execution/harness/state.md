@@ -1,52 +1,56 @@
 # Harness State — Bones agents on the generic WIP agent runtime
 
-- **Round**: 8 of 12 — live-model comparison and the production defect it exposed.
+- **Round**: 9 of 12 — adversarial live comparison and the enhanced final composition.
 - **Goal**: unchanged (agents on `IChatModel` → `IAgentExecutor` → `RuntimeToolInvoker` → `IAgentMemory`).
-- **Definition of done**: D1–D8 were met at `f1a26bb`; the requested **live** comparison then found a
-  real production defect in the new path. The fix is committed as `39258c0`; its first CI run had
-  5/6 jobs green with only the pre-existing viewer-stage flake in the offline gate, so the records
-  commit triggers a retry (EVD-138). D8 will be re-confirmed on the retried run.
-- **Stop criteria**: D1–D7 remain met; D8 is pending a green run that does not hit the viewer flake.
+- **Definition of done**: D1–D7 met; the live comparisons and both composition fixes are committed;
+  D8 is pending the CI run for the enhancement commit.
+- **Stop criteria**: D1–D7 met; D8 pending.
 
-## Live model comparison (2026-11-07)
+## Live comparisons
 
-| | Old provider path | New runtime path (pre-fix) | New runtime path (post-fix) |
-|---|---|---|---|
-| Live result | OK both rounds | **HTTP 400 both rounds** | OK both rounds |
-| API error | — | `Invalid 'tools[0].function.name': … '^[a-zA-Z0-9_-]+$'` | — |
-| First-call prompt | — | byte-identical to old | byte-identical to old |
-| Calls / tokens / time | 1 / ~1.8k / 5–20 s | — | 2–3 / 11.7k–13.5k / 63–68 s |
-| Generated script | compiles | — | compiles |
+**Round 7 (provider migration):** the live run found the dotted-tool-name 400; the adapter
+sanitize/restore fix made both paths complete (round-7 report).
 
-Root cause: WIP capability ids are dotted (`tool.bones.strategy-compile`, `tool.repo.*`) but DeepSeek
-function names allow only `[A-Za-z0-9_-]`. The fix lives in `DeepSeekChatModel`: sanitize outgoing
-names deterministically and restore the canonical dotted name on incoming tool calls; the model-visible
-observation is unchanged. This also repairs the shell's live `tool.repo.*` path.
+**Round 8 (adversarial + enhanced composition):** the first adversarial matrix showed the new path
+spending 10–20× the completion tokens and 60–133 s because it did not send `thinking: disabled`.
+Two changes closed it:
 
-Full report: `docs/execution/harness/round-7/live-comparison.md` (EVD-133..137). The credential was
-read from the machine credential store for the run only and appears nowhere in the repo or logs.
+1. `DeepSeekChatModel` accepts an explicit `DeepSeekThinkingMode`; the Bones host passes the
+   migrated `Disabled`, matching the legacy provider.
+2. The compile tool is advertised lazily: no tools on the first turn, compile tool only on retry
+   turns (`AdvertiseToolsOnFirstTurn`, default false).
 
-Residual: the new path uses ~6–7× the tokens and ~3–12× the wall time because the live model calls
-the compile tool before answering — recorded as RISK-010.
+Post-enhancement live results (same prompts/model):
+
+| Scenario | Old | New (enhanced) |
+|---|---|---|
+| normal r1 | failed after 2 calls, 23.3 s (uncompilable script) | OK, 1 call, 6.4 s, 2,138 tokens |
+| normal r2 | OK, 1 call, 5.1 s, 1,790 tokens | OK, 3 calls, 12.4 s, 9,890 tokens (retry + tool after a compile failure) |
+| prompt injection | OK, safe | OK, safe; 2 calls |
+| long context | OK, 4,965 tokens | OK, 4,989 tokens |
+| forced tool loop | OK, ignores the instruction | fails closed with `MaxStepsReached` after 3 calls |
+| Enhance | Rejected, 2,223 tokens | Rejected, 6,415 tokens |
+
+Full report: `docs/execution/harness/round-8/adversarial-comparison.md` (EVD-140..144).
 
 ## Gate status
 
 | Gate | Status | Detail |
 |---|---|---|
-| G1 Evidence | PASS | live comparison + fix evidence (EVD-133..137) |
-| G2 Falsification | PASS | the live comparison falsified the “offline-green means production-ready” assumption; the defect is fixed and re-tested live |
+| G1 Evidence | PASS | live matrices, fix tests, suite counts |
+| G2 Falsification | PASS | found and fixed the thinking-cost gap; the injection/loop cases are adversarial evidence, not assumptions |
 | G3 Coverage | PASS | D1–D7 met; D8 pending the new CI run |
-| G4 Reproduction | PASS | pre-fix 400 and post-fix success reproduced; offline suites Runtime 155/149/6, Bones 455/454/1 |
-| G5 Honesty | PASS | the cost trade-off and the one-time credential use are disclosed; the CI flake is recorded as pre-existing, not claimed as the fix's result |
+| G4 Reproduction | PASS | Runtime 156/150/6, Bones 457/454/3 waived, host 1/1; live numbers in the report |
+| G5 Honesty | PASS | the retry cost and the stochastic one-run limits are disclosed; no release claim |
 
 ## Objective ledger (new rows)
 
 | Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
 |---|---|---|---|---|---|---|---|
-| 7 | Final CI + records | Orchestrator | 0 | 2 | — | PASS | green at `f1a26bb` |
-| 8 | Live model comparison (old vs new) | Orchestrator + live API | 0 | 5 | 1 production defect (HTTP 400) | G2 PASS | fixed in the adapter; live re-run green; new commit/CI pending |
+| 7 | Live model comparison | Orchestrator + live API | 0 | 7 | dotted-tool 400 | G2 PASS | fixed, green |
+| 8 | Adversarial comparison + enhance composition | Orchestrator + live API | 0 | 5 | thinking-mode cost gap | G2 PASS | lazy tools + thinking parity; live re-run |
 
 ## Next objective
 
-Commit the adapter fix + live tests + report, push, and verify Tests CI (six jobs) and Modus CI at the
+Commit the enhancement + adversarial report, push, and verify Tests CI (six jobs) and Modus CI at the
 new HEAD. Then update the final records. No release claim.

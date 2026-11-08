@@ -79,7 +79,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(
@@ -137,7 +137,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -197,7 +197,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(
@@ -271,7 +271,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(
@@ -328,7 +328,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memoryB,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act — session B runs the new-path Ponder agent.
         var result = await agent.ExecuteAsync(
@@ -431,7 +431,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(
@@ -526,7 +526,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory: null,
-            new BonesAgentLoopOptions { MaxSteps = 2 });
+            new BonesAgentLoopOptions { MaxSteps = 2, AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -572,7 +572,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             runtime.CreateExecutor(model),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions { MaxSteps = 2 });
+            loopOptions: new BonesAgentLoopOptions { MaxSteps = 2, AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -631,7 +631,7 @@ public sealed class BonesAgentRuntimeSafetyTests
             scriptHost,
             new BonesCompileRetryOptions(),
             memory,
-            new BonesAgentLoopOptions());
+            new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(

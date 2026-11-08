@@ -51,6 +51,8 @@ public sealed class BonesEnhanceRuntimeTests
 
     private const string ValidMarkdown = $"```csharp\n{FirstLegalMoveScriptSource}\n```";
 
+    private const string InvalidMarkdown = $"```csharp\n{InvalidScriptSource}\n```";
+
     [Fact]
     public async Task ExecuteAsync_GivenSameInputThroughLegacyAndRuntimePaths_ExpectedDeterministicParity()
     {
@@ -84,7 +86,7 @@ public sealed class BonesEnhanceRuntimeTests
             tooling.CreateExecutor(runtimeModel),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 5 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions());
+            loopOptions: new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var legacyResult = await legacyAgent.ExecuteAsync(
@@ -275,7 +277,7 @@ public sealed class BonesEnhanceRuntimeTests
             tooling.CreateExecutor(model),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 5 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions());
+            loopOptions: new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var result = await agent.ExecuteAsync(
@@ -339,7 +341,7 @@ public sealed class BonesEnhanceRuntimeTests
             tooling.CreateExecutor(model),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions { MaxSteps = 2 });
+            loopOptions: new BonesAgentLoopOptions { MaxSteps = 2, AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -382,7 +384,7 @@ public sealed class BonesEnhanceRuntimeTests
             tooling.CreateExecutor(model),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions { MaxConsecutiveToolFailures = 3 });
+            loopOptions: new BonesAgentLoopOptions { MaxConsecutiveToolFailures = 3, AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<BonesAgentExecutionException>(() =>
@@ -431,7 +433,7 @@ public sealed class BonesEnhanceRuntimeTests
             tooling.CreateExecutor(model),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
             memory: memory,
-            loopOptions: new BonesAgentLoopOptions());
+            loopOptions: new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         await agent.ExecuteAsync(
@@ -492,7 +494,7 @@ public sealed class BonesEnhanceRuntimeTests
             tooling.CreateExecutor(model),
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions());
+            loopOptions: new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
         var coLearningAgent = new BonesCoLearningEnhanceAgent(singleSeatAgent, strategyPool);
 
         var request = new BonesEnhanceStrategyRequest(
@@ -560,7 +562,7 @@ public sealed class BonesEnhanceRuntimeTests
             executor,
             promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
             memory: null,
-            loopOptions: new BonesAgentLoopOptions());
+            loopOptions: new BonesAgentLoopOptions { AdvertiseToolsOnFirstTurn = true });
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
@@ -671,6 +673,38 @@ public sealed class BonesEnhanceRuntimeTests
             Final score for seat {playerId.Seat}: 6
             Final score for seat 3: 14
             """;
+
+    [Fact]
+    public async Task ExecuteAsync_GivenFirstAttemptCompileFailure_ExpectedFirstTurnWithoutToolsAndRetryTurnWithTools()
+    {
+        await using var fixture = await EnhanceFixture.CreateAsync(new SessionId("lazy-tools-enhance"));
+        var playerId = new BonesPlayerId(2);
+        await fixture.SaveAllSeatStrategiesAsync();
+        await fixture.SaveMatchHistoryAsync(playerId, new BonesGameId("lazy-tools-match"));
+
+        var scriptHost = new BonesStrategyScriptHost();
+        using var tooling = new RuntimeTooling(scriptHost);
+        var model = new InvalidThenValidChatModel(InvalidMarkdown, ValidMarkdown);
+        var agent = new BonesEnhanceStrategyAgent(
+            fixture.Store,
+            tooling.CreateExecutor(model),
+            scriptHost,
+            promotionOptions: new BonesStrategyPromotionOptions { EvaluationMatchCount = 1 },
+            compileRetryOptions: new BonesCompileRetryOptions { MaxCompileRetries = 2 },
+            memory: null,
+            loopOptions: new BonesAgentLoopOptions());
+
+        var result = await agent.ExecuteAsync(
+            fixture.Request(playerId, new BonesGameId("lazy-tools-match"), evaluationSeed: 9001),
+            fixture.Context(),
+            CancellationToken.None);
+
+        Assert.Equal(2, model.CapturedRequests.Count);
+        Assert.Empty(model.CapturedRequests[0].Tools);
+        Assert.Single(model.CapturedRequests[1].Tools);
+        Assert.Contains("Compiler diagnostics", model.CapturedRequests[1].Messages[^1].Content, StringComparison.Ordinal);
+        Assert.Contains("ChooseMove", result.StrategyDocument.Markdown, StringComparison.Ordinal);
+    }
 
     private static IReadOnlyList<PromptLine> ToPromptLines(
         IReadOnlyList<BonesStrategyEnhancementMessage> messages)
@@ -820,6 +854,36 @@ public sealed class BonesEnhanceRuntimeTests
             }
 
             return mismatches;
+        }
+    }
+
+    private sealed class InvalidThenValidChatModel(string invalidMarkdown, string validMarkdown) : IChatModel
+    {
+        public List<ChatRequest> CapturedRequests { get; } = [];
+
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            CapturedRequests.Add(request);
+            var markdown = CapturedRequests.Count == 1 ? invalidMarkdown : validMarkdown;
+            return ValueTask.FromResult(new ChatResponse(
+                ChatMessage.Assistant(markdown),
+                request.ModelId,
+                "bones-lazy-tool-test",
+                new ModelProviderUsage(10, 5),
+                request.CorrelationId));
+        }
+
+        public async IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
+        {
+            var response = await CompleteAsync(request, context, cancellationToken);
+            yield return new StreamingChunk(response.Message.Content);
+            yield return new StreamingChunk(string.Empty, isFinal: true, usage: response.Usage);
         }
     }
 

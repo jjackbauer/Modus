@@ -80,6 +80,7 @@ public sealed class DeepSeekChatModelTests
         Assert.Equal(256, root.GetProperty("max_tokens").GetInt32());
         Assert.Equal(0.1, root.GetProperty("temperature").GetDouble(), precision: 5);
         Assert.False(root.TryGetProperty("stream", out _));
+        Assert.False(root.TryGetProperty("thinking", out _));
 
         var messages = root.GetProperty("messages");
         Assert.Equal(2, messages.GetArrayLength());
@@ -416,10 +417,39 @@ public sealed class DeepSeekChatModelTests
         }
     }
 
+    [Fact]
+    [Trait("ChecklistItem", ChecklistItem)]
+    public async Task CompleteAsync_GivenDisabledThinking_ExpectedThinkingPayloadOnTheWire()
+    {
+        string? capturedBody = null;
+        var model = CreateModel(
+            thinking: DeepSeekThinkingMode.Disabled,
+            handler: async (request, cancellationToken) =>
+            {
+                capturedBody = await request.Content!.ReadAsStringAsync(cancellationToken);
+                return JsonResponse(
+                    """
+                    {
+                      "model": "deepseek-flash",
+                      "choices": [{ "index": 0, "message": { "role": "assistant", "content": "ok" } }]
+                    }
+                    """);
+            });
+
+        await model.CompleteAsync(
+            new ChatRequest("deepseek-flash", [ChatMessage.User("hi")]),
+            new CapabilityContext(new SessionId("session-chat-thinking"), TestRepositoryPaths.Worktree("chat-thinking")),
+            CancellationToken.None);
+
+        using var document = JsonDocument.Parse(capturedBody!);
+        Assert.Equal("disabled", document.RootElement.GetProperty("thinking").GetProperty("type").GetString());
+    }
+
     private static DeepSeekChatModel CreateModel(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler,
         int maxTransientRetries = 2,
-        string apiKey = "test-api-key")
+        string apiKey = "test-api-key",
+        DeepSeekThinkingMode thinking = DeepSeekThinkingMode.Default)
     {
         var options = new DeepSeekModelProviderOptions(
             baseUrl: new Uri("https://api.deepseek.com/", UriKind.Absolute),
@@ -433,7 +463,7 @@ public sealed class DeepSeekChatModelTests
             Timeout = Timeout.InfiniteTimeSpan,
         };
 
-        return new DeepSeekChatModel(client, options);
+        return new DeepSeekChatModel(client, options, thinking);
     }
 
     private static HttpResponseMessage JsonResponse(string json)

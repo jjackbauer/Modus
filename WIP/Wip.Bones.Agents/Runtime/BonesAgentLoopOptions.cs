@@ -17,6 +17,14 @@ public sealed class BonesAgentLoopOptions
 
     public int MaxConsecutiveToolFailures { get; set; } = 2;
 
+    /// <summary>
+    /// When false (the default), the compile tool is advertised only on retry turns — the first
+    /// model turn has no tools, so a live model cannot spend a round-trip validating a script that
+    /// has not failed yet. Set true to advertise tools from the first turn (used by tests that
+    /// exercise the tool path directly).
+    /// </summary>
+    public bool AdvertiseToolsOnFirstTurn { get; set; }
+
     public AgentLoopOptions ToAgentLoopOptions()
         => new()
         {

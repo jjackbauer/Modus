@@ -1132,3 +1132,37 @@
 - **Confidence**: High
 - **Agent**: orchestrator
 - **Related**: EVD-138, RISK-004
+
+### OBS-046: The adversarial live run exposed the thinking-mode cost gap; lazy tools + thinking parity close it
+
+- **Source**: `docs/execution/harness/round-8/adversarial-comparison.md`; `.tmp/live-compare/adversarial.log` (pre-enhancement), `adversarial2.log` (post-enhancement); `.tmp/live-compare-out/adversarial-8d188d5beb6241238a7ad5057a5df504/transcript.json`
+- **Fact**: The first adversarial live matrix showed the new path spending **10–20× the completion tokens and 60–133 s** on identical prompts while the old path sent `thinking: {"type":"disabled"}`. Root cause: the generic `ChatRequest` has no thinking field and the host did not pass the migrated `BonesDeepSeekProviderOptions.Thinking`, so `deepseek-flash` reasoned by default. Two composition changes were made: (1) `DeepSeekChatModel` accepts an explicit `DeepSeekThinkingMode` and the Bones host passes `Disabled`, matching the legacy provider; (2) the compile tool is advertised lazily — no tools on the first turn, tools on retry turns only (`BonesAgentLoopOptions.AdvertiseToolsOnFirstTurn`, default false; tests that exercise direct tool routing set it true). After both, normal-path live parity: 6.4 s / 2,138 tokens vs the old path's 5.1 s / 1,790 tokens, with the old path failing one round on an uncompilable script while the new path succeeded. Adversarial outcomes: prompt injection — both safe, no exfiltration; long context — parity; forced tool loop — new path fails closed with `MaxStepsReached` after 3 calls, old path answers (no tool); Enhance — both complete, same Rejected promotion.
+- **Implications**: The final composition now has explicit cost/robustness choices: validation only costs when a failure occurs, and the thinking mode is passed rather than silently defaulted. The old path remains unable to self-validate a bad live script.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: EVD-140..EVD-144, VAL-029, DEC-027, RISK-008, RISK-011
+
+### VAL-029: Adversarial live matrix and the enhanced composition validated
+
+- **Target**: The enhanced final combination (lazy tools + thinking parity) and its adversarial behavior
+- **Method**: Ran the old and new production paths against the real DeepSeek API across normal, prompt-injection, long-context and forced-tool-loop Ponder scenarios plus Enhance; captured every request/response body, usage and latency; re-ran offline adapter/runtime/host suites.
+- **Evidence examined**: `adversarial.log` (thinking uncontrolled: 60–133 s, 11–32k tokens), `adversarial2.log` (thinking disabled + lazy tools: 4–12 s, 2–10k tokens), transcripts and generated scripts, `DeepSeekChatModelTests` 9/9, Ponder/Enhance/adversarial tests 34/34, host composition 1/1, full Runtime/Bones suites (EVD-144).
+- **Result**: Supported
+- **Conclusion**: The enhancements removed the dominant cost gap and kept the safety/robustness properties: first-try cost parity, retry validation, fail-closed budgets, injection-as-data. The new path is not uniformly cheaper when a first answer fails; it pays a retry and gains a compiled answer.
+- **Related**: OBS-046, EVD-140..EVD-144
+
+### DEC-027: Advertise the compile tool lazily and pass the thinking mode explicitly
+
+- **Decision**: Default `BonesAgentLoopOptions.AdvertiseToolsOnFirstTurn` to false so the compile tool is advertised only on retry turns; add `DeepSeekChatModel(HttpClient, Options, DeepSeekThinkingMode)` and `AddDeepSeekChatModel(options, thinking)`, and have the Bones host pass the migrated `Thinking` option (`Disabled` by default). Tests that directly exercise tool routing set the flag true; dedicated tests cover the lazy default.
+- **Rationale**: Live models used the advertise-on-first-turn tool unconditionally, paying 2–3 calls and 6–7× tokens for a script that had not failed. The thinking delta was much larger (10–20×) and was silently lost in the generic `ChatRequest`. Both belong at explicit composition boundaries, not defaults hidden in the adapter.
+- **Alternatives considered**: prompt-level “don't call the tool” guidance (changes the prompt parity contract); `tool_choice` (provider-specific and not in the generic request); removing the tool entirely (loses retry validation); forcing `thinking: disabled` inside the adapter for every host (would change the shell's behavior without its consent).
+- **Related**: OBS-046, VAL-029, RISK-008
+
+### RISK-011: Retry validation costs more when a live first answer is bad
+
+- **Risk**: With lazy tools, a correct first answer is cheap, but a compile failure triggers a retry with the tool; that retry round-trips the script and can cost several times the first call (observed normal r2: 3 calls / 9,890 tokens / 12.4 s vs the old path's 1 call / 1,790 tokens / 5.1 s).
+- **Likelihood**: Medium (stochastic model output)
+- **Impact**: Low–Medium (cost only; correctness improves)
+- **Evidence**: OBS-046, `adversarial2.log`
+- **Mitigation**: keep the retry budget bounded (`MaxCompileRetries`, `MaxSteps`); monitor retry ratio/usage per stage; accept the cost as the price of a compilable artifact.
+- **Gate**: —

@@ -306,7 +306,9 @@ public static class BonesHostServiceCollectionExtensions
                     ?? throw new InvalidOperationException(
                         "Bones host configuration is invalid: DeepSeek provider options are unavailable.");
 
-                services.AddDeepSeekChatModel(deepSeekOptions.ToDeepSeekModelProviderOptions());
+                services.AddDeepSeekChatModel(
+                    deepSeekOptions.ToDeepSeekModelProviderOptions(),
+                    deepSeekOptions.Thinking);
 
                 // Decorate the concrete chat model with the Bones stage-model adapter: agent stage ids
                 // are rewritten to the configured DeepSeek model, supported ids pass through.
