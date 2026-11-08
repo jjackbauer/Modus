@@ -1,0 +1,642 @@
+{
+  "seed": 20261108,
+  "cells": {
+    "normal|old": {
+      "n": 24,
+      "success": 21,
+      "success_rate": 0.875,
+      "success_ci": [
+        0.6899611872949993,
+        0.9565566591987655
+      ],
+      "first_try": 14,
+      "first_try_rate": 0.5833333333333334,
+      "infra": 0,
+      "tokens": {
+        "n": 24,
+        "median": 2095.5,
+        "q1": 1787.75,
+        "q3": 5506.75,
+        "mean": 3393.0833333333335,
+        "min": 1601,
+        "max": 6682
+      },
+      "latency_ms": {
+        "n": 24,
+        "median": 6373.5,
+        "q1": 5072.75,
+        "q3": 9193.5,
+        "mean": 7074.75,
+        "min": 4058,
+        "max": 11914
+      },
+      "calls": {
+        "n": 24,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.4166666666666667,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {
+        "InvalidOperationException": 3
+      }
+    },
+    "normal|new-eager": {
+      "n": 24,
+      "success": 21,
+      "success_rate": 0.875,
+      "success_ci": [
+        0.6899611872949993,
+        0.9565566591987655
+      ],
+      "first_try": 20,
+      "first_try_rate": 0.8333333333333334,
+      "infra": 0,
+      "tokens": {
+        "n": 24,
+        "median": 9138.0,
+        "q1": 6301.75,
+        "q3": 10542.5,
+        "mean": 8664.916666666666,
+        "min": 5066,
+        "max": 12816
+      },
+      "latency_ms": {
+        "n": 24,
+        "median": 13838.5,
+        "q1": 11482.5,
+        "q3": 16078.75,
+        "mean": 14248.375,
+        "min": 9629,
+        "max": 25948
+      },
+      "calls": {
+        "n": 24,
+        "median": 3.0,
+        "q1": 2.0,
+        "q3": 3.0,
+        "mean": 2.5833333333333335,
+        "min": 2,
+        "max": 3
+      },
+      "tool_call_runs": 23,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {
+        "BonesAgentExecutionException": 3
+      }
+    },
+    "normal|new-lazy": {
+      "n": 24,
+      "success": 21,
+      "success_rate": 0.875,
+      "success_ci": [
+        0.6899611872949993,
+        0.9565566591987655
+      ],
+      "first_try": 11,
+      "first_try_rate": 0.4583333333333333,
+      "infra": 0,
+      "tokens": {
+        "n": 24,
+        "median": 5339.0,
+        "q1": 1919.0,
+        "q3": 6071.0,
+        "mean": 4152.0,
+        "min": 1574,
+        "max": 7092
+      },
+      "latency_ms": {
+        "n": 24,
+        "median": 7907.5,
+        "q1": 5690.0,
+        "q3": 9673.25,
+        "mean": 7803.333333333333,
+        "min": 4238,
+        "max": 12262
+      },
+      "calls": {
+        "n": 24,
+        "median": 2.0,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.5416666666666667,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {
+        "InvalidOperationException": 3
+      }
+    },
+    "injection|old": {
+      "n": 16,
+      "success": 15,
+      "success_rate": 0.9375,
+      "success_ci": [
+        0.7167126242970107,
+        0.9888806552353576
+      ],
+      "first_try": 11,
+      "first_try_rate": 0.6875,
+      "infra": 0,
+      "tokens": {
+        "n": 16,
+        "median": 1885.0,
+        "q1": 1576.0,
+        "q3": 4927.25,
+        "mean": 2862.1875,
+        "min": 1204,
+        "max": 6335
+      },
+      "latency_ms": {
+        "n": 16,
+        "median": 5112.0,
+        "q1": 3313.5,
+        "q3": 7409.5,
+        "mean": 5469.25,
+        "min": 1898,
+        "max": 10451
+      },
+      "calls": {
+        "n": 16,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.3125,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {
+        "InvalidOperationException": 1
+      }
+    },
+    "injection|new-lazy": {
+      "n": 16,
+      "success": 14,
+      "success_rate": 0.875,
+      "success_ci": [
+        0.639771727342413,
+        0.9650225122567595
+      ],
+      "first_try": 10,
+      "first_try_rate": 0.625,
+      "infra": 0,
+      "tokens": {
+        "n": 16,
+        "median": 2065.5,
+        "q1": 1820.75,
+        "q3": 5552.75,
+        "mean": 3332.0625,
+        "min": 1349,
+        "max": 6317
+      },
+      "latency_ms": {
+        "n": 16,
+        "median": 5732.0,
+        "q1": 4851.75,
+        "q3": 8357.75,
+        "mean": 6279.9375,
+        "min": 3120,
+        "max": 9301
+      },
+      "calls": {
+        "n": 16,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.375,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {
+        "InvalidOperationException": 2
+      }
+    },
+    "long-context|old": {
+      "n": 16,
+      "success": 16,
+      "success_rate": 1.0,
+      "success_ci": [
+        0.8063923194655637,
+        1.0
+      ],
+      "first_try": 11,
+      "first_try_rate": 0.6875,
+      "infra": 0,
+      "tokens": {
+        "n": 16,
+        "median": 5146.5,
+        "q1": 4936.0,
+        "q3": 11663.5,
+        "mean": 7301.0625,
+        "min": 4851,
+        "max": 13008
+      },
+      "latency_ms": {
+        "n": 16,
+        "median": 5651.0,
+        "q1": 4577.0,
+        "q3": 8685.5,
+        "mean": 6764.1875,
+        "min": 4204,
+        "max": 12158
+      },
+      "calls": {
+        "n": 16,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.3125,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {}
+    },
+    "long-context|new-lazy": {
+      "n": 16,
+      "success": 16,
+      "success_rate": 1.0,
+      "success_ci": [
+        0.8063923194655637,
+        1.0
+      ],
+      "first_try": 13,
+      "first_try_rate": 0.8125,
+      "infra": 0,
+      "tokens": {
+        "n": 16,
+        "median": 5224.5,
+        "q1": 5019.5,
+        "q3": 5365.75,
+        "mean": 6385.625,
+        "min": 4769,
+        "max": 12119
+      },
+      "latency_ms": {
+        "n": 16,
+        "median": 5962.5,
+        "q1": 5053.0,
+        "q3": 6954.25,
+        "mean": 6059.6875,
+        "min": 3821,
+        "max": 9091
+      },
+      "calls": {
+        "n": 16,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 1.0,
+        "mean": 1.1875,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {}
+    },
+    "forced-tool-loop|old": {
+      "n": 8,
+      "success": 8,
+      "success_rate": 1.0,
+      "success_ci": [
+        0.6755924351161198,
+        1.0
+      ],
+      "first_try": 6,
+      "first_try_rate": 0.75,
+      "infra": 0,
+      "tokens": {
+        "n": 8,
+        "median": 1788.5,
+        "q1": 1568.75,
+        "q3": 3879.25,
+        "mean": 2469.875,
+        "min": 1521,
+        "max": 4987
+      },
+      "latency_ms": {
+        "n": 8,
+        "median": 4806.0,
+        "q1": 3741.5,
+        "q3": 6149.25,
+        "mean": 4969.5,
+        "min": 3591,
+        "max": 6946
+      },
+      "calls": {
+        "n": 8,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 1.75,
+        "mean": 1.25,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {}
+    },
+    "forced-tool-loop|new-eager": {
+      "n": 8,
+      "success": 0,
+      "success_rate": 0.0,
+      "success_ci": [
+        0.0,
+        0.32440756488388023
+      ],
+      "first_try": 0,
+      "first_try_rate": 0.0,
+      "infra": 0,
+      "tokens": {
+        "n": 8,
+        "median": 6115.0,
+        "q1": 5685.25,
+        "q3": 7746.5,
+        "mean": 6561.0,
+        "min": 5409,
+        "max": 8614
+      },
+      "latency_ms": {
+        "n": 8,
+        "median": 8084.0,
+        "q1": 7174.25,
+        "q3": 11075.0,
+        "mean": 8767.375,
+        "min": 5401,
+        "max": 12387
+      },
+      "calls": {
+        "n": 8,
+        "median": 3.0,
+        "q1": 3.0,
+        "q3": 3.0,
+        "mean": 3.0,
+        "min": 3,
+        "max": 3
+      },
+      "tool_call_runs": 8,
+      "unknown_tool_calls": 0,
+      "promotions": {},
+      "errors": {
+        "BonesAgentExecutionException": 8
+      }
+    },
+    "enhance|old": {
+      "n": 12,
+      "success": 11,
+      "success_rate": 0.9166666666666666,
+      "success_ci": [
+        0.646120088858883,
+        0.9851349055950829
+      ],
+      "first_try": 7,
+      "first_try_rate": 0.5833333333333334,
+      "infra": 0,
+      "tokens": {
+        "n": 12,
+        "median": 2610.5,
+        "q1": 2144.25,
+        "q3": 5621.75,
+        "mean": 3730.6666666666665,
+        "min": 2037,
+        "max": 6592
+      },
+      "latency_ms": {
+        "n": 12,
+        "median": 6527.0,
+        "q1": 5083.5,
+        "q3": 7635.25,
+        "mean": 6538.333333333333,
+        "min": 4114,
+        "max": 10704
+      },
+      "calls": {
+        "n": 12,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.4166666666666667,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {
+        "Rejected": 11
+      },
+      "errors": {
+        "InvalidOperationException": 1
+      }
+    },
+    "enhance|new-lazy": {
+      "n": 12,
+      "success": 10,
+      "success_rate": 0.8333333333333334,
+      "success_ci": [
+        0.5519691377470266,
+        0.9530348578161463
+      ],
+      "first_try": 6,
+      "first_try_rate": 0.5,
+      "infra": 0,
+      "tokens": {
+        "n": 12,
+        "median": 4026.5,
+        "q1": 2011.5,
+        "q3": 6366.5,
+        "mean": 4149.75,
+        "min": 1840,
+        "max": 6781
+      },
+      "latency_ms": {
+        "n": 12,
+        "median": 6363.5,
+        "q1": 4214.25,
+        "q3": 7929.75,
+        "mean": 6246.333333333333,
+        "min": 3572,
+        "max": 9428
+      },
+      "calls": {
+        "n": 12,
+        "median": 1.5,
+        "q1": 1.0,
+        "q3": 2.0,
+        "mean": 1.5,
+        "min": 1,
+        "max": 2
+      },
+      "tool_call_runs": 0,
+      "unknown_tool_calls": 0,
+      "promotions": {
+        "Rejected": 10
+      },
+      "errors": {
+        "InvalidOperationException": 2
+      }
+    }
+  },
+  "tests": {
+    "normal_old_vs_lazy": {
+      "a": "old",
+      "b": "new-lazy",
+      "n_a": 24,
+      "n_b": 24,
+      "success_a": 21,
+      "success_b": 21,
+      "fisher_p_success": 1.0,
+      "tokens_ratio_a_over_b": [
+        0.39248923019292004,
+        0.33067407673001076,
+        2.100349040139616
+      ],
+      "tokens_mannwhitney_p": 0.10776229039192153,
+      "latency_ratio_a_over_b": [
+        0.8060069554220677,
+        0.6330880635365569,
+        1.133254716981132
+      ],
+      "latency_mannwhitney_p": 0.28362036331636564
+    },
+    "normal_eager_vs_lazy": {
+      "a": "new-eager",
+      "b": "new-lazy",
+      "n_a": 24,
+      "n_b": 24,
+      "success_a": 21,
+      "success_b": 21,
+      "fisher_p_success": 1.0,
+      "tokens_ratio_a_over_b": [
+        1.7115564712492977,
+        1.1870586158192091,
+        4.724070450097847
+      ],
+      "tokens_mannwhitney_p": 6.310679437238065e-06,
+      "latency_ratio_a_over_b": [
+        1.7500474233322796,
+        1.4588154032118805,
+        2.2743682310469313
+      ],
+      "latency_mannwhitney_p": 5.8617292797435994e-08
+    },
+    "normal_old_vs_eager": {
+      "a": "old",
+      "b": "new-eager",
+      "n_a": 24,
+      "n_b": 24,
+      "success_a": 21,
+      "success_b": 21,
+      "fisher_p_success": 1.0,
+      "tokens_ratio_a_over_b": [
+        0.22931713722915298,
+        0.18552707097761623,
+        0.6489558551414222
+      ],
+      "tokens_mannwhitney_p": 1.8206806706722034e-07,
+      "latency_ratio_a_over_b": [
+        0.4605629222820392,
+        0.37763699084516383,
+        0.6258566203884529
+      ],
+      "latency_mannwhitney_p": 3.682322935461002e-08
+    },
+    "injection_old_vs_lazy": {
+      "a": "old",
+      "b": "new-lazy",
+      "n_a": 16,
+      "n_b": 16,
+      "success_a": 15,
+      "success_b": 14,
+      "fisher_p_success": 0.9999999999999977,
+      "tokens_ratio_a_over_b": [
+        0.9126119583635923,
+        0.325185587543002,
+        2.2217473884140553
+      ],
+      "tokens_mannwhitney_p": 0.15209263248157967,
+      "latency_ratio_a_over_b": [
+        0.8918353105373342,
+        0.5566208862399585,
+        1.2348220516399162
+      ],
+      "latency_mannwhitney_p": 0.2912928476178127
+    },
+    "long_old_vs_lazy": {
+      "a": "old",
+      "b": "new-lazy",
+      "n_a": 16,
+      "n_b": 16,
+      "success_a": 16,
+      "success_b": 16,
+      "fisher_p_success": 1.0,
+      "tokens_ratio_a_over_b": [
+        0.9850703416594889,
+        0.943904968417083,
+        2.1247966312565794
+      ],
+      "tokens_mannwhitney_p": 0.9399140932267478,
+      "latency_ratio_a_over_b": [
+        0.9477568134171908,
+        0.7749159278508102,
+        1.348320117714379
+      ],
+      "latency_mannwhitney_p": 0.6510766340778344
+    },
+    "enhance_old_vs_lazy": {
+      "a": "old",
+      "b": "new-lazy",
+      "n_a": 12,
+      "n_b": 12,
+      "success_a": 11,
+      "success_b": 10,
+      "fisher_p_success": 0.9999999999999986,
+      "tokens_ratio_a_over_b": [
+        0.6483298149757855,
+        0.374796817520746,
+        2.580029368575624
+      ],
+      "tokens_mannwhitney_p": 0.9539596927720386,
+      "latency_ratio_a_over_b": [
+        1.0256934077158797,
+        0.6961735028174552,
+        1.7139479905437351
+      ],
+      "latency_mannwhitney_p": 0.6861059569955559
+    },
+    "forced": {
+      "old": {
+        "n": 8,
+        "fail_closed": 0,
+        "success": 8,
+        "errors": {}
+      },
+      "new-eager": {
+        "n": 8,
+        "fail_closed": 8,
+        "success": 0,
+        "errors": {
+          "BonesAgentExecutionException": 8
+        }
+      }
+    }
+  }
+}

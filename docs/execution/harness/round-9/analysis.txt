@@ -1,0 +1,23 @@
+=== PRE-REGISTERED ANALYSIS ===
+normal          old        n=24 success=21 ( 87.5% [ 69.0, 95.7]) first=14 tokens_med=    2096 ms_med=   6374 calls_med=1.0 tools_runs=0 unknown=0 promo={}
+normal          new-eager  n=24 success=21 ( 87.5% [ 69.0, 95.7]) first=20 tokens_med=    9138 ms_med=  13838 calls_med=3.0 tools_runs=23 unknown=0 promo={}
+normal          new-lazy   n=24 success=21 ( 87.5% [ 69.0, 95.7]) first=11 tokens_med=    5339 ms_med=   7908 calls_med=2.0 tools_runs=0 unknown=0 promo={}
+injection       old        n=16 success=15 ( 93.8% [ 71.7, 98.9]) first=11 tokens_med=    1885 ms_med=   5112 calls_med=1.0 tools_runs=0 unknown=0 promo={}
+injection       new-lazy   n=16 success=14 ( 87.5% [ 64.0, 96.5]) first=10 tokens_med=    2066 ms_med=   5732 calls_med=1.0 tools_runs=0 unknown=0 promo={}
+long-context    old        n=16 success=16 (100.0% [ 80.6,100.0]) first=11 tokens_med=    5146 ms_med=   5651 calls_med=1.0 tools_runs=0 unknown=0 promo={}
+long-context    new-lazy   n=16 success=16 (100.0% [ 80.6,100.0]) first=13 tokens_med=    5224 ms_med=   5962 calls_med=1.0 tools_runs=0 unknown=0 promo={}
+forced-tool-loop old        n= 8 success= 8 (100.0% [ 67.6,100.0]) first= 6 tokens_med=    1788 ms_med=   4806 calls_med=1.0 tools_runs=0 unknown=0 promo={}
+forced-tool-loop new-eager  n= 8 success= 0 (  0.0% [  0.0, 32.4]) first= 0 tokens_med=    6115 ms_med=   8084 calls_med=3.0 tools_runs=8 unknown=0 promo={}
+enhance         old        n=12 success=11 ( 91.7% [ 64.6, 98.5]) first= 7 tokens_med=    2610 ms_med=   6527 calls_med=1.0 tools_runs=0 unknown=0 promo={'Rejected': 11}
+enhance         new-lazy   n=12 success=10 ( 83.3% [ 55.2, 95.3]) first= 6 tokens_med=    4026 ms_med=   6364 calls_med=1.5 tools_runs=0 unknown=0 promo={'Rejected': 10}
+
+=== TESTS ===
+normal_old_vs_lazy {"a": "old", "b": "new-lazy", "n_a": 24, "n_b": 24, "success_a": 21, "success_b": 21, "fisher_p_success": 1.0, "tokens_ratio_a_over_b": [0.39248923019292004, 0.33067407673001076, 2.100349040139616], "tokens_mannwhitney_p": 0.10776229039192153, "latency_ratio_a_over_b": [0.8060069554220677, 0.6330880635365569, 1.133254716981132], "latency_mannwhitney_p": 0.28362036331636564}
+normal_eager_vs_lazy {"a": "new-eager", "b": "new-lazy", "n_a": 24, "n_b": 24, "success_a": 21, "success_b": 21, "fisher_p_success": 1.0, "tokens_ratio_a_over_b": [1.7115564712492977, 1.1870586158192091, 4.724070450097847], "tokens_mannwhitney_p": 6.310679437238065e-06, "latency_ratio_a_over_b": [1.7500474233322796, 1.4588154032118805, 2.2743682310469313], "latency_mannwhitney_p": 5.8617292797435994e-08}
+normal_old_vs_eager {"a": "old", "b": "new-eager", "n_a": 24, "n_b": 24, "success_a": 21, "success_b": 21, "fisher_p_success": 1.0, "tokens_ratio_a_over_b": [0.22931713722915298, 0.18552707097761623, 0.6489558551414222], "tokens_mannwhitney_p": 1.8206806706722034e-07, "latency_ratio_a_over_b": [0.4605629222820392, 0.37763699084516383, 0.6258566203884529], "latency_mannwhitney_p": 3.682322935461002e-08}
+injection_old_vs_lazy {"a": "old", "b": "new-lazy", "n_a": 16, "n_b": 16, "success_a": 15, "success_b": 14, "fisher_p_success": 0.9999999999999977, "tokens_ratio_a_over_b": [0.9126119583635923, 0.325185587543002, 2.2217473884140553], "tokens_mannwhitney_p": 0.15209263248157967, "latency_ratio_a_over_b": [0.8918353105373342, 0.5566208862399585, 1.2348220516399162], "latency_mannwhitney_p": 0.2912928476178127}
+long_old_vs_lazy {"a": "old", "b": "new-lazy", "n_a": 16, "n_b": 16, "success_a": 16, "success_b": 16, "fisher_p_success": 1.0, "tokens_ratio_a_over_b": [0.9850703416594889, 0.943904968417083, 2.1247966312565794], "tokens_mannwhitney_p": 0.9399140932267478, "latency_ratio_a_over_b": [0.9477568134171908, 0.7749159278508102, 1.348320117714379], "latency_mannwhitney_p": 0.6510766340778344}
+enhance_old_vs_lazy {"a": "old", "b": "new-lazy", "n_a": 12, "n_b": 12, "success_a": 11, "success_b": 10, "fisher_p_success": 0.9999999999999986, "tokens_ratio_a_over_b": [0.6483298149757855, 0.374796817520746, 2.580029368575624], "tokens_mannwhitney_p": 0.9539596927720386, "latency_ratio_a_over_b": [1.0256934077158797, 0.6961735028174552, 1.7139479905437351], "latency_mannwhitney_p": 0.6861059569955559}
+forced {"old": {"n": 8, "fail_closed": 0, "success": 8, "errors": {}}, "new-eager": {"n": 8, "fail_closed": 8, "success": 0, "errors": {"BonesAgentExecutionException": 8}}}
+
+WROTE .tmp/live-experiment/analysis.json

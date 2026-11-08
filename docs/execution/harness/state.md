@@ -1,56 +1,47 @@
 # Harness State — Bones agents on the generic WIP agent runtime
 
-- **Round**: 9 of 12 — adversarial live comparison and the enhanced final composition.
+- **Round**: 10 of 12 — the pre-registered live experiment.
 - **Goal**: unchanged (agents on `IChatModel` → `IAgentExecutor` → `RuntimeToolInvoker` → `IAgentMemory`).
-- **Definition of done**: D1–D7 met; the live comparisons and both composition fixes are committed;
-  D8 is pending the CI run for the enhancement commit.
-- **Stop criteria**: D1–D7 met; D8 pending.
+- **Definition of done**: D1–D8 met at the enhancement HEAD `9314113` (CI green). The experiment did
+  not change the code; it corrected the cost claim and confirmed the lazy-tool decision.
+- **Stop criteria**: met for the migration; the experiment is complete and reported.
 
-## Live comparisons
+## Experiment result (round 10)
 
-**Round 7 (provider migration):** the live run found the dotted-tool-name 400; the adapter
-sanitize/restore fix made both paths complete (round-7 report).
+Protocol fixed before the run; **176/176 runs, 0 infrastructure errors, 0 exclusions**.
 
-**Round 8 (adversarial + enhanced composition):** the first adversarial matrix showed the new path
-spending 10–20× the completion tokens and 60–133 s because it did not send `thinking: disabled`.
-Two changes closed it:
+- **Success**: normal 21/24 in every arm (87.5%, Fisher p=1.0; risk difference 0, 95% CI
+  −20.8..+16.7 pp). No measured success benefit or harm.
+- **Cost**: old vs new-lazy median tokens 2,096 vs 5,339 (**2.55×**; p=0.108); the pre-registered
+  1.5× non-inferiority **fails**. Median latency 6.4 s vs 7.9 s (1.24×; CI upper 1.58×, not
+  established). On successful runs only, 1,938 vs 2,312 median tokens (1.19×).
+- **Ablation**: lazy vs eager median tokens 5,339 vs 9,138 (1.71×, p=6.3e-6); latency 7.9 vs 13.8 s
+  (1.75×, p=5.9e-8); success equal. Lazy is a real win over the naive composition.
+- **Safety**: forced tool loop old 8/8 success vs new 0/8, all **8/8 `MaxStepsReached`**; injection
+  old 15/16 vs new 14/16 (p=1.0), **0 non-compile tool calls**; long-context 16/16 both.
+- **Enhance**: 11/12 vs 10/12 (p=1.0), all `Rejected`; median tokens 2,610 vs 4,026.
 
-1. `DeepSeekChatModel` accepts an explicit `DeepSeekThinkingMode`; the Bones host passes the
-   migrated `Disabled`, matching the legacy provider.
-2. The compile tool is advertised lazily: no tools on the first turn, compile tool only on retry
-   turns (`AdvertiseToolsOnFirstTurn`, default false).
+Report: `docs/execution/harness/round-9/experiment-report.md`; raw: `results.jsonl`, `analysis.json`,
+`analysis.txt`; protocol: `experiment-protocol.md`.
 
-Post-enhancement live results (same prompts/model):
+## Decision
 
-| Scenario | Old | New (enhanced) |
-|---|---|---|
-| normal r1 | failed after 2 calls, 23.3 s (uncompilable script) | OK, 1 call, 6.4 s, 2,138 tokens |
-| normal r2 | OK, 1 call, 5.1 s, 1,790 tokens | OK, 3 calls, 12.4 s, 9,890 tokens (retry + tool after a compile failure) |
-| prompt injection | OK, safe | OK, safe; 2 calls |
-| long context | OK, 4,965 tokens | OK, 4,989 tokens |
-| forced tool loop | OK, ignores the instruction | fails closed with `MaxStepsReached` after 3 calls |
-| Enhance | Rejected, 2,223 tokens | Rejected, 6,415 tokens |
-
-Full report: `docs/execution/harness/round-8/adversarial-comparison.md` (EVD-140..144).
+Keep lazy tools (causally better than eager) and `thinking: disabled`. **Do not claim cost parity**:
+the new path is functionally equivalent and safer, but more expensive on live-validation retries.
+The next cost experiment, if needed, is a pre-registered no-tool-retry arm vs the current retry; do
+not change production behavior on this observation alone.
 
 ## Gate status
 
 | Gate | Status | Detail |
 |---|---|---|
-| G1 Evidence | PASS | live matrices, fix tests, suite counts |
-| G2 Falsification | PASS | found and fixed the thinking-cost gap; the injection/loop cases are adversarial evidence, not assumptions |
-| G3 Coverage | PASS | D1–D7 met; D8 pending the new CI run |
-| G4 Reproduction | PASS | Runtime 156/150/6, Bones 457/454/3 waived, host 1/1; live numbers in the report |
-| G5 Honesty | PASS | the retry cost and the stochastic one-run limits are disclosed; no release claim |
-
-## Objective ledger (new rows)
-
-| Round | Objective | Mode | Agents | New EVD | Falsified | Gates | Outcome |
-|---|---|---|---|---|---|---|---|
-| 7 | Live model comparison | Orchestrator + live API | 0 | 7 | dotted-tool 400 | G2 PASS | fixed, green |
-| 8 | Adversarial comparison + enhance composition | Orchestrator + live API | 0 | 5 | thinking-mode cost gap | G2 PASS | lazy tools + thinking parity; live re-run |
+| G1 Evidence | PASS | pre-registered protocol, raw data, analysis, report |
+| G2 Falsification | PASS | the experiment falsified the cost-parity claim; the report states it |
+| G3 Coverage | PASS | D1–D7 met; D8 green at `9314113` |
+| G4 Reproduction | PASS | 176/176, 0 infra; analysis selftest + byte-identical regeneration |
+| G5 Honesty | PASS | the failed non-inferiority, the retry cost and the wide success CIs are reported; no release claim |
 
 ## Next objective
 
-Commit the enhancement + adversarial report, push, and verify Tests CI (six jobs) and Modus CI at the
-new HEAD. Then update the final records. No release claim.
+Commit the experiment artifacts and the harness records, push, and verify the docs HEAD CI (the code
+HEAD `9314113` is already green). No release claim.

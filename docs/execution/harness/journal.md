@@ -1166,3 +1166,37 @@
 - **Evidence**: OBS-046, `adversarial2.log`
 - **Mitigation**: keep the retry budget bounded (`MaxCompileRetries`, `MaxSteps`); monitor retry ratio/usage per stage; accept the cost as the price of a compilable artifact.
 - **Gate**: —
+
+### OBS-047: The pre-registered experiment finds success parity, no cost parity, and a real lazy-tool win
+
+- **Source**: `docs/execution/harness/round-9/experiment-protocol.md` (pre-registered), `experiment-report.md`, `results.jsonl`, `analysis.json`, `analysis.txt`, `analysis.py`; `.tmp/live-experiment/experiment.log`
+- **Fact**: 176/176 runs completed with **0 infrastructure errors and 0 exclusions**. Normal scenario (N=24/arm): all three arms 21/24 (87.5%, Fisher p=1.0; risk difference 0, 95% CI −20.8..+16.7 pp). Median tokens all runs: old 2,096, eager 9,138, lazy 5,339; lazy/old = **2.55×** (bootstrap CI 0.48–3.02; Mann–Whitney p=0.108) — the pre-registered 1.5× non-inferiority **fails**. Median latency old 6.4 s vs lazy 7.9 s (1.24×; p=0.284; CI upper 1.58×, not established). On successful runs only, lazy 2,312 vs old 1,938 median tokens (1.19×) and means 3,829 vs 3,120 (1.23×). Lazy vs eager is a clear win: median tokens 5,339 vs 9,138 (1.71×, p=6.3e-6), latency 7.9 vs 13.8 s (1.75×, p=5.9e-8), success equal. Injection: old 15/16 vs new 14/16 (p=1.0), **0 non-compile tool calls**; long-context 16/16 each; forced-loop old 8/8 success vs new 0/8, **8/8 `MaxStepsReached`**; Enhance 11/12 vs 10/12 (p=1.0), all `Rejected`, median tokens 2,610 vs 4,026.
+- **Implications**: The migration is behaviorally equivalent in success but **is not cheaper than the old path**; the live-validation retry costs more and did not raise success in this sample. The lazy-tool enhancement is causally justified against the eager composition. The safety properties (fail-closed budget, injection-as-data) hold.
+- **Confidence**: High (pre-registered, randomized block order, fixed N, all runs reported)
+- **Agent**: orchestrator
+- **Related**: EVD-146..EVD-150, VAL-030, DEC-028, RISK-012
+
+### VAL-030: The experiment is reproducible and the analysis is pre-registered
+
+- **Target**: The experiment's internal validity and reproducibility
+- **Method**: Protocol written before the first run with fixed N, block randomization (seed 20261108), pre-specified endpoints and analysis; analysis script unit-checked against known Fisher/Wilson/Mann–Whitney examples; the committed raw results regenerate the committed `analysis.json` byte-identically; 176/176 cells complete, 0 infra.
+- **Evidence examined**: `experiment-protocol.md`; `analysis.py --selftest` output; `diff` of the regenerated analysis (identical); `analysis.txt`; `results.jsonl`.
+- **Result**: Supported
+- **Conclusion**: The reported numbers are the pre-registered ones, not post-hoc selections. The experiment's scope (one model, one prompt/scenario, N=24/16/8/12, compile-success endpoint) bounds the claims; the success CIs are wide, so "no difference" is not "equivalence".
+- **Related**: OBS-047, EVD-146..EVD-150
+
+### DEC-028: Keep lazy tools, stop claiming cost parity, and pre-register the next cost arm
+
+- **Decision**: Keep `AdvertiseToolsOnFirstTurn=false` (lazy) as the production default — it beats eager on cost with equal success. Keep `thinking: disabled` for Bones. Correct the earlier claim: the new path is **not** cost-equivalent to the old path; report the measured gap (2.55× median all-run tokens, 1.22× mean; 1.24× median latency, 1.10× mean). If cost becomes the priority, the next pre-registered experiment is an arm that retries **without** advertising the compile tool (old-style retry) vs the current lazy-with-tool retry, with the same retry prompt; do not change the production behavior on the basis of this observation alone.
+- **Rationale**: The experiment isolates the lazy change (eager vs lazy, p<1e-5) but does not show a success benefit from tool validation; the honest state is "functionally equivalent, more expensive on retries". Removing the tool would remove the safety/validation capability that the migration deliberately added.
+- **Related**: OBS-047, VAL-030, RISK-012
+
+### RISK-012: The new path remains more expensive than the old path
+
+- **Risk**: Live-validation retries cost more than the old-style retries; median all-run tokens are ~2.55× old (mean ~1.22×), median latency ~1.24× (mean ~1.10×), with no measured success benefit in the N=24 experiment.
+- **Likelihood**: High (observed)
+- **Impact**: Medium (cost/throughput; no correctness or safety regression)
+- **Evidence**: OBS-047, `analysis.json`
+- **Mitigation**: lazy tools already remove the first-turn penalty; the remaining gap is the retry tool call. Options: accept the validation cost, or run the pre-registered no-tool-retry arm before changing behavior. Monitor retry ratio and tokens per stage.
+- **Gate**: —
+
