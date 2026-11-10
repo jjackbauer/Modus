@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Deterministic baseline poker agents, seeded Monte Carlo equity and batch simulation for Wip.Tholdem.</Description>
+    <PackageId>Wip.Tholdem.Agents</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\Wip.Tholdem\Wip.Tholdem.csproj" />
+  </ItemGroup>
+</Project>

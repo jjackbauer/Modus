@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Canonical LLM transcripts, replay and proposal parsing for the Wip.Tholdem model harness.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Tholdem.Agents\Wip.Tholdem.Agents.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+  </ItemGroup>
+</Project>
