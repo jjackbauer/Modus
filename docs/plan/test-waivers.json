@@ -17,7 +17,8 @@
                            "Wip.Abstractions.Tests":  55,
                            "Wip.Runtime.Tests":  146,
                            "Wip.Builder.Tests":  32,
-                           "Wip.Sandbox.Worker.Tests":  18
+                           "Wip.Sandbox.Worker.Tests":  18,
+                           "Wip.Tholdem.Tests":  446
                        },
     "knownAborted":  [
                          {

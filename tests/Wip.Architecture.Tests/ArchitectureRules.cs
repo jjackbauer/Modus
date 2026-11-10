@@ -21,6 +21,10 @@ internal static class ArchitectureRules
         new("sandbox-protocol-no-implementations", "Wip.Sandbox.Protocol", ["Wip.*"]),
         new("sandbox-worker-no-host", "Wip.Sandbox.Worker", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.Runtime", "Wip.ShellHost", "Wip.Bones.Host"]),
         new("sandbox-client-no-host", "Wip.Sandbox.WorkerClient", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.Runtime", "Wip.ShellHost", "Wip.Bones.Host"]),
+        new("tholdem-no-bones", "Wip.Tholdem", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost"]),
+        new("tholdem-agents-no-bones-or-hosts", "Wip.Tholdem.Agents", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost", "Wip.Tholdem.Host"]),
+        new("tholdem-web-no-bones-or-hosts", "Wip.Tholdem.Web", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost", "Wip.Tholdem.Host"]),
+        new("tholdem-host-no-bones", "Wip.Tholdem.Host", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost"]),
         new("bones-agents-no-legacy-provider", "Wip.Bones.Agents", ["Wip.Bones.ModelProviders.DeepSeek"])
     ];
 

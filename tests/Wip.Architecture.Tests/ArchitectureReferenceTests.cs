@@ -13,7 +13,7 @@ public sealed class ArchitectureReferenceTests
     {
         var graph = ProjectReferenceGraph.Load(RepositoryRoot.Find());
 
-        Assert.Equal(43, graph.Count);
+        Assert.Equal(48, graph.Count);
     }
 
     [Fact]

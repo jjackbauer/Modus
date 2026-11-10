@@ -34,7 +34,8 @@ $projects = @(
     'WIP/Wip.Bones.Host.Tests/Wip.Bones.Host.Tests.csproj',
     'WIP/Wip.ShellHost.Tests/Wip.ShellHost.Tests.csproj',
     'WIP/Wip.Bones.E2E.Tests/Wip.Bones.E2E.Tests.csproj',
-    'tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj'
+    'tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj',
+    'WIP/Wip.Tholdem.Tests/Wip.Tholdem.Tests.csproj'
 )
 
 New-Item -ItemType Directory -Force -Path $ResultsDirectory | Out-Null

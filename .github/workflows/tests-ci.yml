@@ -135,6 +135,8 @@ jobs:
         run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
       - name: Run agent safety suite
         run: dotnet test WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~AgentSafetyTests" --results-directory artifacts/security-test-results --logger "trx;LogFileName=AgentSafetyTests.trx"
+      - name: Run Tholdem agent security suite
+        run: dotnet test WIP/Wip.Tholdem.Tests/Wip.Tholdem.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~TholdemRuntimeAgentTests|FullyQualifiedName~SessionHandStoreTests|FullyQualifiedName~LiveModelGateTests|FullyQualifiedName~RuntimeSourceBoundaryTests|FullyQualifiedName~ToolContractTests" --results-directory artifacts/security-test-results --logger "trx;LogFileName=TholdemSecurity.trx"
       - name: Dump containment diagnostics
         if: always()
         shell: pwsh
@@ -187,6 +189,8 @@ jobs:
         run: dotnet test tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj --configuration Release --no-build --results-directory artifacts/security-test-results-linux --logger "trx;LogFileName=Wip.Sandbox.Worker.Tests.trx"
       - name: Run agent safety suite
         run: dotnet test WIP/Wip.Runtime.Tests/Wip.Runtime.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~AgentSafetyTests" --results-directory artifacts/security-test-results-linux --logger "trx;LogFileName=AgentSafetyTests.trx"
+      - name: Run Tholdem agent security suite
+        run: dotnet test WIP/Wip.Tholdem.Tests/Wip.Tholdem.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~TholdemRuntimeAgentTests|FullyQualifiedName~SessionHandStoreTests|FullyQualifiedName~LiveModelGateTests|FullyQualifiedName~RuntimeSourceBoundaryTests|FullyQualifiedName~ToolContractTests" --results-directory artifacts/security-test-results-linux --logger "trx;LogFileName=TholdemSecurity.trx"
       - name: Upload security test results
         if: always()
         uses: actions/upload-artifact@v4

@@ -48,4 +48,12 @@
     <Project Path="WIP/Wip.Validation.DotNet.Tests/Wip.Validation.DotNet.Tests.csproj" />
     <Project Path="WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj" />
   </Folder>
+  <Folder Name="/WIP/Tholdem/">
+    <Project Path="WIP/Wip.Tholdem/Wip.Tholdem.csproj" />
+    <Project Path="WIP/Wip.Tholdem.Agents/Wip.Tholdem.Agents.csproj" />
+    <Project Path="WIP/Wip.Tholdem.ModelHarness/Wip.Tholdem.ModelHarness.csproj" />
+    <Project Path="WIP/Wip.Tholdem.Host/Wip.Tholdem.Host.csproj" />
+    <Project Path="WIP/Wip.Tholdem.Web/Wip.Tholdem.Web.csproj" />
+    <Project Path="WIP/Wip.Tholdem.Tests/Wip.Tholdem.Tests.csproj" />
+  </Folder>
 </Solution>
