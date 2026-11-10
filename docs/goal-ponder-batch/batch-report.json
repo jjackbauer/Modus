@@ -1,0 +1,466 @@
+{
+  "schema": "tholdem.ponder-batch.v1",
+  "generated": "2026-11-10",
+  "request": "at least 10 times this level of experiment run, more aggressively",
+  "shape": {
+    "runs": 10,
+    "roundsPerRun": 4,
+    "seats": 6,
+    "handsPerRound": 20,
+    "searchGridCapacity": 378,
+    "searchSeeds": 50,
+    "gateSeeds": 24,
+    "analysisSource": "genome"
+  },
+  "seeds": [
+    1099513000001,
+    1099513000002,
+    1099513000003,
+    1099513000004,
+    1099513000005,
+    1099513000006,
+    1099513000007,
+    1099513000008,
+    1099513000009,
+    1099513000010
+  ],
+  "aggregate": {
+    "completedRuns": 10,
+    "totalPromotions": 12,
+    "distinctPromotedGenomes": 10,
+    "runsWithPromotion": 10,
+    "toolCalls": 1472,
+    "errors": 0,
+    "freshRobustGenomes": 7,
+    "freshChecksPassed": 34,
+    "freshChecksTotal": 40
+  },
+  "runs": [
+    {
+      "run": 1,
+      "seed": 1099513000001,
+      "promotions": 2,
+      "gateLcbs": [
+        20.455998559364314,
+        10.981330562509743,
+        -15.731483475213857,
+        -17.824813620410474
+      ],
+      "final": {
+        "id": "tholdem-strategy-v3-b4dd8c21",
+        "genome": [
+          0.62,
+          0.15,
+          0.1,
+          1.35
+        ]
+      },
+      "toolCalls": 156,
+      "errors": 0
+    },
+    {
+      "run": 2,
+      "seed": 1099513000002,
+      "promotions": 1,
+      "gateLcbs": [
+        29.292761967776343,
+        -26.95288878647345,
+        -23.810628596189094,
+        -9.52109376058285
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-ce0a90be",
+        "genome": [
+          0.7,
+          0.15,
+          0.18,
+          1.1
+        ]
+      },
+      "toolCalls": 118,
+      "errors": 0
+    },
+    {
+      "run": 3,
+      "seed": 1099513000003,
+      "promotions": 1,
+      "gateLcbs": [
+        28.389330654381055,
+        -1.8368371055875117,
+        -3.1246539019785713,
+        -3.558961394466666
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-af92648d",
+        "genome": [
+          0.9,
+          0.15,
+          0.14,
+          1.1
+        ]
+      },
+      "toolCalls": 153,
+      "errors": 0
+    },
+    {
+      "run": 4,
+      "seed": 1099513000004,
+      "promotions": 1,
+      "gateLcbs": [
+        3.4288716566902835,
+        20.715383896955164,
+        4.8680402527491005,
+        2.0546464983128736
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-c2ac7636",
+        "genome": [
+          1,
+          0.15,
+          0.14,
+          1
+        ]
+      },
+      "toolCalls": 137,
+      "errors": 0
+    },
+    {
+      "run": 5,
+      "seed": 1099513000005,
+      "promotions": 1,
+      "gateLcbs": [
+        30.546830300848704,
+        -8.764346998770526,
+        -44.0599636793049,
+        -53.685559255428736
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-ce0a90be",
+        "genome": [
+          0.7,
+          0.15,
+          0.18,
+          1.1
+        ]
+      },
+      "toolCalls": 151,
+      "errors": 0
+    },
+    {
+      "run": 6,
+      "seed": 1099513000006,
+      "promotions": 1,
+      "gateLcbs": [
+        24.851748565534674,
+        -27.28304496296129,
+        0.32424892918785275,
+        3.4063198081630395
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-25a644e8",
+        "genome": [
+          0.95,
+          0.15,
+          0.14,
+          1
+        ]
+      },
+      "toolCalls": 124,
+      "errors": 0
+    },
+    {
+      "run": 7,
+      "seed": 1099513000007,
+      "promotions": 1,
+      "gateLcbs": [
+        18.8276,
+        -4.8964,
+        -0.8825,
+        -40.9245
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-cc96dffb",
+        "genome": [
+          0.8,
+          0.15,
+          0.18,
+          1.1
+        ]
+      },
+      "toolCalls": 165,
+      "errors": 0
+    },
+    {
+      "run": 8,
+      "seed": 1099513000008,
+      "promotions": 1,
+      "gateLcbs": [
+        6.0204,
+        -44.5849,
+        -8.411,
+        -7.0169
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-7e4e9a5f",
+        "genome": [
+          0.85,
+          0.15,
+          0.18,
+          1.1
+        ]
+      },
+      "toolCalls": 144,
+      "errors": 0
+    },
+    {
+      "run": 9,
+      "seed": 1099513000009,
+      "promotions": 2,
+      "gateLcbs": [
+        27.4526,
+        6.5479,
+        0,
+        -6.4539
+      ],
+      "final": {
+        "id": "tholdem-strategy-v3-2c9559bc",
+        "genome": [
+          0.7,
+          0.2,
+          0.14,
+          1
+        ]
+      },
+      "toolCalls": 147,
+      "errors": 0
+    },
+    {
+      "run": 10,
+      "seed": 1099513000010,
+      "promotions": 1,
+      "gateLcbs": [
+        36.7734,
+        -10.2076,
+        3.438,
+        0.2112
+      ],
+      "final": {
+        "id": "tholdem-strategy-v2-45a371d1",
+        "genome": [
+          1,
+          0.15,
+          0.18,
+          1
+        ]
+      },
+      "toolCalls": 177,
+      "errors": 0
+    }
+  ],
+  "strategies": [
+    {
+      "genome": [
+        0.62,
+        0.15,
+        0.1,
+        1.35
+      ],
+      "promoted": [
+        "run1-r2"
+      ],
+      "gateLcb": [
+        10.981330562509743
+      ],
+      "freshChecks": "2/4",
+      "robust": false,
+      "freshLcbRange": [
+        -41.756,
+        25.439
+      ]
+    },
+    {
+      "genome": [
+        0.7,
+        0.15,
+        0.18,
+        1.1
+      ],
+      "promoted": [
+        "run2-r1",
+        "run5-r1"
+      ],
+      "gateLcb": [
+        29.292761967776343,
+        30.546830300848704
+      ],
+      "freshChecks": "3/4",
+      "robust": false,
+      "freshLcbRange": [
+        -6.783,
+        43.033
+      ]
+    },
+    {
+      "genome": [
+        0.7,
+        0.2,
+        0.14,
+        1
+      ],
+      "promoted": [
+        "run9-r2"
+      ],
+      "gateLcb": [
+        6.5479
+      ],
+      "freshChecks": "1/4",
+      "robust": false,
+      "freshLcbRange": [
+        -12.386,
+        30.812
+      ]
+    },
+    {
+      "genome": [
+        0.8,
+        0.15,
+        0.18,
+        1.1
+      ],
+      "promoted": [
+        "run7-r1"
+      ],
+      "gateLcb": [
+        18.8276
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        8.296,
+        33.589
+      ]
+    },
+    {
+      "genome": [
+        0.85,
+        0.15,
+        0.18,
+        1.1
+      ],
+      "promoted": [
+        "run8-r1"
+      ],
+      "gateLcb": [
+        6.0204
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        13.731,
+        37.079
+      ]
+    },
+    {
+      "genome": [
+        0.9,
+        0.15,
+        0.14,
+        1.1
+      ],
+      "promoted": [
+        "run3-r1"
+      ],
+      "gateLcb": [
+        28.389330654381055
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        24.687,
+        29.286
+      ]
+    },
+    {
+      "genome": [
+        0.95,
+        0.15,
+        0.14,
+        1
+      ],
+      "promoted": [
+        "run6-r1"
+      ],
+      "gateLcb": [
+        24.851748565534674
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        24.908,
+        27.867
+      ]
+    },
+    {
+      "genome": [
+        1,
+        0.15,
+        0.14,
+        0.85
+      ],
+      "promoted": [
+        "run9-r1"
+      ],
+      "gateLcb": [
+        27.4526
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        25.026,
+        28.001
+      ]
+    },
+    {
+      "genome": [
+        1,
+        0.15,
+        0.14,
+        1
+      ],
+      "promoted": [
+        "run4-r2"
+      ],
+      "gateLcb": [
+        20.715383896955164
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        25.026,
+        28.001
+      ]
+    },
+    {
+      "genome": [
+        1,
+        0.15,
+        0.18,
+        1
+      ],
+      "promoted": [
+        "run1-r1",
+        "run10-r1"
+      ],
+      "gateLcb": [
+        20.455998559364314,
+        36.7734
+      ],
+      "freshChecks": "4/4",
+      "robust": true,
+      "freshLcbRange": [
+        28.929,
+        32.584
+      ]
+    }
+  ]
+}

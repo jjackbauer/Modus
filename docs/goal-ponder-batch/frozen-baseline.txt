@@ -1,0 +1,7 @@
+# Frozen baseline before the batch (SHA-256)
+
+9ff873f0c7727d79957815b29556c7028b37c11e980b65bed8689ef4ee7f71ee  WIP\Wip.Tholdem.Agents\Learning\EvaluationCriteria.cs
+2bb7a80083500b34b43280a5adc67342f3b57c201c75b909a6dfa0a8cf788cbe  WIP\Wip.Tholdem.Agents\Learning\PromotionPolicy.cs
+72252cdd9bdbf838a3ddc0a5e5abb60298ca3d356ee4bb455fd521802e0029f0  WIP\Wip.Tholdem.Agents\Learning\PromotionVerifier.cs
+56c85e2de11fc5f4b30acd3423c65b6ffcea0cbaa2e7fc9a2cbe87ec8b8c251d  WIP\Wip.Tholdem.Agents\Learning\MatchEvaluator.cs
+ec4e7845746a930bc115387e25176ad2bf6a417261550939571630a1a944b123  WIP\Wip.Tholdem.Agents\SeedDerivation.cs

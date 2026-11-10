@@ -1,0 +1,49 @@
+# Batch artifact hashes (SHA-256)
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `batch-report.json` | 8057 | `2fc6b283f841f560f4cd628845f33ec732202323e4ae50e8103ed43eed23c32e` |
+| `batch-report.md` | 5473 | `46f0a303669880717d8305de31cacaa018a680f3507f434e1a81e1ddeeb554a5` |
+| `deliverables.md` | 105 | `755f1a82fbf12ae9cafcbdbfa3f8996a0d17fa2ce72fbc50a60cac884b2a2c0a` |
+| `evidence.md` | 7544 | `6bc635e3edd12407eabec4157510918858f73b2350cdbbb0a5d84989d8ddb99d` |
+| `frozen-baseline.txt` | 629 | `6161927afb49e45ba2cf578e2648e292fab49513ea15935ddd415f7631ed0837` |
+| `goal.md` | 4261 | `7c3fc68183d1f24abc5800b68a8fda2b39f11629bcce663556ddef08948221f5` |
+| `intent-audit.md` | 3445 | `82ce698365d996dd1958095777492a1ba51fb186f7e3d008070ae64f0772bc83` |
+| `journal.md` | 15174 | `c8a7ec49049c9f2bea92eea15e091e97ede769bb700f231181b6cd10b5ccecc9` |
+| `logs/batch-runs.log` | 661 | `94612e5a2445d7013c5bed6d90d6297f107bb5ffaffc201e400858b25ef448f2` |
+| `logs/run-01-attempt1.log` | 4932 | `9f0686916d56d159bf73d0030eb144172bc9ccfb121690677a56115c7862ade2` |
+| `logs/run-02-attempt1.log` | 4936 | `ce1ad77cf395ec2ac337a51c9e277e769f9b8a4c18c64ae85407ef176b19ce86` |
+| `logs/run-03-attempt1.log` | 4918 | `662ed512053b9f006e2a50017a5e026cb41be83cd31f5e8d3a9af642bdaf4c28` |
+| `logs/run-04-attempt1.log` | 4980 | `997cee44616a8e7d9a176f5e9699c22e74dd83e5a43ef69a0c7438dc00148f75` |
+| `logs/run-05-attempt1.log` | 4914 | `356d8de0a41ac9de8f6f25ef941588a3169897be90091fc4c0bdfedcc59bc481` |
+| `logs/run-06-attempt1.log` | 4828 | `9abd28dd681fbf4470c80ddb7aeb4e1b0d691ed14c1498ea57911c7fea1a55f8` |
+| `logs/run-07-attempt1.log` | 4820 | `586563401a537ba645b4f79d6a78879afb48be47930f1d59b124d40f5ffb5e21` |
+| `logs/run-08-attempt1.log` | 4864 | `ab3a8e917cd5e07f3db98d91dfe7bf68d0851bf8167931253eebfe7a145419a9` |
+| `logs/run-09-attempt1.log` | 4820 | `88298b76ab1cdd88aca145585cd92098950bdc5dd46a8931c1411da9e9377eff` |
+| `logs/run-10-attempt1.log` | 5004 | `3ed7081949b63fa9668f59513a016388ebae4cbb497560f39fad5d02097f87d0` |
+| `pointers/run-01.json` | 149 | `3b20839cb888cd52d3fa9ed7c74d0a76714e88aa663b540f4a60bd7b9557f751` |
+| `pointers/run-02.json` | 149 | `7320522faba65ef0be7430135ad59b7d9d6dd0556ad546888d3380107f4c8278` |
+| `pointers/run-03.json` | 149 | `1a65f8295c5566911bea67ee83cb98e59a8e8599fcda26dff4f0344697f97223` |
+| `pointers/run-04.json` | 149 | `8f50535cee7f8840d8296960282f6a0da7726521724e2818fa0204d994d5ec63` |
+| `pointers/run-05.json` | 149 | `f14748b5034b0654652c0ae6d462d56ec2cd145d81596cc8390308b2babfcc74` |
+| `pointers/run-06.json` | 149 | `42b39d5b06e6dd27c7887cb64dcfba1664b0414c894c1a39e93dc4f926dac52b` |
+| `pointers/run-07.json` | 149 | `536c24f6924d267082b8b1afbc9ac21cec1ec856e08ab43d3f4cda88d6796e26` |
+| `pointers/run-08.json` | 149 | `0c57e040fa470cec52ac73d365c31dc92d65841c38ab019c13ec7814f3e5f7cd` |
+| `pointers/run-09.json` | 149 | `d33d469a27cd64ad7dc1a21fb2fd45740f0f66c25d2c68ce0812342f20e83ffe` |
+| `pointers/run-10.json` | 149 | `b7ca29a63fd3fadcd1c2f27068b19705add525a0e289b64af7c10ee64ee577e4` |
+| `preregistration.md` | 2061 | `9ae0b96774480792b32f2a44bb950f144213047a80b7f23900c202e572ffbb29` |
+| `round-1/implementation.md` | 10848 | `b236db89525426744c14db609125c918198aec405cf436961446e28537ee6b1a` |
+| `run-batch.ps1` | 2709 | `3ac7f21912aa72976725a9f2255be4791184e53e6e4719a8a525dcaf0a7c818a` |
+| `runs/run-01.json` | 12368 | `05f30bdfc7501b4258fff4e5f9274c9b85c4801d02c17d2d490ae0cf146e93cf` |
+| `runs/run-02.json` | 12507 | `7b5585b101402cc21810486475edb389b1db30b75bcd71a1bb5723fe03d6c0fb` |
+| `runs/run-03.json` | 12408 | `cfd029f9aec6d78c2d94a7d6e0a57285ef222020d2efc2ef27e72893315fd122` |
+| `runs/run-04.json` | 12496 | `42562a2e687bb512c5f135df1af81ad2e74123749eddbf1dd71a1fcca1f86364` |
+| `runs/run-05.json` | 12476 | `cf9eae177ed8545cffb57ad3145920aad23e20a7db10930db331089cbd835cb3` |
+| `runs/run-06.json` | 12435 | `d555ff36d6c075ce09a1cde41c2fd69665e6bc159060c0b7e17c16bfd41c1def` |
+| `runs/run-07.json` | 12398 | `fdf3aee074a9a91192cb45024cb764a9f98385dee4f3c0675380e954b2fd7542` |
+| `runs/run-08.json` | 12639 | `a6ece006f31ddc69a8c45b123627ec80b0596317e958b57ed1b2c9eff2dacf56` |
+| `runs/run-09.json` | 12391 | `479f24a15bd05150e2abb844c66f6e3a70473ba20f3ce9983b83507f331baa4f` |
+| `runs/run-10.json` | 12408 | `605a318c943882d63d69940fdce0a7ac6b7b68740872ec5404fd4f8e55613a56` |
+| `state.md` | 1335 | `61af12e4e033a7620bf123a12fcb98c1dfa6a6b65acc02c48b3b71252aaaa951` |
+
+The manifest itself is excluded. Live run data remains under `.tmp/goal-llm-harness/batch/`.
