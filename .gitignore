@@ -50,6 +50,8 @@ packages/
 
 # Local scratch and generated runtime state (kept on disk, not committed)
 .tmp/
+# Operator secrets (API keys); never commit
+.secrets/
 host-stdout.txt
 host-stderr.txt
 test_status_simple.cs
