@@ -72,6 +72,14 @@ Apply the following gate checks to the document. Each rule produces a **Pass** o
   ```
 - Items missing the numbered format, the backtick-wrapped test name, or the `*Assumption*:` line are flagged.
 
+### Rule 9 - Scope sign-off (conditional)
+
+- **Only checked when** the document transfers a named external system or names a mechanism the user asked to keep.
+- The document must contain a `## Scope Decisions Requiring Sign-Off` section with a pipe table.
+- Every headline mechanism must be `approved` or `rejected`; a `pending` row is a violation.
+- A document that recommends an implementation sequence while any headline row is `pending` is `DRAFT - BLOCKED ON SIGN-OFF`, not build-ready, and fails this gate.
+- A document with no Scope Decisions section fails when it contains a `Reject`/`Defer` verdict for a mechanism named in the user request or in the source's title.
+
 ## Output Format
 
 Produce a Markdown table summarising each rule:
@@ -86,6 +94,8 @@ Produce a Markdown table summarising each rule:
 | 6 | Verification gate | âœ… Pass | â€” |
 | 7 | Closing verification line | âŒ Fail | Missing italicised "Zero Falsified" in last 5 lines |
 | 8 | Numbered test plan items | âœ… Pass | â€” |
+
+Rule 9 is reported as an additional row when it applies.
 
 Use these status indicators:
 - **âœ… Pass** â€” rule satisfied
@@ -102,7 +112,7 @@ Follow the table with a verdict line:
 If the verdict is **FAIL**, the gate **itself** must:
 
 1. Apply fixes directly to the document â€” edit the Markdown in-place to resolve each listed violation.
-2. Re-run all 8 rules against the corrected document and produce a new results table.
+2. Re-run all applicable rules against the corrected document and produce a new results table.
 3. Repeat until the verdict is **PASS**, or until **3 iterations** have been exhausted (to prevent infinite loops).
 
 After reaching **PASS** (or exhausting iterations), return:
@@ -138,7 +148,7 @@ For each entry, check that all required fields defined in `journal-schema.md` ar
 | OBS | Source, Fact, Implications, Confidence, (Related optional) |
 | HYP | Claim, Supporting OBS, Why it matters, Falsification strategy, Status, Confidence |
 | VAL | Target HYP, Method, Evidence examined, Result, Conclusion, (Related optional) |
-| DEC | Decision, Rationale, Alternatives considered, (Related optional) |
+| DEC | Decision, Owner, Status, Rationale, Alternatives considered, (Related optional) |
 | TODO | Task, Priority, Depends on, Status, (Related optional) |
 | RISK | Risk, Likelihood, Impact, Evidence, Mitigation |
 | OQ | Question, Needed evidence, Priority, (Related optional) |

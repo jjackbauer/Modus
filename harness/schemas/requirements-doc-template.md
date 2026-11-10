@@ -18,6 +18,16 @@ description: Shared boilerplate for requirements documents produced by requireme
 
 ---
 
+## Scope Decisions Requiring Sign-Off
+
+| ID | Decision | Source mechanism | Alternatives | Owner | Status |
+|---|---|---|---|---|---|
+| D-01 | <decision> | <mechanism> | <alternatives> | user | pending / approved / rejected |
+
+> A `pending` headline row makes this document `DRAFT — BLOCKED ON SIGN-OFF`. It may be reviewed, but it is not build-ready and no goal may be created from it.
+
+---
+
 ## Functionality Worktree
 
 ### Verification Policy
@@ -95,6 +105,17 @@ description: Shared boilerplate for requirements documents produced by requireme
 
 ---
 
+## Scope Sign-Off Compliance Check
+
+| Condition | Result | Evidence |
+|---|---|---|
+| Verbatim request and named mechanisms are present | Pass / Fail | <brief evidence> |
+| Every headline mechanism is landed or has a user-approved exclusion | Pass / Fail | <brief evidence> |
+| No `pending` headline row remains | Pass / Fail | <brief evidence> |
+| The test plan covers the named mechanism, not only a proxy | Pass / Fail | <brief evidence> |
+
+---
+
 ## Absolute Behavior Verification Compliance Check
 
 | Condition | Result | Evidence |
@@ -114,11 +135,13 @@ description: Shared boilerplate for requirements documents produced by requireme
 Every saved requirements document must include:
 
 1. **Verification Policy** — behavior-proof is non-negotiable; metadata-only is supporting evidence only.
-2. **Completeness Checklist** — unchecked items with bracketed dependency or mandatory tags.
-3. **Test Plan** — numbered items with backtick-wrapped test names and `*Assumption*:` lines.
-4. **Format Gate Results** — PASS verdict from plan-format-gate (or self-healed to PASS).
-5. **Absolute Behavior Verification Compliance Check** — explicit pass/fail table before save.
-6. **Closing verification line** — italicized line in the last five lines containing `Zero Falsified`.
+2. **Scope Decisions Requiring Sign-Off** — verbatim request, named mechanisms, owner, and status; no build-ready document has a `pending` headline row.
+3. **Completeness Checklist** — unchecked items with bracketed dependency or mandatory tags.
+4. **Test Plan** — numbered items with backtick-wrapped test names and `*Assumption*:` lines.
+5. **Format Gate Results** — PASS verdict from plan-format-gate (or self-healed to PASS), including Rule 9 when scope sign-off applies.
+6. **Scope Sign-Off Compliance Check** — explicit pass/fail table before save.
+7. **Absolute Behavior Verification Compliance Check** — explicit pass/fail table before save.
+8. **Closing verification line** — italicized line in the last five lines containing `Zero Falsified`.
 
 ## Behavior-Proof Minimum Gates
 

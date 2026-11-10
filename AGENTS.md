@@ -21,6 +21,13 @@ The architecture emphasizes strict module boundaries, explicit plugin contracts,
 4. Plugins must be discoverable, validated, and registered through a deterministic startup pipeline.
 5. Public APIs and plugin contracts must be covered by automated e2e integration tests before behavioral changes are accepted.
 
+## Intent fidelity
+
+- Quote the user's request verbatim and name its mechanisms before evaluating or planning.
+- A `Reject` or `Defer` of a headline mechanism is a user-owned decision; it blocks the build spec until the user answers.
+- Never substitute a deterministic proxy for a mechanism the user named without an explicit user-approved exclusion.
+- Full rule: `harness/rules/intent-fidelity.md`.
+
 ## File encoding
 
 **Proven on Windows:** Cursor `Write` always creates UTF-16. **Do not use `Write` for text files.**

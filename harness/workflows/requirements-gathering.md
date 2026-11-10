@@ -87,6 +87,18 @@ Record findings in a `DiagnosticsSummary` block:
 
 Every critical failure discovered becomes a **mandatory unchecked item** injected into the checklist in Step 3.
 
+### Step 1a — Source and intent fidelity (mandatory for a named source or user-named mechanism)
+
+Skip this step only when the request names no external system and no mechanism the user wants kept.
+
+1. Quote the user's request verbatim in the output document.
+2. List every named mechanism/entity from the request and from the source's defining vocabulary.
+3. Build the fit matrix with `Owner` and `Sign-off` columns:
+   | Mechanism | Source evidence | Target constraint | Verdict | Owner | Sign-off |
+4. Any `Reject` or `Defer` of a **headline mechanism** is a user-owned scope decision, not a finding. Put it in the `Scope Decisions Requiring Sign-Off` table with `Owner: user` and `Status: pending`, and ask the user the decision directly.
+5. Do not proceed to Step 2 or write an implementation sequence while a pending headline decision exists. The correct output is a `DRAFT — BLOCKED ON SIGN-OFF` document plus the question.
+6. Record constraint provenance: user-stated, repo-documented, or agent-inferred. An agent-inferred constraint may not exclude a user-named mechanism.
+
 ### Step 1 — Derive the completeness checklist
 
 Use `AnalysisSource` to produce the checklist. Combine the analysis source with the `DiagnosticsSummary` from Step 0:
@@ -186,6 +198,16 @@ Create the file if it does not exist; overwrite it if it does.
 | dotnet build | passed / failed |
 | dotnet test | N passed, M failed |
 | Failures addressed in plan | yes / no — <list missing> |
+
+---
+
+## Scope Decisions Requiring Sign-Off
+
+| ID | Decision | Source mechanism | Alternatives | Owner | Status |
+|---|---|---|---|---|---|
+| D-01 | <decision> | <mechanism> | <alternatives> | user | pending / approved / rejected |
+
+> A `pending` headline row makes this document `DRAFT — BLOCKED ON SIGN-OFF`. Do not save it as build-ready and do not create a build goal from it.
 
 ---
 

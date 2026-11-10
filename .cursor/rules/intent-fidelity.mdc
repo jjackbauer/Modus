@@ -1,0 +1,6 @@
+---
+description: Preserve the user's named mechanisms through evaluation, requirements, and goals.
+alwaysApply: true
+---
+
+Follow @harness/rules/intent-fidelity.md when evaluating, specifying, or building any requested capability. Never reject or replace a mechanism the user named without explicit user approval.
