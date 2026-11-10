@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tholdem Spectator Viewer</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzBmMTcyYSIvPjxyZWN0IHg9IjUiIHk9IjMiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNiIgcng9IjMiIGZpbGw9IiNmOGZhZmMiLz48dGV4dCB4PSIxNiIgeT0iMTciIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLHNlcmlmIiBmb250LXNpemU9IjEzIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMGYxNzJhIj5BPC90ZXh0Pjx0ZXh0IHg9IjE2IiB5PSIyNyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiNiOTFjMWMiPuKZpTwvdGV4dD48L3N2Zz4=" />
+  <link rel="stylesheet" href="viewer.css" />
+</head>
+<body>
+  <main class="viewer">
+    <header class="viewer-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">♠</span>
+        <h1>Tholdem Spectator Viewer</h1>
+      </div>
+      <p id="status" class="status-line" role="status" aria-live="polite" aria-atomic="true" data-offline="true">Loading status…</p>
+      <p class="shortcut-hint">
+        <kbd>Space</kbd> pause/resume
+        <span class="hint-sep">·</span> <kbd>←</kbd>/<kbd>→</kbd> replay hand
+        <span class="hint-sep">·</span> <kbd>1</kbd>–<kbd>4</kbd> switch views <span class="hint-sep">·</span> <kbd>5</kbd> training
+      </p>
+    </header>
+
+    <div class="viewer-shell">
+      <aside class="viewer-sidebar" aria-label="Viewer controls">
+        <section class="panel">
+          <h2>Live match</h2>
+          <form id="live-form" class="live-form">
+            <label for="seed">Seed</label>
+            <input id="seed" name="seed" type="number" value="1099511627776" min="0" step="1"
+                   data-minimum-seed="1099511627776" />
+            <p class="seed-hint">A random 64-bit seed is generated on load. Seeds below
+              1099511627776 are guessable and need the opt-in below.</p>
+            <label for="hands">Hands</label>
+            <input id="hands" name="hands" type="number" value="12" min="1" max="500" step="1" />
+            <label for="seats">Seats</label>
+            <select id="seats" name="seats">
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+            <p class="seed-hint">Seats 3–6 alternate the two agent choices below.</p>
+            <label for="delay">Delay (ms)</label>
+            <input id="delay" name="delay" type="number" value="250" min="0" max="5000" step="10" />
+            <label class="checkbox-label" for="allow-weak-seed">
+              <input id="allow-weak-seed" name="allowWeakSeed" type="checkbox" />
+              Allow weak seed (demos and tests only)
+            </label>
+            <label for="seat0-agent">Seat 0 agent</label>
+            <select id="seat0-agent" name="seat0Agent">
+              <option value="random-legal">random-legal</option>
+              <option value="tight-aggressive" selected>tight-aggressive</option>
+              <option value="pot-odds-equity">pot-odds-equity</option>
+            </select>
+            <label for="seat1-agent">Seat 1 agent</label>
+            <select id="seat1-agent" name="seat1Agent">
+              <option value="random-legal" selected>random-legal</option>
+              <option value="tight-aggressive">tight-aggressive</option>
+              <option value="pot-odds-equity">pot-odds-equity</option>
+            </select>
+            <button id="start-live" type="submit">Start live match</button>
+          </form>
+          <div class="controls">
+            <button id="pause-live" type="button">Pause</button>
+            <button id="resume-live" type="button">Resume</button>
+            <button id="stop-live" type="button">Stop</button>
+            <label for="poll-speed">Poll speed</label>
+            <select id="poll-speed">
+              <option value="120">Fast</option>
+              <option value="300" selected>Normal</option>
+              <option value="800">Slow</option>
+            </select>
+          </div>
+          <p id="live-meta" class="live-meta" role="status" aria-live="polite" aria-atomic="true">No live match yet — pick a seed and press Start</p>
+        </section>
+
+        <section class="panel">
+          <h2>Recorded sessions</h2>
+          <ul id="sessions" class="list"></ul>
+          <div id="replay-panel" class="replay-panel">
+            <label for="replay-scrubber">Replay hand</label>
+            <input id="replay-scrubber" type="range" min="1" max="1" value="1" />
+            <p id="replay-hand" class="replay-hand">Select a recorded session to replay</p>
+          </div>
+        </section>
+      </aside>
+
+      <section class="viewer-main" aria-label="Poker table and artifacts">
+        <nav class="tabs" aria-label="Viewer views">
+          <button class="tab" data-view="live" type="button" aria-pressed="true">Live</button>
+          <button class="tab" data-view="replay" type="button" aria-pressed="false">Replay</button>
+          <button class="tab" data-view="strategies" type="button" aria-pressed="false">Strategies</button>
+          <button class="tab" data-view="ledger" type="button" aria-pressed="false">Ledger</button>
+          <button class="tab" data-view="training" type="button" aria-pressed="false">Training</button>
+        </nav>
+
+        <section id="view-table" class="view" aria-label="Table view">
+          <div class="table-heading">
+            <h2 id="table-title" class="view-title">Live table</h2>
+            <p id="table-empty" class="table-empty">No live match yet — pick a seed and press Start</p>
+          </div>
+
+          <section id="live-table" class="poker-table" aria-label="Poker table">
+            <div id="seat-grid" class="seat-grid"></div>
+
+            <div class="table-center">
+              <div id="board" class="cards board" role="group" aria-label="Board" aria-live="polite" aria-atomic="true">
+                <span class="card card--empty" aria-label="Empty board slot"></span>
+                <span class="card card--empty" aria-label="Empty board slot"></span>
+                <span class="card card--empty" aria-label="Empty board slot"></span>
+                <span class="card card--empty" aria-label="Empty board slot"></span>
+                <span class="card card--empty" aria-label="Empty board slot"></span>
+              </div>
+              <p id="pot" class="pot" role="status" aria-live="polite" aria-atomic="true">—</p>
+              <p id="street" class="street">—</p>
+              <p id="to-call" class="to-call" hidden></p>
+            </div>
+          </section>
+
+          <section class="action-panel" aria-label="Action log">
+            <div class="action-panel-head">
+              <h2>Action log</h2>
+              <span class="action-legend">fold · check · call · bet · raise · all-in</span>
+            </div>
+            <ol id="action-log" class="action-log" role="log" aria-live="polite" aria-relevant="additions"></ol>
+            <p id="action-empty" class="action-empty">No actions yet.</p>
+          </section>
+        </section>
+
+        <section id="view-strategies" class="view" aria-label="Strategies" hidden>
+          <h2 class="view-title">Strategies</h2>
+          <p id="strategies-empty" class="empty-state">No strategies recorded yet — run the training loop</p>
+          <div class="split">
+            <ul id="strategies" class="list strategy-list"></ul>
+            <div id="strategy-detail" class="strategy-detail">
+              <p class="empty-state">Select a strategy to inspect it.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-ledger" class="view" aria-label="Promotion ledger" hidden>
+          <h2 class="view-title">Promotion ledger</h2>
+          <div class="table-wrap">
+            <table class="ledger-table">
+              <thead>
+                <tr>
+                  <th>Iteration</th>
+                  <th>Champion</th>
+                  <th>Challenger</th>
+                  <th>Promoted</th>
+                  <th>Reason</th>
+                  <th>Win rate</th>
+                  <th>bb/100</th>
+                  <th>LCB Δ</th>
+                  <th>Samples</th>
+                </tr>
+              </thead>
+              <tbody id="ledger">
+                <tr><td colspan="9" class="empty-state">No promotions yet</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="view-training" class="view" aria-label="Training" hidden>
+          <div class="training-heading">
+            <h2 class="view-title">Training</h2>
+            <p class="training-intro">Start a server-side training loop, follow each completed iteration, and
+              promote a challenger only after the server re-verifies the persisted report.</p>
+          </div>
+
+          <div class="training-layout">
+            <section class="panel training-form-panel" aria-label="Start a training job">
+              <h3 class="training-subtitle">New job</h3>
+              <form id="training-form" class="training-form">
+                <label for="training-seed">Seed</label>
+                <input id="training-seed" name="seed" type="number" value="1099511627776" min="0" step="1"
+                       data-minimum-seed="1099511627776" />
+                <p class="seed-hint">A random 64-bit seed is generated on load. Seeds below 1099511627776 are
+                  guessable and need the opt-in below.</p>
+
+                <label for="training-iterations">Iterations</label>
+                <input id="training-iterations" name="iterations" type="number" value="3" min="1" max="50" step="1" />
+
+                <label for="training-hands">Training hands</label>
+                <input id="training-hands" name="trainingHands" type="number" value="120" min="1" max="2000" step="1" />
+
+                <label for="training-eval-seeds">Evaluation seeds</label>
+                <input id="training-eval-seeds" name="evaluationSeeds" type="number" value="24" min="2" max="500"
+                       step="1" />
+
+                <label for="training-eval-hands">Evaluation hands</label>
+                <input id="training-eval-hands" name="evaluationHands" type="number" value="10" min="1" max="50"
+                       step="1" />
+
+                <label for="training-margin">Margin (bb/100)</label>
+                <input id="training-margin" name="marginBbPer100" type="number" value="5" min="0" max="100"
+                       step="0.1" />
+
+                <label for="training-min-seeds">Minimum seeds</label>
+                <input id="training-min-seeds" name="minSeeds" type="number" value="24" min="2" max="1000" step="1" />
+
+                <label for="training-strategy-id">Starting strategy</label>
+                <input id="training-strategy-id" name="strategyId" type="text" autocomplete="off"
+                       placeholder="optional strategy id" />
+
+                <label class="checkbox-label" for="training-allow-weak">
+                  <input id="training-allow-weak" name="allowWeakSeed" type="checkbox" />
+                  Allow weak seed (demos and tests only)
+                </label>
+
+                <p class="training-hint">Training writes strategy, evaluation, ledger and champion artifacts under
+                  the server data directory. The job runs on the server and keeps going while you use other tabs.</p>
+
+                <div class="training-actions">
+                  <button id="training-start" type="submit">Start training</button>
+                  <button id="training-cancel" type="button" disabled>Cancel job</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="training-job-panel" aria-label="Training progress">
+              <div class="training-job-head">
+                <h3 class="training-subtitle">Job</h3>
+                <button id="training-promote" type="button" hidden>Promote challenger</button>
+              </div>
+              <p id="training-status" class="training-status" role="status" aria-live="polite" aria-atomic="true">No training job yet.</p>
+              <p id="training-message" class="training-message" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+
+              <div class="training-columns">
+                <section class="training-column" aria-label="Training timeline">
+                  <h3 class="training-subtitle">Timeline</h3>
+                  <ol id="training-timeline" class="training-timeline">
+                    <li class="empty-state">No completed iterations yet.</li>
+                  </ol>
+                </section>
+
+                <section class="training-column" aria-label="Training evaluation table">
+                  <h3 class="training-subtitle">Evaluation table</h3>
+                  <div class="table-wrap training-table-wrap">
+                    <table class="ledger-table training-table">
+                      <thead>
+                        <tr>
+                          <th>Iteration</th>
+                          <th>Champion</th>
+                          <th>Challenger</th>
+                          <th>Mean bb/100</th>
+                          <th>LCB vs margin</th>
+                          <th>Decision</th>
+                          <th>Outcome</th>
+                        </tr>
+                      </thead>
+                      <tbody id="training-entries">
+                        <tr><td colspan="7" class="empty-state">No completed iterations yet.</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            </section>
+          </div>
+
+          <section class="training-champion-panel" aria-label="Active champion">
+            <h3 class="training-subtitle">Active champion</h3>
+            <div id="training-champion" class="training-champion">
+              <p class="empty-state">Loading champion…</p>
+            </div>
+          </section>
+
+          <section class="training-meta-panel" aria-label="Mini-RSI proposer policy">
+            <div class="training-heading">
+              <h3 class="training-subtitle">Mini-RSI (proposer policy)</h3>
+              <p class="training-intro">Evolves the proposer mutation step, parameter policy, evaluation
+                budget share and prompt template as data under the same frozen statistical gate. It never
+                changes the strategy champion: an eligible proposer is applied only by the explicit,
+                server-re-verified promote below.</p>
+            </div>
+            <form id="rsi-form" class="training-form training-form--meta">
+              <label for="rsi-seed">Seed</label>
+              <input id="rsi-seed" name="seed" type="number" value="1099511627776" min="0" step="1"
+                     data-minimum-seed="1099511627776" />
+
+              <label for="rsi-meta-iterations">Meta iterations</label>
+              <input id="rsi-meta-iterations" name="metaIterations" type="number" value="2" min="1" max="8" step="1" />
+
+              <label for="rsi-inner-iterations">Inner iterations</label>
+              <input id="rsi-inner-iterations" name="innerIterations" type="number" value="1" min="1" max="5" step="1" />
+
+              <label for="rsi-meta-seeds">Meta seeds</label>
+              <input id="rsi-meta-seeds" name="metaSeeds" type="number" value="3" min="2" max="50" step="1" />
+
+              <label for="rsi-eval-seeds">Evaluation seeds</label>
+              <input id="rsi-eval-seeds" name="evaluationSeeds" type="number" value="4" min="2" max="50" step="1" />
+
+              <label for="rsi-margin">Margin (bb/100)</label>
+              <input id="rsi-margin" name="marginBbPer100" type="number" value="0" min="0" max="100" step="0.1" />
+
+              <label for="rsi-min-seeds">Minimum seeds</label>
+              <input id="rsi-min-seeds" name="minSeeds" type="number" value="2" min="2" max="1000" step="1" />
+
+              <p class="training-hint">A meta promotion writes only <code>meta/active-proposer.json</code>;
+                the strategy champion pointer is untouched. The prompt template is stored as text and is
+                never evaluated.</p>
+
+              <div class="training-actions">
+                <button id="rsi-start" type="submit">Start mini-RSI</button>
+                <button id="rsi-cancel" type="button" disabled>Cancel</button>
+                <button id="rsi-promote" type="button" hidden>Promote proposer</button>
+              </div>
+            </form>
+            <p id="rsi-status" class="training-status" role="status" aria-live="polite" aria-atomic="true">No mini-RSI job yet.</p>
+            <p id="rsi-message" class="training-message" role="status" aria-live="polite" aria-atomic="true" hidden></p>
+          </section>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <template id="seat-template">
+    <div class="seat">
+      <header class="seat-top">
+        <span class="seat-name">Seat</span>
+        <span class="seat-agent" data-seat-agent>—</span>
+        <span class="turn-badge" data-turn hidden>To act</span>
+        <span class="last-action-badge" data-last-action hidden>Last action</span>
+        <span class="folded-badge" data-folded hidden>Folded</span>
+        <span class="allin-badge" data-allin hidden>All-in</span>
+        <span class="dealer-button" data-dealer aria-label="Dealer button" title="Dealer button" hidden>D</span>
+        <span class="winner-badge" data-winner hidden>Winner</span>
+      </header>
+      <p class="seat-stack" data-seat-stack>—</p>
+      <div class="cards seat-cards" data-seat-cards></div>
+      <p class="seat-hand-name" data-seat-hand-name>—</p>
+    </div>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

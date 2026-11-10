@@ -1,0 +1,1861 @@
+:root {
+  color-scheme: dark;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --background: #0b1220;
+  --sidebar: #0d1526;
+  --panel: #111c31;
+  --surface: #1b2941;
+  --surface-strong: #24344f;
+  --border: #334155;
+  --muted: #94a3b8;
+  --text: #e2e8f0;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.16);
+  --card-face-top: #ffffff;
+  --card-face-bottom: #dbe4ef;
+  --card-ink: #0f172a;
+  --card-red: #b91c1c;
+  --pot: #fbbf24;
+  --win: #facc15;
+  --felt-inner: #14532d;
+  --felt-outer: #0c2a1e;
+  --radius: 0.7rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: var(--background);
+  color: var(--text);
+}
+
+body {
+  min-height: 100vh;
+}
+
+.viewer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* --- header ------------------------------------------------------------------------------ */
+
+.viewer-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1.25rem;
+  padding: 0.9rem 1.35rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #0e1a30, #0b1220);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(160deg, #1d4ed8, #0ea5e9);
+  color: #f8fafc;
+  font-size: 1.05rem;
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.55);
+}
+
+.viewer-header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.status-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-line[data-offline="true"]::after {
+  content: " · offline";
+  color: var(--accent);
+}
+
+.shortcut-hint {
+  margin: 0 0 0 auto;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.shortcut-hint kbd {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 0.3rem;
+  background: var(--surface);
+  color: var(--text);
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.7rem;
+}
+
+.hint-sep {
+  color: var(--border);
+  padding: 0 0.15rem;
+}
+
+/* --- shell ------------------------------------------------------------------------------- */
+
+.viewer-shell {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.viewer-sidebar {
+  width: 21rem;
+  flex-shrink: 0;
+  padding: 0.9rem;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--sidebar);
+}
+
+.viewer-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0.9rem 1.15rem 1.75rem;
+}
+
+.panel {
+  margin-bottom: 0.9rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.panel h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+/* --- sidebar controls -------------------------------------------------------------------- */
+
+.live-form {
+  display: grid;
+  grid-template-columns: 6.4rem 1fr;
+  gap: 0.4rem 0.6rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.live-form label {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.live-form .seed-hint {
+  grid-column: 1 / -1;
+  margin: 0 0 0.2rem;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.live-form .checkbox-label {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.live-form .checkbox-label input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.live-form input,
+.live-form select,
+.controls select {
+  width: 100%;
+  padding: 0.32rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.live-form button {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+  padding: 0.48rem 0.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.42rem;
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.controls button {
+  padding: 0.35rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.controls button:hover,
+.live-form button:hover {
+  border-color: var(--accent);
+}
+
+.controls label {
+  grid-column: 1 / -1;
+  margin-top: 0.25rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.live-meta {
+  margin: 0.6rem 0 0;
+  font-size: 0.73rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.list {
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  max-height: 13rem;
+  overflow-y: auto;
+}
+
+.list li {
+  margin-bottom: 0.28rem;
+}
+
+.list .empty {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.session-button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.session-button:hover,
+.session-button.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.session-id {
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.73rem;
+}
+
+.session-meta {
+  color: var(--muted);
+  font-size: 0.71rem;
+}
+
+.replay-panel label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+#replay-scrubber {
+  width: 100%;
+  margin-bottom: 0.45rem;
+  accent-color: var(--accent);
+}
+
+.replay-hand {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- tabs -------------------------------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.25rem 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 0.5rem 1.05rem;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.tab.is-active,
+.tab[aria-selected="true"] {
+  color: var(--text);
+  background: var(--panel);
+  border-color: var(--border);
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+  animation: view-in 160ms ease-out;
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.view-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.table-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+}
+
+.table-empty {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+/* --- poker table ------------------------------------------------------------------------- */
+
+.poker-table {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(13rem, 1fr) minmax(21rem, 1.6fr) minmax(13rem, 1fr);
+  gap: 1.15rem;
+  align-items: center;
+  padding: 1.4rem 1.5rem;
+  border: 2px solid #1f5138;
+  border-radius: 1.6rem;
+  background:
+    radial-gradient(ellipse at 50% 40%, var(--felt-inner) 0%, var(--felt-outer) 72%, #081b13 100%);
+  box-shadow:
+    inset 0 0 0 6px rgba(8, 23, 17, 0.55),
+    inset 0 0 46px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(2, 6, 23, 0.45);
+  min-height: 22rem;
+}
+
+.poker-table.is-empty {
+  opacity: 0.82;
+}
+
+/* Multiway: the live table (and the server-rendered replay fragment) put every seat panel in a
+   grid above the board. 2–4 seats use two columns, 5–6 use three on wide screens; the phone layout
+   is a single column. */
+#live-table {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.poker-table.replay-table {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.seat-grid,
+.replay-seats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-width: 0;
+}
+
+.seat.is-folded {
+  opacity: 0.68;
+}
+
+.seat.is-allin {
+  border-color: rgba(56, 189, 248, 0.55);
+}
+
+.folded-badge,
+.allin-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.allin-badge {
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #bae6fd;
+}
+
+.replay-pots {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.seat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.85rem;
+  background: rgba(9, 16, 30, 0.86);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.seat.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft), 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* The last actor keeps a labelled, visually distinct cue instead of the turn ring. */
+.seat.is-last-action:not(.is-active) {
+  border-color: rgba(148, 163, 184, 0.75);
+  border-style: dashed;
+}
+
+.seat.is-winner {
+  border-color: var(--win);
+  box-shadow:
+    0 0 0 2px rgba(250, 204, 21, 0.32),
+    0 0 26px rgba(250, 204, 21, 0.22),
+    0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.seat-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.seat-name {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.seat-agent {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+}
+
+.seat-stack {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.seat-stack::before {
+  content: "stack ";
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.seat-hand-name {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.seat-cards {
+  display: flex;
+  gap: 0.35rem;
+  min-height: 1rem;
+}
+
+.table-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.board {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 1rem;
+}
+
+.pot {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--pot);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 12px rgba(251, 191, 36, 0.3);
+  letter-spacing: 0.01em;
+}
+
+.street {
+  margin: 0;
+  font-size: 0.76rem;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.to-call {
+  margin: 0;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.12);
+  color: #bae6fd;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dealer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 50%;
+  border: 2px solid #f59e0b;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 0.72rem;
+  font-weight: 850;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(2, 6, 23, 0.6);
+}
+
+.winner-badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid rgba(250, 204, 21, 0.65);
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.16);
+  color: var(--win);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.turn-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgba(56, 189, 248, 0.7);
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.last-action-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* --- CSS-drawn playing cards ------------------------------------------------------------- */
+
+.card {
+  --card-w: 2.7rem;
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.02rem;
+  width: var(--card-w);
+  height: calc(var(--card-w) * 1.42);
+  border-radius: 0.34rem;
+  background: linear-gradient(170deg, var(--card-face-top), var(--card-face-bottom));
+  color: var(--card-ink);
+  box-shadow:
+    0 2px 6px rgba(2, 6, 23, 0.5),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.2);
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-weight: 750;
+  line-height: 1;
+  user-select: none;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(2, 6, 23, 0.55);
+}
+
+.card__rank {
+  font-size: calc(var(--card-w) * 0.4);
+  letter-spacing: -0.03em;
+}
+
+.card__suit {
+  font-size: calc(var(--card-w) * 0.44);
+}
+
+.card--red {
+  color: var(--card-red);
+}
+
+.card--black {
+  color: var(--card-ink);
+}
+
+.card--back {
+  background:
+    repeating-linear-gradient(45deg, #1e3a8a 0 5px, #1d4ed8 5px 10px);
+  box-shadow:
+    inset 0 0 0 2px #93c5fd,
+    0 2px 6px rgba(2, 6, 23, 0.5);
+}
+
+.card--empty {
+  background: transparent;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  box-shadow: none;
+  color: transparent;
+}
+
+.board .card {
+  --card-w: 3.7rem;
+}
+
+.seat-cards .card {
+  --card-w: 3rem;
+}
+
+/* --- action log -------------------------------------------------------------------------- */
+
+.action-panel {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.action-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.action-panel h2 {
+  margin: 0 0 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+.action-legend {
+  margin-bottom: 0.55rem;
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+}
+
+.action-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 13rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.76rem;
+}
+
+.action-log li {
+  display: grid;
+  grid-template-columns: 5.2rem 4.8rem minmax(4.6rem, 1fr) 4.6rem 5.6rem;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.24rem 0.4rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  color: var(--muted);
+}
+
+.action-log li:last-child {
+  color: var(--text);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.action-log li.action--fold {
+  color: #fca5a5;
+}
+
+.action-log li.action--check {
+  color: #cbd5e1;
+}
+
+.action-log li.action--call {
+  color: #93c5fd;
+}
+
+.action-log li.action--bet,
+.action-log li.action--raise {
+  color: #fcd34d;
+}
+
+.action-log li.action--allin {
+  color: #f0abfc;
+  font-weight: 700;
+}
+
+/* Hand separator: the retained live tail spans hands, so each hand is opened explicitly.
+   It pins to the top of the scroll box so the rows currently in view stay attributable. */
+.action-log li.action-hand {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: block;
+  padding: 0.32rem 0.4rem 0.18rem;
+  border-bottom: 1px solid var(--border);
+  background: #14233c;
+  color: var(--text);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.action-log li.action--settle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+  color: var(--text);
+  background: rgba(250, 204, 21, 0.08);
+  border-top: 1px solid rgba(250, 204, 21, 0.35);
+  font-weight: 700;
+}
+
+.action-seat {
+  white-space: nowrap;
+}
+
+.action-kind {
+  white-space: nowrap;
+}
+
+.action-amount,
+.action-pot {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.action-empty {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.06rem 0.42rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip--preflop {
+  background: #14233c;
+  color: #93c5fd;
+  border-color: #1e3a8a;
+}
+
+.chip--flop {
+  background: #122c1d;
+  color: #86efac;
+  border-color: #14532d;
+}
+
+.chip--turn {
+  background: #2f2608;
+  color: #fde68a;
+  border-color: #713f12;
+}
+
+.chip--river {
+  background: #331414;
+  color: #fca5a5;
+  border-color: #7f1d1d;
+}
+
+.chip--reason {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.7rem;
+  color: #e2e8f0;
+}
+
+.chip--settle {
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.5);
+  color: var(--win);
+}
+
+/* --- strategies -------------------------------------------------------------------------- */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(15rem, 22rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.strategy-list {
+  margin: 0;
+  max-height: 34rem;
+}
+
+.strategy-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.1rem 0.5rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.42rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.42rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.strategy-button:hover,
+.strategy-button.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.strategy-id {
+  grid-column: 1;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.73rem;
+  overflow-wrap: anywhere;
+}
+
+.strategy-meta {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}
+
+.strategy-button .pill {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.strategy-detail {
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #12203a, #0f192d);
+  min-height: 12rem;
+}
+
+.strategy-card-id {
+  margin: 0;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.86rem;
+  overflow-wrap: anywhere;
+}
+
+.strategy-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.strategy-card-meta {
+  margin: 0 0 0.8rem;
+  color: var(--muted);
+  font-size: 0.77rem;
+  overflow-wrap: anywhere;
+}
+
+.param-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+}
+
+.param-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.42rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: rgba(27, 41, 65, 0.7);
+}
+
+.param-row dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.param-row dd {
+  margin: 0;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.strategy-prompt-label {
+  margin: 0 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.strategy-prompt {
+  margin: 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  background: #0a1322;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pill--promoted {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #86efac;
+}
+
+.pill--rejected {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+.pill--champion {
+  background: rgba(250, 204, 21, 0.16);
+  border-color: rgba(250, 204, 21, 0.55);
+  color: var(--win);
+}
+
+/* --- ledger ------------------------------------------------------------------------------ */
+
+.table-wrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.ledger-table {
+  width: 100%;
+  min-width: 54rem;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.ledger-table th,
+.ledger-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.ledger-table th {
+  position: sticky;
+  top: 0;
+  background: #13203a;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ledger-table tbody tr:hover {
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.ledger-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ledger-table .cell-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+}
+
+.ledger-table .cell-id {
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: left;
+  white-space: normal;
+}
+
+.ledger-table .empty-state {
+  border: none;
+  padding: 0.9rem 0.6rem;
+}
+
+/* --- responsive -------------------------------------------------------------------------- */
+
+/* Wide screens: five or six seats are arranged in three columns (two rows). */
+@media (min-width: 901px) {
+  #live-table[data-seats="5"] .seat-grid,
+  #live-table[data-seats="6"] .seat-grid,
+  .replay-table.seats-5 .replay-seats,
+  .replay-table.seats-6 .replay-seats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Mid widths (901-1240 px): keep the sidebar but shrink it and the three table columns so the
+   seats never clip and all five board slots stay on one row. */
+@media (max-width: 1240px) {
+  .viewer-sidebar {
+    width: 17rem;
+  }
+
+  .poker-table {
+    grid-template-columns: minmax(9rem, 1fr) minmax(17rem, 1.5fr) minmax(9rem, 1fr);
+    gap: 0.8rem;
+    padding: 1rem 1.1rem;
+  }
+
+  .board .card {
+    --card-w: 3rem;
+  }
+
+  .seat-cards .card {
+    --card-w: 2.6rem;
+  }
+}
+
+/* Stack the shell before the table's minimum width can exceed the main column. */
+@media (max-width: 1024px) {
+  .viewer-shell {
+    flex-direction: column;
+  }
+
+  .viewer-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .viewer-header {
+    padding: 0.7rem 0.9rem 0.6rem;
+  }
+
+  .shortcut-hint {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Table first on a phone: tabs and table must be on the first screen, controls scroll after. */
+  .viewer-main {
+    order: -1;
+    padding: 0.7rem;
+    gap: 0.75rem;
+  }
+
+  .poker-table {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 0.8rem;
+    min-height: 0;
+    border-radius: 1.1rem;
+  }
+
+  .seat {
+    width: 100%;
+  }
+
+  #live-table .seat-grid,
+  .poker-table.replay-table .replay-seats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .table-center {
+    order: -1;
+  }
+
+  .board .card {
+    --card-w: 2.7rem;
+  }
+
+  .seat-cards .card {
+    --card-w: 2.4rem;
+  }
+
+  .pot {
+    font-size: 1.6rem;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-table {
+    min-width: 46rem;
+    font-size: 0.74rem;
+  }
+
+  .action-log li {
+    grid-template-columns: 4.6rem 4.2rem minmax(4rem, 1fr) 4rem 5rem;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .viewer-header h1 {
+    font-size: 1.02rem;
+  }
+
+  .tab {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .board .card {
+    --card-w: 2.05rem;
+  }
+
+  .seat-cards .card {
+    --card-w: 2rem;
+  }
+
+  .board {
+    gap: 0.25rem;
+  }
+
+  .pot {
+    font-size: 1.35rem;
+  }
+
+  .action-log li {
+    grid-template-columns: 4rem 3.3rem minmax(3.2rem, 1fr) 3rem 3.9rem;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    padding: 0.22rem 0.2rem;
+  }
+
+  /* The nine-column ledger becomes a labelled stacked card list: every value stays visible
+     instead of six columns being clipped off-screen behind a hidden scrollbar. */
+  .table-wrap {
+    overflow-x: visible;
+  }
+
+  .ledger-table {
+    min-width: 0;
+  }
+
+  .ledger-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .ledger-table,
+  .ledger-table tbody,
+  .ledger-table tr,
+  .ledger-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .ledger-table tr {
+    padding: 0.5rem 0.55rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.7);
+  }
+
+  .ledger-table tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  .ledger-table td {
+    display: grid;
+    grid-template-columns: minmax(6.2rem, 38%) 1fr;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.16rem 0;
+    border: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ledger-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .ledger-table td.empty-state {
+    display: block;
+  }
+
+  .ledger-table td.empty-state::before {
+    content: none;
+  }
+
+  .ledger-table .cell-num {
+    text-align: left;
+  }
+
+  .param-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}
+
+/* --- training ----------------------------------------------------------------------------- */
+
+.training-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.9rem;
+}
+
+.training-intro {
+  margin: 0;
+  max-width: 60rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.training-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  min-width: 0;
+}
+
+.training-form-panel,
+.training-job-panel,
+.training-champion-panel {
+  margin: 0;
+  padding: 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  min-width: 0;
+}
+
+.training-subtitle {
+  margin: 0 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+}
+
+.training-form {
+  display: grid;
+  grid-template-columns: 7.4rem minmax(0, 1fr);
+  gap: 0.4rem 0.6rem;
+  align-items: center;
+}
+
+.training-form label {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.training-form input[type='number'],
+.training-form input[type='text'] {
+  width: 100%;
+  padding: 0.32rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.training-form .seed-hint,
+.training-form .training-hint {
+  grid-column: 1 / -1;
+  margin: 0 0 0.2rem;
+  font-size: 0.68rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.training-form .checkbox-label {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+.training-form .checkbox-label input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.training-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.25rem;
+}
+
+.training-actions button,
+#training-promote {
+  padding: 0.48rem 0.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.42rem;
+  background: var(--accent-soft);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.training-actions button {
+  flex: 1 1 8rem;
+}
+
+#training-cancel {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.training-actions button:hover:not(:disabled),
+#training-promote:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.training-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#training-promote {
+  border-color: rgba(34, 197, 94, 0.55);
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+#training-promote:hover:not(:disabled) {
+  border-color: #22c55e;
+}
+
+.training-job-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem 0.8rem;
+  margin-bottom: 0.3rem;
+}
+
+.training-job-head .training-subtitle {
+  margin-bottom: 0;
+}
+
+.training-status {
+  margin: 0.2rem 0 0.55rem;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.training-message {
+  margin: 0 0 0.7rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  border-radius: 0.42rem;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.training-message[data-kind='success'] {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+}
+
+.training-message[data-kind='info'] {
+  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.1);
+  color: #bae6fd;
+}
+
+.training-columns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.training-column {
+  min-width: 0;
+}
+
+.training-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 20rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.training-timeline .empty-state {
+  margin: 0;
+}
+
+.training-step {
+  padding: 0.5rem 0.55rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 0.45rem;
+  background: rgba(27, 41, 65, 0.55);
+}
+
+.training-step-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.5rem;
+}
+
+.training-step-iteration {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.training-step-matchup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.25rem 0 0.15rem;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.training-step-matchup a,
+.training-champion a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.training-step-matchup a:hover,
+.training-champion a:hover {
+  text-decoration: underline;
+}
+
+.training-step-arrow {
+  color: var(--muted);
+}
+
+.training-step-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.8rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.training-step-decision {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.training-step-decision-label {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.training-step-verified {
+  color: #86efac;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.training-table-wrap {
+  margin: 0;
+}
+
+.training-table {
+  min-width: 0;
+}
+
+.training-table td .chip {
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.training-champion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+  min-width: 0;
+  font-size: 0.8rem;
+}
+
+.training-champion .empty-state {
+  margin: 0;
+  flex: 0 1 auto;
+}
+
+.training-champion-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.training-champion-label {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.training-champion-id {
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.training-champion-meta,
+.training-champion-hash {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  overflow-wrap: anywhere;
+}
+
+.training-champion-hash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.training-champion-hash-label {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.66rem;
+}
+
+.training-champion-hash-value {
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  color: #cbd5e1;
+  overflow-wrap: anywhere;
+}
+
+.training-ledger-link {
+  margin-left: auto;
+  color: var(--accent);
+  font-size: 0.76rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.training-ledger-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1024px) {
+  .training-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    gap: 0.2rem;
+  }
+
+  .tab {
+    padding: 0.42rem 0.55rem;
+    font-size: 0.78rem;
+  }
+
+  .training-form-panel,
+  .training-job-panel,
+  .training-champion-panel {
+    padding: 0.65rem;
+  }
+
+  .training-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .training-form .seed-hint,
+  .training-form .training-hint,
+  .training-form .checkbox-label,
+  .training-actions {
+    grid-column: 1;
+  }
+
+  .training-table {
+    min-width: 0;
+  }
+
+  .training-ledger-link {
+    margin-left: 0;
+  }
+}
+
+/* Mini-RSI panel: same tokens as the training form, stacked by default and two columns on wide screens. */
+.training-meta-panel {
+  margin-top: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--panel);
+}
+
+.training-form--meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 1rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+.training-form--meta .training-hint,
+.training-form--meta .training-actions {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .training-form--meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
