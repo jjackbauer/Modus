@@ -1,0 +1,13 @@
+# Frozen/adjacent source hashes before round 1
+
+| File | SHA-256 |
+|---|---|
+| WIP/Wip.Tholdem.Agents/Learning/EvaluationCriteria.cs | 9ff873f0c7727d79957815b29556c7028b37c11e980b65bed8689ef4ee7f71ee |
+| WIP/Wip.Tholdem.Agents/Learning/PromotionPolicy.cs | 2bb7a80083500b34b43280a5adc67342f3b57c201c75b909a6dfa0a8cf788cbe |
+| WIP/Wip.Tholdem.Agents/Learning/PromotionVerifier.cs | 72252cdd9bdbf838a3ddc0a5e5abb60298ca3d356ee4bb455fd521802e0029f0 |
+| WIP/Wip.Tholdem.Agents/Learning/MatchEvaluator.cs | 56c85e2de11fc5f4b30acd3423c65b6ffcea0cbaa2e7fc9a2cbe87ec8b8c251d |
+| WIP/Wip.Tholdem.Agents/SeedDerivation.cs | ec4e7845746a930bc115387e25176ad2bf6a417261550939571630a1a944b123 |
+| WIP/Wip.Tholdem.Agents/Learning/FrozenComponents.cs | b1c85d37d89daa3a180cef1a5a20d6ac8aea22c26ec70766c50ffeeee135b578 |
+| WIP/Wip.Tholdem.Agents/Learning/StrategyGenome.cs | e0c72166f7077edd19eafbaf0277919b98e4fb2afb3e498eabbc212045072fcc |
+| WIP/Wip.Tholdem.Agents/Learning/StrategyArtifact.cs | 36c12dac53cc408b4ed7c22394202bfd6ce9af93ee9e550e57ed7e6b0f6adab0 |
+| WIP/Wip.Tholdem.Agents/Simulation/MatchSimulator.cs | 2f82f78ca7091494e4437ec0099f3e030901aff96582db4be785bb67aef64478 |

@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+    <marker id="bg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#15803d"/>
+    </marker>
+    <marker id="br" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b91c1c"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="720" fill="#f8fafc"/>
+  <text x="40" y="40" font-size="24" font-weight="700" fill="#0f172a">Tholdem learning loop — how a strategy is “enhanced”</text>
+  <text x="40" y="66" font-size="15" fill="#475569">Between hands. Proposals are data mutations, not code and not LLM prose; promotion needs a statistical gate plus a verifier.</text>
+
+  <!-- row 1 -->
+  <rect x="40" y="100" width="200" height="96" rx="10" fill="#ede9fe" stroke="#6d28d9"/>
+  <text x="58" y="128" font-size="15" font-weight="700" fill="#0f172a">Champion</text>
+  <text x="58" y="150" font-size="12" fill="#334155">StrategyArtifact v(n)</text>
+  <text x="58" y="168" font-size="12" fill="#334155">4 parameters + prompt text</text>
+  <text x="58" y="186" font-size="12" fill="#5b21b6">content-hashed id</text>
+
+  <rect x="270" y="100" width="200" height="96" rx="10" fill="#e0f2fe" stroke="#0369a1"/>
+  <text x="288" y="128" font-size="15" font-weight="700" fill="#0f172a">Self-play / training</text>
+  <text x="288" y="150" font-size="12" fill="#334155">seeded hands on training seed</text>
+  <text x="288" y="168" font-size="12" fill="#334155">byte-identical histories</text>
+
+  <rect x="500" y="100" width="200" height="96" rx="10" fill="#e0f2fe" stroke="#0369a1"/>
+  <text x="518" y="128" font-size="15" font-weight="700" fill="#0f172a">Analyze</text>
+  <text x="518" y="150" font-size="12" fill="#334155">win rate · bb/100 · aggression</text>
+  <text x="518" y="168" font-size="12" fill="#334155">showdown rate · (VPIP is 0)</text>
+  <text x="518" y="186" font-size="12" fill="#0c4a6e">metrics, not hand reading</text>
+
+  <rect x="730" y="100" width="200" height="96" rx="10" fill="#fef3c7" stroke="#b45309"/>
+  <text x="748" y="128" font-size="15" font-weight="700" fill="#0f172a">Propose</text>
+  <text x="748" y="150" font-size="12" fill="#334155">deterministic nudge of ONE</text>
+  <text x="748" y="168" font-size="12" fill="#334155">parameter by ±0.02</text>
+  <text x="748" y="186" font-size="12" fill="#92400e">no LLM, no generated code</text>
+
+  <rect x="960" y="100" width="200" height="96" rx="10" fill="#fef3c7" stroke="#b45309"/>
+  <text x="978" y="128" font-size="15" font-weight="700" fill="#0f172a">Challenger</text>
+  <text x="978" y="150" font-size="12" fill="#334155">StrategyArtifact v(n+1)</text>
+  <text x="978" y="168" font-size="12" fill="#334155">parent = champion</text>
+
+  <line x1="240" y1="148" x2="268" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="470" y1="148" x2="498" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="700" y1="148" x2="728" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="930" y1="148" x2="958" y2="148" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="1060" y1="196" x2="1060" y2="248" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+
+  <!-- row 2 -->
+  <rect x="960" y="250" width="200" height="96" rx="10" fill="#dcfce7" stroke="#15803d"/>
+  <text x="978" y="278" font-size="15" font-weight="700" fill="#0f172a">Paired evaluation</text>
+  <text x="978" y="300" font-size="12" fill="#334155">held-out seeds, both seat orders</text>
+  <text x="978" y="318" font-size="12" fill="#334155">challenger vs incumbent</text>
+  <text x="978" y="336" font-size="12" fill="#166534">same deals for both</text>
+
+  <rect x="730" y="250" width="200" height="96" rx="10" fill="#dcfce7" stroke="#15803d"/>
+  <text x="748" y="278" font-size="15" font-weight="700" fill="#0f172a">bb/100 + 95% CI</text>
+  <text x="748" y="300" font-size="12" fill="#334155">mean and normal interval per</text>
+  <text x="748" y="318" font-size="12" fill="#334155">held-out seed</text>
+  <text x="748" y="336" font-size="12" fill="#166534">LCB = lower bound</text>
+
+  <rect x="500" y="250" width="200" height="96" rx="10" fill="#fee2e2" stroke="#b91c1c"/>
+  <text x="518" y="278" font-size="15" font-weight="700" fill="#0f172a">Gate</text>
+  <text x="518" y="300" font-size="12" fill="#334155">LCB &gt; margin (5 bb/100)</text>
+  <text x="518" y="318" font-size="12" fill="#334155">AND seeds ≥ 24</text>
+  <text x="518" y="336" font-size="12" fill="#991b1b">otherwise: not promoted</text>
+
+  <rect x="270" y="250" width="200" height="96" rx="10" fill="#fee2e2" stroke="#b91c1c"/>
+  <text x="288" y="278" font-size="15" font-weight="700" fill="#0f172a">Verifier</text>
+  <text x="288" y="300" font-size="12" fill="#334155">RE-DERIVES the decision</text>
+  <text x="288" y="318" font-size="12" fill="#334155">from the report alone</text>
+  <text x="288" y="336" font-size="12" fill="#991b1b">always-promote control fails</text>
+
+  <rect x="40" y="250" width="200" height="96" rx="10" fill="#dcfce7" stroke="#15803d"/>
+  <text x="58" y="278" font-size="15" font-weight="700" fill="#0f172a">Outcome</text>
+  <text x="58" y="300" font-size="12" fill="#334155">promoted → champion pointer</text>
+  <text x="58" y="318" font-size="12" fill="#334155">rejected → ledger entry</text>
+  <text x="58" y="336" font-size="12" fill="#166534">never auto-merge / deploy</text>
+
+  <line x1="958" y1="298" x2="932" y2="298" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="728" y1="298" x2="702" y2="298" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="498" y1="298" x2="472" y2="298" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="268" y1="298" x2="242" y2="298" stroke="#64748b" stroke-width="2" marker-end="url(#b)"/>
+
+  <!-- ledger + files -->
+  <rect x="40" y="400" width="420" height="120" rx="10" fill="#f1f5f9" stroke="#334155"/>
+  <text x="58" y="428" font-size="15" font-weight="700" fill="#0f172a">Persisted every iteration</text>
+  <text x="58" y="452" font-size="13" fill="#334155">strategies/&lt;id&gt;.json · evaluations/*.json</text>
+  <text x="58" y="472" font-size="13" fill="#334155">ledger.json (accumulates, deduplicated)</text>
+  <text x="58" y="492" font-size="13" fill="#334155">active-champion.json (only when verified)</text>
+  <text x="58" y="510" font-size="12" fill="#475569">the viewer reads exactly these files</text>
+
+  <!-- real example -->
+  <rect x="500" y="400" width="420" height="120" rx="10" fill="#fffbeb" stroke="#b45309"/>
+  <text x="518" y="428" font-size="15" font-weight="700" fill="#0f172a">Real run: train --iterations 1 --seed 7</text>
+  <text x="518" y="452" font-size="13" fill="#334155">champion v1-f100e793 → challenger v2-b155b98f</text>
+  <text x="518" y="472" font-size="13" fill="#334155">mean bb/100 0.00 · LCB 0.00 · margin 5.00</text>
+  <text x="518" y="492" font-size="13" fill="#b91c1c">→ rejected (lcb-below-margin), champion unchanged</text>
+  <text x="518" y="510" font-size="12" fill="#92400e">a rejection is the normal, expected outcome</text>
+
+  <!-- no llm note -->
+  <rect x="960" y="400" width="200" height="120" rx="10" fill="#ede9fe" stroke="#6d28d9"/>
+  <text x="978" y="428" font-size="14" font-weight="700" fill="#0f172a">Not in this loop</text>
+  <text x="978" y="452" font-size="12" fill="#334155">no LLM proposal</text>
+  <text x="978" y="470" font-size="12" fill="#334155">no code generation</text>
+  <text x="978" y="488" font-size="12" fill="#334155">no self-modification</text>
+  <text x="978" y="506" font-size="12" fill="#5b21b6">promptText is data only</text>
+
+  <!-- feedback loops -->
+  <path d="M 140 250 L 140 210" stroke="#b91c1c" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#br)"/>
+  <text x="150" y="232" font-size="11" fill="#b91c1c">rejected → retry next iteration</text>
+  <path d="M 960 246 C 880 220 300 220 240 150" fill="none" stroke="#15803d" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#bg)"/>
+  <text x="600" y="210" font-size="11" fill="#15803d">promoted → becomes the next champion</text>
+</svg>

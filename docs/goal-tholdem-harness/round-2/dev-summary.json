@@ -1,0 +1,69 @@
+{
+    "split":  "dev",
+    "seeds":  6,
+    "rows":  60,
+    "baselineRows":  30,
+    "refinementRows":  30,
+    "baselineMeanDivergence":  0.018056,
+    "refinementMeanDivergence":  0.098333,
+    "pooledMeanRatio":  5.446154,
+    "medianPerSeedRatio":  9,
+    "bootstrap95Lower":  6.75,
+    "bootstrap95Upper":  11.5,
+    "baselineZeroEffect":  7,
+    "refinementZeroEffect":  0,
+    "baselineZeroEffectRate":  0.233333,
+    "refinementZeroEffectRate":  0,
+    "baselinePromotions":  0,
+    "refinementPromotions":  0,
+    "perSeed":  [
+                    {
+                        "seed":  1099511627776,
+                        "baselineMedian":  0.008333,
+                        "refinementMedian":  0.075,
+                        "ratio":  9,
+                        "baselineZeroEffect":  0,
+                        "refinementZeroEffect":  0
+                    },
+                    {
+                        "seed":  1099511628776,
+                        "baselineMedian":  0.008333,
+                        "refinementMedian":  0.108333,
+                        "ratio":  13,
+                        "baselineZeroEffect":  0,
+                        "refinementZeroEffect":  0
+                    },
+                    {
+                        "seed":  1099511629776,
+                        "baselineMedian":  0.016667,
+                        "refinementMedian":  0.091667,
+                        "ratio":  5.5,
+                        "baselineZeroEffect":  2,
+                        "refinementZeroEffect":  0
+                    },
+                    {
+                        "seed":  1099511630776,
+                        "baselineMedian":  0.016667,
+                        "refinementMedian":  0.133333,
+                        "ratio":  8,
+                        "baselineZeroEffect":  1,
+                        "refinementZeroEffect":  0
+                    },
+                    {
+                        "seed":  1099511631776,
+                        "baselineMedian":  0.008333,
+                        "refinementMedian":  0.075,
+                        "ratio":  9,
+                        "baselineZeroEffect":  2,
+                        "refinementZeroEffect":  0
+                    },
+                    {
+                        "seed":  1099511632776,
+                        "baselineMedian":  0.008333,
+                        "refinementMedian":  0.083333,
+                        "ratio":  10,
+                        "baselineZeroEffect":  2,
+                        "refinementZeroEffect":  0
+                    }
+                ]
+}

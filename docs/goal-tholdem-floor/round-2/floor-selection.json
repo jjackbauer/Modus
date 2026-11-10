@@ -1,0 +1,67 @@
+{
+    "devSeedCount":  6,
+    "baseline":  {
+                     "rows":  30,
+                     "medianDivergence":  0.008333,
+                     "meanDivergence":  0.018056,
+                     "zeroEffect":  7,
+                     "zeroEffectRate":  0.233333,
+                     "promotions":  0
+                 },
+    "floor0":  {
+                   "rows":  30,
+                   "medianDivergence":  0.0875,
+                   "meanDivergence":  0.098333,
+                   "zeroEffect":  0,
+                   "zeroEffectRate":  0,
+                   "promotions":  0
+               },
+    "floors":  [
+                   {
+                       "floor":  0.05,
+                       "stats":  {
+                                     "rows":  30,
+                                     "medianDivergence":  0.0875,
+                                     "meanDivergence":  0.098333,
+                                     "zeroEffect":  0,
+                                     "zeroEffectRate":  0,
+                                     "promotions":  0
+                                 },
+                       "medianRatioVsBaseline":  9,
+                       "medianRatioVsFloor0":  1
+                   },
+                   {
+                       "floor":  0.1,
+                       "stats":  {
+                                     "rows":  30,
+                                     "medianDivergence":  0.0875,
+                                     "meanDivergence":  0.098333,
+                                     "zeroEffect":  0,
+                                     "zeroEffectRate":  0,
+                                     "promotions":  0
+                                 },
+                       "medianRatioVsBaseline":  9,
+                       "medianRatioVsFloor0":  1
+                   },
+                   {
+                       "floor":  0.2,
+                       "stats":  {
+                                     "rows":  30,
+                                     "medianDivergence":  0.0875,
+                                     "meanDivergence":  0.098333,
+                                     "zeroEffect":  0,
+                                     "zeroEffectRate":  0,
+                                     "promotions":  0
+                                 },
+                       "medianRatioVsBaseline":  9,
+                       "medianRatioVsFloor0":  1
+                   }
+               ],
+    "selectionRule":  "smallest positive floor with zero-effect \u003c= floor0 and median divergence \u003e= 0.9x floor0; else 0",
+    "chosenFloor":  0.05,
+    "candidates":  [
+                       0.05,
+                       0.1,
+                       0.2
+                   ]
+}

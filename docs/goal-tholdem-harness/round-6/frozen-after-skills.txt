@@ -1,0 +1,19 @@
+# Frozen/adjacent source hashes after round 6
+
+The five gate components are byte-identical to round 1. StrategyGenome, StrategyArtifact and StrategyAgent are schema/skill changes, not gate components; the absent-skills v1 artifact hash is preserved.
+
+| File | SHA-256 |
+|---|---|
+| WIP/Wip.Tholdem.Agents/Learning/EvaluationCriteria.cs | 9ff873f0c7727d79957815b29556c7028b37c11e980b65bed8689ef4ee7f71ee |
+| WIP/Wip.Tholdem.Agents/Learning/PromotionPolicy.cs | 2bb7a80083500b34b43280a5adc67342f3b57c201c75b909a6dfa0a8cf788cbe |
+| WIP/Wip.Tholdem.Agents/Learning/PromotionVerifier.cs | 72252cdd9bdbf838a3ddc0a5e5abb60298ca3d356ee4bb455fd521802e0029f0 |
+| WIP/Wip.Tholdem.Agents/Learning/MatchEvaluator.cs | 56c85e2de11fc5f4b30acd3423c65b6ffcea0cbaa2e7fc9a2cbe87ec8b8c251d |
+| WIP/Wip.Tholdem.Agents/SeedDerivation.cs | ec4e7845746a930bc115387e25176ad2bf6a417261550939571630a1a944b123 |
+| WIP/Wip.Tholdem.Agents/Learning/FrozenComponents.cs | b1c85d37d89daa3a180cef1a5a20d6ac8aea22c26ec70766c50ffeeee135b578 |
+| WIP/Wip.Tholdem.Agents/Learning/StrategyGenome.cs | faa6bea06e0c3873d611699d05e6fe83d8428aaf15d9f6b9dd9ac2348238eff7 |
+| WIP/Wip.Tholdem.Agents/Learning/StrategyArtifact.cs | 083960dd539b853ba51ec2463d1339d17cc9f3f235916c1e0103880fa59022f2 |
+| WIP/Wip.Tholdem.Agents/Learning/StrategyAgent.cs | 9b5a161b7d836eb8c2029229a638281d16740e2730098d3a8097b21ebe833a8f |
+| WIP/Wip.Tholdem.Agents/Learning/Skills/StrategySkillSet.cs | 5dbd6aee920691ddedffa9dfb9196513fddd93e1449e1cd459aabcab37689dce |
+| WIP/Wip.Tholdem.Agents/Learning/Skills/StrategySkillSetJson.cs | 193829380b25b383b03791f6f74b1db96f194abd9949faf33386057e262a2182 |
+| WIP/Wip.Tholdem.Agents/Learning/Refinement/RefinementGuard.cs | 395cf8839fc53053942d4e914f64faa65e6823e59b9912f454226c19b505458d |
+| WIP/Wip.Tholdem.Agents/Simulation/MatchSimulator.cs | 2f82f78ca7091494e4437ec0099f3e030901aff96582db4be785bb67aef64478 |

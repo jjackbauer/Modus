@@ -1,0 +1,14 @@
+# Baseline hashes (pre-change)
+
+| File | SHA-256 |
+|---|---|
+| active-champion.json | ce226a2a6b61a58fc8d066e92756b45de8966501d758f567cffcc2a6051f1337 |
+| evaluations\tholdem-strategy-v2-0ceaa8fd-vs-tholdem-strategy-v1-f100e793.json | da431eca90f3778063b37b24b28d3908757f8d66740dbec5866e9319540cd5cd |
+| evaluations\tholdem-strategy-v2-e1ba56f7-vs-tholdem-strategy-v1-f100e793.json | f980fb45f5d232fca2760f68b28e0b00257373126b1a3aa32e9206bfd89f21a1 |
+| ledger.json | c25c19720a92134f478bdc1c561379d9bfcdfe9834e4796104a8cc243ba827f9 |
+| strategies\tholdem-strategy-v1-f100e793.json | 6675d7975b69eafd7cd64f334e70ad5adbfa09fbcc32176a6098aa9649124c14 |
+| strategies\tholdem-strategy-v2-0ceaa8fd.json | 668d8b7f214e8e6bc6cb7bffa4f49321652909d9999fdcee3a8d4282d5943150 |
+| strategies\tholdem-strategy-v2-e1ba56f7.json | 0852587e3dcb0e4bc04d4169bfe43760714671c027ee6ac2bf7dff9ded6fd144 |
+
+A files: 7, B files: 7
+identical: True

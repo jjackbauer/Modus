@@ -1,0 +1,35 @@
+# Deliverables — tholdem
+
+Registered artifacts only. An `ART` row needs ≥3 supporting IDs and a `Verified by` line naming a
+command or check the orchestrator ran.
+
+| ID | Artifact | Path | Type | Supporting evidence | Confidence | Verified by | Round |
+|---|---|---|---|---|---|---|---|
+| ART-001 | Card/deck/evaluator implementation | `WIP/Wip.Tholdem/` | implementation | EVD-017, EVD-022, EVD-023, EVD-026, EVD-027 | High | `dotnet build Wip.slnx -c Release` exit 0; independent deck derivation and 20k-hand reference-evaluator comparison `RESULT=SUPPORTED`; mutation of `Evaluate` and the shuffle each produced failures then restored (hash-checked, 22/22 again) | 1 |
+| ART-002 | Engine unit-test suite (22 cases) | `WIP/Wip.Tholdem.Tests/` | test-suite | EVD-017, EVD-019, EVD-024, EVD-025, EVD-027 | High | Supplementary runner `TOTAL 22 PASSED 22 FAILED 0`; two mutants failed 9 and 2 cases respectively; encoding scan clean | 1 |
+| ART-003 | Architecture/solution/waiver integration for round 1 | `Wip.slnx`, `tests/Wip.Architecture.Tests/{ArchitectureReferenceTests,ArchitectureRules}.cs`, `docs/plan/test-waivers.json`, `tools/run-wip-tests.ps1` | plan | EVD-020, EVD-021, EVD-028, EVD-030 | High | `verify-solution-coverage.ps1` → `solution_coverage=ok` (45/45); architecture runner 4/4 with count 45; waiver JSON parses to 22; diff shows only the five specified edits | 1 |
+| ART-004 | Heads-up hand engine and canonical history | `WIP/Wip.Tholdem/Engine/`, `WIP/Wip.Tholdem/History/` | implementation | EVD-033, EVD-035, EVD-038, EVD-039 | High | `HandProbe`: 500 random hands, 187 showdowns, conservation/termination/showdown/winner recomputation/hash/replay/hidden-info all `SUPPORTED discrepancies=0`; full solution build exit 0 | 2 |
+| ART-005 | Round-2 test suite (52 cases) and mutation evidence | `WIP/Wip.Tholdem.Tests/` | test-suite | EVD-034, EVD-036, EVD-037, EVD-040 | High | Supplementary runner `TOTAL 52 PASSED 52 FAILED 0`; stubbed evaluator → 16 failures; broken `LastRaiseSize` → 1 failure at the intended test; no weak patterns; 28 files, 0 BOM/UTF-16 | 2 |
+| ART-006 | Baseline agents, seeded equity and batch simulator | `WIP/Wip.Tholdem.Agents/` | implementation | EVD-042, EVD-044, EVD-045, EVD-046 | High | `SimProbe`: 120 hands, 121 byte-identical files across same-seed runs, zero-sum confirmed, every metric matched an independent recomputation; independent equity 0.853073 vs pin 0.851125 | 3 |
+| ART-007 | Round-3 test suite (76 cases) and metric mutant | `WIP/Wip.Tholdem.Tests/` | test-suite | EVD-043, EVD-045, EVD-047 | High | Runner `TOTAL 76 PASSED 76 FAILED 0`; `bb/100` mutant failed 2 tests; no weak patterns; 43 files 0 bad encoding | 3 |
+| ART-008 | Bones-style visualization viewer | `WIP/Wip.Tholdem.Web/` | implementation | EVD-050, EVD-052, EVD-053, EVD-055, EVD-056, EVD-058 | High | Real server on 5188 drove status/page/live/sessions/replay/strategies/ledger/champion; `/`→302, viewer 200 with expected ids; traversal review of both catalogs | 4 |
+| ART-009 | Round-4 real-HTTP test suite (86 cases total) | `WIP/Wip.Tholdem.Tests/` | test-suite | EVD-051, EVD-054 | High | Runner `TOTAL 86 PASSED 86 FAILED 0`; live hand hashes equal simulator artifacts | 4 |
+| ART-010 | Live-viewer screenshot evidence | `docs/goal-tholdem/round-4/viewer.png` | dataset | EVD-053, EVD-057, EVD-059 | High | Headless Chromium run: `console_errors=0`, 15 log rows, board and both hole-card pairs visible; 1,440×1,150 PNG | 4 |
+| ART-011 | LLM runtime agent, four tools, session store, live gate | `WIP/Wip.Tholdem.Agents/Runtime/` | implementation | EVD-060, EVD-062, EVD-063, EVD-064, EVD-066 | High | Read the agent's truncation/parse/validate/fallback path; hidden-information test enumerates 50 forbidden cards and the seed; permission test asserts `permission-denied:` and `artifact.read`; `LiveModelGate` mutant failed exactly one test | 5 |
+| ART-012 | Round-5 security test suite (103 cases total) | `WIP/Wip.Tholdem.Tests/Runtime/` | test-suite | EVD-061, EVD-063, EVD-064, EVD-065 | High | Runner `TOTAL 103 PASSED 103 FAILED 0`; mutant `TOTAL 103 PASSED 102 FAILED 1`; restored hash-verified then 103/103; boundary scan clean | 5 |
+| ART-013 | Learning loop: strategies, paired evaluator, gate, verifier, persistence | `WIP/Wip.Tholdem.Agents/Learning/` | implementation | EVD-069, EVD-070, EVD-071 | High | Ran the loop end-to-end (`TrainProbe`): 3 iterations, 4 strategy artifacts, 3 evaluation reports, a 3-entry ledger; all rejected below the 5 bb/100 margin; the viewer served them over HTTP; the always-promote control is refused by the verifier | 6 |
+| ART-014 | Round-6 test suite (124 cases) and verifier mutant | `WIP/Wip.Tholdem.Tests/Learning/` | test-suite | EVD-068, EVD-069, EVD-072 | High | Runner `TOTAL 124 PASSED 124 FAILED 0` (≈115 s); unconditional-verify mutant failed exactly 2 tests including the always-promote control; architecture 4/4; coverage ok; waiver 124 | 6 |
+| ART-015 | Card-face and UX viewer upgrade | `WIP/Wip.Tholdem.Web/` | implementation | EVD-073, EVD-074, EVD-075 | High | Replay HTML contains `data-card` faces with spade/club glyphs, hand names and a winner badge; live snapshot carries `handNames`, `buttonSeat`, `amountToCall`, `potOdds`; screenshots show tabs, dealer button, colour coding and zero console errors | 7 |
+| ART-016 | Round-7a test suite (130 cases) | `WIP/Wip.Tholdem.Tests/` | test-suite | EVD-073, EVD-074 | High | Runner `TOTAL 130 PASSED 130 FAILED 0`; card-markup mutation killed exactly the intended fact | 7 |
+| ART-017 | Upgraded live/replay screenshots | `docs/goal-tholdem/round-7/{orch-live,orch-replay,viewer-live,viewer-replay}.png` | dataset | EVD-075, EVD-076 | High | Viewed the captures: real card faces, board slots, seat panels, hand names, dealer and winner badges, colour-coded action log | 7 |
+| ART-021 | `Wip.Tholdem.Host` CLI, canonical hand parser, persistence fixes | `WIP/Wip.Tholdem.Host/`, `WIP/Wip.Tholdem/History/HandRecordJson.cs`, `WIP/Wip.Tholdem.Agents/Learning/TrainingLoop.cs` | implementation | EVD-084, EVD-085, EVD-086 | High | Ran every command from a clean data dir: play/train/evaluate/replay/retention/help exit 0, promote exits 3 without confirmation and 3 on a below-margin report; session artifacts and manifest hash written; solution count 48 | 8 |
+| ART-022 | Round-8 test suite (172 cases) | `WIP/Wip.Tholdem.Tests/Host/`, `History/`, learning tests | test-suite | EVD-084, EVD-085 | High | Runner `TOTAL 172 PASSED 172 FAILED 0`; CLI mutation (verifier bypass) failed exactly the below-margin promote test per the implementer, and I re-ran the suite green | 8 |
+
+## Pending candidates (not yet delivered, not yet ART)
+
+- Heads-up hand engine, history hash, observation boundary — round 2 — D1
+- `Wip.Tholdem.Agents` baselines, simulator, runtime agent, learning loop — D3, D4, D5
+- `Wip.Tholdem.Host` CLI — D6
+- Security suites (hidden-info, permission denial, prompt injection) — D7
+- `docs/tholdem/*` rule/schema/runbook/limits documents — D6
+- Security CI job wiring for Tholdem — D8
