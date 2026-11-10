@@ -1,0 +1,1 @@
+{"id":"tholdem-strategy-v1-c9d1a24b","version":1,"parentId":null,"createdAtIteration":0,"parameters":{"raiseThreshold":0.7,"callThreshold":0.7,"bluffFrequency":0.12,"sizingMultiplier":1},"promptText":"Play tight-aggressive heads-up: raise strong hands, fold weak hands to large bets, and size value bets by the sizing multiplier."}

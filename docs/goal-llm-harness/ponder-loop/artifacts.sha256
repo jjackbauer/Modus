@@ -1,0 +1,44 @@
+# Ponder-loop artifact hashes (SHA-256)
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `champion-c.json` | 149 | `2c9409bb8b706e03735fa52e88153110a5c5a055b477370f7411903bea391f17` |
+| `evaluations/tholdem-strategy-v2-068a6ead-vs-tholdem-strategy-v1-c9d1a24b.json` | 351 | `9ad4e2e4ad42972344332012dc17f13673603aad1c9e79373ec630469c3d416a` |
+| `evaluations/tholdem-strategy-v2-5f1a121b-vs-tholdem-strategy-v1-c9d1a24b.json` | 354 | `fa4d1c37110d3ce79672376a55d91d2a7374d6f31350ec1590e3b09ec8f3db39` |
+| `evaluations/tholdem-strategy-v2-62d307d7-vs-tholdem-strategy-v1-c9d1a24b.json` | 352 | `54adc2fc5c5ca45a297097463a14eed3c4a51fc1872a41f0bc9e5198adb18f11` |
+| `evaluations/tholdem-strategy-v2-7d1c8d53-vs-tholdem-strategy-v1-c9d1a24b.json` | 341 | `8ed66efe8c8ad0f56ec29bdab80a12586ca27cf73c659586a3d10684e664f66d` |
+| `evaluations-c/tholdem-strategy-v2-6a108c2b-vs-tholdem-strategy-v1-c9d1a24b.json` | 339 | `139fd8331271dbfa5484e118aef201c5ae650d6625bd6c3aba888236ae826299` |
+| `evaluations-c/tholdem-strategy-v3-2fac4080-vs-tholdem-strategy-v2-6a108c2b.json` | 339 | `06cd77b1027b20ff78a12e6428317fbf40c7184520c08d0c750d26f26efffa62` |
+| `evaluations-c/tholdem-strategy-v3-a98d1301-vs-tholdem-strategy-v2-6a108c2b.json` | 350 | `422cec170ec5529b0c40c5b53e0253101cfc984f6f30521e670780266a52299e` |
+| `experiments-2.md` | 7030 | `ab02338de50b9251bfbca9b7f19d0f9e194b8347666d655e88d6d35b2e12a9be` |
+| `experiments-3.md` | 4356 | `27dd0a94d3436237c0d7eccec5138f0579bdf659debe4742a0e497c3ed9b1437` |
+| `implementation.md` | 12196 | `e289cb3fc0c9e15dca3da61acf12fd87e8ac6dad735cbc7ce58ef1ed786ce1a7` |
+| `live.log` | 4132 | `25316a6925e9270a2fc95511e08b632540cfbc3cfcf52713548b7badcecfc75e` |
+| `live-genome.log` | 4206 | `2f7c1c48001caf6e34fc116a220bd844ca48a8af7a6276a36c9f51bda9a04815` |
+| `live-search.log` | 3956 | `ae1a255733b0d2ce1198a410cf31094dc00b2cabb8289969d6375cc45acb57c0` |
+| `preregistration.md` | 3072 | `febfe34bde4b88a7d9a1d8d5c65f1bc58ed9e3d19caff0089faa82b3b177ea14` |
+| `preregistration-b.md` | 2423 | `8faaf8d3a9397e6e527d76a13e901af247b8746f2f2eeefc2911f17aea83b681` |
+| `preregistration-c.md` | 2022 | `6feea1ecb562940cdeb7c14fc2d5df6ef6a508ed554efed8ce43bacf2a9094ea` |
+| `refiner/gate-aware-3.jsonl` | 10710 | `bb1248f5bb4117b3aa2f9f30a21f3c35f04322ce6bad3f947907c815f90fe70f` |
+| `refiner/gate-aware-best-of.jsonl` | 30437 | `1f66883e80f719aff953ec86be3117abf15c5fa7b33ed10f03edb6bbdb0cd1ba` |
+| `refiner/round-1.jsonl` | 6480 | `6f4eb61f3cd5e34cab2d0c8b7824d13f30c37ce16ffb61b0a894b9ec1975dcc2` |
+| `refiner/round-2.jsonl` | 6481 | `d1d441224232252e8995a96234617c531974b55abac37d3682a4b2f85a74ca3b` |
+| `refiner/round-3.jsonl` | 6603 | `ed028e0bb97d5e08c1199c2eb8d436d63ec9ee2d165e40fb0007a377671e1f72` |
+| `refiner/round-4.jsonl` | 2678 | `0fcfac017e4a574be45668480f80103d5a8e15a1593df78154707d83ac985b0c` |
+| `refiner/round-c-1.jsonl` | 6398 | `b180978d311c55a592275f95694213debbabeefab8447c318e745907327aa588` |
+| `refiner/round-c-2.jsonl` | 7254 | `805ef5ba8afc397e4957b5399ca0e469928a14feadd719d4e830511a79b38c30` |
+| `refiner/round-c-3.jsonl` | 7227 | `77f1210939bdc5b421ace910ad3457a0911e8d189c19b4939eb95260ced18d06` |
+| `results.md` | 5139 | `5b478a497c68183bc66df88c728903f5ffc13abbcea16a9d52097b17cd957f04` |
+| `search/round-1.json` | 264 | `147fc485ff90498334a46825a20c60e080aa1aaebdd780ce4fcb0de4721299a9` |
+| `search/round-2.json` | 261 | `4dbbf3703d6471c7d1ce2fb382955e0c2eb7fd091bbe6a5c4de0639021d3e1d0` |
+| `search/round-3.json` | 266 | `fe28cc17e50d249ecbde0fd44a0b15eebf70a26549630960d28a6ebb483050a0` |
+| `strategies-c/tholdem-strategy-v1-c9d1a24b.json` | 331 | `68c1c0e30864d551a9cf216f255f6ec48e5bed65f0ba2e4948725aed51e606e3` |
+| `strategies-c/tholdem-strategy-v2-6a108c2b.json` | 357 | `109ecd467efe2802c25ebc7a81866983b75ef745ea7fc0aebc0e0d6a54512054` |
+| `strategies-report.json` | 12269 | `55b7d4c169e39c2b229dd6d912620c4415359daafb728ddf95afb463f26f76bd` |
+| `strategies-report.md` | 4223 | `d88bad8db35b883fa5ba8c16a4a3db4cee588e9a0b915549103795154f6eed8c` |
+| `strategies-report-b.json` | 12438 | `865dc2401349978a9bf89912640f0df7607960c30fac26fe9aace2ed5b30a8e9` |
+| `strategies-report-b.md` | 4319 | `b2145d05d6da30cba44f8f1c681d73207fda917daa19fb3c5a087191cbaa2787` |
+| `strategies-report-c.json` | 9513 | `851f735922422686a66128c697a06aa3b9db573f31eb3356ea08cd5b106dd4e6` |
+| `strategies-report-c.md` | 3416 | `2e58d0d8f418b496e2ae7ac69760d54c6b2148be92434e433e0f1a462ba8b310` |
+
+All files were copied byte-for-byte from `.tmp/goal-llm-harness/` with `Copy-Item`; no transformation. The manifest itself is excluded from the table.

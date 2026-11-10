@@ -1,0 +1,1 @@
+{"schema":"tholdem.loop.search.v1","round":2,"searchBaseSeed":2114494020789993721,"seeds":50,"hands":20,"evaluated":80,"best":{"raiseThreshold":0.9,"callThreshold":0.2,"bluffFrequency":0.26,"sizingMultiplier":1},"searchLcb":0.2736353423590203,"searchMean":3.05}

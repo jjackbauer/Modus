@@ -1,0 +1,31 @@
+# Round-0 snapshot — goal-llm-harness (2026-11-09)
+
+## Test baseline
+
+- Command: `.tmp/tholdem-verify/RunXunit/bin/Release/net10.0/RunXunit.exe WIP/Wip.Tholdem.Tests/bin/Release/net10.0/Wip.Tholdem.Tests.dll`
+- Observed: `TOTAL 394 PASSED 394 FAILED 0 SKIPPED 0`, exit 0.
+
+## Five frozen component hashes (SHA-256, lowercase)
+
+| File | SHA-256 |
+|---|---|
+| `WIP/Wip.Tholdem.Agents/Learning/EvaluationCriteria.cs` | `9ff873f0c7727d79957815b29556c7028b37c11e980b65bed8689ef4ee7f71ee` |
+| `WIP/Wip.Tholdem.Agents/Learning/PromotionPolicy.cs` | `2bb7a80083500b34b43280a5adc67342f3b57c201c75b909a6dfa0a8cf788cbe` |
+| `WIP/Wip.Tholdem.Agents/Learning/PromotionVerifier.cs` | `72252cdd9bdbf838a3ddc0a5e5abb60298ca3d356ee4bb455fd521802e0029f0` |
+| `WIP/Wip.Tholdem.Agents/Learning/MatchEvaluator.cs` | `56c85e2de11fc5f4b30acd3423c65b6ffcea0cbaa2e7fc9a2cbe87ec8b8c251d` |
+| `WIP/Wip.Tholdem.Agents/SeedDerivation.cs` | `ec4e7845746a930bc115387e25176ad2bf6a417261550939571630a1a944b123` |
+
+Command: `Get-FileHash -Algorithm SHA256` over each path, lowercased.
+
+## Legacy baseline
+
+`docs/goal-tholdem-harness/round-0/baseline-hashes.txt` — 7 JSON files, `identical: True`.
+Re-run target: `dotnet run --project WIP/Wip.Tholdem.Host -c Release -- train --seed 1099511627776 --iterations 2 --data-dir <fresh>`.
+
+## Pre-registered run parameters
+
+Recorded in `goal.md`: seed `1099511927776`, start 0.70/0.70/0.12/1.0, margin 5, minSeeds 24, 10 iterations, 2000 training hands, 50 evaluation seeds, 20 hands per evaluation match.
+
+## Secret file
+
+`.secrets/deepseek.env` present (98 bytes), `.gitignore:54` ignores `.secrets/`. Contents not read.
