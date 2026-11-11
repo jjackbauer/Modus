@@ -1,0 +1,1549 @@
+{
+  "schema": "tholdem.family-probe.v1",
+  "candidates": 144,
+  "verified": 1,
+  "top": [
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 1646.25,
+      "lower": 594.8621398681917
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "VerifiedImprovement",
+      "reason": "verified-improvement",
+      "mean": 150.625,
+      "lower": 71.45234685920583
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 670.625,
+      "lower": 36.087335668777314
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 66.71875,
+      "lower": 16.74941104593664
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 49.53125,
+      "lower": -13.597656249999993
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 20.46875,
+      "lower": -15.154837164444487
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 80,
+      "lower": -15.646909439169235
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 78.28125,
+      "lower": -16.38336724005123
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 230.78125,
+      "lower": -42.689095703341366
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 362.5,
+      "lower": -44.113981493808865
+    }
+  ],
+  "rows": [
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1658.125,
+      "lower": -3546.4189606764353
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -383.43749999999994,
+      "lower": -2198.0694228300454
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -557.34375,
+      "lower": -1421.6569789909863
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 1293.59375,
+      "lower": -224.7579209241776
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -298.4375000000001,
+      "lower": -2273.837472211044
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1972.1875,
+      "lower": -3802.76953125
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -586.25,
+      "lower": -2379.103576726308
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1137.96875,
+      "lower": -4087.046603202267
+    },
+    {
+      "raise": 0.4,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 54.53124999999994,
+      "lower": -1045.1396113448502
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -946.25,
+      "lower": -2915.966844255936
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1179.53125,
+      "lower": -3732.5505535819448
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -592.65625,
+      "lower": -1455.954356326126
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 629.6875,
+      "lower": -1962.3042795175575
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 1646.25,
+      "lower": 594.8621398681917
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -991.5625,
+      "lower": -2995.5236124204403
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -242.5,
+      "lower": -1564.8062385039534
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 51.25,
+      "lower": -1914.1208179232272
+    },
+    {
+      "raise": 0.4,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1122.5,
+      "lower": -2569.5254053016774
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2610.625,
+      "lower": -4124.938487321793
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2045.3125,
+      "lower": -4657.138628268616
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1581.5625,
+      "lower": -2462.05859375
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -997.1875,
+      "lower": -2890.587277671728
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -685.46875,
+      "lower": -2165.149634174286
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1959.375,
+      "lower": -3605.852423805455
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1927.03125,
+      "lower": -3865.37799158674
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2261.40625,
+      "lower": -4032.1642787631904
+    },
+    {
+      "raise": 0.4,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1814.0625,
+      "lower": -2764.457473146756
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1460.3125,
+      "lower": -3163.84375
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2645.78125,
+      "lower": -4034.84375
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2369.6875,
+      "lower": -2985.838087532521
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2928.90625,
+      "lower": -4584.484375
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2852.5,
+      "lower": -3691.0602688361123
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -835.3125,
+      "lower": -3023.602788011265
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1489.84375,
+      "lower": -3280.031525390516
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -2007.5,
+      "lower": -2855.581234271489
+    },
+    {
+      "raise": 0.4,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -748.4375,
+      "lower": -1792.1850474283838
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -122.65625,
+      "lower": -1027.6836372013145
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -360.9375,
+      "lower": -1156.4668812022478
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -450.46875,
+      "lower": -1332.737223855173
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 871.40625,
+      "lower": -300.29264945160776
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 393.4375,
+      "lower": -1278.0039062499986
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -166.25,
+      "lower": -678.7594765089615
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -431.40625,
+      "lower": -1876.8119452736673
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 105.93750000000001,
+      "lower": -631.778505881851
+    },
+    {
+      "raise": 0.6,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 81.25,
+      "lower": -1262.6406249999986
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 29.0625,
+      "lower": -595.2881187833317
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 615,
+      "lower": -677.4130387932485
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -160.31250000000006,
+      "lower": -732.4078551636699
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -235.9375,
+      "lower": -1160.0981234647325
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 732.8125,
+      "lower": -973.4375
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 483.125,
+      "lower": -470.6582383911574
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -218.4375,
+      "lower": -1108.722254685913
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -365.3125,
+      "lower": -1324.7421373234542
+    },
+    {
+      "raise": 0.6,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -530.625,
+      "lower": -1279.983319347389
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1076.09375,
+      "lower": -2374.5307160954253
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 475.9375,
+      "lower": -624.6566669431791
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1434.84375,
+      "lower": -2607.053163138022
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 579.6875,
+      "lower": -149.48047055632367
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 257.65625,
+      "lower": -941.8472448631876
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -686.25,
+      "lower": -1061.599460084773
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 31.875,
+      "lower": -1049.583110778406
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -782.1875,
+      "lower": -2303.45558524048
+    },
+    {
+      "raise": 0.6,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -915.625,
+      "lower": -2539.08203125
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -237.65625,
+      "lower": -582.213055984743
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -370.78125,
+      "lower": -731.0290607842724
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1102.5,
+      "lower": -2379.25
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -905.15625,
+      "lower": -1684.5093960496474
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -981.71875,
+      "lower": -1769.3407566614337
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -187.1875,
+      "lower": -1172.8182680956559
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -445.46875,
+      "lower": -1909.609405908805
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -853.59375,
+      "lower": -2258.051253436082
+    },
+    {
+      "raise": 0.6,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 417.96875,
+      "lower": -700.560847679963
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 78.28125,
+      "lower": -16.38336724005123
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -194.375,
+      "lower": -612.3789062499999
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -337.03125,
+      "lower": -880.5809968135679
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 545.78125,
+      "lower": -267.04777967155997
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -85.46875,
+      "lower": -597.2539062499999
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 466.71875,
+      "lower": -165.0090146036772
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -0.625,
+      "lower": -87.57744897082915
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 93.28125,
+      "lower": -401.09375
+    },
+    {
+      "raise": 0.8,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -325.625,
+      "lower": -1378.62109375
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -556.875,
+      "lower": -1916.60546875
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 269.375,
+      "lower": -883.0562486815991
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 103.59375,
+      "lower": -153.1933890563427
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -35.625,
+      "lower": -67.57186003926782
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 154.6875,
+      "lower": -1216.486112937752
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 20.46875,
+      "lower": -15.154837164444487
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -382.96875,
+      "lower": -1230.625
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -83.4375,
+      "lower": -452.0859374999999
+    },
+    {
+      "raise": 0.8,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 205.78125,
+      "lower": -75.30387573469011
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -286.71875,
+      "lower": -879.3828125
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 359.6875,
+      "lower": -592.4244320662585
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -123.28125,
+      "lower": -1115.1367187499998
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 31.09375,
+      "lower": -77.99159599411838
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 590.15625,
+      "lower": -1319.731508701707
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 49.53125,
+      "lower": -13.597656249999993
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 353.4375,
+      "lower": -82.84879538809173
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 159.0625,
+      "lower": -931.1704895148191
+    },
+    {
+      "raise": 0.8,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 187.03125,
+      "lower": -76.50812983855133
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 303.90625,
+      "lower": -51.59251639698084
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 80,
+      "lower": -15.646909439169235
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -323.125,
+      "lower": -1087.703125
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 746.71875,
+      "lower": -279.47893437351354
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -269.6875,
+      "lower": -959.078125
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -123.28125,
+      "lower": -869.375
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -847.8125,
+      "lower": -1929.9526457493093
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 20.9375,
+      "lower": -46.164868060515985
+    },
+    {
+      "raise": 0.8,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 85.15625,
+      "lower": -1148.2556113958171
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -441.25,
+      "lower": -1464.69921875
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -231.875,
+      "lower": -892.34375
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -222.65625,
+      "lower": -753.93359375
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 20,
+      "lower": -163.17934160569376
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -130.625,
+      "lower": -1610.5585937499998
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1134.84375,
+      "lower": -2783.2578124999995
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "VerifiedImprovement",
+      "reason": "verified-improvement",
+      "mean": 150.625,
+      "lower": 71.45234685920583
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 230.78125,
+      "lower": -42.689095703341366
+    },
+    {
+      "raise": 0.95,
+      "call": 0.2,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -360,
+      "lower": -1044.078125
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -222.03125,
+      "lower": -958.4375
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -1403.75,
+      "lower": -2763.8359375
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -550.625,
+      "lower": -1312.6640625
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -565.625,
+      "lower": -1415.8515624999998
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -166.5625,
+      "lower": -956.71875
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -356.875,
+      "lower": -1143.46875
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -246.5625,
+      "lower": -881.89453125
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -549.6875,
+      "lower": -1322.3867187499995
+    },
+    {
+      "raise": 0.95,
+      "call": 0.4,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 633.4375,
+      "lower": -731.1678469194164
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 66.71875,
+      "lower": 16.74941104593664
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 410.78125,
+      "lower": -212.66196973391868
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 3.59375,
+      "lower": -89.34718260848663
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 237.8125,
+      "lower": -107.92230303941852
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -662.8125,
+      "lower": -1959.6679687499998
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -102.5,
+      "lower": -1495.9089914631236
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 363.4375,
+      "lower": -814.3999242284767
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -207.8125,
+      "lower": -720.46875
+    },
+    {
+      "raise": 0.95,
+      "call": 0.6,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 112.1875,
+      "lower": -180.33333966647774
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -270,
+      "lower": -784.2656249999999
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -262.5,
+      "lower": -1363.1700531444142
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 362.5,
+      "lower": -44.113981493808865
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 670.625,
+      "lower": 36.087335668777314
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -533.125,
+      "lower": -1501.87890625
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.2,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -319.6875,
+      "lower": -1560.107866350387
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 0.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -562.65625,
+      "lower": -1326.7739739859037
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.25,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -365.78124999999994,
+      "lower": -1598.0311882974468
+    },
+    {
+      "raise": 0.95,
+      "call": 0.8,
+      "bluff": 0.4,
+      "sizing": 1.75,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -184.0625,
+      "lower": -1064.7626263933917
+    }
+  ]
+}

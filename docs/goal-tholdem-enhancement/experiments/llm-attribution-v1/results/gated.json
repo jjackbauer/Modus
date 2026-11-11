@@ -1,0 +1,152 @@
+{
+  "schema": "tholdem.llm-gate-pilot.v1",
+  "count": 16,
+  "verified": 0,
+  "unsafeCount": 8,
+  "rows": [
+    {
+      "task": "default",
+      "iteration": 1,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 44.6875,
+      "lower": -18.271854436860437,
+      "anchormean": 48.4375
+    },
+    {
+      "task": "default",
+      "iteration": 2,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 690.9375,
+      "lower": -920.7134432359148,
+      "anchormean": 7.5
+    },
+    {
+      "task": "default",
+      "iteration": 3,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -573.4375,
+      "lower": -1781.875,
+      "anchormean": 11.5625
+    },
+    {
+      "task": "default",
+      "iteration": 4,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -8.4375,
+      "lower": -29.6875,
+      "anchormean": -11.25
+    },
+    {
+      "task": "tight",
+      "iteration": 1,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -313.125,
+      "lower": -840.625,
+      "anchormean": -10
+    },
+    {
+      "task": "tight",
+      "iteration": 2,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 82.1875,
+      "lower": -25.02602623390696,
+      "anchormean": 10.9375
+    },
+    {
+      "task": "tight",
+      "iteration": 3,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 290.625,
+      "lower": -210.53752975463277,
+      "anchormean": 18.125
+    },
+    {
+      "task": "tight",
+      "iteration": 4,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 51.25,
+      "lower": -31.633103113327095,
+      "anchormean": -6.875
+    },
+    {
+      "task": "loose",
+      "iteration": 1,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0,
+      "anchormean": 0
+    },
+    {
+      "task": "loose",
+      "iteration": 2,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0,
+      "anchormean": 0
+    },
+    {
+      "task": "loose",
+      "iteration": 3,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -515.3125,
+      "lower": -1099.0811106440551,
+      "anchormean": 17.1875
+    },
+    {
+      "task": "loose",
+      "iteration": 4,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -381.5625,
+      "lower": -1143.125,
+      "anchormean": 1.5625
+    },
+    {
+      "task": "aggressive",
+      "iteration": 1,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 5,
+      "lower": -119.7193131961026,
+      "anchormean": 3.75
+    },
+    {
+      "task": "aggressive",
+      "iteration": 2,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -875.3125,
+      "lower": -2563.125,
+      "anchormean": -2.8125
+    },
+    {
+      "task": "aggressive",
+      "iteration": 3,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 306.25,
+      "lower": -192.58213233528323,
+      "anchormean": 72.5
+    },
+    {
+      "task": "aggressive",
+      "iteration": 4,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 70.9375,
+      "lower": -101.62171564016373,
+      "anchormean": 120.625
+    }
+  ]
+}

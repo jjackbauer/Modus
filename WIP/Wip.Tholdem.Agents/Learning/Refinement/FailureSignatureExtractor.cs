@@ -154,29 +154,47 @@ public static class FailureSignatureExtractor
     }
 
     /// <summary>
-    /// True when seat 0 answered a same-street opponent aggression. <paramref name="folded"/> is true
-    /// when that answer was a fold, which is the exact fold-to-raise condition.
+    /// True when seat 0 answered an outstanding same-street opponent aggression.
+    /// <paramref name="folded"/> is true when any such answer was a fold, which is the exact
+    /// fold-to-raise condition. The scan tracks the outstanding raise on each street, so an
+    /// intervening opponent call between the raise and the fold does not hide the fold. A hand
+    /// contributes at most one sample because the result is a per-hand flag, never a per-decision
+    /// count.
     /// </summary>
     private static bool FacedRaise(HandRecord hand, out bool folded)
     {
         folded = false;
         var faced = false;
-        for (var index = 1; index < hand.Actions.Count; index++)
+        var street = int.MinValue;
+        var outstanding = false;
+        foreach (var action in hand.Actions)
         {
-            var action = hand.Actions[index];
-            var previous = hand.Actions[index - 1];
-            if (action.Seat != 0
-                || previous.Seat == 0
-                || action.Street != previous.Street
-                || !IsAggressive(previous.Kind))
+            if (action.Street != street)
             {
+                street = action.Street;
+                outstanding = false;
+            }
+
+            if (action.Seat == 0)
+            {
+                if (!outstanding)
+                {
+                    continue;
+                }
+
+                outstanding = false;
+                faced = true;
+                if (string.Equals(action.Kind, "Fold", StringComparison.Ordinal))
+                {
+                    folded = true;
+                }
+
                 continue;
             }
 
-            faced = true;
-            if (string.Equals(action.Kind, "Fold", StringComparison.Ordinal))
+            if (IsAggressive(action.Kind))
             {
-                folded = true;
+                outstanding = true;
             }
         }
 

@@ -1,0 +1,333 @@
+{
+  "schema": "tholdem.reachability.v1",
+  "totals": {
+    "diagnosis": 0,
+    "deterministic": 1,
+    "random": 0,
+    "grid": 0,
+    "nosearch": 0
+  },
+  "signatures": "{\u0022schema\u0022:\u0022tholdem.signatures.v1\u0022,\u0022signals\u0022:[{\u0022name\u0022:\u0022fold-to-raise\u0022,\u0022count\u0022:25,\u0022sample\u0022:29,\u0022rate\u0022:0.8620689655172413,\u0022direction\u0022:\u0022high\u0022},{\u0022name\u0022:\u0022call-with-weak-hand\u0022,\u0022count\u0022:8,\u0022sample\u0022:13,\u0022rate\u0022:0.6153846153846154,\u0022direction\u0022:\u0022high\u0022},{\u0022name\u0022:\u0022missed-value\u0022,\u0022count\u0022:8,\u0022sample\u0022:11,\u0022rate\u0022:0.7272727272727273,\u0022direction\u0022:\u0022high\u0022},{\u0022name\u0022:\u0022aggression-by-street\u0022,\u0022count\u0022:6,\u0022sample\u0022:51,\u0022rate\u0022:0.11764705882352941,\u0022direction\u0022:\u0022low\u0022},{\u0022name\u0022:\u0022showdown-loss\u0022,\u0022count\u0022:26,\u0022sample\u0022:28,\u0022rate\u0022:0.9285714285714286,\u0022direction\u0022:\u0022high\u0022},{\u0022name\u0022:\u0022stack-off-loss\u0022,\u0022count\u0022:1,\u0022sample\u0022:1,\u0022rate\u0022:1,\u0022direction\u0022:\u0022high\u0022}]}",
+  "rows": [
+    {
+      "arm": "diagnosis",
+      "iteration": 1,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -140.15625,
+      "lower": -464.0625
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 1,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -420.3125,
+      "lower": -1254.84375
+    },
+    {
+      "arm": "random",
+      "iteration": 1,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -158.28125,
+      "lower": -1161.416648972563
+    },
+    {
+      "arm": "grid",
+      "iteration": 1,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -278.125,
+      "lower": -1195.2584210949153
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 1,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 2,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -135.3125,
+      "lower": -875.8164062499999
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 2,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 44.6875,
+      "lower": -42.24614874097297
+    },
+    {
+      "arm": "random",
+      "iteration": 2,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -4101.5625,
+      "lower": -5778.426853746735
+    },
+    {
+      "arm": "grid",
+      "iteration": 2,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 198.59375,
+      "lower": -396.57847061140217
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 2,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 3,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -799.6875,
+      "lower": -1734.54664722275
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 3,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -37.5,
+      "lower": -176.5625
+    },
+    {
+      "arm": "random",
+      "iteration": 3,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": 34.0625,
+      "lower": -1287.8770418487518
+    },
+    {
+      "arm": "grid",
+      "iteration": 3,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 521.5625,
+      "lower": -525.2626800339851
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 3,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 4,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -663.4375,
+      "lower": -1570.2343749999995
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 4,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -27.34375,
+      "lower": -137.65625
+    },
+    {
+      "arm": "random",
+      "iteration": 4,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -387.1875,
+      "lower": -1006.40625
+    },
+    {
+      "arm": "grid",
+      "iteration": 4,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 4,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 5,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -670,
+      "lower": -1615.2226562499995
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 5,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -54.375,
+      "lower": -223.61718749999997
+    },
+    {
+      "arm": "random",
+      "iteration": 5,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -796.875,
+      "lower": -1731.5195312499998
+    },
+    {
+      "arm": "grid",
+      "iteration": 5,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -710.3125,
+      "lower": -1928.8047453065735
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 5,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 6,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -292.34375,
+      "lower": -801.57421875
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 6,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -49.53125,
+      "lower": -120.78515625
+    },
+    {
+      "arm": "random",
+      "iteration": 6,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -95.3125,
+      "lower": -915.0303377882381
+    },
+    {
+      "arm": "grid",
+      "iteration": 6,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -373.4375,
+      "lower": -1037.0703125
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 6,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 7,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -564.21875,
+      "lower": -1535.3125
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 7,
+      "verdict": "VerifiedImprovement",
+      "reason": "verified-improvement",
+      "mean": 66.09375,
+      "lower": 11.669451143573205
+    },
+    {
+      "arm": "random",
+      "iteration": 7,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -709.6875,
+      "lower": -2560.818690135169
+    },
+    {
+      "arm": "grid",
+      "iteration": 7,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -256.25,
+      "lower": -1221.1171874999998
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 7,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    },
+    {
+      "arm": "diagnosis",
+      "iteration": 8,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -287.34375,
+      "lower": -886.40625
+    },
+    {
+      "arm": "deterministic",
+      "iteration": 8,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 21.5625,
+      "lower": -17.08257918270361
+    },
+    {
+      "arm": "random",
+      "iteration": 8,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": -91.25,
+      "lower": -270.21833096218194
+    },
+    {
+      "arm": "grid",
+      "iteration": 8,
+      "verdict": "Unsafe",
+      "reason": "unsafe-anchor-regression",
+      "mean": -152.8125,
+      "lower": -2517.7804304477654
+    },
+    {
+      "arm": "nosearch",
+      "iteration": 8,
+      "verdict": "Rejected",
+      "reason": "no-improvement",
+      "mean": 0,
+      "lower": 0
+    }
+  ]
+}

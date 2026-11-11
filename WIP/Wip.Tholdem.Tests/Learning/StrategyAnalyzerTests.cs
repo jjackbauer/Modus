@@ -26,9 +26,11 @@ public sealed class StrategyAnalyzerTests
         Assert.Equal(metrics.AggressionFactor, analysis.AggressionFactor);
         Assert.Equal(metrics.ShowdownRate, analysis.ShowdownRate);
 
-        // The aggregated report carries no voluntary-participation counts, so the analyzer reports
-        // zero rather than fabricating a hand-level statistic.
-        Assert.Equal(0.0, analysis.Vpip);
+        // OBS-005: the analyzer copies the measured seat-zero VPIP and its denominator. The previous
+        // pinned 0.0 asserted the missing-data lie for a report that now measures it.
+        Assert.Equal(report.Vpip[0].Vpip, analysis.Vpip);
+        Assert.Equal(report.Vpip[0].Hands, analysis.VpipHands);
+        Assert.Equal(report.Vpip[0].VoluntaryPreflopHands, analysis.VpipVoluntaryHands);
         Assert.Equal(analysis, StrategyAnalyzer.Analyze(report));
         Assert.NotEqual(report.Agents[1].WinRate, analysis.WinRate);
     }

@@ -6,6 +6,18 @@ using Wip.Tholdem.Engine;
 namespace Wip.Tholdem.History;
 
 /// <summary>
+/// One public action at the decision boundary, normalized for policy and tool consumption. It
+/// carries only public information: the street, the acting seat, the action kind, the resulting
+/// street commitment ("to" amount) and the pot after the action.
+/// </summary>
+public sealed record PublicAction(
+    Street Street,
+    int Seat,
+    ActionKind Kind,
+    long AmountTo,
+    long PotAfter);
+
+/// <summary>
 /// The public projection of one seat: stack, current-street commitment and the two public status
 /// flags. It never carries hole cards.
 /// </summary>
@@ -14,7 +26,11 @@ public sealed record SeatPublicState(
     long Stack,
     long StreetCommitment,
     bool Folded,
-    bool AllIn);
+    bool AllIn)
+{
+    /// <summary>Total chips this seat has committed across all streets.</summary>
+    public long TotalCommitted { get; init; }
+}
 
 /// <summary>
 /// The hidden-information-safe projection of a hand for one seat. It contains no seed, no deck
@@ -34,6 +50,7 @@ public sealed record PlayerObservation
         LegalActionKinds = Array.Empty<ActionKind>();
         Winners = Array.Empty<int>();
         Seats = Array.Empty<SeatPublicState>();
+        ActionHistory = Array.Empty<PublicAction>();
     }
 
     public int HandNumber { get; internal init; }
@@ -76,6 +93,12 @@ public sealed record PlayerObservation
 
     public IReadOnlyList<SeatPublicState> Seats { get; internal init; }
 
+    /// <summary>Total chips the observing seat has committed across all streets.</summary>
+    public long OwnTotalCommitted { get; internal init; }
+
+    /// <summary>Normalized public actions in the order they were taken.</summary>
+    public IReadOnlyList<PublicAction> ActionHistory { get; internal init; }
+
     public static PlayerObservation ForSeat(TableState state, int seat)
     {
         ArgumentNullException.ThrowIfNull(state);
@@ -99,13 +122,28 @@ public sealed record PlayerObservation
                 state.Stacks[candidate],
                 state.StreetCommitted[candidate],
                 state.Folded[candidate],
-                state.AllIn[candidate]);
+                state.AllIn[candidate])
+            {
+                TotalCommitted = state.TotalCommitted[candidate],
+            };
 
             if (candidate != seat)
             {
                 opponentStack += state.Stacks[candidate];
                 opponentCommitment += state.StreetCommitted[candidate];
             }
+        }
+
+        var actionHistory = new PublicAction[state.ActionLog.Count];
+        for (var index = 0; index < state.ActionLog.Count; index++)
+        {
+            var entry = state.ActionLog[index];
+            actionHistory[index] = new PublicAction(
+                (Street)entry.Street,
+                entry.Seat,
+                entry.Kind,
+                entry.Amount,
+                entry.PotAfter);
         }
 
         return new PlayerObservation
@@ -130,6 +168,8 @@ public sealed record PlayerObservation
             IsComplete = state.IsComplete,
             Winners = state.Winners.ToArray(),
             Seats = publicSeats,
+            OwnTotalCommitted = state.TotalCommitted[seat],
+            ActionHistory = actionHistory,
         };
     }
 

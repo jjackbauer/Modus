@@ -79,7 +79,11 @@ public static class LlmPromptBuilder
         builder.Append(",\"showdownRate\":");
         AppendNumber(builder, analysis.ShowdownRate);
         builder.Append(",\"vpip\":");
-        AppendNumber(builder, analysis.Vpip);
+        AppendNullableNumber(builder, analysis.Vpip);
+        builder.Append(",\"vpipHands\":");
+        AppendInteger(builder, analysis.VpipHands);
+        builder.Append(",\"vpipVoluntary\":");
+        AppendInteger(builder, analysis.VpipVoluntaryHands);
         builder.Append('}');
 
         builder.Append(",\"signals\":[");
@@ -213,6 +217,17 @@ public static class LlmPromptBuilder
 
     private static void AppendInteger(StringBuilder builder, int value) =>
         builder.Append(value.ToString(CultureInfo.InvariantCulture));
+
+    private static void AppendNullableNumber(StringBuilder builder, double? value)
+    {
+        if (value is null)
+        {
+            builder.Append("null");
+            return;
+        }
+
+        AppendNumber(builder, value.Value);
+    }
 
     private static void AppendNumber(StringBuilder builder, double value)
     {

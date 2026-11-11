@@ -34,7 +34,15 @@ public static class FailureSignalDirections
 /// many opportunities (<see cref="Sample"/>), with a fixed-vocabulary direction. It never carries a
 /// seed, a card, an opponent name or free text.
 /// </summary>
-public sealed record FailureSignal(string Name, int Count, int Sample, double Rate, string Direction);
+public sealed record FailureSignal(string Name, int Count, int Sample, double Rate, string Direction)
+{
+    /// <summary>
+    /// True when the failure was possible in at least one hand. A false value distinguishes "no
+    /// data" from a sampled hand with zero failures, which has <see cref="Count"/> 0 and a positive
+    /// <see cref="Sample"/>.
+    /// </summary>
+    public bool Observed => Sample > 0;
+}
 
 /// <summary>
 /// The deterministic, bounded (at most twelve named signals) reduction of one recorded training

@@ -1,0 +1,167 @@
+{
+  "schema": "tholdem.llm-attribution-probe.v1",
+  "attempts": 16,
+  "successes": 16,
+  "rows": [
+    {
+      "task": "default",
+      "iteration": 1,
+      "status": "parsed",
+      "RaiseThreshold": 0.7,
+      "CallThreshold": 0.45,
+      "BluffFrequency": 0.14,
+      "SizingMultiplier": 1.1,
+      "adjustments": 0
+    },
+    {
+      "task": "default",
+      "iteration": 2,
+      "status": "parsed",
+      "RaiseThreshold": 0.7,
+      "CallThreshold": 0.46,
+      "BluffFrequency": 0.14,
+      "SizingMultiplier": 1.1,
+      "adjustments": 0
+    },
+    {
+      "task": "default",
+      "iteration": 3,
+      "status": "parsed",
+      "RaiseThreshold": 0.68,
+      "CallThreshold": 0.47,
+      "BluffFrequency": 0.15,
+      "SizingMultiplier": 1.15,
+      "adjustments": 0
+    },
+    {
+      "task": "default",
+      "iteration": 4,
+      "status": "parsed",
+      "RaiseThreshold": 0.7,
+      "CallThreshold": 0.44,
+      "BluffFrequency": 0.14,
+      "SizingMultiplier": 1.1,
+      "adjustments": 0
+    },
+    {
+      "task": "tight",
+      "iteration": 1,
+      "status": "parsed",
+      "RaiseThreshold": 0.8,
+      "CallThreshold": 0.4,
+      "BluffFrequency": 0.1,
+      "SizingMultiplier": 1.3,
+      "adjustments": 0
+    },
+    {
+      "task": "tight",
+      "iteration": 2,
+      "status": "parsed",
+      "RaiseThreshold": 0.8,
+      "CallThreshold": 0.4,
+      "BluffFrequency": 0.1,
+      "SizingMultiplier": 1.3,
+      "adjustments": 0
+    },
+    {
+      "task": "tight",
+      "iteration": 3,
+      "status": "parsed",
+      "RaiseThreshold": 0.8,
+      "CallThreshold": 0.4,
+      "BluffFrequency": 0.1,
+      "SizingMultiplier": 1.3,
+      "adjustments": 0
+    },
+    {
+      "task": "tight",
+      "iteration": 4,
+      "status": "parsed",
+      "RaiseThreshold": 0.8,
+      "CallThreshold": 0.4,
+      "BluffFrequency": 0.1,
+      "SizingMultiplier": 1.3,
+      "adjustments": 0
+    },
+    {
+      "task": "loose",
+      "iteration": 1,
+      "status": "parsed",
+      "RaiseThreshold": 0.55,
+      "CallThreshold": 0.65,
+      "BluffFrequency": 0.25,
+      "SizingMultiplier": 0.8,
+      "adjustments": 0
+    },
+    {
+      "task": "loose",
+      "iteration": 2,
+      "status": "parsed",
+      "RaiseThreshold": 0.55,
+      "CallThreshold": 0.65,
+      "BluffFrequency": 0.25,
+      "SizingMultiplier": 0.8,
+      "adjustments": 0
+    },
+    {
+      "task": "loose",
+      "iteration": 3,
+      "status": "parsed",
+      "RaiseThreshold": 0.52,
+      "CallThreshold": 0.62,
+      "BluffFrequency": 0.28,
+      "SizingMultiplier": 0.9,
+      "adjustments": 0
+    },
+    {
+      "task": "loose",
+      "iteration": 4,
+      "status": "parsed",
+      "RaiseThreshold": 0.52,
+      "CallThreshold": 0.62,
+      "BluffFrequency": 0.28,
+      "SizingMultiplier": 0.9,
+      "adjustments": 0
+    },
+    {
+      "task": "aggressive",
+      "iteration": 1,
+      "status": "parsed",
+      "RaiseThreshold": 0.62,
+      "CallThreshold": 0.48,
+      "BluffFrequency": 0.32,
+      "SizingMultiplier": 1.6,
+      "adjustments": 0
+    },
+    {
+      "task": "aggressive",
+      "iteration": 2,
+      "status": "parsed",
+      "RaiseThreshold": 0.62,
+      "CallThreshold": 0.48,
+      "BluffFrequency": 0.32,
+      "SizingMultiplier": 1.6,
+      "adjustments": 0
+    },
+    {
+      "task": "aggressive",
+      "iteration": 3,
+      "status": "parsed",
+      "RaiseThreshold": 0.62,
+      "CallThreshold": 0.48,
+      "BluffFrequency": 0.32,
+      "SizingMultiplier": 1.6,
+      "adjustments": 0
+    },
+    {
+      "task": "aggressive",
+      "iteration": 4,
+      "status": "parsed",
+      "RaiseThreshold": 0.62,
+      "CallThreshold": 0.48,
+      "BluffFrequency": 0.32,
+      "SizingMultiplier": 1.6,
+      "adjustments": 0
+    }
+  ]
+}

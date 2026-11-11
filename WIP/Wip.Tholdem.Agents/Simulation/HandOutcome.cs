@@ -10,4 +10,11 @@ public sealed record HandOutcome(
     bool Showdown,
     IReadOnlyList<int> AggressiveActions,
     IReadOnlyList<int> Calls,
-    IReadOnlyList<bool> ShowdownParticipants);
+    IReadOnlyList<bool> ShowdownParticipants)
+{
+    /// <summary>
+    /// One flag per seat: whether the seat voluntarily put chips in preflop (call, bet, raise or
+    /// all-in). Posted blinds and checks are not voluntary participation.
+    /// </summary>
+    public IReadOnlyList<bool> VoluntaryPreflop { get; init; } = Array.Empty<bool>();
+}

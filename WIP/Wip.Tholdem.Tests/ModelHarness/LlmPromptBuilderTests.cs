@@ -75,7 +75,7 @@ public sealed class LlmPromptBuilderTests
         Assert.Equal(0.2, promptSkills.GetProperty("bluff").GetProperty("frequency").GetDouble());
 
         var analysis = root.GetProperty("analysis");
-        Assert.Equal(6, analysis.EnumerateObject().Count());
+        Assert.Equal(8, analysis.EnumerateObject().Count());
         Assert.Equal(120, analysis.GetProperty("hands").GetInt32());
         Assert.Equal(0.48, analysis.GetProperty("winRate").GetDouble());
         Assert.Equal(-3.5, analysis.GetProperty("bbPer100").GetDouble());

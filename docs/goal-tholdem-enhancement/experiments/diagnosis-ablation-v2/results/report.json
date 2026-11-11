@@ -1,0 +1,909 @@
+{
+  "schema": "tholdem.diagnosis-ablation.v2",
+  "tasks": [
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {}
+  ],
+  "totals": {
+    "offPromoted": 0,
+    "onPromoted": 0,
+    "onUnsafe": 20
+  },
+  "outcome": "no-benefit",
+  "iterations": [
+    {
+      "task": "default",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 40,
+          "ChallengerId": "tholdem-strategy-v2-4ac1f97b"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-42f95c18"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -511.09375,
+          "ChallengerId": "tholdem-strategy-v2-f9ee0acb"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 6.25,
+          "ChallengerId": "tholdem-strategy-v2-8efd224a"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -533.125,
+          "ChallengerId": "tholdem-strategy-v2-52ac8399"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -1.5625,
+          "ChallengerId": "tholdem-strategy-v2-cffe6417"
+        }
+      ]
+    },
+    {
+      "task": "default",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 2,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -220.46875,
+          "ChallengerId": "tholdem-strategy-v2-e99a7744"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -87.1875,
+          "ChallengerId": "tholdem-strategy-v2-fa363104"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -571.09375,
+          "ChallengerId": "tholdem-strategy-v2-12f5b9e4"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 109.6875,
+          "ChallengerId": "tholdem-strategy-v2-10215e29"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -39.0625,
+          "ChallengerId": "tholdem-strategy-v2-5dcbac7d"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 161.09375,
+          "ChallengerId": "tholdem-strategy-v2-a95d608d"
+        }
+      ]
+    },
+    {
+      "task": "tight",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 20.15625,
+          "ChallengerId": "tholdem-strategy-v2-7b116d90"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -5.625,
+          "ChallengerId": "tholdem-strategy-v2-4943260c"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 38.75,
+          "ChallengerId": "tholdem-strategy-v2-d36638f7"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -1.875,
+          "ChallengerId": "tholdem-strategy-v2-9bea8a6c"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 13.4375,
+          "ChallengerId": "tholdem-strategy-v2-df2e6af2"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-911d09bf"
+        }
+      ]
+    },
+    {
+      "task": "tight",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 1,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -23.281250000000014,
+          "ChallengerId": "tholdem-strategy-v2-69369fc3"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-f53d93af"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-074146c4"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 149.0625,
+          "ChallengerId": "tholdem-strategy-v2-82048cf7"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 460.93749999999994,
+          "ChallengerId": "tholdem-strategy-v2-171713ea"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-45376886"
+        }
+      ]
+    },
+    {
+      "task": "loose",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-7aa24443"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 535.625,
+          "ChallengerId": "tholdem-strategy-v2-ec69d725"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-2d120f86"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 1.5625,
+          "ChallengerId": "tholdem-strategy-v2-b5a8f78a"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-0559b9ee"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-424017b4"
+        }
+      ]
+    },
+    {
+      "task": "loose",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 2,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 806.09375,
+          "ChallengerId": "tholdem-strategy-v2-6c7ee52e"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -454.375,
+          "ChallengerId": "tholdem-strategy-v2-7c3a3f23"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 56.875,
+          "ChallengerId": "tholdem-strategy-v2-48b95e71"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 63.75,
+          "ChallengerId": "tholdem-strategy-v2-a683c6e9"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-1876fd17"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -594.6875,
+          "ChallengerId": "tholdem-strategy-v2-5deaa0a7"
+        }
+      ]
+    },
+    {
+      "task": "aggressive",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -2.8125,
+          "ChallengerId": "tholdem-strategy-v2-26664fdd"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -2.34375,
+          "ChallengerId": "tholdem-strategy-v2-29b9c094"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 10.3125,
+          "ChallengerId": "tholdem-strategy-v2-592252cd"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -2.34375,
+          "ChallengerId": "tholdem-strategy-v2-4ab6dfd3"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-dfa620aa"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 537.1875,
+          "ChallengerId": "tholdem-strategy-v2-3959e402"
+        }
+      ]
+    },
+    {
+      "task": "aggressive",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 4,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 34.0625,
+          "ChallengerId": "tholdem-strategy-v2-d03a87b1"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 16.25,
+          "ChallengerId": "tholdem-strategy-v2-c9fa3bdd"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 123.59375,
+          "ChallengerId": "tholdem-strategy-v2-a0bba3ef"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 15,
+          "ChallengerId": "tholdem-strategy-v2-e1875741"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -23.59375,
+          "ChallengerId": "tholdem-strategy-v2-d552276f"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -159.53125,
+          "ChallengerId": "tholdem-strategy-v2-c2d04b4b"
+        }
+      ]
+    },
+    {
+      "task": "rock",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 33.59375,
+          "ChallengerId": "tholdem-strategy-v2-38c7fa5e"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 2.6562500000000004,
+          "ChallengerId": "tholdem-strategy-v2-718c5aef"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 45.78125,
+          "ChallengerId": "tholdem-strategy-v2-f2f7e896"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-6599fc0c"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-3a18a9c4"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -4.375,
+          "ChallengerId": "tholdem-strategy-v2-5f6378f2"
+        }
+      ]
+    },
+    {
+      "task": "rock",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 4,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 702.65625,
+          "ChallengerId": "tholdem-strategy-v2-3e8dbea3"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 139.84375,
+          "ChallengerId": "tholdem-strategy-v2-9f9c9f76"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 553.90625,
+          "ChallengerId": "tholdem-strategy-v2-1a4cfe59"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 293.4375,
+          "ChallengerId": "tholdem-strategy-v2-19dd8acf"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 691.5625,
+          "ChallengerId": "tholdem-strategy-v2-91c02ff7"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 130.3125,
+          "ChallengerId": "tholdem-strategy-v2-f8eda45b"
+        }
+      ]
+    },
+    {
+      "task": "station",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-666569de"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 6.25,
+          "ChallengerId": "tholdem-strategy-v2-0d5badb5"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-2b08a526"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -1.5625,
+          "ChallengerId": "tholdem-strategy-v2-6f089867"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-44238bc9"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-823c24da"
+        }
+      ]
+    },
+    {
+      "task": "station",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-5483a9d4"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-018f407f"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-e70f4fdf"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-d947c38c"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-1ae7bdec"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-e5e0c185"
+        }
+      ]
+    },
+    {
+      "task": "lag",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -9.375,
+          "ChallengerId": "tholdem-strategy-v2-8cd245c8"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 6.25,
+          "ChallengerId": "tholdem-strategy-v2-02f756a6"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -1.5625,
+          "ChallengerId": "tholdem-strategy-v2-d5238c3f"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-cdea1f2d"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -1.5625,
+          "ChallengerId": "tholdem-strategy-v2-5408b037"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-275ec1e9"
+        }
+      ]
+    },
+    {
+      "task": "lag",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 4,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -360.9375,
+          "ChallengerId": "tholdem-strategy-v2-429e6821"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 133.4375,
+          "ChallengerId": "tholdem-strategy-v2-9e96e3b9"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -28.4375,
+          "ChallengerId": "tholdem-strategy-v2-594dfeea"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 73.125,
+          "ChallengerId": "tholdem-strategy-v2-d4920183"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 145.46875,
+          "ChallengerId": "tholdem-strategy-v2-8395f274"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 30,
+          "ChallengerId": "tholdem-strategy-v2-41b5fbe2"
+        }
+      ]
+    },
+    {
+      "task": "maniac",
+      "arm": "deterministic",
+      "promoted": 0,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-74df3710"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -6.25,
+          "ChallengerId": "tholdem-strategy-v2-cd085c72"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 381.71875,
+          "ChallengerId": "tholdem-strategy-v2-168326ed"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -3.90625,
+          "ChallengerId": "tholdem-strategy-v2-980c220c"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-96e92e2f"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": 0,
+          "ChallengerId": "tholdem-strategy-v2-d0c74fca"
+        }
+      ]
+    },
+    {
+      "task": "maniac",
+      "arm": "diagnosis",
+      "promoted": 0,
+      "unsafeCount": 3,
+      "iterations": [
+        {
+          "Iteration": 1,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 415.46875,
+          "ChallengerId": "tholdem-strategy-v2-b5be5ecf"
+        },
+        {
+          "Iteration": 2,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 37.1875,
+          "ChallengerId": "tholdem-strategy-v2-0360a33e"
+        },
+        {
+          "Iteration": 3,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 447.8125,
+          "ChallengerId": "tholdem-strategy-v2-ac6bcdbd"
+        },
+        {
+          "Iteration": 4,
+          "Outcome": "rejected-selection",
+          "Verdict": "Rejected",
+          "Reason": "selection-mean-not-positive",
+          "SelectionMean": -145.9375,
+          "ChallengerId": "tholdem-strategy-v2-f8b2ed36"
+        },
+        {
+          "Iteration": 5,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Rejected",
+          "Reason": "no-improvement",
+          "SelectionMean": 143.4375,
+          "ChallengerId": "tholdem-strategy-v2-d1e1a14f"
+        },
+        {
+          "Iteration": 6,
+          "Outcome": "rejected-holdout",
+          "Verdict": "Unsafe",
+          "Reason": "unsafe-anchor-regression",
+          "SelectionMean": 7.8125,
+          "ChallengerId": "tholdem-strategy-v2-30ae33a8"
+        }
+      ]
+    }
+  ]
+}

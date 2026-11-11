@@ -26,13 +26,14 @@ public static class TholdemToolCatalog
     [
         new ToolDefinition(
             EquityCalculatorName,
-            "Seeded Monte Carlo showdown equity of two hole cards against one random opponent hand.",
+            "Seeded Monte Carlo showdown equity of two hole cards against one to five random opponent hands.",
             Schema(
                 Object(
                     ("holeCards", ArrayOf("string")),
                     ("board", ArrayOf("string")),
                     ("samples", Integer(1)),
-                    ("seed", Integer(null))),
+                    ("seed", Integer(null)),
+                    ("opponents", Integer(1))),
                 "holeCards")),
         new ToolDefinition(
             PotOddsName,

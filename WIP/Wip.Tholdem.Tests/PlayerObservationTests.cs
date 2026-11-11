@@ -65,6 +65,7 @@ public sealed class PlayerObservationTests
             new[]
             {
                 "ActingSeat",
+                "ActionHistory",
                 "AmountToCall",
                 "Board",
                 "ButtonSeat",
@@ -78,6 +79,7 @@ public sealed class PlayerObservationTests
                 "OwnHoleCards",
                 "OwnStack",
                 "OwnStreetCommitment",
+                "OwnTotalCommitted",
                 "Pot",
                 "Seat",
                 "SeatCount",

@@ -49,6 +49,17 @@ public static class MatchSimulator
         IReadOnlyList<IPokerAgent> agents,
         SimulationOptions options,
         CancellationToken cancellationToken = default)
+        => RunDetailed(agents, options, cancellationToken).Report;
+
+    /// <summary>
+    /// Runs a two-to-six-seat match and returns the report together with the per-hand outcomes in
+    /// hand order and the per-hand seeds actually dealt (one per hand). The report is exactly what
+    /// <see cref="Run(IReadOnlyList{IPokerAgent}, SimulationOptions, CancellationToken)"/> returns.
+    /// </summary>
+    public static MatchSimulation RunDetailed(
+        IReadOnlyList<IPokerAgent> agents,
+        SimulationOptions options,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(agents);
         ArgumentNullException.ThrowIfNull(options);
@@ -74,6 +85,7 @@ public static class MatchSimulator
         }
 
         var outcomes = new List<HandOutcome>(options.Hands);
+        var handSeeds = new List<ulong>(options.Hands);
         var handHashes = new List<string>(options.Hands);
         var historyDirectory = options.HistoryDirectory;
         if (historyDirectory is not null)
@@ -87,6 +99,7 @@ public static class MatchSimulator
         {
             cancellationToken.ThrowIfCancellationRequested();
             var handSeed = SeedDerivation.Derive(options.Seed, hand, 0, 0, 0UL);
+            handSeeds.Add(handSeed);
             var buttonSeat = options.AlternateButton ? (hand - 1) % seats : 0;
             var state = HoldemHandEngine.Start(
                 handSeed,
@@ -106,6 +119,8 @@ public static class MatchSimulator
             var actionCounts = new int[seats];
             var aggressiveActions = new int[seats];
             var calls = new int[seats];
+            var voluntaryPreflop = new bool[seats];
+            var handActionCount = 0;
 
             while (!state.IsComplete)
             {
@@ -167,7 +182,24 @@ public static class MatchSimulator
                     calls[actingSeat]++;
                 }
 
+                // Voluntary preflop participation is measured against the street the action was
+                // taken on: a call, bet, raise or all-in before the flop counts; a check or a
+                // posted blind does not.
+                if (state.Street == Street.Preflop
+                    && action.Kind is ActionKind.Call
+                        or ActionKind.Bet
+                        or ActionKind.Raise
+                        or ActionKind.AllIn)
+                {
+                    voluntaryPreflop[actingSeat] = true;
+                }
+
                 state = next;
+                handActionCount++;
+                if (handActionCount > options.ActionCapPerHand)
+                {
+                    throw new HandActionCapExceededException(hand, options.ActionCapPerHand);
+                }
             }
 
             var record = HandRecord.From(state);
@@ -197,7 +229,10 @@ public static class MatchSimulator
                 showdown,
                 aggressiveActions,
                 calls,
-                showdownParticipants));
+                showdownParticipants)
+            {
+                VoluntaryPreflop = voluntaryPreflop,
+            });
         }
 
         // options.Hands is at least one, so the first Start above always produced the validated
@@ -237,13 +272,33 @@ public static class MatchSimulator
             metrics,
             effectiveStartingStacks[0]);
 
-        return new SimulationReport(
+        var vpip = new VpipSummary[seats];
+        for (var seat = 0; seat < seats; seat++)
+        {
+            var voluntaryHands = 0;
+            foreach (var outcome in outcomes)
+            {
+                if (outcome.VoluntaryPreflop.Count > seat && outcome.VoluntaryPreflop[seat])
+                {
+                    voluntaryHands++;
+                }
+            }
+
+            vpip[seat] = new VpipSummary(options.Hands, voluntaryHands);
+        }
+
+        var report = new SimulationReport(
             sessionId,
             options.Seed,
             options.Hands,
             manifestHash,
             reportJson,
-            metrics);
+            metrics)
+        {
+            Vpip = vpip,
+        };
+
+        return new MatchSimulation(report, outcomes, handSeeds);
     }
 
     private static string NormalizeName(string? name, string fallback) =>

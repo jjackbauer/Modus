@@ -11,11 +11,20 @@ public sealed record SimulationOptions
         long BigBlind = 10,
         bool AlternateButton = true,
         string? HistoryDirectory = null,
-        IReadOnlyList<long>? StartingStacks = null)
+        IReadOnlyList<long>? StartingStacks = null,
+        int actionCapPerHand = 1_000_000)
     {
         if (Hands <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(Hands), Hands, "A simulation must run at least one hand.");
+        }
+
+        if (actionCapPerHand < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(actionCapPerHand),
+                actionCapPerHand,
+                "The per-hand action cap must be at least one.");
         }
 
         this.Seed = Seed;
@@ -26,6 +35,7 @@ public sealed record SimulationOptions
         this.AlternateButton = AlternateButton;
         this.HistoryDirectory = HistoryDirectory;
         this.StartingStacks = StartingStacks?.ToArray();
+        this.ActionCapPerHand = actionCapPerHand;
     }
 
     public ulong Seed { get; init; }
@@ -48,4 +58,11 @@ public sealed record SimulationOptions
     /// value must cover the big blind; the engine enforces both rules when the first hand starts.
     /// </summary>
     public IReadOnlyList<long>? StartingStacks { get; init; }
+
+    /// <summary>
+    /// The maximum number of applied actions one hand may take. The default of one million leaves
+    /// every existing caller byte-identical because no real hand approaches it; a smaller cap turns
+    /// a runaway agent into a <see cref="HandActionCapExceededException"/> instead of a hang.
+    /// </summary>
+    public int ActionCapPerHand { get; init; }
 }

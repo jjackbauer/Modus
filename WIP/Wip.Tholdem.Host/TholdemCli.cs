@@ -34,10 +34,35 @@ public static class TholdemCli
 
     private static readonly IReadOnlySet<string> TrainValued = Valued("iterations", "seed", "data-dir");
 
+    private static readonly IReadOnlySet<string> Train4Flags = Flags("json", "allow-weak-seed", "diagnosis");
+
+    private static readonly IReadOnlySet<string> Train4Valued = Valued(
+        "seed",
+        "iterations",
+        "selection-blocks",
+        "selection-hands",
+        "holdout-blocks",
+        "holdout-hands",
+        "margin",
+        "diagnosis-hands",
+        "data-dir");
+
     private static readonly IReadOnlySet<string> EvaluateFlags = Flags("json", "allow-weak-seed");
 
     private static readonly IReadOnlySet<string> EvaluateValued =
         Valued("challenger", "seeds", "hands", "incumbent", "margin", "seed", "data-dir");
+
+    private static readonly IReadOnlySet<string> Evaluate4Flags = Flags("json");
+
+    private static readonly IReadOnlySet<string> Evaluate4Valued = Valued(
+        "plan",
+        "challenger",
+        "incumbent",
+        "challenger-kind",
+        "incumbent-kind",
+        "anchor-plan",
+        "out",
+        "data-dir");
 
     private static readonly IReadOnlySet<string> PromoteFlags = Flags("yes");
 
@@ -119,7 +144,11 @@ public static class TholdemCli
         {
             "play" => PlayCommand.Execute(CliOptions.Parse(args, 1, PlayFlags, PlayValued), output),
             "train" => TrainCommand.Execute(CliOptions.Parse(args, 1, TrainFlags, TrainValued), output),
+            "train4" => Train4Command.Execute(CliOptions.Parse(args, 1, Train4Flags, Train4Valued), output),
             "evaluate" => EvaluateCommand.Execute(CliOptions.Parse(args, 1, EvaluateFlags, EvaluateValued), output),
+            "evaluate4" => Evaluate4Command.Execute(
+                CliOptions.Parse(args, 1, Evaluate4Flags, Evaluate4Valued),
+                output),
             "promote" => PromoteCommand.Execute(CliOptions.Parse(args, 1, PromoteFlags, PromoteValued), output),
             "replay" => ReplayCommand.Execute(CliOptions.Parse(args, 1, ReplayFlags, ReplayValued), output),
             "retention" => RetentionCommand.Execute(
@@ -141,10 +170,19 @@ public static class TholdemCli
         writer.WriteLine("               [--json] [--data-dir <path>]");
         writer.WriteLine("  tholdem train --iterations <n> --seed <n> [--allow-weak-seed]");
         writer.WriteLine("               [--json] [--data-dir <path>]");
+        writer.WriteLine("  tholdem train4 --iterations <n> --seed <n> [--allow-weak-seed]");
+        writer.WriteLine("               [--selection-blocks <n>=8] [--selection-hands <n>=4]");
+        writer.WriteLine("               [--holdout-blocks <n>=16] [--holdout-hands <n>=4]");
+        writer.WriteLine("               [--margin <bb/100>=5] [--diagnosis] [--diagnosis-hands <n>=20]");
+        writer.WriteLine("               [--json] [--data-dir <path>]");
         writer.WriteLine("  tholdem evaluate --challenger <id> --seeds <n> [--hands <n>=10]");
         writer.WriteLine("               [--incumbent <id>] [--margin <bb/100>=5]");
         writer.WriteLine("               [--seed <n>=1099511627776] [--allow-weak-seed]");
         writer.WriteLine("               [--json] [--data-dir <path>]");
+        writer.WriteLine("  tholdem evaluate4 --plan <path> --challenger <id> --incumbent <id>");
+        writer.WriteLine("               [--challenger-kind <strategy|equity-policy>]");
+        writer.WriteLine("               [--incumbent-kind <strategy|equity-policy>]");
+        writer.WriteLine("               [--anchor-plan <path>] [--out <dir>] [--json] [--data-dir <path>]");
         writer.WriteLine("  tholdem promote --challenger <id> [--incumbent <id>] [--yes] [--data-dir <path>]");
         writer.WriteLine("  tholdem replay <hand.json> [--expected-hash <hex>] [--data-dir <path>]");
         writer.WriteLine("  tholdem retention --status [--json] [--data-dir <path>]");
@@ -166,13 +204,17 @@ public static class TholdemCli
             + " --agent0/--agent1");
         writer.WriteLine(
             "  --starting-stacks  one comma-separated stack per seat, each at least the big blind (10)");
+        writer.WriteLine(
+            "  --challenger-kind  evaluate4 challenger agent kind (default: strategy)");
+        writer.WriteLine(
+            "  --incumbent-kind   evaluate4 incumbent agent kind (default: strategy)");
         writer.WriteLine();
         writer.WriteLine("seeds:");
         writer.WriteLine(
             "  Sessions are dealt deterministically from --seed, so a guessable seed lets an"
             + " observer");
         writer.WriteLine(
-            "  enumerate candidates and reconstruct the deck. play, train and evaluate require"
+            "  enumerate candidates and reconstruct the deck. play, train, train4 and evaluate require"
             + " seed >= "
             + SessionSeedPolicy.MinimumSeed);
         writer.WriteLine(

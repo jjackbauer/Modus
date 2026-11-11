@@ -52,6 +52,46 @@ public static class TrainingTrajectoryCapture
     {
         ArgumentNullException.ThrowIfNull(options);
 
+        return CaptureCore(
+            dataDirectory,
+            iteration,
+            directory => MatchSimulator.Run(
+                seat0,
+                seat1,
+                options with { HistoryDirectory = directory },
+                cancellationToken));
+    }
+
+    /// <summary>
+    /// Runs one reproducible two-to-six-seat match through the same scratch-directory discipline:
+    /// the hand history is written below the iteration's scratch directory, every recorded hand is
+    /// read back in hand-number order, and the scratch directory is deleted whether the match
+    /// succeeds or throws.
+    /// </summary>
+    public static TrajectoryCapture Capture(
+        string dataDirectory,
+        int iteration,
+        SimulationOptions options,
+        IReadOnlyList<IPokerAgent> agents,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(agents);
+        ArgumentNullException.ThrowIfNull(options);
+
+        return CaptureCore(
+            dataDirectory,
+            iteration,
+            directory => MatchSimulator.Run(
+                agents,
+                options with { HistoryDirectory = directory },
+                cancellationToken));
+    }
+
+    private static TrajectoryCapture CaptureCore(
+        string dataDirectory,
+        int iteration,
+        Func<string, SimulationReport> run)
+    {
         var directory = ScratchDirectory(dataDirectory, iteration);
         try
         {
@@ -62,12 +102,7 @@ public static class TrainingTrajectoryCapture
             }
 
             Directory.CreateDirectory(directory);
-            var report = MatchSimulator.Run(
-                seat0,
-                seat1,
-                options with { HistoryDirectory = directory },
-                cancellationToken);
-            return new TrajectoryCapture(report, ReadHands(directory));
+            return new TrajectoryCapture(run(directory), ReadHands(directory));
         }
         finally
         {
