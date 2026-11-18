@@ -68,7 +68,8 @@ public sealed class FactoryRuntime
                 verificationRoot: Path.Combine(root.Root, "verify"),
                 merges: merges,
                 targetHead: merges is null ? null : async ct => await TargetHeadAsync(root.TargetRepository, ct).ConfigureAwait(false),
-                currentEvidence: async (workItemId, ct) => await CurrentEvidenceAsync(workItemId, ct).ConfigureAwait(false)),
+                currentEvidence: async (workItemId, ct) => await CurrentEvidenceAsync(workItemId, ct).ConfigureAwait(false),
+                operations: new FactoryOperationLedger(root.Root)),
             new FactoryDispatchOptions(new SubscriberId(FactoryStageDispatchHandler.Subscriber), MaxEventsPerRun: 32));
     }
 

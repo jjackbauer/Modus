@@ -645,3 +645,22 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 
 - **Decision**: Re-frozen at this commit; no source or configuration change before the blind pair.
 - **Status**: pending user input (OQ-001)
+## OBS-043 — The operation ledger exists and the merge effect goes through it
+
+- **Source**: `FactoryOperationLedger`, `ReleaseAsync` wiring; Host 55/55
+- **Fact**: An operation id is derived from what the effect *is* — `(workItemId, eventId, stage, stageAttemptId,
+  effectOrdinal, effectKind, canonicalTarget, desiredDigest)` — so the same effect always gets the same id and a
+  different ordinal always gets a different one. Records are durable JSON lines with `Pending → Applied | Failed`,
+  the external identity and a verification digest, reloaded by a fresh ledger. The merge is now recorded: `Begin`
+  before `git merge`, `MarkApplied` with the merged sha after, `MarkFailed` on conflict, and a replay that finds
+  `Applied` returns the release without merging again.
+- **Implications**: Gap 3 closed, and closed *composed* — the ledger is on the release path, not a library sitting
+  beside it. Reconciliation is no longer ad hoc inside the merge engine; there is a durable record that says which
+  effect happened and what it produced.
+- **Confidence**: High
+- **Related**: EVD-073..075, OBS-038 (gap 3 of 5)
+
+## DEC-022 — Re-frozen after the operation ledger
+
+- **Decision**: Re-frozen at this commit; no source or configuration change before the blind pair.
+- **Status**: pending user input (OQ-001)

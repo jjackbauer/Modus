@@ -150,6 +150,7 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
     private readonly string _verificationRoot;
     private readonly Func<CancellationToken, Task<string?>>? _targetHead;
     private readonly Func<string, CancellationToken, Task<MergeAuthority?>>? _currentEvidence;
+    private readonly FactoryOperationLedger? _operations;
 
     public FactoryStageDispatchHandler(
         IImplementationStageRunner? implementations = null,
@@ -159,7 +160,8 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         IMergeEngine? merges = null,
         string? verificationRoot = null,
         Func<CancellationToken, Task<string?>>? targetHead = null,
-        Func<string, CancellationToken, Task<MergeAuthority?>>? currentEvidence = null)
+        Func<string, CancellationToken, Task<MergeAuthority?>>? currentEvidence = null,
+        FactoryOperationLedger? operations = null)
     {
         _implementations = implementations;
         _candidates = candidates;
@@ -169,6 +171,7 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         _verificationRoot = verificationRoot ?? Path.Combine(Path.GetTempPath(), "wip-factory-verify");
         _targetHead = targetHead;
         _currentEvidence = currentEvidence;
+        _operations = operations;
     }
 
     public ValueTask<StageDispatchOutcome> HandleAsync(
@@ -595,11 +598,38 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed("approval-incomplete");
         }
 
+        // Durable operation record: the merge is one identified effect, so a retry reconciles instead of repeating.
+        var operationId = _operations is null
+            ? null
+            : FactoryOperationLedger.DeriveOperationId(
+                workItem.WorkItemId.Value, trigger.Id.Value, "release", trigger.Id.Value, 1, "git-merge", workItem.Repository, headSha);
+
+        if (operationId is not null && _operations!.IsApplied(operationId))
+        {
+            var recorded = _operations.Latest(operationId)!;
+            var alreadyApplied = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+            {
+                ["mergedSha"] = recorded.ExternalIdentity ?? string.Empty,
+                ["reconciled"] = "merge-already-applied",
+                ["operationId"] = operationId
+            };
+
+            return StageDispatchOutcome.Advanced(
+                FactoryWorkState.Released,
+                [Event(OperatorEvents.ReleaseCompleted, workItem.WorkItemId, alreadyApplied, trigger.Id)]);
+        }
+
+        _operations?.Begin(operationId!, workItem.WorkItemId.Value, trigger.Id.Value, "release", trigger.Id.Value, 1,
+            "git-merge", workItem.Repository, headSha);
+
         var merge = await _merges.MergeAsync(workItem.Repository, headSha, cancellationToken).ConfigureAwait(false);
         if (!merge.Ok || string.IsNullOrWhiteSpace(merge.MergedSha))
         {
+            if (operationId is not null) { _operations!.MarkFailed(operationId, merge.Reason ?? "merge-failed"); }
             return StageDispatchOutcome.Failed(merge.Reason ?? "merge-failed");
         }
+
+        if (operationId is not null) { _operations!.MarkApplied(operationId, merge.MergedSha!, "git:rev-parse"); }
 
         if (!trigger.Data.TryGetValue("acceptanceContract", out var contractJson))
         {
