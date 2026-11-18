@@ -154,7 +154,8 @@ public sealed class MergeLifecycleTests
     private static async Task<(FactoryRuntime Runtime, string WorkItem)> AtReadyForDeliveryAsync(
         ICandidateHost host,
         IMergeEngine merge,
-        Func<CancellationToken, Task<string?>>? targetHead = null)
+        Func<CancellationToken, Task<string?>>? targetHead = null,
+        MergeAuthority? evidence = null)
     {
         var basePath = Path.Combine(Path.GetTempPath(), "factory-merge-" + Guid.NewGuid().ToString("N"));
         var repository = Path.Combine(basePath, "target");
@@ -173,7 +174,8 @@ public sealed class MergeLifecycleTests
             new StubBuild(),
             merges: merge,
             verificationRoot: Path.Combine(basePath, "verify"),
-            targetHead: targetHead);
+            targetHead: targetHead,
+            currentEvidence: evidence is null ? null : (_, _) => Task.FromResult<MergeAuthority?>(evidence));
 
         var runtime = new FactoryRuntime(root!, handler: handler);
         var submit = await runtime.SubmitAsync(Requirement, null, ContractJson);
@@ -288,5 +290,35 @@ public sealed class MergeLifecycleTests
 
         var status = Assert.Single(await runtime.StatusAsync());
         Assert.NotEqual("Released", status.State);
+    }
+
+    [Theory]
+    [InlineData("reviewDigest")]
+    [InlineData("headSha")]
+    [InlineData("baseSha")]
+    [InlineData("contractDigest")]
+    public async Task Approval_GivenAnyBoundFieldChanged_RefusesMerge(string changedField)
+    {
+        using var server = new StubServer("""{"id":"b1","title":"Dune"}""");
+        var merge = new StubMerge(ok: true);
+
+        // Every bound fact matches except one, which now differs from durable evidence.
+        var evidence = new MergeAuthority(
+            ReviewDigest: changedField == "reviewDigest" ? "sha256:changed" : "unused-matches",
+            HeadSha: changedField == "headSha" ? "a-different-head" : "unused-matches",
+            BaseSha: changedField == "baseSha" ? "a-different-base" : "unused-matches",
+            ContractDigest: changedField == "contractDigest" ? "sha256:changed" : "unused-matches");
+
+        var (runtime, workItem) = await AtReadyForDeliveryAsync(
+            new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("base-1"), evidence);
+
+        var digest = await ReviewDigestAsync(runtime, workItem);
+        Assert.True((await runtime.ApproveMergeAsync(workItem, digest)).Ok);
+
+        await runtime.RunAsync(16);
+
+        var status = Assert.Single(await runtime.StatusAsync());
+        Assert.Equal("DeliveryValidation", status.State);
+        Assert.Equal(0, merge.MergeCalls);
     }
 }

@@ -67,6 +67,16 @@ public interface IImplementationStageRunner
     ValueTask<ImplementationOutcome> RunAsync(ImplementationRequest request, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// The facts a merge approval is bound to (v0.3 §5.2). Delivery validation re-reads them from durable evidence so a
+/// stale approval cannot authorise a merge after any of them changed.
+/// </summary>
+public sealed record MergeAuthority(
+    string ReviewDigest,
+    string HeadSha,
+    string BaseSha,
+    string ContractDigest);
+
 /// <summary>Builds a candidate for review. Injected so a test can verify review logic without a real toolchain.</summary>
 public interface ICandidateBuildVerifier
 {
@@ -126,6 +136,7 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
     private readonly IMergeEngine? _merges;
     private readonly string _verificationRoot;
     private readonly Func<CancellationToken, Task<string?>>? _targetHead;
+    private readonly Func<string, CancellationToken, Task<MergeAuthority?>>? _currentEvidence;
 
     public FactoryStageDispatchHandler(
         IImplementationStageRunner? implementations = null,
@@ -134,7 +145,8 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         AcceptanceContractRunner? contractRunner = null,
         IMergeEngine? merges = null,
         string? verificationRoot = null,
-        Func<CancellationToken, Task<string?>>? targetHead = null)
+        Func<CancellationToken, Task<string?>>? targetHead = null,
+        Func<string, CancellationToken, Task<MergeAuthority?>>? currentEvidence = null)
     {
         _implementations = implementations;
         _candidates = candidates;
@@ -143,6 +155,7 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         _merges = merges;
         _verificationRoot = verificationRoot ?? Path.Combine(Path.GetTempPath(), "wip-factory-verify");
         _targetHead = targetHead;
+        _currentEvidence = currentEvidence;
     }
 
     public ValueTask<StageDispatchOutcome> HandleAsync(
@@ -483,6 +496,39 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         if (string.IsNullOrWhiteSpace(boundHead))
         {
             return StageDispatchOutcome.Failed("approval-incomplete");
+        }
+
+        // The approval must still describe the evidence that exists now. Any changed bound fact makes it stale.
+        if (_currentEvidence is not null)
+        {
+            var current = await _currentEvidence(workItem.WorkItemId.Value, CancellationToken.None).ConfigureAwait(false);
+            if (current is null)
+            {
+                return StageDispatchOutcome.Failed("approval-stale:no-current-evidence");
+            }
+
+            var mismatches = new List<string>();
+            static bool Differs(IReadOnlyDictionary<string, string> data, string key, string actual)
+                => data.TryGetValue(key, out var recorded)
+                   && !string.IsNullOrWhiteSpace(recorded)
+                   && !string.Equals(recorded, actual, StringComparison.Ordinal);
+
+            if (Differs(trigger.Data, "reviewDigest", current.ReviewDigest)) { mismatches.Add("reviewDigest"); }
+            if (Differs(trigger.Data, "headSha", current.HeadSha)) { mismatches.Add("headSha"); }
+            if (Differs(trigger.Data, "baseSha", current.BaseSha)) { mismatches.Add("baseSha"); }
+            if (Differs(trigger.Data, "contractDigest", current.ContractDigest)) { mismatches.Add("contractDigest"); }
+
+            if (mismatches.Count > 0)
+            {
+                var stale = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+                {
+                    ["reason"] = "approval-stale",
+                    ["changedFields"] = string.Join(",", mismatches)
+                };
+
+                return StageDispatchOutcome.Recorded(
+                    [Event(OperatorEvents.StageFailed, workItem.WorkItemId, stale, trigger.Id)]);
+            }
         }
 
         if (_targetHead is not null)

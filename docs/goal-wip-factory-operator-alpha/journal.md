@@ -436,3 +436,27 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   Transient retries still record nothing, by design, so the aggregate does not churn.
 - **Confidence**: High
 - **Related**: OBS-025
+## OBS-029 — Approval is now checked against current durable evidence (PA-06, partial)
+
+- **Source**: `FactoryStagePipeline.ValidateDelivery`, `FactoryRuntime.CurrentEvidenceAsync`; Host 44/44
+- **Fact**: Delivery validation now re-reads the latest accepted review from durable storage and compares the
+  approval's bound `reviewDigest`, `headSha`, `baseSha` and `contractDigest` against it. Any difference records
+  `approval-stale` with the changed field names and **performs no merge**. Four tests mutate each field
+  independently and each one leaves the item in `DeliveryValidation` with zero merge calls.
+- **Implications**: PA-06 has executable evidence for the four content facts that matter most (which review was
+  approved, which commit, which base, which contract). **Not yet bound**: approval actor/time/window, policy and
+  guidelines versions, and profile/tool-runner versions. The spec lists those too, so PA-06 is **partial**, not
+  met.
+- **Confidence**: High
+- **Related**: EVD-051, EVD-052, OBS-030
+
+## OBS-030 — The positive path with matching evidence is not separately tested
+
+- **Source**: this round's test design
+- **Fact**: The merge happy-path tests construct the handler without an evidence lookup, so they exercise the merge
+  while the binding check is absent. The four mutation tests supply mismatching evidence. No test currently supplies
+  *matching* evidence and asserts the merge proceeds.
+- **Implications**: A defect that made the check always fail would be caught by nothing except the real end-to-end
+  run (which uses the runtime's real lookup). Recorded as a gap rather than implied coverage.
+- **Confidence**: High
+- **Related**: OBS-029

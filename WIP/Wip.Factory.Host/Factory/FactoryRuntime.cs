@@ -67,7 +67,8 @@ public sealed class FactoryRuntime
                 implementations, candidates, builds,
                 verificationRoot: Path.Combine(root.Root, "verify"),
                 merges: merges,
-                targetHead: merges is null ? null : async ct => await TargetHeadAsync(root.TargetRepository, ct).ConfigureAwait(false)),
+                targetHead: merges is null ? null : async ct => await TargetHeadAsync(root.TargetRepository, ct).ConfigureAwait(false),
+                currentEvidence: async (workItemId, ct) => await CurrentEvidenceAsync(workItemId, ct).ConfigureAwait(false)),
             new FactoryDispatchOptions(new SubscriberId(FactoryStageDispatchHandler.Subscriber), MaxEventsPerRun: 32));
     }
 
@@ -477,6 +478,23 @@ public sealed class FactoryRuntime
         {
             await session.Stop().ConfigureAwait(false);
         }
+    }
+
+    /// <summary>The latest review evidence for a work item, read from durable storage rather than a cached copy.</summary>
+    private async ValueTask<MergeAuthority?> CurrentEvidenceAsync(string workItemId, CancellationToken cancellationToken)
+    {
+        var events = await EventsAsync(workItemId, cancellationToken).ConfigureAwait(false);
+        var review = events.LastOrDefault(static e => string.Equals(e.Type, OperatorEvents.ReviewAccepted, StringComparison.Ordinal));
+        if (review is null)
+        {
+            return null;
+        }
+
+        return new MergeAuthority(
+            review.Data.TryGetValue("reviewDigest", out var reviewDigest) ? reviewDigest : string.Empty,
+            review.Data.TryGetValue("headSha", out var headSha) ? headSha : string.Empty,
+            review.Data.TryGetValue("baseSha", out var baseSha) ? baseSha : string.Empty,
+            review.Data.TryGetValue("contractDigest", out var contractDigest) ? contractDigest : string.Empty);
     }
 
     private static async Task<string?> TargetHeadAsync(string repositoryPath, CancellationToken cancellationToken)
