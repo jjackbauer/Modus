@@ -265,3 +265,51 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   path before any claim about merging.
 - **Confidence**: High
 - **Related**: OBS-015, OBS-014
+## OBS-017 — The real path reaches Released, and the merged revision is the repository's HEAD
+
+- **Source**: operator run `%TEMP%\m4b-517f1861` (no stubs anywhere)
+- **Fact**: submit → contract approve → run (52 s: implementation + review → `ReadyForDelivery` v9) →
+  `factory approve --review-digest …` → run (4 s: merge + post-merge verification) → **`Released` v13**.
+  Target `main` now reads `e9bb30a merge 27e0bcf…`, `27e0bcf feat: implement …`, `24b3af9 chore: initialise`.
+  The recorded release evidence is: `mergedSha=e9bb30abf933330b812c931a56637f26c6838f51` (identical to
+  `git rev-parse HEAD`), `postMergeDetail=contract-passed-on-merged-revision`,
+  `postMergeScenarios=AC-1=pass,AC-2=pass,AC-3=pass,AC-4=pass`, plus the review and contract digests.
+- **Implications**: PA-03's "merged revision verified" is now demonstrated end to end with real git, and the
+  merged revision is provably the one the repository holds. This is the first time the full operator path ran
+  without a stub at any stage.
+- **Confidence**: High
+- **Related**: EVD-035, EVD-036, OBS-018, OBS-019
+
+## OBS-018 — Three wiring defects, each fatal, each invisible to tests
+
+- **Source**: the same run, twice
+- **Fact**: (1) `factory approve` was not routed by `Program.Main`, so the verb fell through to "not
+  implemented in this increment". (2) The CLI constructed `FactoryRuntime` without a merge engine, so the
+  release stage failed with `merge-engine-unavailable` and the merge never ran. (3) The generated `.gitignore`
+  contained a literal backtick-n (`bin/`nobj/`n`) because a PowerShell here-string swallowed the escape, so it
+  ignored nothing and **35 `obj/` entries were committed** into the merged tree.
+- **Implications**: The third is the most instructive: the ignore file existed, looked right in a directory
+  listing, and did nothing. It is now a public constant with a test that asserts real lines and no backtick.
+  All three were wiring, not logic — the class of defect that unit tests by construction cannot see.
+- **Confidence**: High
+- **Related**: OBS-017
+
+## OBS-019 — D-06 is violated by the reused WIP worktree provider
+
+- **Source**: `Wip.Workspaces.Git/WipWorkspaceProviderGit.cs:77`
+- **Fact**: the provider hardcodes `<repository>/.wip/worktrees/<sessionId>`, so session worktrees live **inside**
+  the target repository. v0.3 §9 requires them under the control root, and the target repository must never
+  contain control state; after a run the target repo shows an untracked `.wip/` directory.
+- **Implications**: This is a spec-versus-baseline conflict, not a bug I can fix in the factory alone: the
+  factory must not create a second worktree engine (N-02), so the fix is an additive `worktreeRoot` parameter
+  on the existing provider. Until then D-06 is only partially met — the control root itself is outside the
+  repo, but worktrees are not. Recorded as RISK-002.
+- **Confidence**: High
+- **Related**: OBS-017, RISK-002
+## RISK-002 — Worktrees live inside the target repository (D-06 partial)
+
+- **Risk**: `WipWorkspaceProviderGit` hardcodes `<repo>/.wip/worktrees`. The target repo therefore accumulates
+  factory control state, violating v0.3 §9 and leaving an untracked `.wip/` after every run.
+- **Mitigation**: additive `worktreeRoot` option on the existing provider (no second engine), passed from the
+  control root; then a test asserting no `.wip/` appears in the target repo.
+- **Status**: open

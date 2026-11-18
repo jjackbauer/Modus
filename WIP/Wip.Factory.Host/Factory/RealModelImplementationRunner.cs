@@ -36,6 +36,9 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
     private static readonly CapabilityVersion Version = new("1.0.0");
     private static readonly CapabilityPermission WorkspaceWrite = new("workspace.write");
 
+    /// <summary>Baseline ignore list so generated diffs stay source-only (bin/obj were being committed).</summary>
+    public static readonly string DefaultGitIgnore = "bin/" + Environment.NewLine + "obj/" + Environment.NewLine;
+
     private readonly FactoryControlRoot _root;
     private readonly Uri _baseUrl;
     private readonly string _apiKey;
@@ -261,7 +264,7 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
         var ignore = Path.Combine(repositoryPath, ".gitignore");
         if (!File.Exists(ignore))
         {
-            await File.WriteAllTextAsync(ignore, "bin/`nobj/`n", cancellationToken).ConfigureAwait(false);
+            await File.WriteAllTextAsync(ignore, DefaultGitIgnore, cancellationToken).ConfigureAwait(false);
             await GitAsync(repositoryPath, cancellationToken, "add", ".gitignore").ConfigureAwait(false);
         }
 
