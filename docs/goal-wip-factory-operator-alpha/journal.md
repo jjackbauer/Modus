@@ -121,3 +121,27 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   had never executed before this round.
 - **Confidence**: High
 - **Related**: OBS-004
+## OBS-006 — The six-tool gateway exists and its refusals are tested
+
+- **Source**: `Wip.Factory.Agents.Core/Tools/*`, `Wip.Factory.Wip/Isolation/RunCommandTool.cs`; Agents 67/67
+- **Fact**: Six tools now exist: `list_files`, `read_file`, `search_text`, `apply_patch`, `write_file`,
+  `run_command`. Nine PA-08 supporting tests pass: absolute path refused, traversal refused, patch conflict
+  refused **atomically** (file verified byte-identical afterwards), matching patch applies, search respects
+  its match cap and reports truncation, read_file truncates with total length, `nuget` subcommand refused,
+  a `;`-bearing argument is passed literally (no marker file created, build fails instead), and a session
+  without a worktree fails without writing.
+- **Implications**: F-D's confinement and allowlist claims now have executable evidence. `apply_patch` is a
+  real unified-diff applier with all-or-nothing semantics, not a whole-file rewrite.
+- **Confidence**: High
+- **Related**: EVD-015, EVD-016
+
+## OBS-007 — M2 stop condition NOT reached this round
+
+- **Source**: this round's scope
+- **Fact**: The tools exist but nothing dispatches the Implementations role yet: there is no worktree
+  provisioning, no profile-with-tools dispatch, no attributable-diff check and no `dotnet build`
+  verification wired into the lifecycle. The work item still stops at `RequirementsAligned`.
+- **Implications**: Honest statement of where the product is: intake and tooling are real; production does
+  not yet generate source. M2 remains open.
+- **Confidence**: High
+- **Related**: OBS-004
