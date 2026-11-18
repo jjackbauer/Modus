@@ -62,7 +62,22 @@ public static class FactoryCli
         }
 
         var text = await File.ReadAllTextAsync(file).ConfigureAwait(false);
-        var result = await new FactoryRuntime(root).SubmitAsync(text, title).ConfigureAwait(false);
+
+        // A requirement may point at a structured contract; copy it at intake so nothing external is read later.
+        string? contractJson = null;
+        var (parsed, _) = RequirementDocument.Parse(text, title);
+        if (parsed?.AcceptanceContractReference is { Length: > 0 } reference)
+        {
+            var contractPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(file))!, reference));
+            if (!File.Exists(contractPath))
+            {
+                return await FailAsync(error, Refused, "acceptance-contract-not-found:" + reference).ConfigureAwait(false);
+            }
+
+            contractJson = await File.ReadAllTextAsync(contractPath).ConfigureAwait(false);
+        }
+
+        var result = await new FactoryRuntime(root).SubmitAsync(text, title, contractJson).ConfigureAwait(false);
 
         if (!result.Accepted)
         {

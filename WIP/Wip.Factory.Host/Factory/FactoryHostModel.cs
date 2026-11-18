@@ -75,7 +75,7 @@ public sealed record FactoryControlRoot(string Root, string TargetRepository)
 }
 
 /// <summary>The supported application class (v0.3 §0.2). Anything else is refused at intake.</summary>
-public static class SupportedClass
+public static class SupportedAppClass
 {
     public const string AspNetCoreHttpNet10 = "aspnetcore-http-net10";
 }
@@ -87,7 +87,8 @@ public sealed record RequirementDocument(
     string Body,
     IReadOnlyList<string> Expectations,
     string Digest,
-    string RawText)
+    string RawText,
+    string? AcceptanceContractReference = null)
 {
     public const string MissingTitleCategory = "requirement-missing-title";
     public const string UnsupportedClassCategory = "unsupported-class";
@@ -152,7 +153,7 @@ public sealed record RequirementDocument(
         }
 
         var supportedClass = metadata.TryGetValue("supportedClass", out var sc) ? sc : string.Empty;
-        if (!string.Equals(supportedClass, SupportedClass.AspNetCoreHttpNet10, StringComparison.Ordinal))
+        if (!string.Equals(supportedClass, SupportedAppClass.AspNetCoreHttpNet10, StringComparison.Ordinal))
         {
             errors.Add($"{UnsupportedClassCategory}:{supportedClass}");
         }
@@ -177,7 +178,8 @@ public sealed record RequirementDocument(
         }
 
         var digest = ComputeDigest(title!, supportedClass, body, expectations);
-        return (new RequirementDocument(title!, supportedClass, body, expectations, digest, text), []);
+        var contractRef = metadata.TryGetValue("acceptanceContract", out var reference) ? reference : null;
+        return (new RequirementDocument(title!, supportedClass, body, expectations, digest, text, contractRef), []);
     }
 
     public static string ComputeDigest(
@@ -209,9 +211,11 @@ public sealed record ContractProposal(
     IReadOnlyList<ContractScenario> Scenarios,
     string RequirementDigest,
     string ProposalDigest,
-    bool Executable)
+    string? ExecutableContractDigest = null)
 {
-    public static ContractProposal From(RequirementDocument requirement)
+    public bool Executable => ExecutableContractDigest is not null;
+
+    public static ContractProposal From(RequirementDocument requirement, string? executableContractDigest = null)
     {
         ArgumentNullException.ThrowIfNull(requirement);
 
@@ -232,7 +236,7 @@ public sealed record ContractProposal(
 
         var digest = "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
 
-        return new ContractProposal(1, requirement.SupportedClassId, scenarios, requirement.Digest, digest, Executable: false);
+        return new ContractProposal(1, requirement.SupportedClassId, scenarios, requirement.Digest, digest, executableContractDigest);
     }
 
     public string ToJson() => JsonSerializer.Serialize(this, SerializerOptions);

@@ -184,3 +184,33 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   development requirement should be run to reduce the risk of over-fitting before freeze.
 - **Confidence**: High
 - **Related**: OQ-001
+## OBS-011 — The oracle exists, executes real HTTP, and can reject a wrong implementation
+
+- **Source**: `Factory/AcceptanceContract.cs`, `AcceptanceContractRunner.cs`; Host 24/24
+- **Fact**: A frozen contract is parsed, canonicalised and digest-pinned; the runner executes its scenarios in
+  order over real loopback HTTP, substitutes captured values into later paths, compares JSON as a structural
+  subset with ordered arrays, and records a per-scenario verdict with response digests. Six tests drive
+  scripted TCP servers: a correct implementation passes all three scenarios; a wrong status fails AC-1 with
+  `status-mismatch`; a wrong stored value fails AC-2 with `json-subset-mismatch`; capture substitution is
+  proven by asserting the exact request sequence seen by the server; absolute URLs, missing `expect.status`
+  and an unsupported class are refused at parse. A requirement may now reference `acceptanceContract:` and the
+  proposal reports `executable: true` with the contract digest.
+- **Implications**: PA-04 now has the mechanism it needs — an oracle that fails a plausible-but-wrong
+  candidate whose statuses look fine. It is **not yet wired into the lifecycle**: the review stage does not
+  run it, so the gates remain unclaimed.
+- **Confidence**: High
+- **Related**: EVD-022..025, OBS-012
+
+## OBS-012 — Three defects found by testing the new code
+
+- **Source**: this round's test runs
+- **Fact**: (1) `AcceptanceContract.Digest` was a computed property, so `ToCanonicalJson()` serialised it and
+  recursed into itself — a stack overflow that aborted the test run; fixed with `[JsonIgnore]`. (2) Storing the
+  **canonical** form in the event made the proposal non-executable, because the canonical shape is not the
+  contract schema and my parser could not re-read it; the operator bytes are now stored and the digest pins the
+  canonical form. (3) Two of my own test expectations were wrong: a failed capture correctly cascades into the
+  later scenarios, and ordered arrays report the first differing element, not the array.
+- **Implications**: The cascade and the ordered-array rule are now asserted explicitly rather than left as
+  undocumented behaviour.
+- **Confidence**: High
+- **Related**: OBS-011

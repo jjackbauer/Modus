@@ -66,12 +66,25 @@ public sealed class FactoryRuntime
     public async ValueTask<SubmitResult> SubmitAsync(
         string requirementText,
         string? titleOverride = null,
+        string? acceptanceContractJson = null,
         CancellationToken cancellationToken = default)
     {
         var (document, errors) = RequirementDocument.Parse(requirementText, titleOverride);
         if (document is null)
         {
             return SubmitResult.Refused([.. errors]);
+        }
+
+        AcceptanceContract? contract = null;
+        if (!string.IsNullOrWhiteSpace(acceptanceContractJson))
+        {
+            var (parsed, contractErrors) = AcceptanceContract.Parse(acceptanceContractJson);
+            if (parsed is null)
+            {
+                return SubmitResult.Refused([.. contractErrors]);
+            }
+
+            contract = parsed;
         }
 
         // Idempotent by requirement digest: an identical revision is not duplicated (v0.3 §3.2.1).
@@ -100,6 +113,14 @@ public sealed class FactoryRuntime
             ["supportedClass"] = document.SupportedClassId,
             ["expectations"] = JsonSerializer.Serialize(document.Expectations)
         };
+
+        if (contract is not null)
+        {
+            // Store the operator bytes; the digest pins the canonical form derived from them, so
+            // whitespace and key order cannot change what was approved.
+            data["acceptanceContract"] = acceptanceContractJson!;
+            data["contractDigest"] = contract.Digest;
+        }
 
         var commit = await _store.CommitAsync(
             new WorkItemCommit(snapshot, ExpectedVersion: 0, [FactoryStageDispatchHandler.Event(

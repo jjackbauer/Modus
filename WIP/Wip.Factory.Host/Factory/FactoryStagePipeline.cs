@@ -115,7 +115,14 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed("requirement-invalid:" + string.Join(",", errors));
         }
 
-        var proposal = ContractProposal.From(document);
+        string? contractDigest = null;
+        if (trigger.Data.TryGetValue("acceptanceContract", out var contractJson))
+        {
+            var (contract, _) = AcceptanceContract.Parse(contractJson);
+            contractDigest = contract?.Digest;
+        }
+
+        var proposal = ContractProposal.From(document, contractDigest);
         var data = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["proposal"] = proposal.ToJson(),
