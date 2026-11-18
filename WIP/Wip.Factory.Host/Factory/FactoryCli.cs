@@ -236,7 +236,11 @@ public static class FactoryCli
 
         var runner = TryCreateImplementationRunner(root, error);
         var runtime = new FactoryRuntime(root, runner, new DotnetRunCandidateHost(), new DotnetBuildVerifier(), new GitMergeEngine());
-        var reports = await runtime.RunAsync().ConfigureAwait(false);
+        var (reports, lockError) = await runtime.RunExclusiveAsync().ConfigureAwait(false);
+        if (lockError is not null)
+        {
+            return await FailAsync(error, Refused, lockError).ConfigureAwait(false);
+        }
         var statuses = await runtime.StatusAsync().ConfigureAwait(false);
 
         if (json)

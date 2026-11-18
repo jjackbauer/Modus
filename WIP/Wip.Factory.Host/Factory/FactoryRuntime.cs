@@ -149,6 +149,44 @@ public sealed class FactoryRuntime
         return new SubmitResult(true, workItemId.Value, snapshot.State.ToString(), document.Digest, []);
     }
 
+    /// <summary>
+    /// One exclusive writer per control root (v0.3 §5.3). The lock is an OS file handle held for the whole run, so a
+    /// second process gets <c>host-lock-held</c> instead of silently interleaving writes with the first.
+    /// </summary>
+    public async ValueTask<(IReadOnlyList<FactoryDispatchRunReport> Reports, string? Error)> RunExclusiveAsync(
+        int maxPasses = 8,
+        CancellationToken cancellationToken = default)
+    {
+        var lockPath = Path.Combine(_root.LocksPath, "run.lock");
+        FileStream handle;
+
+        try
+        {
+            handle = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+        }
+        catch (IOException)
+        {
+            return ([], "host-lock-held");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return ([], "host-lock-denied");
+        }
+
+        try
+        {
+            await handle.WriteAsync(BitConverter.GetBytes(Environment.ProcessId), cancellationToken).ConfigureAwait(false);
+            await handle.FlushAsync(cancellationToken).ConfigureAwait(false);
+
+            var reports = await RunAsync(maxPasses, cancellationToken).ConfigureAwait(false);
+            return (reports, null);
+        }
+        finally
+        {
+            await handle.DisposeAsync().ConfigureAwait(false);
+        }
+    }
+
     /// <summary>Drains eligible events until idle. Returns per-pass reports.</summary>
     public async ValueTask<IReadOnlyList<FactoryDispatchRunReport>> RunAsync(
         int maxPasses = 8,

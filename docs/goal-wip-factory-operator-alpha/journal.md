@@ -590,3 +590,19 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   operation-ID ledger, D-09 template policy, and the wired D-08 A edge.
 - **Confidence**: High
 - **Related**: OBS-036, RISK-003, EVD-064
+## OBS-039 — The host lock now exists and is enforced by the OS
+
+- **Source**: `FactoryRuntime.RunExclusiveAsync`, `FactoryCLI`; Host 51/51
+- **Fact**: `factory run` takes an exclusive `FileShare.None` handle on `<controlRoot>/locks/run.lock` for the whole
+  run, writes its process id into it, and returns `host-lock-held` (exit 2) if another process holds it. Two tests:
+  a held handle produces `host-lock-held` with no reports, and after a run the lock is free again.
+- **Implications**: The single-writer claim in v0.3 §5.3 is now enforced rather than asserted, and the named test
+  `Host_GivenConcurrentRun_ExitsHostLockHeld` exists under its specified name.
+- **Confidence**: High
+- **Related**: EVD-066, OBS-038 (gap 1 of 5)
+
+## DEC-019 — Re-frozen after the host lock
+
+- **Source**: this round (code changed)
+- **Decision**: Re-frozen at this commit. No source or configuration change before the blind pair runs.
+- **Status**: pending user input (OQ-001)
