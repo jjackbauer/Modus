@@ -664,3 +664,23 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 
 - **Decision**: Re-frozen at this commit; no source or configuration change before the blind pair.
 - **Status**: pending user input (OQ-001)
+## OBS-044 — D-09 policy exists and rejects eight ways; NOT yet on the intake path
+
+- **Source**: `FactoryTemplateRegistry`, `FactoryTemplatePolicy`; Host 64/64
+- **Fact**: Templates are immutable manifests registered under the control root, usable only after an operator approves
+  the exact manifest digest. The policy re-reads the stored body, re-verifies its digest, validates every declared
+  parameter against its permitted values, rejects unexpected parameters, re-instantiates the template and requires the
+  proposed scenarios to be **deep-equal** to that instantiation. A full match returns provenance
+  (`template-policy`, template id/version, manifest digest, parameters digest, contract digest); anything else returns
+  a fallback reason. Nine tests: the positive case plus unknown template, unapproved version, revoked template,
+  tampered manifest body, edited assertion, out-of-range parameter, unexpected parameter, and a non-template proposal.
+- **Implications**: The mechanism is real and adversarially tested. It is **not yet wired**: the lifecycle still
+  approves contracts by human digest only, so D-09 is implemented and tested but uncomposed. That is exactly the
+  distinction this harness exists to keep visible, so gap 4 is recorded as **partially closed**.
+- **Confidence**: High
+- **Related**: EVD-077, EVD-078, OBS-038 (gap 4 of 5, partial)
+
+## DEC-023 — Re-frozen after the template policy
+
+- **Decision**: Re-frozen at this commit. Note that D-09 remains uncomposed; that is stated, not hidden.
+- **Status**: pending user input (OQ-001)
