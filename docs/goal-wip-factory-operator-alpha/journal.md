@@ -239,3 +239,29 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   proven. The integration path had to be run.
 - **Confidence**: High
 - **Related**: OBS-013
+## OBS-015 — The merge lifecycle exists, with a drift guard and post-merge proof
+
+- **Source**: `FactoryStagePipeline` (DeliveryValidation, ReleaseAsync), `MergeEngine.cs`, `FactoryRuntime.ApproveMergeAsync`; Host 33/33
+- **Fact**: `factory approve --work-item --review-digest` records a **separate** operator authorisation bound to the
+  recorded review digest; a mismatched digest is refused (`review-digest-mismatch`). Approval moves the item to
+  `DeliveryValidation`, where the target branch's actual HEAD is compared with the approved base — a moved
+  branch records `target-drift` and merges nothing. Otherwise the item becomes `ReleaseCandidate`, the real
+  git merge runs with **reconciliation** (if the approved change is already an ancestor, it does not merge
+  again), the merged revision is materialised in a detached worktree, rebuilt, started and re-verified against
+  the frozen contract, and only then becomes `Released`. Five tests cover: approved → Released with exactly one
+  merge; wrong digest refused; drift blocks the merge; post-merge contract failure is not Released; merge
+  conflict is not Released.
+- **Implications**: PA-03's "merged revision verified" and PA-06's digest binding now have mechanisms. They are
+  proven with stubs and a stub merge engine; the real git path has **not** yet been exercised end to end.
+- **Confidence**: High
+- **Related**: EVD-031..033, OBS-016
+
+## OBS-016 — Real merge path not yet run
+
+- **Source**: scope of this round
+- **Fact**: `GitMergeEngine` (merge, reconciliation, worktree materialisation) compiles and is wired into the
+  CLI, but no end-to-end operator run has executed it. The merge tests use `StubMerge`.
+- **Implications**: Per the lesson from OBS-014, this is not yet evidence. The next round must run the real
+  path before any claim about merging.
+- **Confidence**: High
+- **Related**: OBS-015, OBS-014

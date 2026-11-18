@@ -19,6 +19,10 @@ public static class OperatorEvents
     public const string ImplementationRequested = "factory.implementation.requested.v1";
     public const string ImplementationCompleted = "factory.implementation.completed.v1";
     public const string ReviewAccepted = "factory.review.accepted.v1";
+    public const string MergeApproved = "factory.merge.approved.v1";
+    public const string DeliveryRequested = "factory.delivery.requested.v1";
+    public const string CandidateReady = "factory.release.candidate-ready.v1";
+    public const string ReleaseCompleted = "factory.release.completed.v1";
     public const string StageFailed = "factory.stage.failed.v1";
 }
 
@@ -113,17 +117,26 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
     private readonly ICandidateHost? _candidates;
     private readonly ICandidateBuildVerifier? _builds;
     private readonly AcceptanceContractRunner _contractRunner;
+    private readonly IMergeEngine? _merges;
+    private readonly string _verificationRoot;
+    private readonly Func<CancellationToken, Task<string?>>? _targetHead;
 
     public FactoryStageDispatchHandler(
         IImplementationStageRunner? implementations = null,
         ICandidateHost? candidates = null,
         ICandidateBuildVerifier? builds = null,
-        AcceptanceContractRunner? contractRunner = null)
+        AcceptanceContractRunner? contractRunner = null,
+        IMergeEngine? merges = null,
+        string? verificationRoot = null,
+        Func<CancellationToken, Task<string?>>? targetHead = null)
     {
         _implementations = implementations;
         _candidates = candidates;
         _builds = builds;
         _contractRunner = contractRunner ?? new AcceptanceContractRunner();
+        _merges = merges;
+        _verificationRoot = verificationRoot ?? Path.Combine(Path.GetTempPath(), "wip-factory-verify");
+        _targetHead = targetHead;
     }
 
     public ValueTask<StageDispatchOutcome> HandleAsync(
@@ -156,6 +169,15 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
 
             (OperatorEvents.ImplementationCompleted, FactoryWorkState.InReview)
                 => ReviewAsync(workItem, trigger, cancellationToken),
+
+            (OperatorEvents.MergeApproved, FactoryWorkState.ReadyForDelivery)
+                => ValueTask.FromResult(StartDeliveryValidation(workItem, trigger)),
+
+            (OperatorEvents.DeliveryRequested, FactoryWorkState.DeliveryValidation)
+                => ValidateDelivery(workItem, trigger),
+
+            (OperatorEvents.CandidateReady, FactoryWorkState.ReleaseCandidate)
+                => ReleaseAsync(workItem, trigger, cancellationToken),
 
             _ => ValueTask.FromResult(StageDispatchOutcome.NoOp())
         };
@@ -398,6 +420,159 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.ReadyForDelivery,
             [Event(OperatorEvents.ReviewAccepted, workItem.WorkItemId, acceptedData, trigger.Id)]);
+    }
+
+    /// <summary>An approved candidate enters delivery validation; nothing is merged yet (v0.3 §3.4 step 5).</summary>
+    private static StageDispatchOutcome StartDeliveryValidation(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
+    {
+        if (!trigger.Data.TryGetValue("reviewDigest", out var reviewDigest) || string.IsNullOrWhiteSpace(reviewDigest))
+        {
+            return StageDispatchOutcome.Failed("missing-merge-approval");
+        }
+
+        var data = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+        {
+            ["approvalId"] = trigger.Id.Value,
+            ["approvedAtUtc"] = trigger.TimeUtc.ToString("O")
+        };
+
+        return StageDispatchOutcome.Advanced(
+            FactoryWorkState.DeliveryValidation,
+            [Event(OperatorEvents.DeliveryRequested, workItem.WorkItemId, data, trigger.Id)]);
+    }
+
+    /// <summary>
+    /// Pre-merge drift guard: the approval must still describe the repository's actual baseline. A moved target
+    /// branch invalidates the approval instead of being silently rebased (v0.3 §3.4 conflict/drift).
+    /// </summary>
+    private async ValueTask<StageDispatchOutcome> ValidateDelivery(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
+    {
+        var boundBase = trigger.Data.TryGetValue("baseSha", out var baseSha) ? baseSha : string.Empty;
+        var boundHead = trigger.Data.TryGetValue("headSha", out var headSha) ? headSha : string.Empty;
+
+        if (string.IsNullOrWhiteSpace(boundHead))
+        {
+            return StageDispatchOutcome.Failed("approval-incomplete");
+        }
+
+        if (_targetHead is not null)
+        {
+            var current = await _targetHead(CancellationToken.None).ConfigureAwait(false);
+            if (current is not null && !string.IsNullOrWhiteSpace(boundBase)
+                && !string.Equals(current.Trim(), boundBase.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                var stale = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+                {
+                    ["reason"] = "target-drift",
+                    ["expectedBase"] = boundBase,
+                    ["observedBase"] = current.Trim()
+                };
+
+                return StageDispatchOutcome.Recorded(
+                    [Event(OperatorEvents.StageFailed, workItem.WorkItemId, stale, trigger.Id)]);
+            }
+        }
+
+        return StageDispatchOutcome.Advanced(
+            FactoryWorkState.ReleaseCandidate,
+            [Event(OperatorEvents.CandidateReady, workItem.WorkItemId, trigger.Data, trigger.Id)]);
+    }
+
+    /// <summary>
+    /// The real merge, then verification of the <b>merged revision</b> rather than the worktree (v0.3 §3.4 step 7).
+    /// A merged revision that fails verification enters Failed and is never reported as Released.
+    /// </summary>
+    private async ValueTask<StageDispatchOutcome> ReleaseAsync(
+        WorkItemSnapshot workItem,
+        FactoryEventEnvelope trigger,
+        CancellationToken cancellationToken)
+    {
+        if (_merges is null)
+        {
+            return StageDispatchOutcome.Failed("merge-engine-unavailable");
+        }
+
+        var headSha = trigger.Data.TryGetValue("headSha", out var head) ? head : string.Empty;
+        if (string.IsNullOrWhiteSpace(headSha))
+        {
+            return StageDispatchOutcome.Failed("approval-incomplete");
+        }
+
+        var merge = await _merges.MergeAsync(workItem.Repository, headSha, cancellationToken).ConfigureAwait(false);
+        if (!merge.Ok || string.IsNullOrWhiteSpace(merge.MergedSha))
+        {
+            return StageDispatchOutcome.Failed(merge.Reason ?? "merge-failed");
+        }
+
+        if (!trigger.Data.TryGetValue("acceptanceContract", out var contractJson))
+        {
+            return StageDispatchOutcome.Failed(ContractNotExecutable);
+        }
+
+        var (contract, _) = AcceptanceContract.Parse(contractJson);
+        if (contract is null || _builds is null || _candidates is null)
+        {
+            return StageDispatchOutcome.Failed(ContractNotExecutable);
+        }
+
+        var mergedSha = merge.MergedSha!;
+        var destination = Path.Combine(_verificationRoot, mergedSha[..Math.Min(12, mergedSha.Length)]);
+        var postMergeOk = false;
+        ContractRunResult? mergedContract = null;
+        var detail = string.Empty;
+
+        var session = CandidateSession.None;
+        try
+        {
+            var revisionPath = await _merges
+                .MaterialiseAsync(workItem.Repository, mergedSha, destination, cancellationToken)
+                .ConfigureAwait(false);
+
+            var (buildOk, buildDetail) = await _builds.VerifyAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+            detail = buildOk ? "build-passed" : "build-failed:" + buildDetail;
+
+            if (buildOk)
+            {
+                session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+                if (session.IdentityVerified)
+                {
+                    mergedContract = await _contractRunner.RunAsync(contract, session.BaseAddress, cancellationToken).ConfigureAwait(false);
+                    postMergeOk = mergedContract.Passed;
+                    detail = postMergeOk ? "contract-passed-on-merged-revision" : "contract-failed:" + mergedContract.FailureSummary;
+                }
+                else
+                {
+                    detail = "candidate-identity-unverified";
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return StageDispatchOutcome.Failed("post-merge-verification-failed:" + exception.Message);
+        }
+        finally
+        {
+            await session.Stop().ConfigureAwait(false);
+        }
+
+        var evidence = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+        {
+            ["mergedSha"] = mergedSha,
+            ["postMergeDetail"] = detail,
+            ["postMergeScenarios"] = mergedContract is null
+                ? string.Empty
+                : string.Join(",", mergedContract.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
+        };
+
+        if (!postMergeOk)
+        {
+            // A merged revision that fails is terminal: D-08 A's rework edge is pre-merge only.
+            return StageDispatchOutcome.Failed("post-merge-verification-failed:" + detail);
+        }
+
+        return StageDispatchOutcome.Advanced(
+            FactoryWorkState.Released,
+            [Event(OperatorEvents.ReleaseCompleted, workItem.WorkItemId, evidence, trigger.Id)]);
     }
 
     internal static FactoryEventEnvelope Event(

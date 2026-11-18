@@ -1,12 +1,11 @@
 # State — Wip.Factory Operator Alpha v0.3
 
-- **Round**: 7 complete. M1, M2 done. **M3 partial**: review gate live, merge not yet wired.
-- **Gates**: G0 PASS; G1 PASS (30 EVD); G2 PASS; G3 0/8 PA (unclaimed); G4 PASS (118 tests); G5 PASS.
-- **Working path**: submit → run → contract approve → run → implementation (real model) → **review gate**
-  (build, candidate on owned port, frozen HTTP contract) → `ReadyForDelivery`.
-- **Real run evidence**: 62 s, checks 4/4, scenarios AC-1..AC-4 pass, digests recorded.
-- **Not done**: no merge approval, no merge, no post-merge verification, no `serve`; PA-01..PA-08 unclaimed.
-- **Next objective (round 8)**: separate merge approval (`factory approve --review-digest`), `DeliveryValidation`
-  with drift check and D-08 A pre-merge rework, real merge with reconciliation, post-merge verification of the
-  merged revision, then `Released`.
+- **Round**: 8 complete. M1, M2 done. **M3 nearly done**: merge lifecycle implemented and unit-proven.
+- **Gates**: G0 PASS; G1 PASS (34 EVD); G2 PASS; G3 0/8 PA (unclaimed); G4 PASS (123 tests); G5 PASS.
+- **Lifecycle now**: submit → contract approve → implementation → review gate → **merge approval → drift guard →
+  real merge (reconciled) → post-merge verification → Released**.
+- **Honest gap**: the real `GitMergeEngine` path has not been executed end to end; merge tests use a stub.
+- **Next objective (round 9)**: run the full real path (model → review → merge → post-merge) on a fresh repo and
+  record it; then implement `factory serve` with process identity for PA-07; then a second, behaviourally
+  different development requirement before freeze.
 - **Blocked on user (freeze time only)**: OQ-001 blind PA-01/02 requirements.

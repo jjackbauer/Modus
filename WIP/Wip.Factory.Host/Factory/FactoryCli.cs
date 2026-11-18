@@ -29,6 +29,7 @@ public static class FactoryCli
             "contract" => await ContractAsync(rest, output, error).ConfigureAwait(false),
             "run" => await RunAsync(rest, output, error, json).ConfigureAwait(false),
             "status" => await StatusAsync(rest, output, error, json).ConfigureAwait(false),
+            "approve" => await ApproveAsync(rest, output, error).ConfigureAwait(false),
             _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status").ConfigureAwait(false)
         };
     }
@@ -154,6 +155,35 @@ public static class FactoryCli
         }
 
         return await FailAsync(error, Usage, "usage: factory contract show|approve").ConfigureAwait(false);
+    }
+
+    private static async Task<int> ApproveAsync(string[] rest, TextWriter output, TextWriter error)
+    {
+        var workItem = Value(rest, "--work-item");
+        var digest = Value(rest, "--review-digest");
+        var repo = Value(rest, "--repo") ?? Directory.GetCurrentDirectory();
+        var controlRootValue = Value(rest, "--control-root");
+
+        if (workItem is null || digest is null)
+        {
+            return await FailAsync(error, Usage, "usage: factory approve --work-item <id> --review-digest <sha256:...> --repo <dir>").ConfigureAwait(false);
+        }
+
+        var (root, rootError) = FactoryControlRoot.Resolve(repo, controlRootValue);
+        if (root is null)
+        {
+            return await FailAsync(error, Refused, rootError!).ConfigureAwait(false);
+        }
+
+        var (ok, approveError) = await new FactoryRuntime(root).ApproveMergeAsync(workItem, digest).ConfigureAwait(false);
+        if (!ok)
+        {
+            return await FailAsync(error, Refused, approveError ?? "approve-refused").ConfigureAwait(false);
+        }
+
+        await output.WriteLineAsync($"merge authorised : {digest}").ConfigureAwait(false);
+        await output.WriteLineAsync("next             : factory run --until-idle").ConfigureAwait(false);
+        return Ok;
     }
 
     private static async Task<int> RunAsync(string[] rest, TextWriter output, TextWriter error, bool json)

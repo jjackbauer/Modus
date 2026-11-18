@@ -47,6 +47,7 @@ public sealed class FactoryRuntime
         IImplementationStageRunner? implementations = null,
         ICandidateHost? candidates = null,
         ICandidateBuildVerifier? builds = null,
+        IMergeEngine? merges = null,
         IStageDispatchHandler? handler = null)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
@@ -56,7 +57,11 @@ public sealed class FactoryRuntime
             _store,
             _store,
             _store,
-            handler ?? new FactoryStageDispatchHandler(implementations, candidates, builds),
+            handler ?? new FactoryStageDispatchHandler(
+                implementations, candidates, builds,
+                verificationRoot: Path.Combine(root.Root, "verify"),
+                merges: merges,
+                targetHead: merges is null ? null : async ct => await TargetHeadAsync(root.TargetRepository, ct).ConfigureAwait(false)),
             new FactoryDispatchOptions(new SubscriberId(FactoryStageDispatchHandler.Subscriber), MaxEventsPerRun: 32));
     }
 
@@ -281,6 +286,95 @@ public sealed class FactoryRuntime
 
         var snapshot = await _store.LoadAsync(new WorkItemId(match.Subject), cancellationToken).ConfigureAwait(false);
         return snapshot is null ? null : (match.Subject, snapshot.State.ToString());
+    }
+
+    /// <summary>
+    /// Records the operator's merge authorisation, bound to the exact review evidence. D-09 authorises contract
+    /// approval only; this is a separate, human-authorised merge (v0.3 §2, §3.4 step 4).
+    /// </summary>
+    public async ValueTask<(bool Ok, string? Error)> ApproveMergeAsync(
+        string workItemId,
+        string reviewDigest,
+        CancellationToken cancellationToken = default)
+    {
+        var events = await _store.ReadAllAsync(cancellationToken).ConfigureAwait(false);
+        var review = events.LastOrDefault(e =>
+            string.Equals(e.Subject, workItemId, StringComparison.Ordinal)
+            && string.Equals(e.Type, OperatorEvents.ReviewAccepted, StringComparison.Ordinal));
+
+        if (review is null)
+        {
+            return (false, "no-review-to-approve");
+        }
+
+        if (!review.Data.TryGetValue("reviewDigest", out var recorded)
+            || !string.Equals(recorded, reviewDigest, StringComparison.Ordinal))
+        {
+            return (false, "review-digest-mismatch");
+        }
+
+        var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
+        if (snapshot is null)
+        {
+            return (false, "work-item-not-found");
+        }
+
+        var data = new Dictionary<string, string>(review.Data, StringComparer.Ordinal)
+        {
+            ["approvedBy"] = Environment.UserName,
+            ["approvedAtUtc"] = DateTimeOffset.UtcNow.ToString("O"),
+            ["approvalKind"] = "operator-merge"
+        };
+
+        var bound = snapshot with { Version = snapshot.Version + 1 };
+        var commit = await _store.CommitAsync(
+            new WorkItemCommit(bound, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                OperatorEvents.MergeApproved, snapshot.WorkItemId, data)]),
+            cancellationToken).ConfigureAwait(false);
+
+        return commit.Succeeded ? (true, null) : (false, commit.Reason ?? "approve-commit-refused");
+    }
+
+    /// <summary>Durable event history for one work item, in commit order.</summary>
+    public async ValueTask<IReadOnlyList<FactoryEventEnvelope>> EventsAsync(
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        var events = await _store.ReadAllAsync(cancellationToken).ConfigureAwait(false);
+        return events
+            .Where(e => string.Equals(e.Subject, workItemId, StringComparison.Ordinal))
+            .ToArray();
+    }
+
+    private static async Task<string?> TargetHeadAsync(string repositoryPath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var info = new System.Diagnostics.ProcessStartInfo("git")
+            {
+                WorkingDirectory = repositoryPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false
+            };
+
+            info.ArgumentList.Add("rev-parse");
+            info.ArgumentList.Add("HEAD");
+
+            using var process = System.Diagnostics.Process.Start(info);
+            if (process is null)
+            {
+                return null;
+            }
+
+            var output = await process.StandardOutput.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            return process.ExitCode == 0 ? output.Trim() : null;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            return null;
+        }
     }
 
     private static string? LastValue(IReadOnlyList<FactoryEventEnvelope> events, string type, string key)
