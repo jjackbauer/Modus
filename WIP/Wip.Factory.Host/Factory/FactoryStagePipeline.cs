@@ -547,8 +547,8 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
                     ["changedFields"] = string.Join(",", mismatches)
                 };
 
-                return StageDispatchOutcome.Recorded(
-                    [Event(OperatorEvents.StageFailed, workItem.WorkItemId, stale, trigger.Id)]);
+                // D-08 A: a pre-merge failure takes the legal DeliveryValidation -> NeedsRework edge.
+                return ReworkOrFail(workItem, stale, trigger, "target-drift");
             }
         }
 
@@ -565,8 +565,8 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
                     ["observedBase"] = current.Trim()
                 };
 
-                return StageDispatchOutcome.Recorded(
-                    [Event(OperatorEvents.StageFailed, workItem.WorkItemId, stale, trigger.Id)]);
+                // D-08 A: a pre-merge failure takes the legal DeliveryValidation -> NeedsRework edge.
+                return ReworkOrFail(workItem, stale, trigger, "target-drift");
             }
         }
 
@@ -707,6 +707,31 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.InImplementation,
             [Event(OperatorEvents.ImplementationRequested, workItem.WorkItemId, data, trigger.Id)]);
+    }
+
+    /// <summary>
+    /// Pre-merge failure handling (v0.3 §3.5, D-08 A): spend a rework attempt on the legal
+    /// DeliveryValidation -> NeedsRework edge, and only fall to Failed once the budget is gone.
+    /// </summary>
+    private static StageDispatchOutcome ReworkOrFail(
+        WorkItemSnapshot workItem,
+        Dictionary<string, string> data,
+        FactoryEventEnvelope trigger,
+        string reason)
+    {
+        var used = data.TryGetValue("reworkCount", out var text)
+            && int.TryParse(text, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : 0;
+
+        data["reworkCount"] = (used + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        data["reworkContext"] = reason;
+
+        return used < ReworkBudget
+            ? StageDispatchOutcome.Advanced(FactoryWorkState.NeedsRework,
+                [Event(OperatorEvents.ReworkRequested, workItem.WorkItemId, data, trigger.Id)])
+            : StageDispatchOutcome.Advanced(FactoryWorkState.Failed,
+                [Event(OperatorEvents.StageFailed, workItem.WorkItemId, data, trigger.Id)]);
     }
 
     internal static FactoryEventEnvelope Event(

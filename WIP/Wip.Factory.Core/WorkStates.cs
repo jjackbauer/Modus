@@ -53,8 +53,9 @@ public static class WorkStateMachine
             [FactoryWorkState.NeedsRework] = [FactoryWorkState.InImplementation, FactoryWorkState.Failed],
             [FactoryWorkState.ReadyForDelivery] =
                 [FactoryWorkState.DeliveryValidation, FactoryWorkState.NeedsRework],
+            // D-08 A (v0.3 §3.1): the single approved edge, legal only before the merge operation is applied.
             [FactoryWorkState.DeliveryValidation] =
-                [FactoryWorkState.ReleaseCandidate, FactoryWorkState.Failed],
+                [FactoryWorkState.ReleaseCandidate, FactoryWorkState.Failed, FactoryWorkState.NeedsRework],
             [FactoryWorkState.ReleaseCandidate] = [FactoryWorkState.Released, FactoryWorkState.Failed],
             [FactoryWorkState.Released] = [FactoryWorkState.OperationallyValidated, FactoryWorkState.Closed],
             [FactoryWorkState.OperationallyValidated] = [FactoryWorkState.Closed],

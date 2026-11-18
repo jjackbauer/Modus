@@ -606,3 +606,25 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Source**: this round (code changed)
 - **Decision**: Re-frozen at this commit. No source or configuration change before the blind pair runs.
 - **Status**: pending user input (OQ-001)
+## OBS-040 — Gap 5 closed: the D-08 A edge exists in the state machine and is taken
+
+- **Source**: `WorkStates.cs`, `FactoryStagePipeline.ReworkOrFail`; Core 18/18, Host 51/51
+- **Fact**: `DeliveryValidation` now targets `ReleaseCandidate`, `Failed` **and `NeedsRework`** — the single edge v0.3
+  §3.1 authorises. Pre-merge failures (target drift, stale approval) take it: they spend a rework attempt and return
+  the item to `NeedsRework` with the reason as context, falling to `Failed` only when the budget is spent.
+- **Implications**: Before this round D-08 A was **specified but absent**: the state machine rejected the edge, and the
+  handler recorded a failure event instead. Treating a pre-merge failure as terminal was a real deviation from §3.5.
+- **Confidence**: High
+- **Related**: EVD-068, OBS-038 (gap 5 of 5)
+
+## OBS-041 — My own assertions were wrong twice before the property was right
+
+- **Source**: this round's test failures
+- **Fact**: I first asserted the stale-approval cases rest in `DeliveryValidation`; after wiring D-08 A they failed
+  with `DeliveryValidation` vs expected `NeedsRework`. I changed the expectation to `NeedsRework`; they then failed
+  with `ReadyForDelivery`, because the rework cycle legitimately runs the item onward through implementation and
+  review. Only the third formulation was correct: the property is **no merge and no release**, not a resting state.
+- **Implications**: The same test taught me the mechanism twice and my assumption once. Recorded because asserting a
+  snapshot state for a lifecycle that is designed to move is a recurring trap in this codebase.
+- **Confidence**: High
+- **Related**: OBS-040
