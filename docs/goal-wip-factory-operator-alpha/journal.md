@@ -751,3 +751,25 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   first time the error was mine rather than a tool failure.
 - **Confidence**: High
 - **Related**: OBS-048, OBS-036, OBS-037
+## OBS-050 — Implementer-side work is complete; acceptance is not
+
+- **Source**: `DELIVERY.md`; four suites re-run this round
+- **Fact**: 163 tests pass across four suites; build clean. Six of eight PA gates are demonstrated by recorded real
+  runs (two applications plus a template-driven one reaching `OperationallyValidated`). The five structural gaps found
+  by self-audit are closed and reachable from operator commands. Named-test coverage is **26 of 80**, measured, with
+  the gap mapped to renames versus missing mechanisms.
+- **Implications**: There is no remaining implementer-side work that advances PA-01/PA-02. Those gates require two
+  requirements withheld from me, and they have been the sole blocker for three consecutive rounds.
+- **Confidence**: High
+- **Related**: EVD-089, OQ-001, DELIVERY.md
+
+## DEC-025 — Declaring the goal blocked on the blind pair
+
+- **Decision**: The goal is reported blocked. The concrete condition is OQ-001: PA-01 and PA-02 cannot be attempted
+  because the two acceptance requirements must be supplied by the user after freeze, and no such files exist in the
+  repository or session.
+- **Owner**: user
+- **Status**: pending user input
+- **Rationale**: Continuing to add tests or infrastructure would move numbers that are explicitly not the acceptance
+  criterion, and one such attempt already produced a false coverage count (OBS-049). Reporting the state accurately is
+  more useful than a ninth round of adjacent work.
