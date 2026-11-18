@@ -1,13 +1,12 @@
-# State — Wip.Factory Operator Alpha v0.3 — **IMPLEMENTATION FROZEN**
+# State — Wip.Factory Operator Alpha v0.3 — **IMPLEMENTATION FROZEN at 13e0a1d**
 
-- **Round**: 16 complete. M1–M4 done. RISK-002 closed. Two applications delivered end to end.
-- **Gates**: G0 PASS; G1 PASS (58 EVD); G2 PASS; G3 2/8 PA (`Not started` for PA-01/PA-02); G4 PASS (137 tests);
+- **Round**: 17 complete (evidence only; no code changed, so the freeze stands).
+- **Gates**: G0 PASS; G1 PASS (59 EVD); G2 PASS; G3 2/8 PA (`Not started`: PA-01/PA-02); G4 PASS (137 tests);
   G5 PASS.
-- **Demonstrated without the blind pair**: PA-03 (attributable diff = merged revision), PA-04 (wrong candidate
-  rejected by the independent oracle), PA-05 (kill after merge applied, resumed, one merge), PA-07 (served identity
-  + contract), PA-08 (tool-level refusals). PA-06 partial (four content facts bound both ways).
-- **Freeze**: DEC-017 — binary, configuration and harness frozen; no source change between the two blind runs.
-- **Blocked**: **OQ-001** — PA-01/PA-02 need two requirement files supplied by the user that the implementer has not
-  seen. Everything the implementer can prove alone is proven or honestly partial.
-- **Next objective (round 17)**: await the blind pair; when it arrives run PA-01 and PA-02 unchanged, capture the
-  §1.2 manifests, and report pass or fail per gate.
+- **PA-05**: **both windows now exercised** — pre-merge kill (0 merges, resume → 1 merge) and post-merge kill
+  (1 merge throughout, resume → still 1, no false release).
+- **PA-06**: partial (four content facts bound both ways; actor/time/window, policy and profile versions not bound).
+- **Freeze**: DEC-017 — binary at `13e0a1d`, no code change since; this round produced evidence only.
+- **Blocked**: **OQ-001** — PA-01/PA-02 need two requirement files the implementer has not seen.
+- **Next objective (round 18)**: if the blind pair has not arrived, close the remaining PA-06 bindings
+  (policy/guidelines/profile versions, approval window) and re-freeze; otherwise run PA-01/PA-02 unchanged.

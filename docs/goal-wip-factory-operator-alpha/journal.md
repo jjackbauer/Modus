@@ -508,3 +508,14 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   running against this binary with no source or configuration change between them.
 - **Owner**: user (OQ-001)
 - **Status**: pending user input — the gates stay unclaimed until the pair arrives.
+## OBS-034 — PA-05 now covers both windows: pre-merge kill merges nothing
+
+- **Source**: operator run `pa05b-de7afa61` (real model, real git, taskkill /T /F)
+- **Fact**: A ping requirement reached `ReadyForDelivery` v9 and was merge-authorised (v10, state unchanged). The
+  release run was killed **350 ms in, before the merge applied**: state `ReadyForDelivery` v10 and **0 merge
+  commits** in the target repository. A single resume then produced `Released` v13 with exactly **1 merge commit**
+  (`bc6d56b merge 3416d51…`).
+- **Implications**: Combined with OBS-031 (kill *after* the merge applied → still one merge), PA-05's two
+  duplication-relevant windows are both exercised: no merge when none happened, and no second merge when one did.
+- **Confidence**: High
+- **Related**: EVD-059, OBS-031, EVD-053
