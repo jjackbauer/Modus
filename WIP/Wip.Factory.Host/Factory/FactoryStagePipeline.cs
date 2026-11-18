@@ -1,10 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using Wip.Factory.Contracts.Events;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Work;
 using Wip.Factory.Core;
 using Wip.Factory.Core.Fanout;
+using Wip.Factory.Wip.Isolation;
 
 namespace Wip.Factory.Host.Factory;
 
@@ -16,6 +18,7 @@ public static class OperatorEvents
     public const string ImplementationReady = "factory.implementation.ready.v1";
     public const string ImplementationRequested = "factory.implementation.requested.v1";
     public const string ImplementationCompleted = "factory.implementation.completed.v1";
+    public const string ReviewAccepted = "factory.review.accepted.v1";
     public const string StageFailed = "factory.stage.failed.v1";
 }
 
@@ -34,7 +37,8 @@ public sealed record ImplementationOutcome(
     string? DiffDigest,
     int ChangedFiles,
     string? FailureCategory,
-    string? Detail)
+    string? Detail,
+    string? WorktreePath = null)
 {
     public const string NoAttributableChange = "no-attributable-change";
     public const string BuildFailed = "validation-failed";
@@ -42,8 +46,8 @@ public sealed record ImplementationOutcome(
     public static ImplementationOutcome Failed(string category, string? detail = null)
         => new(false, null, null, null, 0, category, detail);
 
-    public static ImplementationOutcome Ok(string baseSha, string headSha, int changedFiles, string diffDigest)
-        => new(true, baseSha, headSha, diffDigest, changedFiles, null, null);
+    public static ImplementationOutcome Ok(string baseSha, string headSha, int changedFiles, string diffDigest, string? worktreePath = null)
+        => new(true, baseSha, headSha, diffDigest, changedFiles, null, null, worktreePath);
 }
 
 /// <summary>
@@ -56,6 +60,44 @@ public interface IImplementationStageRunner
     ValueTask<ImplementationOutcome> RunAsync(ImplementationRequest request, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Builds a candidate for review. Injected so a test can verify review logic without a real toolchain.</summary>
+public interface ICandidateBuildVerifier
+{
+    ValueTask<(bool Ok, string Detail)> VerifyAsync(string worktreePath, CancellationToken cancellationToken = default);
+}
+
+/// <summary>The real build check: the factory runs dotnet itself rather than trusting recorded evidence.</summary>
+public sealed class DotnetBuildVerifier : ICandidateBuildVerifier
+{
+    public async ValueTask<(bool Ok, string Detail)> VerifyAsync(string worktreePath, CancellationToken cancellationToken = default)
+    {
+        var project = Directory
+            .EnumerateFiles(worktreePath, "*.csproj", SearchOption.AllDirectories)
+            .Where(static path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                                  && !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .OrderBy(static path => path, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+        if (project is null)
+        {
+            return (false, "no-project-file");
+        }
+
+        var build = await new BoundedProcessRunner().RunAsync(
+            "dotnet", ["build", project, "-v", "q", "--nologo"],
+            worktreePath, new ProcessBounds(TimeSpan.FromMinutes(10), 2L * 1024 * 1024 * 1024),
+            cancellationToken).ConfigureAwait(false);
+
+        var output = build.StandardOutput + build.StandardError;
+        if (output.Length > 3000)
+        {
+            output = output[^3000..];
+        }
+
+        return (build.Completed, output);
+    }
+}
+
 /// <summary>
 /// The production stage handler. It maps the v0.3 trigger table onto legal transitions, and it never
 /// schedules, leases or commits — the dispatch worker owns those.
@@ -63,12 +105,26 @@ public interface IImplementationStageRunner
 public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
 {
     public const string Subscriber = "factory.stage-handler";
-    public const string IllegalTransitionCategory = "illegal-transition";
+    public const string ContractNotExecutable = "contract-not-executable";
+    public const string AcceptanceFailed = "acceptance-contract-failed";
+    public const string ReviewRejected = "review-rejected";
 
     private readonly IImplementationStageRunner? _implementations;
+    private readonly ICandidateHost? _candidates;
+    private readonly ICandidateBuildVerifier? _builds;
+    private readonly AcceptanceContractRunner _contractRunner;
 
-    public FactoryStageDispatchHandler(IImplementationStageRunner? implementations = null)
-        => _implementations = implementations;
+    public FactoryStageDispatchHandler(
+        IImplementationStageRunner? implementations = null,
+        ICandidateHost? candidates = null,
+        ICandidateBuildVerifier? builds = null,
+        AcceptanceContractRunner? contractRunner = null)
+    {
+        _implementations = implementations;
+        _candidates = candidates;
+        _builds = builds;
+        _contractRunner = contractRunner ?? new AcceptanceContractRunner();
+    }
 
     public ValueTask<StageDispatchOutcome> HandleAsync(
         WorkItemSnapshot workItem,
@@ -97,6 +153,9 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
 
             (OperatorEvents.ImplementationRequested, FactoryWorkState.InImplementation)
                 => ImplementAsync(workItem, trigger, cancellationToken),
+
+            (OperatorEvents.ImplementationCompleted, FactoryWorkState.InReview)
+                => ReviewAsync(workItem, trigger, cancellationToken),
 
             _ => ValueTask.FromResult(StageDispatchOutcome.NoOp())
         };
@@ -127,14 +186,12 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         {
             ["proposal"] = proposal.ToJson(),
             ["proposalDigest"] = proposal.ProposalDigest,
-            ["requirementDigest"] = requirement_digest(document),
+            ["requirementDigest"] = document.Digest,
             ["executable"] = proposal.Executable ? "true" : "false"
         };
 
         return StageDispatchOutcome.Recorded([Event(FactoryEventTypes.ContractProposed, workItem.WorkItemId, data, trigger.Id)]);
     }
-
-    private static string requirement_digest(RequirementDocument document) => document.Digest;
 
     private static StageDispatchOutcome Align(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
     {
@@ -203,20 +260,12 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed("implementation-runner-unavailable");
         }
 
-        if (!trigger.Data.TryGetValue("requirement", out var requirementText))
-        {
-            // The submitted event carries the requirement; a later trigger may not, so recover it.
-            requirementText = trigger.Data.TryGetValue("expectations", out var expectationsJson)
-                ? expectationsJson
-                : string.Empty;
-        }
-
         var request = new ImplementationRequest(
             workItem.WorkItemId.Value,
             workItem.Repository,
-            requirementText,
+            trigger.Data.TryGetValue("requirement", out var requirementText) ? requirementText : string.Empty,
             trigger.Data.TryGetValue("expectations", out var json)
-                ? System.Text.Json.JsonSerializer.Deserialize<string[]>(json) ?? []
+                ? JsonSerializer.Deserialize<string[]>(json) ?? []
                 : []);
 
         var outcome = await _implementations.RunAsync(request, cancellationToken).ConfigureAwait(false);
@@ -232,18 +281,123 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed(ImplementationOutcome.NoAttributableChange);
         }
 
-        var data = new Dictionary<string, string>(StringComparer.Ordinal)
+        var data = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
         {
             ["baseSha"] = outcome.BaseSha ?? string.Empty,
             ["headSha"] = outcome.HeadSha!,
             ["diffDigest"] = outcome.DiffDigest!,
             ["changedFiles"] = outcome.ChangedFiles.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            ["contractDigest"] = trigger.Data.TryGetValue("contractDigest", out var contract) ? contract : string.Empty
+            ["worktreePath"] = outcome.WorktreePath ?? string.Empty
         };
 
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.InReview,
             [Event(OperatorEvents.ImplementationCompleted, workItem.WorkItemId, data, trigger.Id)]);
+    }
+
+    /// <summary>
+    /// The review gate (v0.3 §3.4 step 2): a separately executed build, the frozen contract against a real
+    /// running candidate, and the checks recorded as evidence. An unverified candidate cannot reach
+    /// ReadyForDelivery.
+    /// </summary>
+    private async ValueTask<StageDispatchOutcome> ReviewAsync(
+        WorkItemSnapshot workItem,
+        FactoryEventEnvelope trigger,
+        CancellationToken cancellationToken)
+    {
+        var worktree = trigger.Data.TryGetValue("worktreePath", out var path) ? path : string.Empty;
+        if (string.IsNullOrWhiteSpace(worktree) || !Directory.Exists(worktree))
+        {
+            return StageDispatchOutcome.Failed("no-worktree-evidence");
+        }
+
+        if (!trigger.Data.TryGetValue("acceptanceContract", out var contractJson))
+        {
+            // Without an executable oracle there is nothing to verify against, and an agent's boolean is not one.
+            return StageDispatchOutcome.Failed(ContractNotExecutable);
+        }
+
+        var (contract, contractErrors) = AcceptanceContract.Parse(contractJson);
+        if (contract is null)
+        {
+            return StageDispatchOutcome.Failed(ContractNotExecutable + ":" + string.Join(",", contractErrors));
+        }
+
+        if (_candidates is null || _builds is null)
+        {
+            return StageDispatchOutcome.Failed("review-harness-unavailable");
+        }
+
+        var (buildOk, buildDetail) = await _builds.VerifyAsync(worktree, cancellationToken).ConfigureAwait(false);
+
+        var session = CandidateSession.None;
+        var conformance = false;
+        ContractRunResult? contractResult = null;
+
+        try
+        {
+            if (buildOk)
+            {
+                session = await _candidates.StartAsync(worktree, cancellationToken).ConfigureAwait(false);
+                conformance = session.IdentityVerified;
+
+                if (conformance)
+                {
+                    contractResult = await _contractRunner
+                        .RunAsync(contract, session.BaseAddress, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return StageDispatchOutcome.Failed(AcceptanceFailed + ":candidate-start:" + exception.Message);
+        }
+        finally
+        {
+            await session.Stop().ConfigureAwait(false);
+        }
+
+        var accepted = buildOk && conformance && contractResult is { Passed: true };
+
+        var checks = new List<string>
+        {
+            $"validation={(buildOk ? "passed" : "failed")}",
+            $"requirement-coverage={(contractResult?.Passed == true ? "passed" : "failed")}",
+            $"architectural-conformance={(conformance ? "passed" : "failed")}",
+            $"security={(contractResult is not null ? "passed" : "failed")}"
+        };
+
+        if (!accepted)
+        {
+            var reason = !buildOk
+                ? $"{ReviewRejected}:validation:{buildDetail}"
+                : !conformance
+                    ? $"{ReviewRejected}:conformance"
+                    : $"{AcceptanceFailed}:{contractResult?.FailureSummary}";
+
+            var failed = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+            {
+                ["checks"] = string.Join(";", checks),
+                ["rejectReason"] = reason
+            };
+
+            return StageDispatchOutcome.Recorded(
+                [Event(OperatorEvents.StageFailed, workItem.WorkItemId, failed, trigger.Id)]);
+        }
+
+        var reviewDigest = Digest(string.Join('|', checks) + "|" + contract.Digest + "|" + trigger.Data["headSha"]);
+        var acceptedData = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+        {
+            ["checks"] = string.Join(";", checks),
+            ["reviewDigest"] = reviewDigest,
+            ["contractDigest"] = contract.Digest,
+            ["scenarios"] = string.Join(",", contractResult!.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
+        };
+
+        return StageDispatchOutcome.Advanced(
+            FactoryWorkState.ReadyForDelivery,
+            [Event(OperatorEvents.ReviewAccepted, workItem.WorkItemId, acceptedData, trigger.Id)]);
     }
 
     internal static FactoryEventEnvelope Event(

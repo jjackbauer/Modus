@@ -45,6 +45,8 @@ public sealed class FactoryRuntime
     public FactoryRuntime(
         FactoryControlRoot root,
         IImplementationStageRunner? implementations = null,
+        ICandidateHost? candidates = null,
+        ICandidateBuildVerifier? builds = null,
         IStageDispatchHandler? handler = null)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
@@ -54,7 +56,7 @@ public sealed class FactoryRuntime
             _store,
             _store,
             _store,
-            handler ?? new FactoryStageDispatchHandler(implementations),
+            handler ?? new FactoryStageDispatchHandler(implementations, candidates, builds),
             new FactoryDispatchOptions(new SubscriberId(FactoryStageDispatchHandler.Subscriber), MaxEventsPerRun: 32));
     }
 

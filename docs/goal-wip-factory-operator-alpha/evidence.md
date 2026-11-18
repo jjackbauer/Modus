@@ -21,4 +21,7 @@
 | EVD-023 | Capture substitution drives later scenarios | same suite, asserting the server-observed request order | Saw `POST /books`, `GET /books/generated-42`, `DELETE /books/generated-42` in order |
 | EVD-024 | Unsafe or malformed contracts are refused at parse | same suite | Absolute URL → `contract-unsupported-form`; missing `expect.status` → `contract-invalid`; unsupported class → refused |
 | EVD-025 | A requirement can carry an executable oracle | `Intake_GivenRequirementWithContract_ProposesAnExecutableOracle` | Submitted with `acceptanceContract:`; proposal reported `Executable=true` and the canonical contract digest |
-| EVD-026 | Factory regression after M3 work | four suites | arch 5/5, Core 18/18, Agents 67/67, Host 24/24 = 114 passing, 0 failed; build 0 errors |
+| EVD-026 | Factory regression after M3 work | four suites | arch 5/5, Core 18/18, Agents 67/67, Host 24/24 = 114 passing, 0 failed; build 0 errors || EVD-027 | Review advances only when the contract passes | `dotnet test ... --filter Review_GivenContractPasses` | Ran it; state reached `ReadyForDelivery` |
+| EVD-028 | A wrong candidate stays in review | `Review_GivenContractFails` | Ran it; wrong stored title left state at `InReview` |
+| EVD-029 | A failed build never starts the candidate | `Review_GivenBuildFails` / `Review_GivenCandidateIdentityUnverified` | Ran both; state stayed `InReview` |
+| EVD-030 | The real path reaches ReadyForDelivery with recorded evidence | operator run `m3b-f33d58e7` | State `ReadyForDelivery` v9 in 62 s; event data shows 4/4 checks passed, AC-1..AC-4 pass, reviewDigest, contractDigest, headSha and diffDigest |

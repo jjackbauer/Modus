@@ -201,7 +201,7 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
                 detail.Length > 4000 ? detail[^4000..] : detail);
         }
 
-        return ImplementationOutcome.Ok(baseSha, headSha, changed, diffDigest);
+        return ImplementationOutcome.Ok(baseSha, headSha, changed, diffDigest, worktree);
     }
 
     private static string BuildPrompt(ImplementationRequest request)

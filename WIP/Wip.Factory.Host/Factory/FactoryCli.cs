@@ -168,7 +168,7 @@ public static class FactoryCli
         }
 
         var runner = TryCreateImplementationRunner(root, error);
-        var runtime = new FactoryRuntime(root, runner);
+        var runtime = new FactoryRuntime(root, runner, new DotnetRunCandidateHost(), new DotnetBuildVerifier());
         var reports = await runtime.RunAsync().ConfigureAwait(false);
         var statuses = await runtime.StatusAsync().ConfigureAwait(false);
 

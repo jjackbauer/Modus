@@ -214,3 +214,28 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   undocumented behaviour.
 - **Confidence**: High
 - **Related**: OBS-011
+## OBS-013 — The review gate is real: unverified candidates cannot advance
+
+- **Source**: `FactoryStagePipeline.ReviewAsync`, `CandidateHost.cs`; Host 28/28; real run `m3b-f33d58e7`
+- **Fact**: On `implementation.completed` the factory now runs a **separately executed build**, starts the
+  candidate on a factory-allocated loopback port, verifies it owns that PID, executes the frozen contract over
+  real HTTP, records four checks, and only then advances. Four tests prove the negatives: a wrong stored value
+  stays `InReview`; a failed build never starts the candidate; an unverifiedprocess identity never advances.
+  The real end-to-end run reached **`ReadyForDelivery` v9 in 62 s** with recorded evidence:
+  `checks=validation=passed;requirement-coverage=passed;architectural-conformance=passed;security=passed`,
+  `scenarios=AC-1=pass,AC-2=pass,AC-3=pass,AC-4=pass`, `reviewDigest=sha256:7f10b505…`,
+  `contractDigest=sha256:1b27034b…`, `headSha=29dfabbc…`, `diffDigest=sha256:0915d8e9…`.
+- **Implications**: The oracle is now a gate, not a library. An agent's assertion cannot substitute for it.
+- **Confidence**: High
+- **Related**: EVD-027..030, OBS-014
+
+## OBS-014 — The real run caught the integration bug the stubs could not
+
+- **Source**: first real review run, log record `event-quarantined reason=no-worktree-evidence`
+- **Fact**: The review stage refused with `no-worktree-evidence` because `RealModelImplementationRunner` never
+  passed its worktree path into `ImplementationOutcome`; the stub-based tests passed because they inject the
+  path directly. Fixing the runner made the real run reach `ReadyForDelivery`.
+- **Implications**: Precisely the failure mode the harness warns about — a mechanism proven with stubs is not
+  proven. The integration path had to be run.
+- **Confidence**: High
+- **Related**: OBS-013
