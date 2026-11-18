@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace Wip.Factory.Host.Factory;
 
@@ -31,6 +32,7 @@ public static class FactoryCli
             "status" => await StatusAsync(rest, output, error, json).ConfigureAwait(false),
             "approve" => await ApproveAsync(rest, output, error).ConfigureAwait(false),
             "serve" => await ServeAsync(rest, output, error).ConfigureAwait(false),
+            "template" => await TemplateAsync(rest, output, error).ConfigureAwait(false),
             _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status").ConfigureAwait(false)
         };
     }
@@ -170,6 +172,64 @@ public static class FactoryCli
         }
 
         return await FailAsync(error, Usage, "usage: factory contract show|approve").ConfigureAwait(false);
+    }
+
+    /// <summary>Operator/admin surface for D-09 templates. Never reachable from model tools.</summary>
+    private static async Task<int> TemplateAsync(string[] rest, TextWriter output, TextWriter error)
+    {
+        var action = rest.Length > 0 ? rest[0] : string.Empty;
+        var repo = Value(rest, "--repo") ?? Directory.GetCurrentDirectory();
+        var controlRootValue = Value(rest, "--control-root");
+
+        var (root, rootError) = FactoryControlRoot.Resolve(repo, controlRootValue);
+        if (root is null)
+        {
+            return await FailAsync(error, Refused, rootError!).ConfigureAwait(false);
+        }
+
+        var registry = new FactoryTemplateRegistry(root.Root);
+
+        if (string.Equals(action, "register", StringComparison.Ordinal))
+        {
+            var file = Value(rest, "--file");
+            if (file is null || !File.Exists(file))
+            {
+                return await FailAsync(error, Refused, "template-file-not-found").ConfigureAwait(false);
+            }
+
+            var manifest = registry.Register(JsonNode.Parse(await File.ReadAllTextAsync(file).ConfigureAwait(false))!);
+            await output.WriteLineAsync($"registered : {manifest.TemplateId}@{manifest.TemplateVersion}").ConfigureAwait(false);
+            await output.WriteLineAsync($"digest     : {manifest.ManifestDigest}").ConfigureAwait(false);
+            await output.WriteLineAsync("note       : registered templates are NOT approved until an operator approves the digest").ConfigureAwait(false);
+            return Ok;
+        }
+
+        if (string.Equals(action, "approve", StringComparison.Ordinal))
+        {
+            var id = Value(rest, "--id");
+            var version = Value(rest, "--version");
+            var digest = Value(rest, "--digest");
+            if (id is null || version is null || digest is null || !int.TryParse(version, out var versionNumber))
+            {
+                return await FailAsync(error, Usage, "usage: factory template approve --id <id> --version <n> --digest <sha256:...>").ConfigureAwait(false);
+            }
+
+            if (!registry.Approve(id, versionNumber, digest))
+            {
+                return await FailAsync(error, Refused, "template-approval-refused: unknown template, version or digest mismatch").ConfigureAwait(false);
+            }
+
+            await output.WriteLineAsync($"approved   : {id}@{versionNumber}").ConfigureAwait(false);
+            return Ok;
+        }
+
+        if (string.Equals(action, "list", StringComparison.Ordinal))
+        {
+            await output.WriteLineAsync("templates are approved per (id, version, digest); see the control root for the stored manifests").ConfigureAwait(false);
+            return Ok;
+        }
+
+        return await FailAsync(error, Usage, "usage: factory template register|approve|list").ConfigureAwait(false);
     }
 
     private static async Task<int> ServeAsync(string[] rest, TextWriter output, TextWriter error)

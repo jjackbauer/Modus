@@ -702,3 +702,27 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 
 - **Decision**: Re-frozen at this commit. All five ranked structural gaps are now closed and composed.
 - **Status**: pending user input (OQ-001) — unchanged and decisive.
+## OBS-046 — The template path runs end to end through the operator CLI
+
+- **Source**: operator run `tpl-9d9c4b49` (real model, real git, real serve)
+- **Fact**: `factory template register` stored the manifest and refused to treat it as approved; `factory template
+  approve --digest` gated it on the exact digest. A requirement naming `template: ping-service@1` with
+  `parameters: {"path":"/ping"}` was accepted, and `factory contract approve --policy` froze the contract with
+  `approvalKind=template-policy` and template `ping-service@1` — no human digest. The lifecycle then ran unchanged:
+  implementation + review in 52 s → `ReadyForDelivery` v9, merge authorisation → `Released` v13, `serve` →
+  `OperationallyValidated` v15 (pid 33760, http://127.0.0.1:59949/).
+- **Implications**: D-09 is reachable and useful from the operator surface, not only from the runtime. This is the
+  first time a template-derived contract was approved, merged and served without a human typing a contract digest.
+- **Confidence**: High
+- **Related**: EVD-084, EVD-085, OBS-045
+
+## OBS-047 — The template CLI was missing until this round
+
+- **Source**: this round, before adding it
+- **Fact**: D-09 was composed in `FactoryRuntime` after round 26, but `factory template` did not exist, so an operator
+  could not register or approve a template at all. The composition was real but unreachable.
+- **Implications**: Third occurrence of the same pattern in this goal (policy implemented but uncomposed; serve not
+  passing a worktree; ledger uncomposed). The rule I apply from here: a mechanism is not delivered until an operator
+  command reaches it.
+- **Confidence**: High
+- **Related**: OBS-046, OBS-044
