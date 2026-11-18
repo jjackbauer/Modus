@@ -22,8 +22,13 @@ public sealed class FactoryWorktreeProvisioner
     private readonly WipWorkspaceProviderGit _provider;
     private readonly Dictionary<string, SessionId> _worktreeOwners = new(StringComparer.OrdinalIgnoreCase);
 
-    public FactoryWorktreeProvisioner(WipWorkspaceProviderGit? provider = null)
-        => _provider = provider ?? new WipWorkspaceProviderGit();
+    private readonly string? _worktreeRoot;
+
+    public FactoryWorktreeProvisioner(WipWorkspaceProviderGit? provider = null, string? worktreeRoot = null)
+    {
+        _provider = provider ?? new WipWorkspaceProviderGit();
+        _worktreeRoot = worktreeRoot;
+    }
 
     public const string WorktreeAlreadyLeasedCategory = "worktree-already-leased";
     public const string DuplicateSessionCategory = "session-already-provisioned";
@@ -38,7 +43,7 @@ public sealed class FactoryWorktreeProvisioner
         ArgumentException.ThrowIfNullOrWhiteSpace(targetBranch);
 
         var session = await _provider
-            .CreateAsync(new CreateWorkspaceRequest(repositoryPath, sessionId, targetBranch), cancellationToken)
+            .CreateAsync(new CreateWorkspaceRequest(repositoryPath, sessionId, targetBranch, _worktreeRoot), cancellationToken)
             .ConfigureAwait(false);
 
         var normalized = Path.GetFullPath(session.WorktreePath);

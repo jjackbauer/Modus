@@ -8,7 +8,8 @@ namespace Wip.Workspaces.Git;
 public sealed record CreateWorkspaceRequest(
     string RepositoryPath,
     SessionId SessionId,
-    string TargetBranch);
+    string TargetBranch,
+    string? WorktreeRoot = null);
 
 public sealed record WorkspaceSession(
     SessionId SessionId,
@@ -74,7 +75,11 @@ public sealed class WipWorkspaceProviderGit
             cancellationToken);
 
         var sessionBranch = BuildSessionBranchName(request.SessionId);
-        var worktreePath = Path.Combine(request.RepositoryPath, ".wip", "worktrees", request.SessionId.Value);
+        var worktreeRoot = string.IsNullOrWhiteSpace(request.WorktreeRoot)
+            ? Path.Combine(request.RepositoryPath, ".wip", "worktrees")
+            : request.WorktreeRoot!;
+
+        var worktreePath = Path.Combine(worktreeRoot, request.SessionId.Value);
         Directory.CreateDirectory(Path.GetDirectoryName(worktreePath) ?? request.RepositoryPath);
 
         var worktreeAdd = await RunGitAsync(

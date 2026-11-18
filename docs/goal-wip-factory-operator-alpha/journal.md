@@ -487,3 +487,24 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Implications**: The check cannot silently always fail without a test going red.
 - **Confidence**: High
 - **Related**: OBS-030, OBS-029
+## OBS-033 — RISK-002 closed: worktrees live under the control root
+
+- **Source**: `CreateWorkspaceRequest.WorktreeRoot`, `FactoryWorktreeProvisioner(worktreeRoot:)`, runner wiring;
+  real run `d06-bfdeedfa`
+- **Fact**: The reused WIP provider now accepts an optional worktree root (additive, default unchanged), and the
+  implementation runner passes `<controlRoot>/worktrees`. Verified end to end on a fresh repository: the target
+  repository has **no `.wip` directory**, the worktree count under the control root is **1**, the target repo has
+  **0 untracked entries**, and the same run still reached `ReadyForDelivery` v9 then `Released` v13.
+- **Implications**: D-06 is now fully met — no factory control state lives inside the operator's repository, and no
+  second worktree engine was created (N-02 preserved).
+- **Confidence**: High
+- **Related**: EVD-056, EVD-057, RISK-002 (closed)
+
+## DEC-017 — Implementation frozen for blind acceptance
+
+- **Source**: this round
+- **Decision**: The factory implementation, its configuration and its test harness are frozen at commit
+  `27xx` (this commit). PA-01/PA-02 require two requirements **withheld from the implementer**, supplied after freeze,
+  running against this binary with no source or configuration change between them.
+- **Owner**: user (OQ-001)
+- **Status**: pending user input — the gates stay unclaimed until the pair arrives.

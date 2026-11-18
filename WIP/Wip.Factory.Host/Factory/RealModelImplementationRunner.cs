@@ -60,7 +60,8 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
         // worktree can be created, without touching any operator content.
         await EnsureBaselineCommitAsync(request.RepositoryPath, cancellationToken).ConfigureAwait(false);
 
-        var provisioner = new FactoryWorktreeProvisioner();
+        // D-06: session worktrees live under the control root, never inside the operator repository.
+        var provisioner = new FactoryWorktreeProvisioner(worktreeRoot: Path.Combine(_root.Root, "worktrees"));
         var sessionId = new SessionId("session-impl-" + request.WorkItemId.ToLowerInvariant());
         FactoryWorkspaceLease? lease;
         string? reason;
