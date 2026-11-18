@@ -1,6 +1,6 @@
 # Wip.Factory Operator Alpha — Requirement Set
 
-**Status: `DRAFT - BLOCKED ON SIGN-OFF`** — decisions D-01…D-07 are user-owned (see §4).
+**Status: SUPERSEDED by v0.2** — do not implement this version. See `Wip.Factory.Operator.Alpha.v0.2.md`. — decisions D-01…D-07 are user-owned (see §4).
 Version 0.1 · 2026-11-18 · Supersedes nothing; extends `Wip.Factory.Alpha.md`
 
 ---
