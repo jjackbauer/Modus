@@ -541,3 +541,39 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   this binary with no further source or configuration change.
 - **Owner**: user (OQ-001 still open)
 - **Status**: pending user input
+## OBS-036 — Only 15 of the 80 named tests exist under their specified names
+
+- **Source**: `dotnet test --list-tests` across the four suites, compared with the `N. \`Name\`` list in v0.3 §12.2–12.3
+- **Fact**: 134 unique executable test methods exist. Of the 80 tests v0.3 names, **15 exist under the exact specified
+  name** and **65 do not**: Contract 13, Lifecycle 9, Operation 5, StageHandler 5, ToolGateway 5, Host 4, Intake 4,
+  Store 3, and singletons across Supervisor, Verification, Delivery, Claim, AgentLoop, Production, PA02, Workflow,
+  Execution, Review and Merge.
+- **Implications**: This is a real gap against v0.3 §12.3 ("every named supporting test must be an executable test in a
+  suite run by CI"). Many of the *behaviours* are covered under different names — attributable-change refusal,
+  approval binding, kill/resume and contract rejection all have passing tests — but the spec's named list is a
+  contract, and by that contract **81% of it is absent**. My previous round summaries described those mechanisms as
+  "demonstrated" without ever checking the named-test correspondence. That was misleading even though each individual
+  statement was true.
+- **Confidence**: High
+- **Related**: EVD-063, OBS-037, RISK-003
+
+## OBS-037 — Two measurement attempts returned false zeros before a correct one
+
+- **Source**: this round
+- **Fact**: (1) Reflecting over the built assemblies with PowerShell `Assembly.LoadFrom(...).GetTypes()` threw
+  `ReflectionTypeLoadException` for every suite, and my script printed **0 of 80** as though it were a result. (2) A
+  first parse of `dotnet test --list-tests` matched fully-qualified names with a regex that only allowed a leaf
+  identifier, reporting **1 of 80**. (3) Only after matching `Namespace.Class.Method(optional args)` and taking the
+  leaf did the real figure appear: **15 of 80**.
+- **Implications**: Both false zeros would have been reported as findings had I not read the errors. This is the same
+  class of failure as the earlier completeness-count error (OBS-053 in the previous goal): a measurement tool failing
+  is indistinguishable from a product being empty unless the error is read.
+- **Confidence**: High
+- **Related**: OBS-036, RISK-003
+## RISK-003 — 65 of 80 named tests are absent by name
+
+- **Risk**: v0.3 §12.3 requires each named supporting test to exist and be run by CI. Only 15 do. A grader checking the
+  named list against the repository would find 81% missing regardless of the behaviour that works.
+- **Mitigation**: build an explicit mapping from each spec name to an existing test or a new one; add the missing
+  named tests (test-only work, no behaviour change), then re-freeze.
+- **Status**: open
