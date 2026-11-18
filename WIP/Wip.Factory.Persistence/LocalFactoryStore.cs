@@ -32,6 +32,8 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
 
     private readonly Dictionary<WorkItemId, WorkItemSnapshot> _snapshots = [];
     private readonly List<StoredEvent> _events = [];
+    private readonly Dictionary<string, ClaimEntry> _claims = new(StringComparer.Ordinal);
+
     private readonly Dictionary<string, InboxEntry> _inbox = new(StringComparer.Ordinal);
     private readonly Dictionary<string, LeaseEntry> _leases = new(StringComparer.Ordinal);
     private readonly Dictionary<WorkItemId, long> _maxFencingToken = [];
@@ -40,8 +42,9 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
     private bool _loaded;
     private int _tornRecordCount;
 
-    public LocalFactoryStore(string directory)
+    public LocalFactoryStore(string directory, TimeSpan? claimLease = null)
     {
+        _claimLease = claimLease ?? TimeSpan.FromMinutes(2);
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         Directory.CreateDirectory(directory);
         _logPath = Path.Combine(directory, LogFileName);
@@ -154,12 +157,37 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         try
         {
             EnsureLoaded();
-            return _events
+            var now = DateTimeOffset.UtcNow;
+            var selected = _events
                 .Where(stored => !stored.Published
-                    && !_quarantine.ContainsKey(stored.Envelope.Id.Value))
+                    && !_quarantine.ContainsKey(stored.Envelope.Id.Value)
+                    && IsClaimable(stored.Envelope.Id.Value, subscriber.Value, now))
                 .Take(maxCount)
-                .Select(static stored => stored.Envelope)
                 .ToArray();
+
+            // Persist the reservation before handing the events out: a crash then leaves a reclaimable claim
+            // with a durable attempt count rather than an invisible in-flight event.
+            foreach (var stored in selected)
+            {
+                var attempts = _claims.TryGetValue(stored.Envelope.Id.Value, out var existing)
+                    ? existing.Attempts + 1
+                    : 1;
+
+                var claimRecord = new LogRecord
+                {
+                    Kind = LogKinds.EventClaimed,
+                    EventId = stored.Envelope.Id.Value,
+                    Subscriber = subscriber.Value,
+                    ExpiresAtUtc = now + _claimLease,
+                    Attempts = attempts,
+                    RecordedAtUtc = now
+                };
+
+                Append(claimRecord);
+                Apply(claimRecord);
+            }
+
+            return selected.Select(static stored => stored.Envelope).ToArray();
         }
         finally
         {
@@ -537,6 +565,15 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         stream.Flush(flushToDisk: true);
     }
 
+    /// <summary>
+    /// An event may be claimed when it is unclaimed, when the same subscriber is retrying its own claim, or when a
+    /// previous claim has expired (a crashed worker). A different subscriber cannot steal a live claim.
+    /// </summary>
+    private bool IsClaimable(string eventId, string subscriber, DateTimeOffset now)
+        => !_claims.TryGetValue(eventId, out var claim)
+           || string.Equals(claim.Subscriber, subscriber, StringComparison.Ordinal)
+           || claim.ExpiresAtUtc <= now;
+
     private void Apply(LogRecord record)
     {
         switch (record.Kind)
@@ -554,6 +591,16 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
                     _events.Add(new StoredEvent(envelope, Published: false));
                 }
 
+                break;
+            }
+
+            case LogKinds.EventClaimed
+                when record.EventId is { } claimedEvent && record.Subscriber is { } claimedSubscriber:
+            {
+                _claims[claimedEvent] = new ClaimEntry(
+                    claimedSubscriber,
+                    record.ExpiresAtUtc ?? record.RecordedAtUtc,
+                    record.Attempts ?? 1);
                 break;
             }
 
@@ -656,6 +703,12 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
 
     private sealed record InboxEntry(bool Claimed, bool Acknowledged);
 
+    /// <summary>A live reservation on an unpublished event (v0.3 §5.1).</summary>
+    private sealed record ClaimEntry(string Subscriber, DateTimeOffset ExpiresAtUtc, int Attempts);
+
+    /// <summary>How long a claim is held before another subscriber may reclaim it after a crash.</summary>
+    private readonly TimeSpan _claimLease;
+
     private sealed record LeaseEntry(long FencingToken, bool Claimed, bool Released, DateTimeOffset ExpiresAtUtc);
 
     private static class LogKinds
@@ -668,6 +721,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         public const string LeaseRelease = "lease-release";
         public const string EventQuarantined = "event-quarantined";
         public const string EventReplayed = "event-replayed";
+        public const string EventClaimed = "event-claimed";
     }
 
     private sealed class LogRecord

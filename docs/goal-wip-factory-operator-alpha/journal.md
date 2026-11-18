@@ -628,3 +628,20 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   snapshot state for a lifecycle that is designed to move is a recurring trap in this codebase.
 - **Confidence**: High
 - **Related**: OBS-040
+## OBS-042 — Claim reservation is real: durable owner, deadline and attempts
+
+- **Source**: `LocalFactoryStore` (`event-claimed` records, `_claims`, configurable lease); Core 21/21
+- **Fact**: `ClaimUnpublishedAsync` now persists a reservation record for every event it hands out, carrying the
+  subscriber, an expiry and an incremented durable attempt count, and replays those records on load. An event is
+  claimable only when unclaimed, when the same subscriber retries, or when the previous claim expired. Three tests:
+  a live claim is not given to another subscriber (and a fresh store over the same log still refuses), an expired
+  claim is reclaimable from durable state alone, and a published event is never claimed again.
+- **Implications**: Gap 2 closed. "Effectively-once" now rests on a durable claim protocol rather than only on the
+  merge engine's ad-hoc reconciliation. The lease is configurable so expiry is testable without clock surgery.
+- **Confidence**: High
+- **Related**: EVD-070, EVD-071, OBS-038 (gap 2 of 5)
+
+## DEC-021 — Re-frozen after claim reservation
+
+- **Decision**: Re-frozen at this commit; no source or configuration change before the blind pair.
+- **Status**: pending user input (OQ-001)
