@@ -1,12 +1,10 @@
-# State — Wip.Factory Operator Alpha v0.3 — **RE-FROZEN (DEC-023)**
+# State — Wip.Factory Operator Alpha v0.3 — **RE-FROZEN (DEC-024)**
 
-- **Round**: 25 complete.
-- **Gates**: G0 PASS; G1 PASS (79 EVD); G2 PASS; G3 6/8 PA demonstrated, PA-06 met, PA-01/PA-02 not started;
-  G4 PASS (159 tests); G5 PASS.
-- **Ranked gaps**: 1 host lock ✅, 2 claim reservation ✅, 3 operation ledger ✅, 5 D-08 A edge ✅;
-  **4 D-09 template policy: implemented and adversarially tested, NOT yet composed into the lifecycle**.
+- **Round**: 26 complete. **All five ranked structural gaps closed and composed.**
+- **Gates**: G0 PASS; G1 PASS (83 EVD); G2 PASS; G3 6/8 PA demonstrated, PA-06 met, PA-01/PA-02 not started;
+  G4 PASS (161 tests); G5 PASS.
 - **Named tests**: 30 of 80.
-- **Blocked**: **OQ-001** — PA-01/PA-02 need the user's blind pair.
-- **Next objective (round 26)**: compose D-09 into intake and approval — a requirement may name a template and
-  parameters; intake instantiates and stores it; approval attempts the policy first and records
-  `approvalKind=template-policy` on a full match, otherwise requires the human digest.
+- **Blocked**: **OQ-001** — PA-01/PA-02 need the user's blind pair. Nothing else on the implementer's side is
+  outstanding for those two gates.
+- **Next objective (round 27)**: attempt a real end-to-end run on the template path (template requirement → merge →
+  serve) to confirm composition in production, then hold for the blind pair.

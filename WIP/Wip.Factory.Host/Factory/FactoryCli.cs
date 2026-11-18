@@ -137,6 +137,20 @@ public static class FactoryCli
             return Ok;
         }
 
+        if (string.Equals(action, "approve", StringComparison.Ordinal) && HasFlag(rest, "--policy"))
+        {
+            var (policyOk, policyError, decision) = await runtime.ContractPolicyApproveAsync(workItem).ConfigureAwait(false);
+            if (!policyOk)
+            {
+                return await FailAsync(error, Refused, policyError ?? "template-policy-refused").ConfigureAwait(false);
+            }
+
+            await output.WriteLineAsync($"contract frozen : {decision!.ContractDigest} (template-policy)").ConfigureAwait(false);
+            await output.WriteLineAsync($"template        : {decision.TemplateId}@{decision.TemplateVersion}").ConfigureAwait(false);
+            await output.WriteLineAsync("next            : factory run --until-idle").ConfigureAwait(false);
+            return Ok;
+        }
+
         if (string.Equals(action, "approve", StringComparison.Ordinal))
         {
             if (digest is null)

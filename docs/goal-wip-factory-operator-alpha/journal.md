@@ -684,3 +684,21 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 
 - **Decision**: Re-frozen at this commit. Note that D-09 remains uncomposed; that is stated, not hidden.
 - **Status**: pending user input (OQ-001)
+## OBS-045 — D-09 composed: intake instantiates an approved template and policy grants approval
+
+- **Source**: `SubmitAsync` (template instantiation), `ContractPolicyApproveAsync`, `contract approve --policy`; Host 66/66
+- **Fact**: A requirement may now declare `template: <id>@<version>` and `parameters: {...}`. Intake resolves the
+  approved manifest, instantiates its scenarios into a full contract and stores it, and records the template reference
+  and parameters as provenance on the submitted event. Approval can then run the policy instead of a human digest: on
+  a full match the item advances with `approvalKind=template-policy`, template id/version, manifest digest, parameters
+  digest and contract digest all recorded. An out-of-bounds parameter falls back and leaves the item in `Proposed`.
+- **Implications**: Gap 4 closed **and composed** — the policy is on the real operator path, not a library beside it.
+  Two defects had to be fixed to get there: the manifest reload dropped its parameter schema (so every parameter looked
+  unexpected), and the policy was handed the whole contract where it compares scenarios.
+- **Confidence**: High
+- **Related**: EVD-080..082, OBS-044 (gap 4 of 5)
+
+## DEC-024 — Re-frozen after D-09 composition
+
+- **Decision**: Re-frozen at this commit. All five ranked structural gaps are now closed and composed.
+- **Status**: pending user input (OQ-001) — unchanged and decisive.

@@ -109,6 +109,33 @@ public sealed class FactoryTemplateRegistry
         return true;
     }
 
+    /// <summary>Reads a manifest from its stored body, including the parameter schema.</summary>
+    private static TemplateManifest FromNode(JsonNode node, string templateId, int templateVersion)
+    {
+        var parameters = new Dictionary<string, TemplateParameter>(StringComparer.Ordinal);
+        if (node["parameters"] is JsonObject parameterNode)
+        {
+            foreach (var (name, spec) in parameterNode)
+            {
+                var allowed = (spec as JsonObject)?["allowed"]?.AsArray()
+                    .Select(static v => v?.GetValue<string>() ?? string.Empty)
+                    .ToArray();
+                parameters[name] = new TemplateParameter(
+                    (spec as JsonObject)?["type"]?.GetValue<string>() ?? "string",
+                    allowed);
+            }
+        }
+
+        return new TemplateManifest(
+            templateId,
+            templateVersion,
+            node["schemaVersion"]?.GetValue<int>() ?? 1,
+            node["supportedClass"]?.GetValue<string>() ?? string.Empty,
+            parameters,
+            node["scenarios"]!.DeepClone(),
+            ComputeDigest(node));
+    }
+
     public void Revoke(string templateId, int templateVersion)
     {
         var key = Key(templateId, templateVersion);
@@ -180,11 +207,8 @@ public sealed class FactoryTemplateRegistry
                 }
 
                 var approved = File.Exists(Path.Combine(idDirectory, versionText + ".approved"));
-                var digest = ComputeDigest(node);
-                _templates[Key(id, version)] = (new TemplateManifest(
-                    id, version, node["schemaVersion"]?.GetValue<int>() ?? 1,
-                    node["supportedClass"]?.GetValue<string>() ?? string.Empty,
-                    new Dictionary<string, TemplateParameter>(), node["scenarios"]!.DeepClone(), digest), approved);
+                // Reload the parameter schema too: without it every declared parameter looks unexpected.
+                _templates[Key(id, version)] = (FromNode(node, id, version), approved);
             }
         }
     }

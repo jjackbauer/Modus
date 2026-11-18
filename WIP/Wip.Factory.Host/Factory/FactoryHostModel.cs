@@ -88,7 +88,9 @@ public sealed record RequirementDocument(
     IReadOnlyList<string> Expectations,
     string Digest,
     string RawText,
-    string? AcceptanceContractReference = null)
+    string? AcceptanceContractReference = null,
+    string? TemplateReference = null,
+    string? TemplateParametersJson = null)
 {
     public const string MissingTitleCategory = "requirement-missing-title";
     public const string UnsupportedClassCategory = "unsupported-class";
@@ -97,7 +99,7 @@ public sealed record RequirementDocument(
 
     private static readonly HashSet<string> KnownKeys = new(StringComparer.OrdinalIgnoreCase)
     {
-        "title", "supportedClass", "acceptanceContract"
+        "title", "supportedClass", "acceptanceContract", "template", "parameters"
     };
 
     public static (RequirementDocument? Document, IReadOnlyList<string> Errors) Parse(string text, string? titleOverride = null)
@@ -179,7 +181,9 @@ public sealed record RequirementDocument(
 
         var digest = ComputeDigest(title!, supportedClass, body, expectations);
         var contractRef = metadata.TryGetValue("acceptanceContract", out var reference) ? reference : null;
-        return (new RequirementDocument(title!, supportedClass, body, expectations, digest, text, contractRef), []);
+        var templateRef = metadata.TryGetValue("template", out var template) ? template : null;
+        var templateParameters = metadata.TryGetValue("parameters", out var parameters) ? parameters : null;
+        return (new RequirementDocument(title!, supportedClass, body, expectations, digest, text, contractRef, templateRef, templateParameters), []);
     }
 
     public static string ComputeDigest(

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Wip.Factory.Contracts.Events;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Persistence;
@@ -44,6 +45,7 @@ public sealed class FactoryRuntime
     private readonly ICandidateHost? _candidates;
     private readonly IMergeEngine? _merges;
     private readonly ICandidateBuildVerifier? _builds;
+    private readonly FactoryTemplateRegistry _templates;
 
     public FactoryRuntime(
         FactoryControlRoot root,
@@ -57,6 +59,7 @@ public sealed class FactoryRuntime
         _candidates = candidates;
         _merges = merges;
         _builds = builds;
+        _templates = new FactoryTemplateRegistry(root.Root);
         _root.EnsureCreated();
         _store = new LocalFactoryStore(_root.Root);
         _worker = new FactoryDispatchWorker(
@@ -88,6 +91,37 @@ public sealed class FactoryRuntime
         if (document is null)
         {
             return SubmitResult.Refused([.. errors]);
+        }
+
+        // A requirement may name an approved template; intake instantiates it so the oracle is the template exactly.
+        if (document.TemplateReference is { Length: > 0 } templateRef)
+        {
+            var parts = templateRef.Split('@');
+            if (parts.Length != 2 || !int.TryParse(parts[1], out var templateVersion))
+            {
+                return SubmitResult.Refused("template-reference-invalid:" + templateRef);
+            }
+
+            var (manifest, templateError) = _templates.Resolve(parts[0], templateVersion);
+            if (manifest is null)
+            {
+                return SubmitResult.Refused(templateError ?? "template-unavailable");
+            }
+
+            var parameters = string.IsNullOrWhiteSpace(document.TemplateParametersJson)
+                ? new JsonObject()
+                : JsonNode.Parse(document.TemplateParametersJson) as JsonObject ?? new JsonObject();
+
+            if (acceptanceContractJson is null)
+            {
+                // The template carries scenarios; the contract also needs its schema and class.
+                acceptanceContractJson = new JsonObject
+                {
+                    ["schemaVersion"] = manifest.SchemaVersion,
+                    ["supportedClass"] = manifest.SupportedClass,
+                    ["scenarios"] = FactoryTemplatePolicy.Instantiate(manifest, parameters).DeepClone()
+                }.ToJsonString();
+            }
         }
 
         AcceptanceContract? contract = null;
@@ -128,6 +162,13 @@ public sealed class FactoryRuntime
             ["supportedClass"] = document.SupportedClassId,
             ["expectations"] = JsonSerializer.Serialize(document.Expectations)
         };
+
+        if (document.TemplateReference is { Length: > 0 } namedTemplate)
+        {
+            // Provenance the policy needs at approval time: which template, instantiated with what.
+            data["templateReference"] = namedTemplate;
+            data["templateParameters"] = document.TemplateParametersJson ?? "{}";
+        }
 
         if (contract is not null)
         {
@@ -335,7 +376,82 @@ public sealed class FactoryRuntime
     }
 
     /// <summary>
+    /// Attempts D-09 policy approval: a contract is auto-approved only when it is exactly the instantiation of an
+    /// operator-approved template with permitted parameters (v0.3 §4.3).
+    /// </summary>
+    public async ValueTask<(bool Ok, string? Error, TemplateDecision? Decision)> ContractPolicyApproveAsync(
+        string workItemId,
+        CancellationToken cancellationToken = default)
+    {
+        var events = await EventsAsync(workItemId, cancellationToken).ConfigureAwait(false);
+        var submitted = events.LastOrDefault(static e => string.Equals(e.Type, FactoryEventTypes.RequirementSubmitted, StringComparison.Ordinal));
+        if (submitted is null)
+        {
+            return (false, "no-submitted-requirement", null);
+        }
+
+        if (!submitted.Data.TryGetValue("templateReference", out var templateRef)
+            || !submitted.Data.TryGetValue("acceptanceContract", out var contractJson))
+        {
+            return (false, "template-policy:proposal-names-no-template", null);
+        }
+
+        var parts = templateRef.Split('@');
+        if (parts.Length != 2 || !int.TryParse(parts[1], out var version))
+        {
+            return (false, "template-reference-invalid:" + templateRef, null);
+        }
+
+        var parameters = submitted.Data.TryGetValue("templateParameters", out var parametersJson)
+            ? JsonNode.Parse(parametersJson) as JsonObject ?? new JsonObject()
+            : new JsonObject();
+
+        var proposal = new JsonObject
+        {
+            ["templateId"] = parts[0],
+            ["templateVersion"] = version,
+            ["parameters"] = parameters.DeepClone(),
+            // The stored contract is the whole object; the policy compares only its scenarios.
+            ["scenarios"] = JsonNode.Parse(contractJson)?["scenarios"]?.DeepClone()
+        };
+
+        var decision = FactoryTemplatePolicy.Evaluate(_templates, proposal);
+        if (!decision.Approved)
+        {
+            return (false, decision.Reason, decision);
+        }
+
+        var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
+        if (snapshot is null)
+        {
+            return (false, "work-item-not-found", decision);
+        }
+
+        var data = new Dictionary<string, string>(submitted.Data, StringComparer.Ordinal)
+        {
+            ["contractDigest"] = decision.ContractDigest!,
+            ["approvalKind"] = FactoryTemplatePolicy.ApprovalKind,
+            ["templateId"] = decision.TemplateId!,
+            ["templateVersion"] = decision.TemplateVersion.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["manifestDigest"] = decision.ManifestDigest!,
+            ["parametersDigest"] = decision.ParametersDigest!,
+            ["approvedBy"] = "policy:" + FactoryPolicy.PolicyVersion,
+            ["approvedAtUtc"] = DateTimeOffset.UtcNow.ToString("O")
+        };
+
+        var approved = snapshot with { Version = snapshot.Version + 1 };
+        var commit = await _store.CommitAsync(
+            new WorkItemCommit(approved, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                FactoryEventTypes.ContractApproved, snapshot.WorkItemId, data)]),
+            cancellationToken).ConfigureAwait(false);
+
+        return commit.Succeeded ? (true, null, decision) : (false, commit.Reason ?? "approve-commit-refused", decision);
+    }
+
+    /// <summary>
     /// Records the operator's merge authorisation, bound to the exact review evidence. D-09 authorises contract
+    /// approval only; this is a separate, human-authorised merge (v0.3 §2, §3.4 step 4).
+    /// </summary>
     /// approval only; this is a separate, human-authorised merge (v0.3 §2, §3.4 step 4).
     /// </summary>
     public async ValueTask<(bool Ok, string? Error)> ApproveMergeAsync(
