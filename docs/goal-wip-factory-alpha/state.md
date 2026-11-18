@@ -1,6 +1,6 @@
 # Harness State — wip-factory-alpha
 
-- **Round**: 34 — **DELIVERED**. Goal record stays open on a harness defect only (OBS-063)
+- **Round**: 35 — **GOAL COMPLETE** (goal `phase=complete`, revision 7)
 - **Goal**: All 105 requirements implemented; 82 named tests passing; six factory architecture rules live; nine roles + improvement loop + admission lifecycle + RustLace prediction through real Modus/WIP seams.
 - **Definition of done**: **9/9** met. 86 tests green after clean rebuild; all five demos exit 0 (EVD-111, EVD-112)
 - **Stop criteria**: D1–D9 all pass with G1–G5 green (unmet: 7 dimensions); round cap 30 (unmet)

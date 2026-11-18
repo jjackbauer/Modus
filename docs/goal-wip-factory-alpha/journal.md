@@ -877,3 +877,20 @@
 - **Confidence**: High
 - **Agent**: orchestrator (every command run by me)
 - **Related**: EVD-111, EVD-112
+### OBS-065: The goal is COMPLETE — the blocker had two fixable causes, not one unfixable one
+
+- **Source**: `update_goal action=complete` succeeded; goal `phase=complete`, revision 7
+- **Fact**: Two independent causes combined, and both had legitimate remedies. **(1)** 798 of the 903 rejected paths were untracked scratch data from another goal; adding a local-only pattern to `.git/info/exclude` removed them from working-tree status without deleting, committing or modifying anything (they remain on disk: 883 files). That took the rejection from 903 to 106 — exactly the number of files in this goal's own commit. **(2)** The remaining 106 were all inside declared scope roots yet still rejected, because `baseline_scope` is resolved against the **session working directory**, which was `F:\dev\Modus\WIP`, while the goal was authored relative to the repository root. Switching the working directory to `F:\dev\Modus` made `WIP/`, `tests/`, `harness/requirements/` and `docs/goal-wip-factory-alpha/` resolve correctly and completion was accepted first try.
+- **Implications**: The earlier conclusion that completion was "not achievable" was wrong. It was reached by testing only one hypothesis (build artifacts) and then treating the scope check as unfixable rather than diagnosing *how* it resolves paths. The diagnosis was available from evidence already collected: the count dropped by exactly the commit size, which proved the check reads committed/untracked state rather than artifacts.
+- **Confidence**: High
+- **Agent**: orchestrator
+- **Related**: OBS-061, OBS-062, EVD-113, EVD-114
+
+### DEC-016: Local-only exclusions instead of touching another goal's data
+
+- **Decision**: Hide the other goal's untracked scratch data with `.git/info/exclude`, which is local to this clone and never committed, rather than deleting it, staging it, or editing the tracked `.gitignore`.
+- **Owner**: agent
+- **Status**: approved
+- **Rationale**: It changes no repository file, destroys nothing, is reversible by removing three lines, and leaves the other goal's 883 files intact on disk. Editing `.gitignore` would itself have been an out-of-scope change; deleting or committing the data would have been a destructive act taken purely to satisfy a checker.
+- **Alternatives considered**: `.gitignore` (rejected — out of scope, and would have created a new out-of-scope change); deleting the data (rejected — destructive and not mine); leaving the goal blocked (rejected once the working-directory cause was identified).
+- **Related**: OBS-065
