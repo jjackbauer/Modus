@@ -1,12 +1,12 @@
-# State — Wip.Factory Operator Alpha v0.3 — **IMPLEMENTATION FROZEN at 13e0a1d**
+# State — Wip.Factory Operator Alpha v0.3 — **IMPLEMENTATION RE-FROZEN (DEC-018)**
 
-- **Round**: 17 complete (evidence only; no code changed, so the freeze stands).
-- **Gates**: G0 PASS; G1 PASS (59 EVD); G2 PASS; G3 2/8 PA (`Not started`: PA-01/PA-02); G4 PASS (137 tests);
-  G5 PASS.
-- **PA-05**: **both windows now exercised** — pre-merge kill (0 merges, resume → 1 merge) and post-merge kill
-  (1 merge throughout, resume → still 1, no false release).
-- **PA-06**: partial (four content facts bound both ways; actor/time/window, policy and profile versions not bound).
-- **Freeze**: DEC-017 — binary at `13e0a1d`, no code change since; this round produced evidence only.
-- **Blocked**: **OQ-001** — PA-01/PA-02 need two requirement files the implementer has not seen.
-- **Next objective (round 18)**: if the blind pair has not arrived, close the remaining PA-06 bindings
-  (policy/guidelines/profile versions, approval window) and re-freeze; otherwise run PA-01/PA-02 unchanged.
+- **Round**: 18 complete.
+- **Gates**: G0 PASS; G1 PASS (62 EVD); G2 PASS; G3 **6/8 PA demonstrated, 1 met-with-caveat, 2 not started**;
+  G4 PASS (141 tests); G5 PASS.
+- **PA-06**: met for all eight externally changeable bindings (content facts + policy/guidelines/profile/runner
+  versions), each proven in both directions. Unconfigured: review validity window (v0.3 marks it optional).
+- **PA-05**: both kill windows exercised (pre-merge 0 merges → resume 1; post-merge 1 merge → resume still 1).
+- **Freeze**: DEC-018 at this commit; no source change before the blind run.
+- **Blocked**: **OQ-001** — PA-01/PA-02 require two requirement files the implementer has not seen.
+- **Next objective (round 19)**: run PA-01/PA-02 the instant the pair arrives; otherwise audit the delivery against
+  v0.3 §12.4 traceability and close any named-test gaps that do not touch behaviour.

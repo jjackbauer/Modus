@@ -306,7 +306,8 @@ public sealed class MergeLifecycleTests
 
         var review = (await runtime.EventsAsync(workItem)).Last(static e => e.Type == OperatorEvents.ReviewAccepted);
         captured = new MergeAuthority(
-            review.Data["reviewDigest"], review.Data["headSha"], review.Data["baseSha"], review.Data["contractDigest"]);
+            review.Data["reviewDigest"], review.Data["headSha"], review.Data["baseSha"], review.Data["contractDigest"],
+            review.Data["policyVersion"], review.Data["guidelinesVersion"], review.Data["profileVersion"], review.Data["runnerVersion"]);
 
         Assert.True((await runtime.ApproveMergeAsync(workItem, review.Data["reviewDigest"])).Ok);
         await runtime.RunAsync(16);
@@ -321,6 +322,10 @@ public sealed class MergeLifecycleTests
     [InlineData("headSha")]
     [InlineData("baseSha")]
     [InlineData("contractDigest")]
+    [InlineData("policyVersion")]
+    [InlineData("guidelinesVersion")]
+    [InlineData("profileVersion")]
+    [InlineData("runnerVersion")]
     public async Task Approval_GivenAnyBoundFieldChanged_RefusesMerge(string changedField)
     {
         using var server = new StubServer("""{"id":"b1","title":"Dune"}""");
@@ -331,7 +336,11 @@ public sealed class MergeLifecycleTests
             ReviewDigest: changedField == "reviewDigest" ? "sha256:changed" : "unused-matches",
             HeadSha: changedField == "headSha" ? "a-different-head" : "unused-matches",
             BaseSha: changedField == "baseSha" ? "a-different-base" : "unused-matches",
-            ContractDigest: changedField == "contractDigest" ? "sha256:changed" : "unused-matches");
+            ContractDigest: changedField == "contractDigest" ? "sha256:changed" : "unused-matches",
+            PolicyVersion: changedField == "policyVersion" ? "policy://changed@2" : FactoryPolicy.PolicyVersion,
+            GuidelinesVersion: changedField == "guidelinesVersion" ? "guidelines/changed@2" : FactoryPolicy.GuidelinesVersion,
+            ProfileVersion: changedField == "profileVersion" ? "profile/changed@2" : FactoryPolicy.ProfileVersion,
+            RunnerVersion: changedField == "runnerVersion" ? "runner@2" : FactoryPolicy.RunnerVersion);
 
         var (runtime, workItem) = await AtReadyForDeliveryAsync(
             new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("base-1"), () => evidence);

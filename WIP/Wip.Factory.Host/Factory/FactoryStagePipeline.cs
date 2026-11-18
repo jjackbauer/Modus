@@ -75,7 +75,20 @@ public sealed record MergeAuthority(
     string ReviewDigest,
     string HeadSha,
     string BaseSha,
-    string ContractDigest);
+    string ContractDigest,
+    string PolicyVersion,
+    string GuidelinesVersion,
+    string ProfileVersion,
+    string RunnerVersion);
+
+/// <summary>The policy, guidelines, profile and runner versions an approval is bound to (v0.3 §5.2).</summary>
+public static class FactoryPolicy
+{
+    public const string PolicyVersion = "policy://factory/mandatory@1";
+    public const string GuidelinesVersion = "guidelines/system@1";
+    public const string ProfileVersion = "profile/implementations-analyst@1";
+    public const string RunnerVersion = "factory-runner@1";
+}
 
 /// <summary>Builds a candidate for review. Injected so a test can verify review logic without a real toolchain.</summary>
 public interface ICandidateBuildVerifier
@@ -457,7 +470,11 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             ["checks"] = string.Join(";", checks),
             ["reviewDigest"] = reviewDigest,
             ["contractDigest"] = contract.Digest,
-            ["scenarios"] = string.Join(",", contractResult!.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
+            ["scenarios"] = string.Join(",", contractResult!.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail"))),
+            ["policyVersion"] = FactoryPolicy.PolicyVersion,
+            ["guidelinesVersion"] = FactoryPolicy.GuidelinesVersion,
+            ["profileVersion"] = FactoryPolicy.ProfileVersion,
+            ["runnerVersion"] = FactoryPolicy.RunnerVersion
         };
 
         return StageDispatchOutcome.Advanced(
@@ -517,6 +534,10 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             if (Differs(trigger.Data, "headSha", current.HeadSha)) { mismatches.Add("headSha"); }
             if (Differs(trigger.Data, "baseSha", current.BaseSha)) { mismatches.Add("baseSha"); }
             if (Differs(trigger.Data, "contractDigest", current.ContractDigest)) { mismatches.Add("contractDigest"); }
+            if (Differs(trigger.Data, "policyVersion", current.PolicyVersion)) { mismatches.Add("policyVersion"); }
+            if (Differs(trigger.Data, "guidelinesVersion", current.GuidelinesVersion)) { mismatches.Add("guidelinesVersion"); }
+            if (Differs(trigger.Data, "profileVersion", current.ProfileVersion)) { mismatches.Add("profileVersion"); }
+            if (Differs(trigger.Data, "runnerVersion", current.RunnerVersion)) { mismatches.Add("runnerVersion"); }
 
             if (mismatches.Count > 0)
             {

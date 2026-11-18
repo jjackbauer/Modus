@@ -494,7 +494,13 @@ public sealed class FactoryRuntime
             review.Data.TryGetValue("reviewDigest", out var reviewDigest) ? reviewDigest : string.Empty,
             review.Data.TryGetValue("headSha", out var headSha) ? headSha : string.Empty,
             review.Data.TryGetValue("baseSha", out var baseSha) ? baseSha : string.Empty,
-            review.Data.TryGetValue("contractDigest", out var contractDigest) ? contractDigest : string.Empty);
+            review.Data.TryGetValue("contractDigest", out var contractDigest) ? contractDigest : string.Empty,
+            // The versions below are the ones configured *now*, not the recorded ones: a policy or profile
+            // bump must invalidate approvals that were bound to the old value.
+            FactoryPolicy.PolicyVersion,
+            FactoryPolicy.GuidelinesVersion,
+            FactoryPolicy.ProfileVersion,
+            FactoryPolicy.RunnerVersion);
     }
 
     private static async Task<string?> TargetHeadAsync(string repositoryPath, CancellationToken cancellationToken)

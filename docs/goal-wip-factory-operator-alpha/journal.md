@@ -519,3 +519,25 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   duplication-relevant windows are both exercised: no merge when none happened, and no second merge when one did.
 - **Confidence**: High
 - **Related**: EVD-059, OBS-031, EVD-053
+## OBS-035 — PA-06 now binds all eight externally changeable facts
+
+- **Source**: `MergeAuthority`, `FactoryPolicy`, `ValidateDelivery`; Host 49/49
+- **Fact**: Delivery validation compares the approval against current evidence on eight bindings: `reviewDigest`,
+  `headSha`, `baseSha`, `contractDigest`, `policyVersion`, `guidelinesVersion`, `profileVersion`, `runnerVersion`.
+  The version values are read from the **currently configured** policy, not from the recorded event, so bumping the
+  policy or the profile invalidates every outstanding approval. Eight mutation cases each refuse the merge and leave
+  the item in `DeliveryValidation` with zero merge calls; the matching-evidence case still merges and releases.
+- **Implications**: Every bound fact that can change externally is enforced. What is **not** compared is the approval
+  actor and timestamp — those are the authorisation record itself, not facts to re-derive — and the review validity
+  window, which v0.3 marks optional ("if configured") and which this alpha does not configure. PA-06 is therefore met
+  for all changeable bindings, with the unconfigured window stated rather than claimed.
+- **Confidence**: High
+- **Related**: EVD-060, EVD-061, OBS-029
+
+## DEC-018 — Re-frozen at this commit
+
+- **Source**: this round (code changed after DEC-017)
+- **Decision**: The implementation is re-frozen at the commit produced by this round. PA-01/PA-02 must run against
+  this binary with no further source or configuration change.
+- **Owner**: user (OQ-001 still open)
+- **Status**: pending user input
