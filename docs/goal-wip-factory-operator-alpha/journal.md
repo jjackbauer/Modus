@@ -337,3 +337,30 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   repeated silently.
 - **Confidence**: High
 - **Related**: OBS-020
+## OBS-022 — The gate rejected a second, structurally different application — correctly
+
+- **Source**: operator run `m5-0e29a02f`; requirement "Job queue HTTP API" (different shape: FIFO queue, state
+  transitions, an empty-set 204 case)
+- **Fact**: The unchanged factory accepted the requirement, froze an executable 5-scenario contract, drove the
+  model (57 s), and the review gate returned
+  `requirement-coverage=failed` with
+  `acceptance-contract-failed:AC-2:status-mismatch: expected 200 observed 405; AC-4:status-mismatch: expected 200
+  observed 405`. Inspecting the generated `Program.cs` shows the model implemented `app.MapPost("/jobs/next", …)`
+  while the contract requires `GET /jobs/next`. The factory refused to advance (`InReview` v9), and no merge or
+  release happened.
+- **Implications**: Two things are now true. (1) The oracle is not vacuous — it caught a wire-level defect
+  (verb mismatch) on an application it had never seen, on a contract it did not write. (2) Generality is **not**
+  yet demonstrated, because the second application did not reach Released.
+- **Confidence**: High
+- **Related**: EVD-042, EVD-043, OBS-023
+
+## OBS-023 — There is no rework loop yet, so a rejected attempt is terminal
+
+- **Source**: same run; v0.3 §3.5 requires `InReview → NeedsRework` with a bounded budget
+- **Fact**: On review failure the handler records `factory.stage.failed.v1` and leaves the item in `InReview`.
+  `NeedsRework` exists in the state machine and `D-08 A` already permits `DeliveryValidation → NeedsRework`, but no
+  transition feeds the failure back to the implementation role, so the model never sees its own mistake.
+- **Implications**: The factory can detect a bad attempt but cannot yet correct one. This is the single largest
+  remaining behavioural gap before the blind acceptance run, and it is the next objective.
+- **Confidence**: High
+- **Related**: OBS-022
