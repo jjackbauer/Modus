@@ -41,3 +41,54 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   measured (17 in / 3 out tokens), so the provider works, but a full app build is many steps and may
   exhaust budget or rate limits mid-run.
 - **Mitigation**: bounded steps/timeouts; report `inconclusive` rather than substituting a fake model.
+## OBS-003 — Independent intent audit FAILED the v1 goal contract
+
+- **Source**: `audit-intent.md` (subagent `7aa8fb02`, read-only session; content persisted by me because
+  the agent had no write tool), plus my own check of `deliverables.md`
+- **Fact**: 18 mechanisms audited: **16 KEPT (3 full, 10 partial, 3 nominal), 0 REPLACED, 2 REMOVED**.
+  REMOVED were **D-06 control root** and **D-04 three-role default** — neither appeared anywhere in the
+  goal folder. Additionally the audit found ten partial/nominal rows (six tools named but not enumerated,
+  "effectively-once" as a slogan with no operation identity, missing attribution chain in PA-03, PA-05
+  missing "no false release / no lost failure record", PA-07 missing release artifact and process tree,
+  PA-08 missing three refusal classes, absent CLI contract and manifest fields) and **one clause that
+  contradicted the spec**: v1 stop criterion 1 allowed a goal to be *stopped* on an honestly-recorded
+  failing PA gate, while v0.3:75 says a failed gate means the delivery is not accepted.
+- **Implications**: **G0 FAILED**. Implementation could not start. This is the second time in this
+  project that a completeness claim of mine ("all KEPT — no replacement, no exclusion") was false; the
+  first was the 82/82 test count in the previous goal.
+- **Confidence**: High
+- **Related**: VAL-001, EVD-009, EVD-010, DEC-002..004
+
+## VAL-001 — FALSIFIED: "all mechanisms KEPT" in goal.md v1
+
+- **Claim**: v1 goal.md's anchors table asserted every user mechanism was KEPT.
+- **Counterexample**: the table covered a 10-item subset; D-06 and D-04 were absent from the entire file
+  (0 hits for "control"/"outside"/"three"/"role" in `goal.md`, and 0 hits in `deliverables.md` too —
+  EVD-009).
+- **Status**: Falsified. Superseded by goal.md v2's 18-row binding table.
+
+## DEC-002 — PA-01 pass predicate ends at Released
+
+- **Source**: audit §5; v0.3:58 vs v0.3:43/44/116
+- **Decision**: PA-01 = merged, post-merge verified, reached `Released`. Liveness/`serve` proof belongs to
+  PA-07. This resolves a contradiction the spec could not resolve itself: one gate cannot span two
+  terminal states.
+- **Owner**: agent (engineering resolution), consistent with v0.3's "proposed engineering resolutions"
+  clause
+- **Status**: approved
+
+## DEC-003 — PA-06 and PA-08 are proven through harness injection seams
+
+- **Source**: audit §5 secondary finding; v0.3:479 ("CLI and runtime")
+- **Decision**: mutating an approval-bound field and requesting an out-of-profile tool are induced by
+  test-only seams unreachable from the operator CLI.
+- **Owner**: agent
+- **Status**: approved
+
+## DEC-004 — A failed PA gate is NOT acceptance
+
+- **Source**: audit §3
+- **Decision**: withdrawn the v1 clause that let "honest recording of a failing gate" stop the goal.
+  Failure must be reported, and it never constitutes completion.
+- **Owner**: agent, correcting my own contract
+- **Status**: approved
