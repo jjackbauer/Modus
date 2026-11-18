@@ -24,6 +24,7 @@ public static class OperatorEvents
     public const string CandidateReady = "factory.release.candidate-ready.v1";
     public const string ReleaseCompleted = "factory.release.completed.v1";
     public const string ReleaseObserved = "factory.release.observed.v1";
+    public const string ReworkRequested = "factory.rework.requested.v1";
     public const string StageFailed = "factory.stage.failed.v1";
 }
 
@@ -32,7 +33,8 @@ public sealed record ImplementationRequest(
     string WorkItemId,
     string RepositoryPath,
     string RequirementText,
-    IReadOnlyList<string> Expectations);
+    IReadOnlyList<string> Expectations,
+    string? ReworkContext = null);
 
 /// <summary>The verified outcome of an implementation attempt. Only the factory sets these fields.</summary>
 public sealed record ImplementationOutcome(
@@ -114,6 +116,9 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
     public const string AcceptanceFailed = "acceptance-contract-failed";
     public const string ReviewRejected = "review-rejected";
 
+    /// <summary>Bounded repair attempts per work item (v0.3 §3.5; default two).</summary>
+    public const int ReworkBudget = 2;
+
     private readonly IImplementationStageRunner? _implementations;
     private readonly ICandidateHost? _candidates;
     private readonly ICandidateBuildVerifier? _builds;
@@ -182,6 +187,9 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
 
             (OperatorEvents.ReleaseObserved, FactoryWorkState.Released)
                 => ValueTask.FromResult(RecordObservation(workItem, trigger)),
+
+            (OperatorEvents.ReworkRequested, FactoryWorkState.NeedsRework)
+                => ValueTask.FromResult(StartRework(workItem, trigger)),
 
             _ => ValueTask.FromResult(StageDispatchOutcome.NoOp())
         };
@@ -292,7 +300,8 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             trigger.Data.TryGetValue("requirement", out var requirementText) ? requirementText : string.Empty,
             trigger.Data.TryGetValue("expectations", out var json)
                 ? JsonSerializer.Deserialize<string[]>(json) ?? []
-                : []);
+                : [],
+            ReworkContext: trigger.Data.TryGetValue("reworkContext", out var rework) ? rework : null);
 
         var outcome = await _implementations.RunAsync(request, cancellationToken).ConfigureAwait(false);
 
@@ -402,13 +411,30 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
                     ? $"{ReviewRejected}:conformance"
                     : $"{AcceptanceFailed}:{contractResult?.FailureSummary}";
 
+            // A rejected attempt is fed back to the implementer while budget remains (v0.3 §3.5).
+            var reworkCount = trigger.Data.TryGetValue("reworkCount", out var reworkText)
+                && int.TryParse(reworkText, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : 0;
+
             var failed = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
             {
                 ["checks"] = string.Join(";", checks),
-                ["rejectReason"] = reason
+                ["rejectReason"] = reason,
+                ["reworkCount"] = (reworkCount + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["reworkContext"] = reason
             };
 
-            return StageDispatchOutcome.Recorded(
+            if (reworkCount < ReworkBudget)
+            {
+                return StageDispatchOutcome.Advanced(
+                    FactoryWorkState.NeedsRework,
+                    [Event(OperatorEvents.ReworkRequested, workItem.WorkItemId, failed, trigger.Id)]);
+            }
+
+            // The budget is spent: take the legal NeedsRework -> Failed edge rather than retrying forever.
+            return StageDispatchOutcome.Advanced(
+                FactoryWorkState.Failed,
                 [Event(OperatorEvents.StageFailed, workItem.WorkItemId, failed, trigger.Id)]);
         }
 
@@ -604,6 +630,16 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.OperationallyValidated,
             [Event("factory.operations.validated.v1", workItem.WorkItemId, data, trigger.Id)]);
+    }
+
+    /// <summary>Hands the rejection back to the implementer as a new attempt with the failure as context.</summary>
+    private static StageDispatchOutcome StartRework(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
+    {
+        var data = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal);
+
+        return StageDispatchOutcome.Advanced(
+            FactoryWorkState.InImplementation,
+            [Event(OperatorEvents.ImplementationRequested, workItem.WorkItemId, data, trigger.Id)]);
     }
 
     internal static FactoryEventEnvelope Event(

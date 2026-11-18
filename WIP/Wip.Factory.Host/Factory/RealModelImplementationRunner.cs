@@ -209,27 +209,27 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
 
     private static string BuildPrompt(ImplementationRequest request)
     {
-        var expectations = string.Join('\n', request.Expectations.Select(static (e, i) => $"- AC-{i + 1}: {e}"));
+        var expectations = string.Join('\n', request.Expectations.Select(static (e, i) => "- AC-" + (i + 1) + ": " + e));
 
-        return $"""
-            Implement this requirement in the current repository, which is already checked out in your worktree.
+        var prompt = "Implement this requirement in the current repository, which is already checked out in your worktree.\n\n"
+            + "REQUIREMENT\n" + request.RequirementText + "\n\n"
+            + "ACCEPTANCE EXPECTATIONS\n" + expectations + "\n\n"
+            + "RULES\n"
+            + "- Use the tools. Write real files; do not describe them.\n"
+            + "- The repository may be empty. Create the project (.csproj) and source as needed.\n"
+            + "- run_command accepts only: new, restore, build, test, run, publish. Use it to check your work.\n"
+            + "- Before you finish, dotnet build must succeed on the project you created.\n"
+            + "- Paths are relative to the repository root.\n"
+            + "- Reply DONE when the build is green.";
 
-            REQUIREMENT
-            {request.RequirementText}
+        if (!string.IsNullOrWhiteSpace(request.ReworkContext))
+        {
+            prompt += "\n\nYOUR PREVIOUS ATTEMPT WAS REJECTED\n" + request.ReworkContext
+                + "\nFix exactly that. Do not change the acceptance contract.";
+        }
 
-            ACCEPTANCE EXPECTATIONS
-            {expectations}
-
-            RULES
-            - Use the tools. Write real files; do not describe them.
-            - The repository may be empty. Create the project (.csproj) and source as needed.
-            - `run_command` accepts only: new, restore, build, test, run, publish. Use it to check your work.
-            - Before you finish, `dotnet build` must succeed on the project you created.
-            - Paths are relative to the repository root.
-            - Reply DONE when the build is green.
-            """;
+        return prompt;
     }
-
     private static ToolDefinition[] ToolDefinitions()
     {
         static ToolDefinition Make(string name, string description, string schema)

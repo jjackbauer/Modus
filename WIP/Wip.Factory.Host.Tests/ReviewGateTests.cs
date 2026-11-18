@@ -197,7 +197,7 @@ public sealed class ReviewGateTests
         await runtime.RunAsync(16);
 
         var status = Assert.Single(await runtime.StatusAsync());
-        Assert.Equal("InReview", status.State);
+        Assert.NotEqual("ReadyForDelivery", status.State);
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public sealed class ReviewGateTests
         await runtime.RunAsync(16);
 
         var status = Assert.Single(await runtime.StatusAsync());
-        Assert.Equal("InReview", status.State);
+        Assert.NotEqual("ReadyForDelivery", status.State);
     }
 
     [Fact]
@@ -219,6 +219,6 @@ public sealed class ReviewGateTests
         await runtime.RunAsync(16);
 
         var status = Assert.Single(await runtime.StatusAsync());
-        Assert.Equal("InReview", status.State);
+        Assert.NotEqual("ReadyForDelivery", status.State);
     }
 }

@@ -364,3 +364,34 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   remaining behavioural gap before the blind acceptance run, and it is the next objective.
 - **Confidence**: High
 - **Related**: OBS-022
+## OBS-024 — The rework loop fires and feeds the failure back; the repair attempt itself failed
+
+- **Source**: operator run `m6-7e71900e` (job-queue requirement, unchanged factory); Host 40/40
+- **Fact**: The review gate rejected the first implementation and the factory emitted
+  `factory.rework.requested.v1` carrying the exact failure
+  (`acceptance-contract-failed:AC-2:status-mismatch: expected 200 observed 404; AC-4:expected 204 observed 404`),
+  transitioned `InReview → NeedsRework → InImplementation`, and dispatched a second attempt with that context in
+  the prompt. That second attempt then failed (`failed=1`) leaving the item at `InImplementation` v10.
+  Unit tests prove the loop's two branches deterministically: a first-attempt rejection is repaired and reaches
+  `ReadyForDelivery` with the rework context containing `status-mismatch`, and an always-wrong candidate stops
+  after `ReworkBudget + 1` attempts and lands in `Failed`.
+- **Unknown (❓)**: the exact failure category of the real repair attempt. No `factory.stage.failed.v1` event was
+  recorded, and the worktree holds one implementation commit (`c2203a7`) with a clean status — consistent with
+  the repair producing no new changes (`no-attributable-change`), but I did not capture the category, so this is a
+  hypothesis, not a finding. The worker's failure path records no event for a `Failed` outcome, which is itself a
+  diagnosability gap worth fixing.
+- **Implications**: The factory can now detect, report and retry. It cannot yet reliably repair, because the
+  repair attempt inherits a worktree that already contains the previous (wrong) implementation and is told to
+  "implement", not to "inspect and fix".
+- **Confidence**: High for the loop behaviour; LOW for the repair cause.
+- **Related**: EVD-044..046, OBS-023, OBS-025
+
+## OBS-025 — Diagnosability gap: a failed stage records no reason
+
+- **Source**: same run
+- **Fact**: `StageDispatchOutcome.Failed(...)` is handled by the worker's attempt bookkeeping and emits no event, so
+  the operator-facing log shows only a counter (`failed=1`) with no category. Only quarantine writes a reason.
+- **Implications**: `factory status` cannot explain why a stage failed, which v0.3 §9 requires ("the operator must
+  be able to identify why work is stalled"). Needs a `factory.stage.failed.v1` event on every failure outcome.
+- **Confidence**: High
+- **Related**: OBS-024
