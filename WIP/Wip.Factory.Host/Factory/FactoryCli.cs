@@ -152,7 +152,8 @@ public static class FactoryCli
             return await FailAsync(error, Refused, rootError!).ConfigureAwait(false);
         }
 
-        var runtime = new FactoryRuntime(root);
+        var runner = TryCreateImplementationRunner(root, error);
+        var runtime = new FactoryRuntime(root, runner);
         var reports = await runtime.RunAsync().ConfigureAwait(false);
         var statuses = await runtime.StatusAsync().ConfigureAwait(false);
 
@@ -223,6 +224,22 @@ public static class FactoryCli
                 status.Version,
                 digest)).ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Builds the real implementation runner from the configured provider. Without credentials the lifecycle
+    /// still runs, and the implementation stage fails with a named category rather than pretending.
+    /// </summary>
+    private static RealModelImplementationRunner? TryCreateImplementationRunner(FactoryControlRoot root, TextWriter error)
+    {
+        var (baseUrl, apiKey) = DeepSeekCredentials.Load();
+        if (baseUrl is null || apiKey is null)
+        {
+            error.WriteLineAsync("note: no model credentials found; implementation stages will fail with implementation-runner-unavailable").GetAwaiter().GetResult();
+            return null;
+        }
+
+        return new RealModelImplementationRunner(root, baseUrl, apiKey);
     }
 
     private static string? Value(string[] args, string name)

@@ -126,7 +126,8 @@ public sealed class OperatorLifecycleTests
         var approved = await runtime.ContractApproveAsync(submit.WorkItemId!, proposal!.ProposalDigest);
         Assert.True(approved.Ok, approved.Error);
 
-        await runtime.RunAsync();
+        // Exactly one pass: this advances to RequirementsAligned and no further.
+        await runtime.RunAsync(1);
 
         // A fresh process reads the advanced state from durable storage only.
         var fresh = await new FactoryRuntime(root).StatusAsync();

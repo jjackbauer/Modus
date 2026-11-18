@@ -11,102 +11,6 @@ using Wip.Factory.Persistence;
 
 namespace Wip.Factory.Host.Factory;
 
-/// <summary>
-/// The production stage handler (v0.3 §3.3). It owns only the stage's own work: it never schedules,
-/// leases or commits — the dispatch worker does that.
-/// </summary>
-public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
-{
-    public const string Subscriber = "factory.stage-handler";
-
-    public ValueTask<StageDispatchOutcome> HandleAsync(
-        WorkItemSnapshot workItem,
-        FactoryEventEnvelope trigger,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(workItem);
-        ArgumentNullException.ThrowIfNull(trigger);
-
-        return trigger.Type switch
-        {
-            FactoryEventTypes.RequirementSubmitted when workItem.State == FactoryWorkState.Proposed
-                => ValueTask.FromResult(Propose(workItem, trigger)),
-
-            FactoryEventTypes.ContractApproved when workItem.State == FactoryWorkState.Proposed
-                => ValueTask.FromResult(Align(workItem, trigger)),
-
-            _ => ValueTask.FromResult(StageDispatchOutcome.NoOp())
-        };
-    }
-
-    private static StageDispatchOutcome Propose(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
-    {
-        var requirement = RequirementDocumentFrom(trigger);
-        if (requirement is null)
-        {
-            return StageDispatchOutcome.Failed("requirement-event-incomplete");
-        }
-
-        var proposal = ContractProposal.From(requirement);
-        var data = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["proposal"] = proposal.ToJson(),
-            ["proposalDigest"] = proposal.ProposalDigest,
-            ["requirementDigest"] = requirement.Digest,
-            ["executable"] = proposal.Executable ? "true" : "false"
-        };
-
-        // Recorded: durable facts, no state change (v0.3 §3.2).
-        return StageDispatchOutcome.Recorded([Event(FactoryEventTypes.ContractProposed, workItem.WorkItemId, data, trigger.Id)]);
-    }
-
-    private static StageDispatchOutcome Align(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
-    {
-        var data = new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["contractDigest"] = trigger.Data.TryGetValue("contractDigest", out var digest) ? digest : string.Empty
-        };
-
-        return StageDispatchOutcome.Advanced(
-            FactoryWorkState.RequirementsAligned,
-            [Event("factory.requirement.aligned.v1", workItem.WorkItemId, data, trigger.Id)]);
-    }
-
-    private static RequirementDocument? RequirementDocumentFrom(FactoryEventEnvelope trigger)
-    {
-        if (!trigger.Data.TryGetValue("requirement", out var text))
-        {
-            return null;
-        }
-
-        var (document, _) = RequirementDocument.Parse(text);
-        return document;
-    }
-
-    internal static FactoryEventEnvelope Event(
-        string type,
-        WorkItemId workItemId,
-        IReadOnlyDictionary<string, string> data,
-        FactoryEventId? causation = null)
-    {
-        // The dispatch worker routes on this key; every event we emit must carry it (v0.3 3.3).
-        var payload = new Dictionary<string, string>(data, StringComparer.Ordinal)
-        {
-            [FactoryDispatchOptions.WorkItemDataKey] = workItemId.Value
-        };
-
-        return new FactoryEventEnvelope(
-            new FactoryEventId(Guid.NewGuid().ToString("N")),
-            type,
-            Subscriber,
-            workItemId.Value,
-            DateTimeOffset.UtcNow,
-            null,
-            causation,
-            payload);
-    }
-}
-
 /// <summary>What the CLI reported for a submission.</summary>
 public sealed record SubmitResult(
     bool Accepted,
@@ -138,7 +42,10 @@ public sealed class FactoryRuntime
     private readonly LocalFactoryStore _store;
     private readonly FactoryDispatchWorker _worker;
 
-    public FactoryRuntime(FactoryControlRoot root, IStageDispatchHandler? handler = null)
+    public FactoryRuntime(
+        FactoryControlRoot root,
+        IImplementationStageRunner? implementations = null,
+        IStageDispatchHandler? handler = null)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
         _root.EnsureCreated();
@@ -147,7 +54,7 @@ public sealed class FactoryRuntime
             _store,
             _store,
             _store,
-            handler ?? new FactoryStageDispatchHandler(),
+            handler ?? new FactoryStageDispatchHandler(implementations),
             new FactoryDispatchOptions(new SubscriberId(FactoryStageDispatchHandler.Subscriber), MaxEventsPerRun: 32));
     }
 
@@ -304,7 +211,8 @@ public sealed class FactoryRuntime
             return (false, "work-item-not-found");
         }
 
-        var data = new Dictionary<string, string>(StringComparer.Ordinal)
+        var submitted = await SubmittedPayloadAsync(workItemId, cancellationToken).ConfigureAwait(false);
+        var data = new Dictionary<string, string>(submitted, StringComparer.Ordinal)
         {
             ["contractDigest"] = proposal.ProposalDigest,
             ["requirementDigest"] = proposal.RequirementDigest,
@@ -320,6 +228,17 @@ public sealed class FactoryRuntime
             cancellationToken).ConfigureAwait(false);
 
         return commit.Succeeded ? (true, null) : (false, commit.Reason ?? "approve-commit-refused");
+    }
+
+    /// <summary>The submitted event payload for a work item, so later stages keep the requirement text.</summary>
+    private async ValueTask<IReadOnlyDictionary<string, string>> SubmittedPayloadAsync(string workItemId, CancellationToken cancellationToken)
+    {
+        var events = await _store.ReadAllAsync(cancellationToken).ConfigureAwait(false);
+        var submitted = events.LastOrDefault(e =>
+            string.Equals(e.Subject, workItemId, StringComparison.Ordinal)
+            && string.Equals(e.Type, FactoryEventTypes.RequirementSubmitted, StringComparison.Ordinal));
+
+        return submitted?.Data ?? new Dictionary<string, string>(StringComparer.Ordinal);
     }
 
     private async ValueTask<(string Id, string State)?> FindByRequirementDigestAsync(

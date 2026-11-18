@@ -145,3 +145,42 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   not yet generate source. M2 remains open.
 - **Confidence**: High
 - **Related**: OBS-004
+## OBS-008 — M2 stop condition MET: the model built a working application
+
+- **Source**: operator CLI run in `%TEMP%\m2b-43d7fb5f`; independent verification by me
+- **Fact**: With the real model and six tools, the lifecycle advanced Proposed → RequirementsAligned →
+  ArchitectureRefined → ReadyForImplementation → InImplementation → **InReview in 50 s**. The model created
+  `BookCatalog.csproj` (Web SDK, net10.0) and a 62-line `Program.cs` implementing GET/POST/GET-by-id/DELETE
+  with validation and a `BookStore`. I rebuilt it myself: `dotnet build` exit 0. I then started it on
+  loopback and exercised the contract by hand: `GET /books` → 200 `[]`; `POST /books` → 201 with id; `GET
+  /books/{id}` → 200 with title+author; `DELETE` → 204; `GET` after delete → 404. All four stated acceptance
+  expectations hold against the running process.
+- **Implications**: The thesis is demonstrated on a development fixture: requirements in, working software
+  out, no per-application C#. PA-01/PA-02 remain **unclaimed** because this requirement was authored by me,
+  not withheld (OQ-001).
+- **Confidence**: High
+- **Related**: EVD-018..021, OBS-009, OBS-010
+
+## OBS-009 — Two more defects that only a real run exposed
+
+- **Source**: the first two M2 runs
+- **Fact**: (1) An empty target repository (git init, no commits) crashed the worktree provisioner:
+  `git rev-parse --verify main` → `fatal: Needed a single revision`. Fixed by creating a baseline commit when
+  HEAD is absent, and by converting provisioning exceptions into `worktree-failed:` instead of a raw throw.
+  (2) The generated commit included `bin/` and `obj/` — 1,265 insertions, mostly binaries — because the fresh
+  target repo had no `.gitignore`. Fixed by writing one at baseline so diffs stay source-only.
+- **Implications**: Both were invisible to tests and to reading. Neither was in the spec's list of expected
+  problems, which is why running first matters.
+- **Confidence**: High
+- **Related**: OBS-008
+
+## OBS-010 — Scope honesty: this is not PA-01/PA-02
+
+- **Source**: v0.3 §1.1; OQ-001
+- **Fact**: The passing run used a requirement I wrote. v0.3 requires the two final requirements to be
+  chosen by an independent evaluator **after** the implementation is frozen, and forbids accepting a
+  hardcoded fixture as proof of general behaviour.
+- **Implications**: M2 is complete; PA-01/PA-02 stay unclaimed. A second, behaviourally different
+  development requirement should be run to reduce the risk of over-fitting before freeze.
+- **Confidence**: High
+- **Related**: OQ-001
