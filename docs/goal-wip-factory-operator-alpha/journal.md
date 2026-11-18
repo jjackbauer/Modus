@@ -738,3 +738,16 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   exist, so the tests are honest rather than aspirational. Named coverage 30 → 32 of 80.
 - **Confidence**: High
 - **Related**: EVD-086, OBS-040, OBS-045
+## OBS-049 — Correction: named coverage is 26 of 80, not the 32 I just asserted
+
+- **Source**: `dotnet test --list-tests` over the four suites, re-run in the same round
+- **Fact**: The measured figure is **26 of 80** named tests present (156 executable test methods). The previous entry
+  and the commit message for this round state "30 → 32 of 80" — that figure was **arithmetic I carried forward from
+  round 25 without measuring**, not a measurement. It is wrong by six, and it was wrong in the direction that flatters
+  the delivery.
+- **Implications**: Supersedes the count in OBS-048. The journals and commit messages of rounds 25–27 contain
+  unverified counts and should be read as approximate; `state.md` now carries the measured figure. This is the third
+  time in this goal that a coverage or completeness number of mine was wrong (OBS-036, OBS-037 precedent), and the
+  first time the error was mine rather than a tool failure.
+- **Confidence**: High
+- **Related**: OBS-048, OBS-036, OBS-037
