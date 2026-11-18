@@ -577,3 +577,16 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Mitigation**: build an explicit mapping from each spec name to an existing test or a new one; add the missing
   named tests (test-only work, no behaviour change), then re-freeze.
 - **Status**: open
+## OBS-038 — The named-test gap is mostly a product gap, not a naming problem
+
+- **Source**: `named-test-map.md`; targeted searches in the implementation
+- **Fact**: Of the 65 absent spec names, roughly **6** are renames over existing behaviour and **~59** correspond to
+  mechanisms v0.3 requires and the alpha does not have. Verified by search: no `FileShare.None`/host-lock/`Mutex`
+  anywhere in the host factory code (0 matches), no `ClaimOwner`/`ClaimDeadline`/`Reserve` in `LocalFactoryStore`
+  (0 matches), no `OperationId`/`effectOrdinal` outside the merge engine's ad-hoc reconciliation, and the
+  `DeliveryValidation → NeedsRework` edge (D-08 A) is **not** taken — the handler records a failure event instead.
+- **Implications**: Renaming ~59 tests to match the spec would convert a product gap into documentation. The map
+  records the gap instead. The five most consequential missing mechanisms are: host lock, claim reservation,
+  operation-ID ledger, D-09 template policy, and the wired D-08 A edge.
+- **Confidence**: High
+- **Related**: OBS-036, RISK-003, EVD-064
