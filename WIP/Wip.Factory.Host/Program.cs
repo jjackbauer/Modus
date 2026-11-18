@@ -62,6 +62,11 @@ public static class Program
                 return await new AdmissionLifecycleDemo().RunAsync(output);
             }
 
+            if (string.Equals(demo, "todo-app", StringComparison.Ordinal))
+            {
+                return await new TodoAppDemo().RunAsync(output);
+            }
+
             await Console.Error.WriteLineAsync($"unknown demo '{demo}'");
             return 64;
         }

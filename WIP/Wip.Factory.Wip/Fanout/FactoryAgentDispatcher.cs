@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Wip.Abstractions.Agents;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
 using Wip.Builder;
 using Wip.Factory.Adaptation;
@@ -17,7 +18,8 @@ public sealed record FactoryWorkDispatch(
     AgentDefinitionId AgentDefinitionId,
     AgentProfileVersion AgentProfileVersion,
     string Task,
-    string? SystemPrompt = null);
+    string? SystemPrompt = null,
+    IReadOnlyList<ToolDefinition>? Tools = null);
 
 /// <summary>What one dispatch produced. Tokens are separated so cost is derivable (F-E.7).</summary>
 public sealed record FactoryAgentResult(
@@ -138,7 +140,7 @@ public sealed class FactoryAgentDispatcher
             dispatch.Task,
             profile.Draft.Model.PreferredModel,
             dispatch.SystemPrompt,
-            tools: null,
+            dispatch.Tools,
             initialMessages: null,
             new AgentLoopOptions
             {
