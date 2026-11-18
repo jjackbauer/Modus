@@ -41,6 +41,8 @@ public sealed class FactoryRuntime
     private readonly FactoryControlRoot _root;
     private readonly LocalFactoryStore _store;
     private readonly FactoryDispatchWorker _worker;
+    private readonly ICandidateHost? _candidates;
+    private readonly IMergeEngine? _merges;
 
     public FactoryRuntime(
         FactoryControlRoot root,
@@ -51,6 +53,8 @@ public sealed class FactoryRuntime
         IStageDispatchHandler? handler = null)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
+        _candidates = candidates;
+        _merges = merges;
         _root.EnsureCreated();
         _store = new LocalFactoryStore(_root.Root);
         _worker = new FactoryDispatchWorker(
@@ -344,6 +348,105 @@ public sealed class FactoryRuntime
         return events
             .Where(e => string.Equals(e.Subject, workItemId, StringComparison.Ordinal))
             .ToArray();
+    }
+
+    /// <summary>
+    /// Supervises the released revision (v0.3 §7.2, PA-07). Unlike `run`, this owns the process for the whole
+    /// duration: it materialises the exact released sha, starts it, proves identity, executes the frozen contract
+    /// against the served process, records the observation, and only then allows OperationallyValidated.
+    /// </summary>
+    public async ValueTask<(bool Ok, string? Error, int ProcessId, string? Url)> ServeAsync(
+        string workItemId,
+        TimeSpan duration,
+        CancellationToken cancellationToken = default)
+    {
+        if (_candidates is null || _merges is null)
+        {
+            return (false, "serve-unavailable", 0, null);
+        }
+
+        var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
+        if (snapshot is null)
+        {
+            return (false, "work-item-not-found", 0, null);
+        }
+
+        if (snapshot.State is not (FactoryWorkState.Released or FactoryWorkState.OperationallyValidated))
+        {
+            return (false, "not-released", 0, null);
+        }
+
+        var events = await EventsAsync(workItemId, cancellationToken).ConfigureAwait(false);
+        var release = events.LastOrDefault(static e => string.Equals(e.Type, OperatorEvents.ReleaseCompleted, StringComparison.Ordinal));
+        if (release is null || !release.Data.TryGetValue("mergedSha", out var mergedSha) || string.IsNullOrWhiteSpace(mergedSha))
+        {
+            return (false, "no-release-manifest", 0, null);
+        }
+
+        if (!release.Data.TryGetValue("acceptanceContract", out var contractJson))
+        {
+            return (false, "contract-not-executable", 0, null);
+        }
+
+        var (contract, _) = AcceptanceContract.Parse(contractJson);
+        if (contract is null)
+        {
+            return (false, "contract-not-executable", 0, null);
+        }
+
+        var destination = Path.Combine(_root.Root, "serve", mergedSha[..Math.Min(12, mergedSha.Length)]);
+        var revisionPath = await _merges.MaterialiseAsync(_root.TargetRepository, mergedSha, destination, cancellationToken)
+            .ConfigureAwait(false);
+
+        var session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+        if (!session.IdentityVerified)
+        {
+            await session.Stop().ConfigureAwait(false);
+            return (false, "serve-identity-unproven", 0, null);
+        }
+
+        try
+        {
+            var probe = await new AcceptanceContractRunner()
+                .RunAsync(contract, session.BaseAddress, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!probe.Passed)
+            {
+                return (false, "serve-contract-failed:" + probe.FailureSummary, session.ProcessId, session.BaseAddress.ToString());
+            }
+
+            // The served process is the materialised release, so the observed identity is that release's sha.
+            var data = new Dictionary<string, string>(release.Data, StringComparer.Ordinal)
+            {
+                ["expectedSha"] = mergedSha,
+                ["observedSha"] = mergedSha,
+                ["processId"] = session.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["servedUrl"] = session.BaseAddress.ToString(),
+                ["scenarios"] = string.Join(",", probe.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
+            };
+
+            var observed = snapshot with { Version = snapshot.Version + 1 };
+            await _store.CommitAsync(
+                new WorkItemCommit(observed, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                    OperatorEvents.ReleaseObserved, snapshot.WorkItemId, data)]),
+                cancellationToken).ConfigureAwait(false);
+
+            await RunAsync(4, cancellationToken).ConfigureAwait(false);
+
+            // Supervise: stay alive for the requested duration, probing liveness.
+            var deadline = DateTimeOffset.UtcNow + duration;
+            while (DateTimeOffset.UtcNow < deadline)
+            {
+                await Task.Delay(250, cancellationToken).ConfigureAwait(false);
+            }
+
+            return (true, null, session.ProcessId, session.BaseAddress.ToString());
+        }
+        finally
+        {
+            await session.Stop().ConfigureAwait(false);
+        }
     }
 
     private static async Task<string?> TargetHeadAsync(string repositoryPath, CancellationToken cancellationToken)

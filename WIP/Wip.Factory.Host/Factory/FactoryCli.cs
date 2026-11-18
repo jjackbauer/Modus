@@ -30,6 +30,7 @@ public static class FactoryCli
             "run" => await RunAsync(rest, output, error, json).ConfigureAwait(false),
             "status" => await StatusAsync(rest, output, error, json).ConfigureAwait(false),
             "approve" => await ApproveAsync(rest, output, error).ConfigureAwait(false),
+            "serve" => await ServeAsync(rest, output, error).ConfigureAwait(false),
             _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status").ConfigureAwait(false)
         };
     }
@@ -155,6 +156,42 @@ public static class FactoryCli
         }
 
         return await FailAsync(error, Usage, "usage: factory contract show|approve").ConfigureAwait(false);
+    }
+
+    private static async Task<int> ServeAsync(string[] rest, TextWriter output, TextWriter error)
+    {
+        var workItem = Value(rest, "--work-item");
+        var repo = Value(rest, "--repo") ?? Directory.GetCurrentDirectory();
+        var controlRootValue = Value(rest, "--control-root");
+        var durationText = Value(rest, "--duration-seconds");
+
+        if (workItem is null)
+        {
+            return await FailAsync(error, Usage, "usage: factory serve --work-item <id> --repo <dir> [--duration-seconds N]").ConfigureAwait(false);
+        }
+
+        var (root, rootError) = FactoryControlRoot.Resolve(repo, controlRootValue);
+        if (root is null)
+        {
+            return await FailAsync(error, Refused, rootError!).ConfigureAwait(false);
+        }
+
+        var duration = int.TryParse(durationText, out var seconds) && seconds > 0
+            ? TimeSpan.FromSeconds(seconds)
+            : TimeSpan.FromSeconds(30);
+
+        var runtime = new FactoryRuntime(root, new RealModelImplementationRunner(root, new Uri("http://127.0.0.1:1/"), "unused"), new DotnetRunCandidateHost(), new DotnetBuildVerifier(), new GitMergeEngine());
+        var result = await runtime.ServeAsync(workItem, duration).ConfigureAwait(false);
+
+        if (!result.Ok)
+        {
+            return await FailAsync(error, Refused, result.Error ?? "serve-failed").ConfigureAwait(false);
+        }
+
+        await output.WriteLineAsync($"serving          : {result.Url}").ConfigureAwait(false);
+        await output.WriteLineAsync($"process id       : {result.ProcessId}").ConfigureAwait(false);
+        await output.WriteLineAsync($"supervised for   : {duration.TotalSeconds}s (process stopped on exit)").ConfigureAwait(false);
+        return Ok;
     }
 
     private static async Task<int> ApproveAsync(string[] rest, TextWriter output, TextWriter error)

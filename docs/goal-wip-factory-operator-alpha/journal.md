@@ -313,3 +313,27 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Mitigation**: additive `worktreeRoot` option on the existing provider (no second engine), passed from the
   control root; then a test asserting no `.wip/` appears in the target repo.
 - **Status**: open
+## OBS-020 — `factory serve` supervises the released revision and is the only path to OperationallyValidated
+
+- **Source**: real supervisor run against `m4b-517f1861`; Host 38/38
+- **Fact**: On a work item already `Released`, `factory serve --duration-seconds 3` materialised the exact released sha
+  into the control root, started it on a factory-allocated port, proved the process identity, executed the frozen
+  contract against the served process, recorded the observation and advanced the item to
+  **`OperationallyValidated` (v15)**. Recorded evidence: `serving http://127.0.0.1:50336/`, `process id 56980`,
+  `observedSha = expectedSha = e9bb30abf933330b812c931a56637f26c6838f51`, `scenarios=AC-1=pass,AC-2=pass,
+  AC-3=pass,AC-4=pass`. The CLI reports "supervised for 3s (process stopped on exit)" and never claims a daemon.
+- **Implications**: PA-07's mechanism exists and ran for real. `Released` alone no longer implies liveness; only an
+  observed, identity-proven serve does, exactly as v0.3 §0.3 requires.
+- **Confidence**: High
+- **Related**: EVD-039, EVD-040
+
+## OBS-021 — A shared stub hid a scoping error in my serve test
+
+- **Source**: `Supervisor_GivenUnverifiedIdentity_DoesNotValidate` failing
+- **Fact**: The test reused one candidate-host stub for review, post-merge verification and serve, so making it
+  unverified broke the *review* stage first and the test failed for the wrong reason. Replaced with a call-count
+  based stub so only the supervised start is unverified.
+- **Implications**: Fourth fixture-caused failure this session; recorded so the pattern is visible rather than
+  repeated silently.
+- **Confidence**: High
+- **Related**: OBS-020

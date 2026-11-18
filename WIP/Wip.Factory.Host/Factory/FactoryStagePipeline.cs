@@ -23,6 +23,7 @@ public static class OperatorEvents
     public const string DeliveryRequested = "factory.delivery.requested.v1";
     public const string CandidateReady = "factory.release.candidate-ready.v1";
     public const string ReleaseCompleted = "factory.release.completed.v1";
+    public const string ReleaseObserved = "factory.release.observed.v1";
     public const string StageFailed = "factory.stage.failed.v1";
 }
 
@@ -178,6 +179,9 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
 
             (OperatorEvents.CandidateReady, FactoryWorkState.ReleaseCandidate)
                 => ReleaseAsync(workItem, trigger, cancellationToken),
+
+            (OperatorEvents.ReleaseObserved, FactoryWorkState.Released)
+                => ValueTask.FromResult(RecordObservation(workItem, trigger)),
 
             _ => ValueTask.FromResult(StageDispatchOutcome.NoOp())
         };
@@ -573,6 +577,33 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.Released,
             [Event(OperatorEvents.ReleaseCompleted, workItem.WorkItemId, evidence, trigger.Id)]);
+    }
+
+    /// <summary>
+    /// A supervised release was observed serving the intended revision and passing the contract. This is the only
+    /// way a work item becomes OperationallyValidated (v0.3 §0.3), so a merge alone never claims liveness.
+    /// </summary>
+    private static StageDispatchOutcome RecordObservation(WorkItemSnapshot workItem, FactoryEventEnvelope trigger)
+    {
+        if (!trigger.Data.TryGetValue("observedSha", out var observed) || string.IsNullOrWhiteSpace(observed))
+        {
+            return StageDispatchOutcome.Failed("serve-identity-unproven");
+        }
+
+        if (!trigger.Data.TryGetValue("expectedSha", out var expected)
+            || !string.Equals(expected, observed, StringComparison.OrdinalIgnoreCase))
+        {
+            return StageDispatchOutcome.Failed("serve-identity-mismatch");
+        }
+
+        var data = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+        {
+            ["validatedAtUtc"] = DateTimeOffset.UtcNow.ToString("O")
+        };
+
+        return StageDispatchOutcome.Advanced(
+            FactoryWorkState.OperationallyValidated,
+            [Event("factory.operations.validated.v1", workItem.WorkItemId, data, trigger.Id)]);
     }
 
     internal static FactoryEventEnvelope Event(
