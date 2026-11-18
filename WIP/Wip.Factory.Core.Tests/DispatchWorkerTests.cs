@@ -173,7 +173,8 @@ public sealed class DispatchWorkerTests : IDisposable
         await worker.RunOnceAsync();
         var settled = await store.LoadAsync(new WorkItemId("W-1"));
         Assert.Equal(FactoryWorkState.InImplementation, settled!.State);
-        Assert.Equal(2, settled.Version);
+        // v1 submitted, v2 the durable failure record written at quarantine, v3 the single advance.
+        Assert.Equal(3, settled.Version);
     }
 
     [Fact]

@@ -296,12 +296,64 @@ public sealed class FactoryDispatchWorker
             return DispatchDisposition.Retry;
         }
 
+        // The operator must be able to see why work stalled (v0.3 §9). Record it once, when the event is
+        // actually abandoned, so transient retries do not churn the aggregate.
+        await RecordFailureEventAsync(envelope, reason, attempts, cancellationToken).ConfigureAwait(false);
         await _outbox.QuarantineAsync(envelope.Id, reason, attempts, cancellationToken).ConfigureAwait(false);
         // A quarantined event was never successfully processed, so it must not be acknowledged in the
         // inbox: acknowledgement is what would make a later replay look like a duplicate.
         await _outbox.MarkPublishedAsync(envelope.Id, cancellationToken).ConfigureAwait(false);
         _attempts.Remove(envelope.Id.Value);
         return DispatchDisposition.Quarantined;
+    }
+
+    private async ValueTask RecordFailureEventAsync(
+        FactoryEventEnvelope envelope,
+        string reason,
+        int attempts,
+        CancellationToken cancellationToken)
+    {
+        if (!envelope.Data.TryGetValue(FactoryDispatchOptions.WorkItemDataKey, out var workItemValue)
+            || string.IsNullOrWhiteSpace(workItemValue))
+        {
+            return;
+        }
+
+        var workItemId = new WorkItemId(workItemValue);
+        var snapshot = await _workItemStore.LoadAsync(workItemId, cancellationToken).ConfigureAwait(false);
+        if (snapshot is null)
+        {
+            return;
+        }
+
+        var data = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [FactoryDispatchOptions.WorkItemDataKey] = workItemValue,
+            ["failureCategory"] = reason,
+            ["attempt"] = attempts.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["failedEventType"] = envelope.Type
+        };
+
+        var failure = new FactoryEventEnvelope(
+            new FactoryEventId(Guid.NewGuid().ToString("N")),
+            "factory.stage.failed.v1",
+            "factory.dispatch-worker",
+            workItemValue,
+            DateTimeOffset.UtcNow,
+            null,
+            envelope.Id,
+            data);
+
+        var recorded = snapshot with { Version = snapshot.Version + 1 };
+        var commit = await _workItemStore
+            .CommitAsync(new WorkItemCommit(recorded, snapshot.Version, [failure]), cancellationToken)
+            .ConfigureAwait(false);
+
+        if (commit.Succeeded)
+        {
+            // Evidence, not work: publish it at once so it is never claimed as a command to dispatch.
+            await _outbox.MarkPublishedAsync(failure.Id, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private async ValueTask AcknowledgeAsync(FactoryEventEnvelope envelope, CancellationToken cancellationToken)

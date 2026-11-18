@@ -395,3 +395,44 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   be able to identify why work is stalled"). Needs a `factory.stage.failed.v1` event on every failure outcome.
 - **Confidence**: High
 - **Related**: OBS-024
+## OBS-026 — A second, behaviourally different application is delivered end to end
+
+- **Source**: operator run `m7-13821bb5` (job-queue requirement, unchanged factory)
+- **Fact**: The same factory that built the book catalog delivered a **structurally different** application — a FIFO
+  job queue with state transitions (pending → running → done), a `204` empty-set case and a `404` unknown-id case.
+  It reached `ReadyForDelivery` in 62 s with all five scenarios passing
+  (`AC-1=pass,AC-2=pass,AC-3=pass,AC-4=pass,AC-5=pass`), was authorised (`reviewDigest sha256:0f4a6a3e…`), merged
+  (`Released` v13, `JobQueueApi.csproj` + `Program.cs` on `main`), and then served:
+  `OperationallyValidated` v15, `serving http://127.0.0.1:53025/`, pid 76252.
+- **Implications**: Generality is demonstrated **on development fixtures**: two behaviourally different applications
+  through one unchanged binary, with no per-application C#. PA-01/PA-02 remain unclaimed because both requirements
+  were authored by me (OQ-001).
+- **Confidence**: High
+- **Related**: EVD-047..049, OBS-021
+
+## OBS-027 — `serve` had three defects, all found by running it
+
+- **Source**: two failed serve attempts on `m7-13821bb5`
+- **Fact**: (1) `serve` materialised the released sha and ran `dotnet run --no-build` in a **fresh** checkout with no
+  build output, so the candidate never listened (`candidate-not-started`). Fixed by building the materialised
+  revision first. (2) A leftover verification checkout made `git worktree add` fail
+  (`already exists`); materialisation now reconciles — it removes and prunes a stale checkout first. (3) Both
+  failures surfaced as **unhandled exceptions with stack traces**, which v0.3 §8 forbids; `serve` now catches
+  materialisation and candidate-start failures and returns named categories
+  (`serve-revision-unavailable:…`, `serve-candidate-failed:…`).
+- **Implications**: The unit tests for serve used a stub host, so none of this could appear until the real
+  supervisor ran on a real repository. Fifth instance this session of the same lesson.
+- **Confidence**: High
+- **Related**: OBS-026, OBS-014
+
+## OBS-028 — A failed stage now records why
+
+- **Source**: worker change + `DispatchWorkerTests` adjustment
+- **Fact**: When an event is abandoned, the worker now commits `factory.stage.failed.v1` carrying
+  `failureCategory`, `attempt` and `failedEventType`, and publishes it immediately so it is evidence, not a command.
+  The poison-event test's expected aggregate version moved from 2 to 3 to include that durable fact (the state
+  assertion is unchanged; the "advanced exactly once" assertion still holds).
+- **Implications**: `factory status` can now explain a stall, satisfying v0.3 §9 for the abandoned-event case.
+  Transient retries still record nothing, by design, so the aggregate does not churn.
+- **Confidence**: High
+- **Related**: OBS-025

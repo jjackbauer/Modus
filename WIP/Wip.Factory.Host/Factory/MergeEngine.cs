@@ -71,6 +71,18 @@ public sealed class GitMergeEngine : IMergeEngine
 
         Directory.CreateDirectory(Path.GetDirectoryName(destination) ?? destination);
 
+        // Reconcile: a previous verification may have left this checkout behind.
+        if (Directory.Exists(destination))
+        {
+            await TryGitAsync(repositoryPath, cancellationToken, "worktree", "remove", "--force", destination).ConfigureAwait(false);
+            await TryGitAsync(repositoryPath, cancellationToken, "worktree", "prune").ConfigureAwait(false);
+
+            if (Directory.Exists(destination))
+            {
+                Directory.Delete(destination, recursive: true);
+            }
+        }
+
         var add = await TryGitAsync(repositoryPath, cancellationToken, "worktree", "add", "--detach", destination, mergedSha)
             .ConfigureAwait(false);
 

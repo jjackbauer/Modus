@@ -225,7 +225,10 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
         if (!string.IsNullOrWhiteSpace(request.ReworkContext))
         {
             prompt += "\n\nYOUR PREVIOUS ATTEMPT WAS REJECTED\n" + request.ReworkContext
-                + "\nFix exactly that. Do not change the acceptance contract.";
+                + "\n\nA working tree already contains your earlier implementation and it FAILED those scenarios."
+                + "\nDo not start over. First inspect what is there: list_files, then read_file or search_text"
+                + "\non the endpoint named in the failure, and fix the defect in place. The acceptance contract is not"
+                + " negotiable.";
         }
 
         return prompt;

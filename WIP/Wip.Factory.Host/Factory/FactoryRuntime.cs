@@ -43,6 +43,7 @@ public sealed class FactoryRuntime
     private readonly FactoryDispatchWorker _worker;
     private readonly ICandidateHost? _candidates;
     private readonly IMergeEngine? _merges;
+    private readonly ICandidateBuildVerifier? _builds;
 
     public FactoryRuntime(
         FactoryControlRoot root,
@@ -55,6 +56,7 @@ public sealed class FactoryRuntime
         _root = root ?? throw new ArgumentNullException(nameof(root));
         _candidates = candidates;
         _merges = merges;
+        _builds = builds;
         _root.EnsureCreated();
         _store = new LocalFactoryStore(_root.Root);
         _worker = new FactoryDispatchWorker(
@@ -395,10 +397,38 @@ public sealed class FactoryRuntime
         }
 
         var destination = Path.Combine(_root.Root, "serve", mergedSha[..Math.Min(12, mergedSha.Length)]);
-        var revisionPath = await _merges.MaterialiseAsync(_root.TargetRepository, mergedSha, destination, cancellationToken)
-            .ConfigureAwait(false);
+        string revisionPath;
+        try
+        {
+            revisionPath = await _merges.MaterialiseAsync(_root.TargetRepository, mergedSha, destination, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            return (false, "serve-revision-unavailable:" + exception.Message, 0, null);
+        }
 
-        var session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+        // A served revision must be built first: `dotnet run --no-build` in a fresh checkout has no output.
+        if (_builds is not null)
+        {
+            var (serveBuildOk, serveBuildDetail) = await _builds.VerifyAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+            if (!serveBuildOk)
+            {
+                return (false, "serve-build-failed:" + serveBuildDetail, 0, null);
+            }
+        }
+
+        CandidateSession session;
+        try
+        {
+            session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // A named refusal, never an unhandled exception (v0.3 §8).
+            return (false, "serve-candidate-failed:" + exception.Message, 0, null);
+        }
+
         if (!session.IdentityVerified)
         {
             await session.Stop().ConfigureAwait(false);
