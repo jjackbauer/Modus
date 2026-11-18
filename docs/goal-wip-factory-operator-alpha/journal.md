@@ -460,3 +460,30 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   run (which uses the runtime's real lookup). Recorded as a gap rather than implied coverage.
 - **Confidence**: High
 - **Related**: OBS-029
+## OBS-031 — PA-05 demonstrated: killed after the merge applied, resumed twice, one merge only
+
+- **Source**: operator run `pa05-0cf7a35b` (real model, real git, `/usr/bin/taskkill /T /F`)
+- **Fact**: A ping application reached `ReadyForDelivery` in 19 s and was merge-authorised. The factory was then
+  killed **2.5 s into the release run**: state was `ReleaseCandidate` v12 and the target repository held
+  **1 merge commit** — the merge had been applied but the release event was never recorded or acknowledged. The
+  factory was restarted and killed again 1.2 s in; state stayed `ReleaseCandidate` v12 and the merge count stayed
+  **1**. A final run completed: `Released` v13, merge count still **1**, history
+  `8b7aeca merge 86ce9fd…` / `86ce9fd feat: implement …` / `de90c6f chore: initialise`.
+- **Implications**: The window exercised is the one where duplication is most likely — merge applied, effect not yet
+  recorded. On resume `GitMergeEngine` reconciled with `merge-base --is-ancestor` and returned the existing HEAD
+  instead of merging again. No duplicate merge, no corrupt state, and no false `Released` while verification was
+  incomplete.
+- **Limitation (honest)**: the kill landed during post-merge verification, i.e. *after* the merge was applied. A kill
+  *before* the merge applied was not separately exercised, so "no merge when none happened" is untested end to end.
+- **Confidence**: High for the exercised window; the pre-merge kill is untested.
+- **Related**: EVD-053, EVD-054, OBS-032
+
+## OBS-032 — OBS-030 closed: matching evidence merges and releases
+
+- **Source**: `Approval_GivenMatchingEvidence_MergesAndReleases`
+- **Fact**: A test now supplies the durability-read review digest, head, base and contract digest to delivery
+  validation; the item reaches `Released` with exactly one merge call. Together with the four mutation tests, the
+  binding check is proven to accept correct evidence as well as reject stale evidence.
+- **Implications**: The check cannot silently always fail without a test going red.
+- **Confidence**: High
+- **Related**: OBS-030, OBS-029

@@ -155,7 +155,7 @@ public sealed class MergeLifecycleTests
         ICandidateHost host,
         IMergeEngine merge,
         Func<CancellationToken, Task<string?>>? targetHead = null,
-        MergeAuthority? evidence = null)
+        Func<MergeAuthority?>? evidence = null)
     {
         var basePath = Path.Combine(Path.GetTempPath(), "factory-merge-" + Guid.NewGuid().ToString("N"));
         var repository = Path.Combine(basePath, "target");
@@ -175,7 +175,7 @@ public sealed class MergeLifecycleTests
             merges: merge,
             verificationRoot: Path.Combine(basePath, "verify"),
             targetHead: targetHead,
-            currentEvidence: evidence is null ? null : (_, _) => Task.FromResult<MergeAuthority?>(evidence));
+            currentEvidence: evidence is null ? null : (_, _) => Task.FromResult(evidence()));
 
         var runtime = new FactoryRuntime(root!, handler: handler);
         var submit = await runtime.SubmitAsync(Requirement, null, ContractJson);
@@ -292,6 +292,30 @@ public sealed class MergeLifecycleTests
         Assert.NotEqual("Released", status.State);
     }
 
+
+    [Fact]
+    public async Task Approval_GivenMatchingEvidence_MergesAndReleases()
+    {
+        using var server = new StubServer("""{"id":"b1","title":"Dune"}""");
+        var merge = new StubMerge(ok: true);
+
+        // The evidence lookup is lazy: the test fills it with the durable values once review has happened.
+        MergeAuthority? captured = null;
+        var (runtime, workItem) = await AtReadyForDeliveryAsync(
+            new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("base-1"), () => captured);
+
+        var review = (await runtime.EventsAsync(workItem)).Last(static e => e.Type == OperatorEvents.ReviewAccepted);
+        captured = new MergeAuthority(
+            review.Data["reviewDigest"], review.Data["headSha"], review.Data["baseSha"], review.Data["contractDigest"]);
+
+        Assert.True((await runtime.ApproveMergeAsync(workItem, review.Data["reviewDigest"])).Ok);
+        await runtime.RunAsync(16);
+
+        var status = Assert.Single(await runtime.StatusAsync());
+        Assert.Equal("Released", status.State);
+        Assert.Equal(1, merge.MergeCalls);
+    }
+
     [Theory]
     [InlineData("reviewDigest")]
     [InlineData("headSha")]
@@ -310,7 +334,7 @@ public sealed class MergeLifecycleTests
             ContractDigest: changedField == "contractDigest" ? "sha256:changed" : "unused-matches");
 
         var (runtime, workItem) = await AtReadyForDeliveryAsync(
-            new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("base-1"), evidence);
+            new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("base-1"), () => evidence);
 
         var digest = await ReviewDigestAsync(runtime, workItem);
         Assert.True((await runtime.ApproveMergeAsync(workItem, digest)).Ok);
