@@ -92,3 +92,32 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   Failure must be reported, and it never constitutes completion.
 - **Owner**: agent, correcting my own contract
 - **Status**: approved
+## OBS-004 — M1 stop condition MET through the real CLI
+
+- **Source**: operator run in a temp repo; commit `HEAD` after this round
+- **Fact**: `factory requirement submit` → work item `WORK-bbb00f48` at `Proposed` v1 with requirement digest
+  `sha256:08a4dc67…`. `factory run --until-idle` consumed the submission, the handler returned `Recorded`
+  and the item became `Proposed` **v2** with a proposal digest — facts committed, state unchanged, exactly
+  as v0.3 §3.2 requires. A **fresh process** read the proposal back. `factory contract approve --digest`
+  froze it; `factory run` advanced `Proposed → RequirementsAligned` at **v4**; a second fresh process read
+  `RequirementsAligned` from durable storage. Identical resubmission returned the same work item.
+  Refusals verified: missing class + no expectations (`exit 2`), and control root inside the target
+  (`control-root-inside-target`, `exit 2`).
+- **Implications**: The intake → proposal → freeze → alignment spine is real and durable, and it runs
+  through the production host rather than a demo. PA gates remain 0/8 because no implementation, contract
+  execution, review, merge or serve exists yet.
+- **Confidence**: High
+- **Related**: EVD-011, EVD-012, EVD-013
+
+## OBS-005 — Two defects found by running, not by reading
+
+- **Source**: the first two CLI runs
+- **Fact**: (1) the dispatch worker routes on `Data["workItemId"]`; my events omitted it, so every dispatch
+  failed and the event was **quarantined** with "carries no 'workItemId'". (2) `ContractApproveAsync`
+  committed the snapshot at its current version instead of `version + 1`, refused with "The snapshot
+  version 2 must be exactly 3". Both were invisible to the build and to a code read; both surfaced on the
+  first real run.
+- **Implications**: Reinforces the harness rule that an unreproduced claim is not a delivery. The CLI path
+  had never executed before this round.
+- **Confidence**: High
+- **Related**: OBS-004

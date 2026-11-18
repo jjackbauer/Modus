@@ -24,6 +24,12 @@ public sealed record FactoryEventEnvelope(
 public static class FactoryEventTypes
 {
     public const string RequirementSubmitted = "factory.requirement.submitted.v1";
+
+    /// <summary>A structured contract proposal was recorded without advancing the work state.</summary>
+    public const string ContractProposed = "factory.contract.proposed.v1";
+
+    /// <summary>An exact proposal digest was authorised; the contract is now frozen.</summary>
+    public const string ContractApproved = "factory.contract.approved.v1";
     public const string RequirementAligned = "factory.requirement.aligned.v1";
     public const string RequirementRefined = "factory.requirement.refined.v1";
     public const string WorkReady = "factory.work.ready.v1";

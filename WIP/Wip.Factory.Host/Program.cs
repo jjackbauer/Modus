@@ -1,4 +1,5 @@
 using Wip.Factory.Host.Demo;
+using Wip.Factory.Host.Factory;
 
 namespace Wip.Factory.Host;
 
@@ -23,6 +24,12 @@ public static class Program
         }
 
         var verb = args.Length > 1 ? args[1] : string.Empty;
+
+        // Operator verbs (v0.3 §8). These are the production path; demos are secondary regression.
+        if (verb is "requirement" or "contract" or "run" or "status")
+        {
+            return await FactoryCli.ExecuteAsync(args, Console.Out, Console.Error);
+        }
 
         if (string.Equals(verb, "demo", StringComparison.Ordinal))
         {

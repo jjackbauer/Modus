@@ -14,7 +14,13 @@ public enum StageDispatchKind
     NoOp = 2,
 
     /// <summary>The stage failed; the attempt is retried until the bound is reached.</summary>
-    Failed = 3
+    Failed = 3,
+
+    /// <summary>
+    /// Durable facts and events were produced but the work state must not change (v0.3 3.2).
+    /// Used for contract proposals and evidence that must survive without advancing the aggregate.
+    /// </summary>
+    Recorded = 4
 }
 
 /// <summary>Result of one stage dispatch.</summary>
@@ -30,6 +36,10 @@ public sealed record StageDispatchOutcome(
         => new(StageDispatchKind.Advanced, nextState, events ?? [], null);
 
     public static StageDispatchOutcome NoOp() => new(StageDispatchKind.NoOp, null, [], null);
+
+    /// <summary>Persists evidence and events while preserving the work state.</summary>
+    public static StageDispatchOutcome Recorded(IReadOnlyList<FactoryEventEnvelope> events)
+        => new(StageDispatchKind.Recorded, null, events, null);
 
     public static StageDispatchOutcome Failed(string failureCategory)
     {

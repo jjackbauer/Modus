@@ -240,6 +240,25 @@ public sealed class FactoryDispatchWorker
                 return DispatchDisposition.Dispatched;
             }
 
+            case StageDispatchKind.Recorded:
+            {
+                // Facts advance the aggregate version but never the state (v0.3 3.2).
+                var recorded = snapshot with { Version = snapshot.Version + 1 };
+                var recordCommit = await _workItemStore.CommitAsync(
+                    new WorkItemCommit(recorded, snapshot.Version, outcome.Events),
+                    cancellationToken).ConfigureAwait(false);
+
+                if (!recordCommit.Succeeded)
+                {
+                    return await RecordFailureAsync(envelope, recordCommit.Reason ?? "record commit refused.", cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                await AcknowledgeAsync(envelope, cancellationToken).ConfigureAwait(false);
+                _attempts.Remove(envelope.Id.Value);
+                return DispatchDisposition.Dispatched;
+            }
+
             default:
                 return await RecordFailureAsync(envelope, "unknown stage outcome", cancellationToken).ConfigureAwait(false);
         }
