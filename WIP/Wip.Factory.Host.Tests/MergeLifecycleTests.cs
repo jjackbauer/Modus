@@ -358,4 +358,24 @@ public sealed class MergeLifecycleTests
         Assert.NotEqual("Released", status.State);
         Assert.Equal(0, merge.MergeCalls);
     }
+
+    [Fact]
+    public async Task Lifecycle_GivenPreMergeDeliveryFailure_TransitionsToNeedsRework()
+    {
+        using var server = new StubServer("""{"id":"b1","title":"Dune"}""");
+        var merge = new StubMerge(ok: true);
+        // The target moved after approval: a pre-merge failure that must take D-08 A's edge.
+        var (runtime, workItem) = await AtReadyForDeliveryAsync(
+            new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("a-different-base"));
+
+        var digest = await ReviewDigestAsync(runtime, workItem);
+        Assert.True((await runtime.ApproveMergeAsync(workItem, digest)).Ok);
+
+        await runtime.RunAsync(16);
+
+        var events = await runtime.EventsAsync(workItem);
+        Assert.Contains(events, static e => e.Type == OperatorEvents.ReworkRequested);
+        Assert.DoesNotContain(events, static e => e.Type == OperatorEvents.ReleaseCompleted);
+        Assert.Equal(0, merge.MergeCalls);
+    }
 }

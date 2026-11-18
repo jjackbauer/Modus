@@ -103,4 +103,26 @@ public sealed class TemplateIntakeTests
         var status = Assert.Single(await runtime.StatusAsync());
         Assert.Equal("Proposed", status.State);
     }
+
+    [Fact]
+    public async Task Contract_GivenPolicyContractApproval_CannotAuthorizeMerge()
+    {
+        var root = Root(out _);
+        var registry = new FactoryTemplateRegistry(root.Root);
+        var manifest = registry.Register(JsonNode.Parse(TemplateJson)!);
+        Assert.True(registry.Approve(manifest.TemplateId, manifest.TemplateVersion, manifest.ManifestDigest));
+
+        var runtime = new FactoryRuntime(root);
+        var submit = await runtime.SubmitAsync(Requirement);
+        Assert.True(submit.Accepted, string.Join(";", submit.Errors));
+        await runtime.RunAsync(16);
+
+        var (ok, error, _) = await runtime.ContractPolicyApproveAsync(submit.WorkItemId!);
+        Assert.True(ok, error);
+
+        // D-09 authorises the contract only. Merge authorisation is separate and cannot be inferred from it.
+        var (mergeOk, mergeError) = await runtime.ApproveMergeAsync(submit.WorkItemId!, "sha256:anything");
+        Assert.False(mergeOk);
+        Assert.Equal("no-review-to-approve", mergeError);
+    }
 }

@@ -726,3 +726,15 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   command reaches it.
 - **Confidence**: High
 - **Related**: OBS-046, OBS-044
+## OBS-048 — Two named tests became honest only after the mechanisms existed
+
+- **Source**: `Lifecycle_GivenPreMergeDeliveryFailure_TransitionsToNeedsRework`,
+  `Contract_GivenPolicyContractApproval_CannotAuthorizeMerge`; Host 68/68
+- **Fact**: The first asserts, from durable event history, that a pre-merge delivery failure emits
+  `factory.rework.requested.v1`, never emits `release.completed`, and merges zero times — i.e. D-08 A is taken and the
+  merge is not. The second asserts that a policy contract approval cannot authorise a merge: `ApproveMergeAsync`
+  refuses with `no-review-to-approve` because D-09 authorises the contract only.
+- **Implications**: These names were deliberately withheld earlier because the mechanisms did not exist. They now
+  exist, so the tests are honest rather than aspirational. Named coverage 30 → 32 of 80.
+- **Confidence**: High
+- **Related**: EVD-086, OBS-040, OBS-045
