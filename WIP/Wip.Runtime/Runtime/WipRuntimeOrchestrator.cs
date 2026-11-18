@@ -47,6 +47,21 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
     private readonly SemaphoreSlim _authorityGate = new(1, 1);
     private SessionId? _attachedSessionId;
 
+    /// <summary>
+    /// Observability seam: invoked while the process-wide authority gate is held, before the operation
+    /// body runs. It exists so contention can be measured against the real semaphore.
+    /// </summary>
+    internal static Func<CancellationToken, ValueTask>? GateHeldObserver { get; set; }
+
+    private async ValueTask AcquireGateAsync(CancellationToken cancellationToken)
+    {
+        await _authorityGate.WaitAsync(cancellationToken);
+        if (GateHeldObserver is { } observer)
+        {
+            await observer(cancellationToken);
+        }
+    }
+
     public WipRuntimeOrchestrator(ISessionStore sessionStore, ISessionEventPublisher eventPublisher)
     {
         _sessionStore = sessionStore ?? throw new ArgumentNullException(nameof(sessionStore));
@@ -112,7 +127,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
             TargetCommit: targetCommit,
             ArtifactDirectory: artifactDirectory);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             Directory.CreateDirectory(snapshot.WorktreePath);
@@ -143,7 +158,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         SessionState targetState,
         CancellationToken cancellationToken)
     {
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await _sessionStore.LoadAsync(sessionId, cancellationToken)
@@ -161,7 +176,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         WorkflowId workflowId,
         CancellationToken cancellationToken)
     {
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -198,7 +213,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(agent);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -245,7 +260,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(services);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await _sessionStore.LoadAsync(sessionId, cancellationToken)
@@ -425,7 +440,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ValidateRequired(request.Patch, nameof(request.Patch));
         ArgumentNullException.ThrowIfNull(request.ChangedFiles);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -479,7 +494,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ValidateRequired(request.Patch, nameof(request.Patch));
         ArgumentNullException.ThrowIfNull(request.ChangedFiles);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -539,7 +554,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(artifactStore);
         ValidateRequired(request.Summary, nameof(request.Summary));
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -681,7 +696,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(reviewGenerator);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -737,7 +752,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(approvalTokenFactory);
         ArgumentNullException.ThrowIfNull(artifactStore);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -812,7 +827,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ValidateRequired(request.DiffHash, nameof(request.DiffHash));
         ValidateRequired(request.Summary, nameof(request.Summary));
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var producedAtUtc = request.ProducedAtUtc ?? DateTimeOffset.UtcNow;
@@ -927,7 +942,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(artifactStore);
         ValidateRequired(request.Reason, nameof(request.Reason));
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -1013,7 +1028,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         ArgumentNullException.ThrowIfNull(artifactStore);
         ValidateRequired(request.Reason, nameof(request.Reason));
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var current = await LoadSessionUnderAuthorityAsync(sessionId, cancellationToken);
@@ -1080,7 +1095,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
         if (string.IsNullOrWhiteSpace(repositoryPath))
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(repositoryPath));
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var restored = await _sessionStore.LoadAsync(sessionId, cancellationToken)
@@ -1112,7 +1127,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
 
     public async ValueTask<bool> DetachSessionAsync(CancellationToken cancellationToken)
     {
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             if (_attachedSessionId is null)
@@ -1157,7 +1172,7 @@ public sealed class WipRuntimeOrchestrator : IWorkflowRunAuthority
 
         ArgumentNullException.ThrowIfNull(builder);
 
-        await _authorityGate.WaitAsync(cancellationToken);
+        await AcquireGateAsync(cancellationToken);
         try
         {
             var snapshot = await _sessionStore.LoadAsync(sessionId, cancellationToken)

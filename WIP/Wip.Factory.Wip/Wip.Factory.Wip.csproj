@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Adapters from factory dispatch to WIP session, executor, governance and worktrees.</Description>
+    <PackageId>Wip.Factory.Wip</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Factory.Contracts\Wip.Factory.Contracts.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Adaptation\Wip.Factory.Adaptation.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Core\Wip.Factory.Core.csproj" />
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Sandbox.WorkerClient\Wip.Sandbox.WorkerClient.csproj" />
+    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\Wip.Workspaces.Git\Wip.Workspaces.Git.csproj" />
+    <ProjectReference Include="..\Wip.Validation.DotNet\Wip.Validation.DotNet.csproj" />
+    <ProjectReference Include="..\Wip.Artifacts.Local\Wip.Artifacts.Local.csproj" />
+  </ItemGroup>
+</Project>

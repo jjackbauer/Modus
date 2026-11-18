@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Wip.Abstractions.Artifacts;
 using Wip.Abstractions.Identifiers;
 using Wip.Abstractions.Workspaces;
@@ -6,6 +7,9 @@ namespace Wip.Abstractions.Capabilities;
 
 public readonly record struct CapabilityVersion
 {
+    // The payload property is get-only, so without an explicit deserialization constructor a JSON
+    // round-trip yields a default instance with a null payload (factory profiles persist this value).
+    [JsonConstructor]
     public CapabilityVersion(string value)
     {
         if (string.IsNullOrWhiteSpace(value))

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Contracts\Wip.Factory.Contracts.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Core\Wip.Factory.Core.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Persistence\Wip.Factory.Persistence.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Blackboard\Wip.Factory.Blackboard.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Wip\Wip.Factory.Wip.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Modus\Wip.Factory.Modus.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Admission\Wip.Factory.Admission.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Adaptation\Wip.Factory.Adaptation.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Telemetry\Wip.Factory.Telemetry.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Analysis\Wip.Factory.Analysis.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Agents.Core\Wip.Factory.Agents.Core.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Host\Wip.Factory.Host.csproj" />
+  </ItemGroup>
+</Project>

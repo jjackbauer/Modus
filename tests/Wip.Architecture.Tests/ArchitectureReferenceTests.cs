@@ -9,11 +9,49 @@ namespace Wip.Architecture.Tests;
 public sealed class ArchitectureReferenceTests
 {
     [Fact]
-    public void ProjectGraph_GivenWipSolution_ExpectedAllWipProjects()
+    public void ProjectGraph_GivenSolutionProjects_MatchesSolutionDeclaredSet()
     {
-        var graph = ProjectReferenceGraph.Load(RepositoryRoot.Find());
+        var root = RepositoryRoot.Find();
+        var graph = ProjectReferenceGraph.Load(root);
+        var declared = SolutionProjects.LoadDeclaredWipProjectNames(root);
 
-        Assert.Equal(48, graph.Count);
+        Assert.NotEmpty(declared);
+        Assert.NotEmpty(graph);
+
+        // The gate asserts the on-disk project set and the solution agree, in both directions:
+        // a project added to disk but not to the solution fails, and a stale solution entry fails.
+        Assert.Equal(
+            declared.OrderBy(static name => name, StringComparer.Ordinal),
+            graph.Keys.OrderBy(static name => name, StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void ArchitectureRules_GivenSyntheticFactoryEdge_ReportsTheMatchingFactoryRule()
+    {
+        var factoryRules = ArchitectureRules
+            .Rules
+            .Where(static rule => rule.Id.StartsWith("factory-", StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.Equal(6, factoryRules.Select(static rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
+
+        foreach (var rule in factoryRules)
+        {
+            var target = rule.ForbiddenPatterns.First(static pattern => !pattern.EndsWith(".*", StringComparison.Ordinal));
+            var graph = new Dictionary<string, IReadOnlyCollection<string>>(StringComparer.Ordinal)
+            {
+                [rule.Source] = [target],
+                [target] = []
+            };
+
+            var violations = ArchitectureRules.Evaluate(graph);
+
+            Assert.True(
+                violations.Any(violation => violation.RuleId == rule.Id
+                    && violation.Source == rule.Source
+                    && violation.Target == target),
+                $"Rule '{rule.Id}' did not bite on the synthetic edge {rule.Source} -> {target}.");
+        }
     }
 
     [Fact]

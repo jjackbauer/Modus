@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Factory work-state machine, dependency readiness and routing rules.</Description>
+    <PackageId>Wip.Factory.Core</PackageId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Factory.Contracts\Wip.Factory.Contracts.csproj" />
+  </ItemGroup>
+</Project>

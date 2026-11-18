@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <Description>Composition root, background event handlers and operator demo verbs for the factory alpha.</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Factory.Contracts\Wip.Factory.Contracts.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Core\Wip.Factory.Core.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Persistence\Wip.Factory.Persistence.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Blackboard\Wip.Factory.Blackboard.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Wip\Wip.Factory.Wip.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Modus\Wip.Factory.Modus.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Admission\Wip.Factory.Admission.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Adaptation\Wip.Factory.Adaptation.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Telemetry\Wip.Factory.Telemetry.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Analysis\Wip.Factory.Analysis.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Agents.Core\Wip.Factory.Agents.Core.csproj" />
+    <ProjectReference Include="..\Wip.Abstractions\Wip.Abstractions.csproj" />
+    <ProjectReference Include="..\Wip.Builder\Wip.Builder.csproj" />
+    <ProjectReference Include="..\Wip.Runtime\Wip.Runtime.csproj" />
+    <ProjectReference Include="..\Wip.Modus\Wip.Modus.csproj" />
+    <ProjectReference Include="..\Wip.Workspaces.Git\Wip.Workspaces.Git.csproj" />
+    <ProjectReference Include="..\Wip.Validation.DotNet\Wip.Validation.DotNet.csproj" />
+    <ProjectReference Include="..\Wip.Artifacts.Local\Wip.Artifacts.Local.csproj" />
+    <ProjectReference Include="..\Wip.Policy.LocalSafe\Wip.Policy.LocalSafe.csproj" />
+  </ItemGroup>
+</Project>

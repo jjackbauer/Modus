@@ -40,7 +40,8 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
         messages.Add(ChatMessage.User(request.Task));
 
         var steps = new List<AgentStep>();
-        var totalTokens = 0;
+        var totalInputTokens = 0;
+        var totalOutputTokens = 0;
         var consecutiveFailures = 0;
 
         using var loopTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -63,23 +64,24 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                 }
                 catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
                 {
-                    return Result(AgentExecutionStatus.TimedOut, null, steps, totalTokens,
+                    return Result(AgentExecutionStatus.TimedOut, null, steps, totalInputTokens, totalOutputTokens,
                         $"Agent loop exceeded {options.Timeout.TotalSeconds:0.###}s.");
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
-                    return Result(AgentExecutionStatus.Failed, null, steps, totalTokens,
+                    return Result(AgentExecutionStatus.Failed, null, steps, totalInputTokens, totalOutputTokens,
                         $"model-error: {ex.GetType().Name}: {ex.Message}");
                 }
 
-                totalTokens += (response.Usage?.InputTokens ?? 0) + (response.Usage?.OutputTokens ?? 0);
+                totalInputTokens += response.Usage?.InputTokens ?? 0;
+                totalOutputTokens += response.Usage?.OutputTokens ?? 0;
                 messages.Add(response.Message);
 
                 var toolCalls = response.Message.ToolCalls;
                 if (toolCalls.Count == 0)
                 {
                     steps.Add(new AgentStep(stepIndex, response.Message, Array.Empty<ToolResult>()));
-                    return Result(AgentExecutionStatus.Completed, response.Message, steps, totalTokens, error: null);
+                    return Result(AgentExecutionStatus.Completed, response.Message, steps, totalInputTokens, totalOutputTokens, error: null);
                 }
 
                 var toolResults = new List<ToolResult>(toolCalls.Count);
@@ -105,21 +107,21 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                             AgentExecutionStatus.ToolFailureLimitReached,
                             null,
                             steps,
-                            totalTokens,
+                            totalInputTokens, totalOutputTokens,
                             $"Tool failure limit ({options.MaxConsecutiveToolFailures}) reached.");
                     }
                 }
 
                 steps.Add(new AgentStep(stepIndex, response.Message, toolResults));
 
-                if (options.MaxTotalTokens is > 0 && totalTokens >= options.MaxTotalTokens.Value)
+                if (options.MaxTotalTokens is > 0 && (totalInputTokens + totalOutputTokens) >= options.MaxTotalTokens.Value)
                 {
-                    return Result(AgentExecutionStatus.TokenBudgetExhausted, null, steps, totalTokens,
+                    return Result(AgentExecutionStatus.TokenBudgetExhausted, null, steps, totalInputTokens, totalOutputTokens,
                         $"Token budget ({options.MaxTotalTokens.Value}) exhausted.");
                 }
             }
 
-            return Result(AgentExecutionStatus.MaxStepsReached, null, steps, totalTokens,
+            return Result(AgentExecutionStatus.MaxStepsReached, null, steps, totalInputTokens, totalOutputTokens,
                 $"Max steps ({options.MaxSteps}) reached without a final answer.");
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -132,13 +134,14 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
         AgentExecutionStatus status,
         ChatMessage? finalMessage,
         IReadOnlyList<AgentStep> steps,
-        int totalTokens,
+        int inputTokens,
+        int outputTokens,
         string? error)
         => new(
             status,
             finalMessage,
             steps.ToArray(),
-            totalTokens > 0 ? new ModelProviderUsage(totalTokens, 0) : null,
+            (inputTokens + outputTokens) > 0 ? new ModelProviderUsage(inputTokens, outputTokens) : null,
             error);
     public async IAsyncEnumerable<AgentStreamEvent> ExecuteStreamingAsync(
         AgentExecutionRequest request,
@@ -159,7 +162,8 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
         messages.Add(ChatMessage.User(request.Task));
 
         var steps = new List<AgentStep>();
-        var totalTokens = 0;
+        var totalInputTokens = 0;
+        var totalOutputTokens = 0;
         var consecutiveFailures = 0;
 
         using var loopTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -231,7 +235,8 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                             yield return new AgentStreamEvent(AgentStreamEventKind.ToolCall, ToolCall: chunk.ToolCall);
                         }
 
-                        totalTokens += (chunk.Usage?.InputTokens ?? 0) + (chunk.Usage?.OutputTokens ?? 0);
+                        totalInputTokens += chunk.Usage?.InputTokens ?? 0;
+                        totalOutputTokens += chunk.Usage?.OutputTokens ?? 0;
                     }
                 }
                 finally
@@ -249,7 +254,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                         AgentExecutionStatus.TimedOut,
                         null,
                         steps,
-                        totalTokens,
+                        totalInputTokens, totalOutputTokens,
                         $"Agent stream exceeded {options.Timeout.TotalSeconds:0.###}s."));
                 yield break;
             }
@@ -259,7 +264,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                 yield return new AgentStreamEvent(
                     AgentStreamEventKind.Failed,
                     Content: modelFailure ?? "model-error",
-                    Result: Result(AgentExecutionStatus.Failed, null, steps, totalTokens, modelFailure));
+                    Result: Result(AgentExecutionStatus.Failed, null, steps, totalInputTokens, totalOutputTokens, modelFailure));
                 yield break;
             }
 
@@ -272,7 +277,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                 yield return new AgentStreamEvent(
                     AgentStreamEventKind.Completed,
                     assistantMessage.Content,
-                    Result: Result(AgentExecutionStatus.Completed, assistantMessage, steps, totalTokens, error: null));
+                    Result: Result(AgentExecutionStatus.Completed, assistantMessage, steps, totalInputTokens, totalOutputTokens, error: null));
                 yield break;
             }
 
@@ -296,7 +301,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                             AgentExecutionStatus.ToolFailureLimitReached,
                             null,
                             steps,
-                            totalTokens,
+                            totalInputTokens, totalOutputTokens,
                             $"Tool failure limit ({options.MaxConsecutiveToolFailures}) reached."));
                     yield break;
                 }
@@ -304,7 +309,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
 
             steps.Add(new AgentStep(stepIndex, assistantMessage, toolResults));
 
-            if (options.MaxTotalTokens is > 0 && totalTokens >= options.MaxTotalTokens.Value)
+            if (options.MaxTotalTokens is > 0 && (totalInputTokens + totalOutputTokens) >= options.MaxTotalTokens.Value)
             {
                 yield return new AgentStreamEvent(
                     AgentStreamEventKind.Failed,
@@ -313,7 +318,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                         AgentExecutionStatus.TokenBudgetExhausted,
                         null,
                         steps,
-                        totalTokens,
+                        totalInputTokens, totalOutputTokens,
                         $"Token budget ({options.MaxTotalTokens.Value}) exhausted."));
                 yield break;
             }
@@ -326,7 +331,7 @@ public sealed class AgentExecutor : IAgentExecutor, IStreamingAgentExecutor
                 AgentExecutionStatus.MaxStepsReached,
                 null,
                 steps,
-                totalTokens,
+                totalInputTokens, totalOutputTokens,
                 $"Max steps ({options.MaxSteps}) reached without a final answer."));
     }
 

@@ -4,6 +4,21 @@
     <Project Path="tests/Wip.Sandbox.Worker.Tests/Wip.Sandbox.Worker.Tests.csproj" />
   </Folder>
   <Folder Name="/WIP/">
+    <Project Path="WIP\Wip.Factory.Contracts\Wip.Factory.Contracts.csproj" />
+    <Project Path="WIP\Wip.Factory.Core\Wip.Factory.Core.csproj" />
+    <Project Path="WIP\Wip.Factory.Persistence\Wip.Factory.Persistence.csproj" />
+    <Project Path="WIP\Wip.Factory.Blackboard\Wip.Factory.Blackboard.csproj" />
+    <Project Path="WIP\Wip.Factory.Wip\Wip.Factory.Wip.csproj" />
+    <Project Path="WIP\Wip.Factory.Modus\Wip.Factory.Modus.csproj" />
+    <Project Path="WIP\Wip.Factory.Admission\Wip.Factory.Admission.csproj" />
+    <Project Path="WIP\Wip.Factory.Adaptation\Wip.Factory.Adaptation.csproj" />
+    <Project Path="WIP\Wip.Factory.Telemetry\Wip.Factory.Telemetry.csproj" />
+    <Project Path="WIP\Wip.Factory.Analysis\Wip.Factory.Analysis.csproj" />
+    <Project Path="WIP\Wip.Factory.Agents.Core\Wip.Factory.Agents.Core.csproj" />
+    <Project Path="WIP\Wip.Factory.Host\Wip.Factory.Host.csproj" />
+    <Project Path="WIP\Wip.Factory.Core.Tests\Wip.Factory.Core.Tests.csproj" />
+    <Project Path="WIP\Wip.Factory.Agents.Tests\Wip.Factory.Agents.Tests.csproj" />
+    <Project Path="WIP\Wip.Factory.Host.Tests\Wip.Factory.Host.Tests.csproj" />
     <Project Path="WIP/Wip.Agent.Basic/Wip.Agent.Basic.csproj" />
     <Project Path="WIP/Wip.Abstractions/Wip.Abstractions.csproj" />
     <Project Path="WIP/Wip.Artifacts.Local/Wip.Artifacts.Local.csproj" />

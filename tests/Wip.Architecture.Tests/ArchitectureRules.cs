@@ -25,7 +25,31 @@ internal static class ArchitectureRules
         new("tholdem-agents-no-bones-or-hosts", "Wip.Tholdem.Agents", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost", "Wip.Tholdem.Host"]),
         new("tholdem-web-no-bones-or-hosts", "Wip.Tholdem.Web", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost", "Wip.Tholdem.Host"]),
         new("tholdem-host-no-bones", "Wip.Tholdem.Host", ["Wip.Bones", "Wip.Bones.*", "Wip.Shell", "Wip.Shell.*", "Wip.ShellHost"]),
-        new("bones-agents-no-legacy-provider", "Wip.Bones.Agents", ["Wip.Bones.ModelProviders.DeepSeek"])
+        new("bones-agents-no-legacy-provider", "Wip.Bones.Agents", ["Wip.Bones.ModelProviders.DeepSeek"]),
+
+        // Factory layering (F-A.5). Distinct rule ids: six.
+        new("factory-contracts-no-implementations", "Wip.Factory.Contracts",
+        [
+            "Wip.Factory.Core", "Wip.Factory.Persistence", "Wip.Factory.Blackboard", "Wip.Factory.Wip",
+            "Wip.Factory.Modus", "Wip.Factory.Admission", "Wip.Factory.Adaptation", "Wip.Factory.Telemetry",
+            "Wip.Factory.Analysis", "Wip.Factory.Agents.Core", "Wip.Factory.Host",
+            "Wip.Runtime", "Wip.Shell", "Wip.ShellHost", "Wip.Shell.*"
+        ]),
+        new("factory-core-no-infrastructure", "Wip.Factory.Core",
+        [
+            "Wip.Factory.Persistence", "Wip.Factory.Blackboard", "Wip.Factory.Wip", "Wip.Factory.Modus",
+            "Wip.Factory.Admission", "Wip.Factory.Adaptation", "Wip.Factory.Telemetry",
+            "Wip.Factory.Analysis", "Wip.Factory.Agents.Core", "Wip.Factory.Host"
+        ]),
+        new("factory-wip-adapter-no-hosts", "Wip.Factory.Wip",
+            ["Wip.Factory.Host", "Wip.Shell", "Wip.ShellHost", "Wip.Shell.*"]),
+        new("factory-agents-no-hosts", "Wip.Factory.Agents.Core",
+            ["Wip.Factory.Host", "Wip.Shell", "Wip.ShellHost", "Wip.Shell.*"]),
+        new("factory-analysis-no-orchestrator", "Wip.Factory.Analysis",
+            ["Wip.Runtime", "Wip.Factory.Host", "Wip.Shell", "Wip.ShellHost", "Wip.Shell.*"]),
+        new("factory-no-bones", "Wip.Factory.Adaptation", ["Wip.Bones", "Wip.Bones.*"]),
+        new("factory-no-bones", "Wip.Factory.Admission", ["Wip.Bones", "Wip.Bones.*"]),
+        new("factory-no-bones", "Wip.Factory.Analysis", ["Wip.Bones", "Wip.Bones.*"])
     ];
 
     public static IReadOnlyList<ArchitectureViolation> Evaluate(IReadOnlyDictionary<string, IReadOnlyCollection<string>> graph)
