@@ -243,6 +243,8 @@ pub fn WorkQueuePage() -> impl IntoView {
     let saved_name = RwSignal::new(String::new());
     let active_view = RwSignal::new(Option::<String>::None);
     let refresh = context.refresh;
+    let refresh_error = RwSignal::new(None::<api::UiError>);
+    let last_good = RwSignal::new(None::<Page<WorkItemSummary>>);
     let filters_active = Signal::derive(move || {
         !search.get().trim().is_empty() || !state.get().is_empty() || !indicator.get().is_empty()
     });
@@ -345,22 +347,36 @@ pub fn WorkQueuePage() -> impl IntoView {
         let search = search.get();
         let sort = sort.get();
         let _ = refresh.get();
+        let error_slot = refresh_error;
+        let previous_slot = last_good;
         async move {
             if !api::is_client() || instance.is_empty() {
                 None
             } else {
-                Some(
-                    api::work_items(
-                        &instance,
-                        Some(state.as_str()),
-                        Some(search.as_str()),
-                        Some(indicator.as_str()),
-                        Some(sort.as_str()),
-                        200,
-                        0,
-                    )
-                    .await,
+                match api::work_items(
+                    &instance,
+                    Some(state.as_str()),
+                    Some(search.as_str()),
+                    Some(indicator.as_str()),
+                    Some(sort.as_str()),
+                    200,
+                    0,
                 )
+                .await
+                {
+                    Ok(page) => {
+                        error_slot.set(None);
+                        previous_slot.set(Some(page.clone()));
+                        Some(Ok(page))
+                    }
+                    Err(error) => {
+                        error_slot.set(Some(error.clone()));
+                        match previous_slot.get_untracked() {
+                            Some(previous) => Some(Ok(previous)),
+                            None => Some(Err(error)),
+                        }
+                    }
+                }
             }
         }
     });
@@ -637,6 +653,16 @@ pub fn WorkQueuePage() -> impl IntoView {
                     None => view! { <LoadingBlock label="Loading durable work items…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                     Some(Ok(page)) => view! {
+                        {move || refresh_error.get().map(|error| view! {
+                            <Notice kind="danger">
+                                <div role="alert" class="row wrap">
+                                    <strong>"The last refresh failed. "</strong>
+                                    <span>{error.message}</span>
+                                    <span class="tiny mono">{format!("{} · {}", error.status, error.code)}</span>
+                                    <button class="btn btn-sm" on:click=move |_| context.touch()>"Retry refresh"</button>
+                                </div>
+                            </Notice>
+                        })}
                         <QueueSummary page=page.clone()/>
                         {match view.get() {
                             QueueView::Table => view! {

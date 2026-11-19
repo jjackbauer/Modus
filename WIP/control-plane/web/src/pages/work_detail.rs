@@ -52,6 +52,8 @@ pub fn WorkDetailPage() -> impl IntoView {
     let tab = RwSignal::new("lifecycle");
     let dialog = RwSignal::new(None::<Dialog>);
     let refresh = context.refresh;
+    let refresh_error = RwSignal::new(None::<api::UiError>);
+    let last_good = RwSignal::new(None::<WorkItemDetail>);
     let location = use_location();
     let requested =
         Signal::derive(move || location.query.get().get("authorize").unwrap_or_default());
@@ -60,11 +62,26 @@ pub fn WorkDetailPage() -> impl IntoView {
         let instance = instance.get();
         let work_item_id = work_item_id.get();
         let _ = refresh.get();
+        let error_slot = refresh_error;
+        let previous_slot = last_good;
         async move {
             if !api::is_client() || instance.is_empty() || work_item_id.is_empty() {
                 None
             } else {
-                Some(api::work_item(&instance, &work_item_id).await)
+                match api::work_item(&instance, &work_item_id).await {
+                    Ok(data) => {
+                        error_slot.set(None);
+                        previous_slot.set(Some(data.clone()));
+                        Some(Ok(data))
+                    }
+                    Err(error) => {
+                        error_slot.set(Some(error.clone()));
+                        match previous_slot.get_untracked() {
+                            Some(previous) => Some(Ok(previous)),
+                            None => Some(Err(error)),
+                        }
+                    }
+                }
             }
         }
     });
@@ -75,6 +92,16 @@ pub fn WorkDetailPage() -> impl IntoView {
                 None => view! { <LoadingBlock label="Loading the work item from durable factory state…"/> }.into_any(),
                 Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                 Some(Ok(data)) => view! {
+                    {move || refresh_error.get().map(|error| view! {
+                        <Notice kind="danger">
+                            <div role="alert" class="row wrap">
+                                <strong>"The last refresh failed. "</strong>
+                                <span>{error.message}</span>
+                                <span class="tiny mono">{format!("{} · {}", error.status, error.code)}</span>
+                                <button class="btn btn-sm" on:click=move |_| context.touch()>"Retry refresh"</button>
+                            </div>
+                        </Notice>
+                    })}
                     <WorkDetailBody
                         data=data
                         instance=instance
