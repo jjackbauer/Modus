@@ -101,3 +101,41 @@ plus an optional `contract.json` (§4.1 schema: `method`, `path`, `request.json`
 
 Those two runs are PA-01 and PA-02. Until they exist, the honest answer to "is this a usable factory?" is
 **unknown** — the machinery works, and generalisation is unproven.
+
+---
+
+## Final state (round 29)
+
+| | |
+|---|---|
+| Test cases | **168** across four suites (161 unique method names) |
+| Build | 0 errors |
+| Named tests present | **31 of 80** (measured with `dotnet test --list-tests`; gap mapped in `named-test-map.md`) |
+| Application shapes delivered to `OperationallyValidated` | **5** — book catalog (CRUD), job queue (FIFO + states), ping (single endpoint), temperature conversion (computed, query params), text statistics (computed, stateless) |
+| Operator paths | explicit contract, and digest-gated **template** (`contract approve --policy`) |
+| Structural gaps | 5 of 5 closed **and reachable from operator commands** |
+
+### Acceptance harness
+
+`run-acceptance.ps1 -Requirement <path> -Gate <id> -OutRoot <dir>` drives the whole lifecycle on a fresh repository
+and writes a §1.2-style manifest. It reads the proposal digest from the durable log rather than `contract show`, so it
+never prints the requirement or scenario text. Verdict is mechanical: `Released` + merged SHA equal to the target head
++ no failing scenario before or after the merge + `OperationallyValidated`, else `fail`.
+
+### `known-input/` is not `blind/`
+
+Two further shapes (conversion, text statistics) were delivered from requirements **I authored**, because delegated
+authoring proved impossible (read-only subagent session) and the operator directed me to write them. Their manifests
+are in `known-input/`. They are evidence of breadth, **not** of blind acceptance, and PA-01/PA-02 remain unclaimed.
+
+### Reproducing the gate status
+
+```powershell
+dotnet build Wip.slnx                                   # 0 errors
+dotnet test tests/Wip.Architecture.Tests                # 5
+dotnet test WIP/Wip.Factory.Core.Tests                  # 21
+dotnet test WIP/Wip.Factory.Agents.Tests                # 69
+dotnet test WIP/Wip.Factory.Host.Tests                  # 73
+```
+
+For PA-01/PA-02: supply two unseen requirement files, then run the harness once per file and attach both manifests.

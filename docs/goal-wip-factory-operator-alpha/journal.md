@@ -827,3 +827,13 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   discipline only holds if small imprecisions are corrected too. When reporting counts, say which one is meant.
 - **Confidence**: High
 - **Related**: OBS-053, EVD-095
+## OBS-055 — Delivery consolidated at round 29; work preserved on the remote
+
+- **Source**: final verification this round; `git rev-list --count origin/feature/wip-factory-alpha..HEAD`
+- **Fact**: 168 test cases pass across four suites with a clean build. Named coverage 31 of 80. Five application shapes
+  have reached `OperationallyValidated`. `DELIVERY.md` now carries the final figures, the harness usage and an explicit
+  note that `known-input/` is not `blind/`. The branch was **33 commits ahead of origin** and has been pushed.
+- **Implications**: The delivery is intact and recoverable from the remote without this session. PA-01/PA-02 remain
+  unclaimed and are the only unmet acceptance criterion.
+- **Confidence**: High
+- **Related**: EVD-097, OQ-001, DELIVERY.md
