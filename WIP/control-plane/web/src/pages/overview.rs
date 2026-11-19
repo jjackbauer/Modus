@@ -285,18 +285,27 @@ fn OverviewBody(data: Overview) -> impl IntoView {
                             }.into_any()
                         } else {
                             let row_count = release_items.len();
+                            let table_items = release_items.clone();
+                            let list_items = release_items;
                             view! {
-                                <DataTable
-                                    caption="Serving state per release".to_string()
-                                    columns=vec![
-                                        Column::text("State"),
-                                        Column::text("Release"),
-                                        Column::text("What the operator should believe"),
-                                    ]
-                                    rows=row_count
-                                >
-                                    {release_items.into_iter().map(|release| view! { <ServingRow release=release instance=instance.get()/> }).collect_view()}
-                                </DataTable>
+                                <div class="serving-table-wrap">
+                                    <DataTable
+                                        caption="Serving state per release".to_string()
+                                        columns=vec![
+                                            Column::text("State"),
+                                            Column::text("Release"),
+                                            Column::text("What the operator should believe"),
+                                        ]
+                                        rows=row_count
+                                    >
+                                        {table_items.into_iter().map(|release| view! { <ServingRow release=release instance=instance.get()/> }).collect_view()}
+                                    </DataTable>
+                                </div>
+                                <div class="serving-list" aria-label="Serving state by release">
+                                    {list_items.into_iter().map(|release| view! {
+                                        <ServingItem release=release instance=instance.get()/>
+                                    }).collect_view()}
+                                </div>
                             }.into_any()
                         }}
                     </Section>
@@ -526,7 +535,27 @@ fn ServingRow(release: ReleaseListItem, instance: String) -> impl IntoView {
     }
 }
 
+
+/// Narrow-screen alternative to the serving table: the same three facts per release, stacked, so
+/// the state and the explanation are never clipped by a horizontally scrolled table.
 #[component]
+fn ServingItem(release: ReleaseListItem, instance: String) -> impl IntoView {
+    let status = release.serving_status.clone();
+    let label = serving_status_label(Some(&status)).to_string();
+    let tone = serving_status_tone(Some(&status));
+    let explanation = serving_status_explanation(Some(&status)).to_string();
+    let href = format!("/i/{}/work/{}", instance, release.work_item_id);
+    view! {
+        <div class="serving-item">
+            <div class="serving-item-head">
+                <StatusIndicator label=label tone=tone raw=status.clone()/>
+                <span class="mono tiny">{release.work_item_id.clone()}</span>
+            </div>
+            <a href=href>{release.title.clone()}</a>
+            <p class="serving-detail">{explanation}</p>
+        </div>
+    }
+}#[component]
 fn ReleaseRow(release: ReleaseListItem, instance: String) -> impl IntoView {
     let status = release.serving_status.clone();
     let label = serving_status_label(Some(&status)).to_string();

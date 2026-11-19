@@ -3942,3 +3942,71 @@ td .entity-identity .btn:hover,
 td .entity-identity .btn:focus-visible {
   opacity: 1;
 }
+
+/* Narrow screens get a stacked serving list instead of a table that would be clipped:
+   inner scrolling stays available on desktop, where the hint is visible. */
+.serving-list {
+  display: none;
+  gap: var(--space-3);
+}
+
+.serving-item {
+  display: grid;
+  gap: 4px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  min-width: 0;
+}
+
+.serving-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.serving-detail {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* My attention-row override above comes after the 760px rule, so restate the stacked layout
+   for narrow screens: a 120px label column leaves too little room for the fact itself. */
+@media (max-width: 760px) {
+  .attention-row {
+    grid-template-columns: 1fr;
+    gap: 1px;
+  }
+
+  .attention-row dt {
+    margin-top: var(--space-2);
+  }
+}
+
+@media (max-width: 860px) {
+  .serving-table-wrap {
+    display: none;
+  }
+
+  .serving-list {
+    display: grid;
+  }
+}
+
+/* A section heading keeps its whole sentence: the count and the action move below it instead of
+   squeezing the heading into "Where the work / is". */
+@media (max-width: 700px) {
+  .section-head {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+
+  .section-head-side {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

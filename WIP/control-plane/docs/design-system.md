@@ -379,7 +379,8 @@ increment, still open.
   factory health, work items, durable events, last event, dispatch state and the projection clock.
 - Sections: "Decisions waiting" (one row per work item + action, facts before the link), "Where the
   work is" (authoritative state counts with the definition sentence), "Serving now" (a reconciled
-  serving table), "Recent durable activity".
+  serving table on desktop, a stacked card per release at ≤860px so the explanation is never clipped
+  by a horizontally scrolled table), "Recent durable activity".
 - Aside: pending authorizations as a count summary that links to the audit inbox instead of
   repeating the same decision, dispatch, execution capacity (deterministic demo runner stated
   explicitly, tokens not shown as zero), recent releases and freshness.
@@ -419,6 +420,7 @@ fixture, both themes. Raw JSON: `.evidence/pr3/pr3-verify.json`, `.evidence/pr3/
 | Dialog: 390px and 320px | 378×793 within 390×844 with footer visible; 308px wide at 320 with footer visible; 0 document overflow |
 | Dialog: Escape | closes, removes `inert`, removes `dialog-open`, restores focus to "Authorize merge" |
 | 320px document overflow, 3 converted routes | 0 |
+| 320px overview usability | serving state reads as a stacked card; attention facts stack label over value; section headings keep their whole sentence; stage counters wrap 2 per row |
 | Visible text below 12px, 3 converted routes | 0 |
 | Page errors / unexpected console errors | 0 / 0 |
 | Screenshots | 15 files in `.evidence/pr3/shots/` (1440/390/320, both themes, dialog open/closed) |
