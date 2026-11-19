@@ -396,7 +396,7 @@ fn LifecycleTab(
             <div class="stack">
                 <Panel title="What the factory allows next".to_string()>
                     <p class="tiny faint">
-                        "This is the factory's own transition list. The governed buttons for the actions it names are in the action row at the top of this page; this list does not perform them."
+                        "This is the factory's own transition list. Contract, rejection and merge decisions are made from the action row at the top of this page; starting or stopping a serve is owned by the release page. This list does not perform any of them."
                     </p>
                     {if next_actions.is_empty() {
                         view! { <EmptyBlock title="No action offered" detail="The control plane does not expose a transition the factory has not authorised."/> }.into_any()
