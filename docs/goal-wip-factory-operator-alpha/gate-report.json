@@ -1,0 +1,50 @@
+{
+    "generatedAtUtc":  "2026-11-19T09:43:10.1044156Z",
+    "sourceRevision":  "e142bb43fb2faed6884f85387833186eac06457d",
+    "suites":  [
+                   {
+                       "suite":  "factory-core",
+                       "project":  "WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj",
+                       "exitCode":  0,
+                       "passedCases":  21,
+                       "failedCases":  0
+                   },
+                   {
+                       "suite":  "factory-agents",
+                       "project":  "WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj",
+                       "exitCode":  0,
+                       "passedCases":  69,
+                       "failedCases":  0
+                   },
+                   {
+                       "suite":  "factory-host",
+                       "project":  "WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj",
+                       "exitCode":  0,
+                       "passedCases":  140,
+                       "failedCases":  0
+                   },
+                   {
+                       "suite":  "architecture",
+                       "project":  "tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj",
+                       "exitCode":  0,
+                       "passedCases":  5,
+                       "failedCases":  0
+                   }
+               ],
+    "totals":  {
+                   "passedCases":  235,
+                   "failedCases":  0,
+                   "suiteCount":  4
+               },
+    "namedCoverage":  {
+                          "named":  80,
+                          "exact":  32,
+                          "missing":  48,
+                          "nameOnly":  0
+                      },
+    "namedCoverageDetail":  "named-test-coverage.json",
+    "pa01":  "not-run",
+    "pa02":  "not-run",
+    "acceptanceStatus":  "implementation-ready / acceptance-pending",
+    "gate":  "pass"
+}

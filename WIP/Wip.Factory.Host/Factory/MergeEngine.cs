@@ -21,6 +21,17 @@ public interface IMergeEngine
 
     /// <summary>A checkout of the merged revision, never the operator's working tree.</summary>
     ValueTask<string> MaterialiseAsync(string repositoryPath, string mergedSha, string destination, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// True when the repository already contains the revision. Used to reconcile a crash after the merge was
+    /// recorded as applied: the effect is not repeated, but it is also not assumed to exist (FAC-P0-01.4).
+    /// </summary>
+    ValueTask<bool> ContainsAsync(string repositoryPath, string mergedSha, CancellationToken cancellationToken = default)
+        => ValueTask.FromResult(true);
+
+    /// <summary>The tree identity of a revision, when the engine can resolve one.</summary>
+    ValueTask<string?> ResolveTreeAsync(string repositoryPath, string mergedSha, CancellationToken cancellationToken = default)
+        => ValueTask.FromResult<string?>(null);
 }
 
 /// <summary>The real merge, through git, with reconciliation against what the repository actually contains.</summary>
@@ -97,6 +108,34 @@ public sealed class GitMergeEngine : IMergeEngine
         }
 
         return destination;
+    }
+
+    public async ValueTask<bool> ContainsAsync(
+        string repositoryPath,
+        string mergedSha,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(mergedSha);
+
+        var contains = await TryGitAsync(
+            repositoryPath, cancellationToken, "merge-base", "--is-ancestor", mergedSha, "HEAD").ConfigureAwait(false);
+
+        return contains is { ExitCode: 0 };
+    }
+
+    public async ValueTask<string?> ResolveTreeAsync(
+        string repositoryPath,
+        string mergedSha,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(repositoryPath);
+        ArgumentException.ThrowIfNullOrWhiteSpace(mergedSha);
+
+        var tree = await TryGitAsync(repositoryPath, cancellationToken, "rev-parse", mergedSha + "^{tree}")
+            .ConfigureAwait(false);
+
+        return tree is { ExitCode: 0 } value ? value.StandardOutput.Trim() : null;
     }
 
     private static async Task<(int ExitCode, string StandardOutput, string StandardError)> GitAsync(

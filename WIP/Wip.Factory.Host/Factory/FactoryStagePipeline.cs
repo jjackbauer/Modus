@@ -1,11 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Wip.Abstractions.Identifiers;
 using Wip.Factory.Contracts.Events;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Work;
 using Wip.Factory.Core;
 using Wip.Factory.Core.Fanout;
+using Wip.Factory.Wip.Governance;
 using Wip.Factory.Wip.Isolation;
 
 namespace Wip.Factory.Host.Factory;
@@ -79,7 +81,15 @@ public sealed record MergeAuthority(
     string PolicyVersion,
     string GuidelinesVersion,
     string ProfileVersion,
-    string RunnerVersion);
+    string RunnerVersion,
+    string TargetBranch = "main",
+    string RequirementDigest = "",
+    string EvidenceDigest = "",
+    string ValidationEvidenceDigest = "",
+    string CoverageEvidenceDigest = "",
+    string ArchitectureEvidenceDigest = "",
+    string SecurityEvidenceDigest = "",
+    string TemplateProvenanceDigest = "");
 
 /// <summary>The policy, guidelines, profile and runner versions an approval is bound to (v0.3 §5.2).</summary>
 public static class FactoryPolicy
@@ -151,6 +161,11 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
     private readonly Func<CancellationToken, Task<string?>>? _targetHead;
     private readonly Func<string, CancellationToken, Task<MergeAuthority?>>? _currentEvidence;
     private readonly FactoryOperationLedger? _operations;
+    private readonly IRegressionTestRunner _regressions;
+    private readonly FactoryReviewCheckSet? _reviewChecks;
+    private readonly ReviewEvidenceStore _reviewEvidence;
+    private readonly IReleaseVerifier? _releaseVerifier;
+    private readonly ReleaseVerificationStore _releaseVerifications;
 
     public FactoryStageDispatchHandler(
         IImplementationStageRunner? implementations = null,
@@ -161,7 +176,12 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         string? verificationRoot = null,
         Func<CancellationToken, Task<string?>>? targetHead = null,
         Func<string, CancellationToken, Task<MergeAuthority?>>? currentEvidence = null,
-        FactoryOperationLedger? operations = null)
+        FactoryOperationLedger? operations = null,
+        IRegressionTestRunner? regressions = null,
+        FactoryReviewCheckSet? reviewChecks = null,
+        string? reviewEvidencePath = null,
+        IReleaseVerifier? releaseVerifier = null,
+        string? releaseVerificationPath = null)
     {
         _implementations = implementations;
         _candidates = candidates;
@@ -172,6 +192,13 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         _targetHead = targetHead;
         _currentEvidence = currentEvidence;
         _operations = operations;
+        _regressions = regressions ?? new DotnetRegressionTestRunner();
+        _reviewChecks = reviewChecks;
+        _reviewEvidence = new ReviewEvidenceStore(
+            reviewEvidencePath ?? Path.Combine(_verificationRoot, "review-evidence.log"));
+        _releaseVerifier = releaseVerifier;
+        _releaseVerifications = new ReleaseVerificationStore(
+            releaseVerificationPath ?? Path.Combine(_verificationRoot, "release-verifications.log"));
     }
 
     public ValueTask<StageDispatchOutcome> HandleAsync(
@@ -381,6 +408,12 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed(ContractNotExecutable);
         }
 
+        var reviewedSha = trigger.Data.TryGetValue("headSha", out var reviewedHead) ? reviewedHead : string.Empty;
+        if (string.IsNullOrWhiteSpace(reviewedSha))
+        {
+            return StageDispatchOutcome.Failed("review-evidence-missing:reviewed-sha");
+        }
+
         var (contract, contractErrors) = AcceptanceContract.Parse(contractJson);
         if (contract is null)
         {
@@ -392,66 +425,88 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed("review-harness-unavailable");
         }
 
-        var (buildOk, buildDetail) = await _builds.VerifyAsync(worktree, cancellationToken).ConfigureAwait(false);
+        var baseSha = trigger.Data.TryGetValue("baseSha", out var baseValue) ? baseValue : string.Empty;
+        var checks = _reviewChecks ?? FactoryReviewCheckSet.Default(_builds, _regressions, _candidates, _contractRunner);
 
-        var session = CandidateSession.None;
-        var conformance = false;
-        ContractRunResult? contractResult = null;
-
+        IReadOnlyList<ReviewCheckExecution> executions;
         try
         {
-            if (buildOk)
+            executions = await checks.RunAsync(
+                new ReviewCheckContext(workItem.WorkItemId.Value, worktree, reviewedSha, baseSha, contract),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            return StageDispatchOutcome.Failed("review-check-runner-failed:" + exception.Message);
+        }
+
+        // Evidence is durable before the review decision is published (FAC-P0-02.1, FAC-P0-01.6).
+        _reviewEvidence.Append(workItem.WorkItemId.Value, executions);
+
+        var requirementDigest = trigger.Data.TryGetValue("requirementDigest", out var requirementValue)
+            ? requirementValue
+            : string.Empty;
+
+        var requirement = new ReviewRequirement(
+            workItem.WorkItemId.Value,
+            requirementDigest,
+            contract.Scenarios.Select(static scenario => scenario.Id).ToArray());
+
+        var baseline = new ReviewBaseline(
+            reviewedSha, baseSha, "main", FactoryPolicy.PolicyVersion, FactoryPolicy.GuidelinesVersion);
+
+        var review = new FactoryReviewService().EvaluateWithEvidence(
+            requirement,
+            baseline,
+            new Dictionary<string, string>(StringComparer.Ordinal)
             {
-                session = await _candidates.StartAsync(worktree, cancellationToken).ConfigureAwait(false);
-                conformance = session.IdentityVerified;
+                ["review-check-runner"] = ReviewPolicy.CheckRunnerVersion,
+                ["validation"] = ReviewPolicy.ValidationPolicy,
+                ["coverage"] = ReviewPolicy.CoveragePolicy,
+                ["architecture"] = ReviewPolicy.ArchitecturePolicy,
+                ["security"] = ReviewPolicy.SecurityPolicyVersion
+            },
+            executions,
+            findings: [],
+            exclusions: [],
+            riskClassification: "alpha-standard",
+            reviewerProfileVersion: new AgentProfileVersion(1),
+            reviewerSessionId: new SessionId("review-" + workItem.WorkItemId.Value.ToLowerInvariant()),
+            requiredHeadSha: reviewedSha,
+            requiredContractDigest: contract.Digest);
 
-                if (conformance)
-                {
-                    contractResult = await _contractRunner
-                        .RunAsync(contract, session.BaseAddress, cancellationToken)
-                        .ConfigureAwait(false);
-                }
-            }
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        var summary = string.Join(
+            ";",
+            executions
+                .OrderBy(static execution => execution.Kind)
+                .Select(static execution => ReviewKindName(execution.Kind) + "=" + execution.Outcome));
+
+        var reworkCount = trigger.Data.TryGetValue("reworkCount", out var reworkText)
+            && int.TryParse(reworkText, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : 0;
+
+        if (!review.Accepted || review.Artifact is null)
         {
-            return StageDispatchOutcome.Failed(AcceptanceFailed + ":candidate-start:" + exception.Message);
-        }
-        finally
-        {
-            await session.Stop().ConfigureAwait(false);
-        }
+            // The operator-facing reason names the refusal category and the concrete failing observation, so a
+            // rework context carries the counterexample rather than only "review failed".
+            var failures = executions
+                .Where(static execution => !execution.Passed)
+                .OrderBy(static execution => execution.Kind)
+                .Select(static execution => ReviewKindName(execution.Kind) + ":" + execution.Detail);
 
-        var accepted = buildOk && conformance && contractResult is { Passed: true };
-
-        var checks = new List<string>
-        {
-            $"validation={(buildOk ? "passed" : "failed")}",
-            $"requirement-coverage={(contractResult?.Passed == true ? "passed" : "failed")}",
-            $"architectural-conformance={(conformance ? "passed" : "failed")}",
-            $"security={(contractResult is not null ? "passed" : "failed")}"
-        };
-
-        if (!accepted)
-        {
-            var reason = !buildOk
-                ? $"{ReviewRejected}:validation:{buildDetail}"
-                : !conformance
-                    ? $"{ReviewRejected}:conformance"
-                    : $"{AcceptanceFailed}:{contractResult?.FailureSummary}";
-
-            // A rejected attempt is fed back to the implementer while budget remains (v0.3 §3.5).
-            var reworkCount = trigger.Data.TryGetValue("reworkCount", out var reworkText)
-                && int.TryParse(reworkText, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
-                ? parsed
-                : 0;
-
+            var reason = $"{ReviewRejected}:{review.Reason}:{string.Join("|", failures)}";
             var failed = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
             {
-                ["checks"] = string.Join(";", checks),
+                ["checks"] = summary,
                 ["rejectReason"] = reason,
                 ["reworkCount"] = (reworkCount + 1).ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ["reworkContext"] = reason
+                ["reworkContext"] = reason,
+                ["evidenceDigest"] = ReviewEvidenceStore.AggregateDigest(executions)
             };
 
             if (reworkCount < ReworkBudget)
@@ -467,22 +522,58 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
                 [Event(OperatorEvents.StageFailed, workItem.WorkItemId, failed, trigger.Id)]);
         }
 
-        var reviewDigest = Digest(string.Join('|', checks) + "|" + contract.Digest + "|" + trigger.Data["headSha"]);
         var acceptedData = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
         {
-            ["checks"] = string.Join(";", checks),
-            ["reviewDigest"] = reviewDigest,
+            ["checks"] = summary,
+            ["reviewDigest"] = review.Artifact.ContentDigest,
+            ["evidenceDigest"] = ReviewEvidenceStore.AggregateDigest(executions),
+            ["evidence"] = JsonSerializer.Serialize(executions),
+            ["reviewedSha"] = reviewedSha,
+            ["reviewPolicyVersion"] = ReviewPolicy.CheckRunnerVersion,
             ["contractDigest"] = contract.Digest,
-            ["scenarios"] = string.Join(",", contractResult!.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail"))),
             ["policyVersion"] = FactoryPolicy.PolicyVersion,
             ["guidelinesVersion"] = FactoryPolicy.GuidelinesVersion,
             ["profileVersion"] = FactoryPolicy.ProfileVersion,
             ["runnerVersion"] = FactoryPolicy.RunnerVersion
         };
 
+        // Scenario evidence is carried by the requirement-coverage execution detail; keep the stable summary too.
+        acceptedData["scenarios"] = ScenariosFromEvidence(executions);
+
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.ReadyForDelivery,
             [Event(OperatorEvents.ReviewAccepted, workItem.WorkItemId, acceptedData, trigger.Id)]);
+    }
+
+    private static string ReviewKindName(ReviewCheckKind kind) => kind switch
+    {
+        ReviewCheckKind.Validation => "validation",
+        ReviewCheckKind.RequirementCoverage => "requirement-coverage",
+        ReviewCheckKind.ArchitecturalConformance => "architectural-conformance",
+        ReviewCheckKind.Security => "security",
+        _ => kind.ToString()
+    };
+
+    private static string ScenariosFromEvidence(IReadOnlyList<ReviewCheckExecution> executions)
+    {
+        var coverage = executions.FirstOrDefault(static execution =>
+            execution.Kind == ReviewCheckKind.RequirementCoverage);
+
+        if (coverage is null)
+        {
+            return string.Empty;
+        }
+
+        const string marker = "scenarios=";
+        var index = coverage.Detail.IndexOf(marker, StringComparison.Ordinal);
+        if (index < 0)
+        {
+            return string.Empty;
+        }
+
+        var rest = coverage.Detail[(index + marker.Length)..];
+        var end = rest.IndexOf(';', StringComparison.Ordinal);
+        return end < 0 ? rest : rest[..end];
     }
 
     /// <summary>An approved candidate enters delivery validation; nothing is merged yet (v0.3 §3.4 step 5).</summary>
@@ -536,7 +627,15 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             if (Differs(trigger.Data, "reviewDigest", current.ReviewDigest)) { mismatches.Add("reviewDigest"); }
             if (Differs(trigger.Data, "headSha", current.HeadSha)) { mismatches.Add("headSha"); }
             if (Differs(trigger.Data, "baseSha", current.BaseSha)) { mismatches.Add("baseSha"); }
+            if (Differs(trigger.Data, "targetBranch", current.TargetBranch)) { mismatches.Add("targetBranch"); }
+            if (Differs(trigger.Data, "requirementDigest", current.RequirementDigest)) { mismatches.Add("requirementDigest"); }
             if (Differs(trigger.Data, "contractDigest", current.ContractDigest)) { mismatches.Add("contractDigest"); }
+            if (Differs(trigger.Data, "evidenceDigest", current.EvidenceDigest)) { mismatches.Add("evidenceDigest"); }
+            if (Differs(trigger.Data, "validationEvidenceDigest", current.ValidationEvidenceDigest)) { mismatches.Add("validationEvidenceDigest"); }
+            if (Differs(trigger.Data, "coverageEvidenceDigest", current.CoverageEvidenceDigest)) { mismatches.Add("coverageEvidenceDigest"); }
+            if (Differs(trigger.Data, "architectureEvidenceDigest", current.ArchitectureEvidenceDigest)) { mismatches.Add("architectureEvidenceDigest"); }
+            if (Differs(trigger.Data, "securityEvidenceDigest", current.SecurityEvidenceDigest)) { mismatches.Add("securityEvidenceDigest"); }
+            if (Differs(trigger.Data, "templateProvenanceDigest", current.TemplateProvenanceDigest)) { mismatches.Add("templateProvenanceDigest"); }
             if (Differs(trigger.Data, "policyVersion", current.PolicyVersion)) { mismatches.Add("policyVersion"); }
             if (Differs(trigger.Data, "guidelinesVersion", current.GuidelinesVersion)) { mismatches.Add("guidelinesVersion"); }
             if (Differs(trigger.Data, "profileVersion", current.ProfileVersion)) { mismatches.Add("profileVersion"); }
@@ -579,8 +678,9 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
     }
 
     /// <summary>
-    /// The real merge, then verification of the <b>merged revision</b> rather than the worktree (v0.3 §3.4 step 7).
-    /// A merged revision that fails verification enters Failed and is never reported as Released.
+    /// Performs the authorized merge, then verifies the <b>merged revision</b> rather than the worktree (v0.3 §3.4
+    /// step 7). Merge-applied and post-merge-verified are distinct durable facts: replaying an applied merge resumes
+    /// verification instead of emitting a release (v0.4 FAC-P0-01).
     /// </summary>
     private async ValueTask<StageDispatchOutcome> ReleaseAsync(
         WorkItemSnapshot workItem,
@@ -598,104 +698,158 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed("approval-incomplete");
         }
 
+        var baseSha = trigger.Data.TryGetValue("baseSha", out var baseValue) ? baseValue : string.Empty;
+
+        // The oracle is validated before any external effect: an unexecutable contract must not merge.
+        if (!trigger.Data.TryGetValue("acceptanceContract", out var contractJson))
+        {
+            return StageDispatchOutcome.Failed(ContractNotExecutable);
+        }
+
+        var (contract, contractErrors) = AcceptanceContract.Parse(contractJson);
+        if (contract is null)
+        {
+            return StageDispatchOutcome.Failed(ContractNotExecutable + ":" + string.Join(",", contractErrors));
+        }
+
+        if (_builds is null || _candidates is null)
+        {
+            return StageDispatchOutcome.Failed("release-verifier-unavailable");
+        }
+
         // Durable operation record: the merge is one identified effect, so a retry reconciles instead of repeating.
         var operationId = _operations is null
             ? null
             : FactoryOperationLedger.DeriveOperationId(
                 workItem.WorkItemId.Value, trigger.Id.Value, "release", trigger.Id.Value, 1, "git-merge", workItem.Repository, headSha);
 
-        if (operationId is not null && _operations!.IsApplied(operationId))
+        var applied = operationId is null ? null : _operations!.Latest(operationId);
+        var mergeWasApplied = applied?.State == OperationState.Applied;
+        string mergedSha;
+
+        if (mergeWasApplied)
         {
-            var recorded = _operations.Latest(operationId)!;
-            var alreadyApplied = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
+            mergedSha = applied!.ExternalIdentity ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(mergedSha))
             {
-                ["mergedSha"] = recorded.ExternalIdentity ?? string.Empty,
-                ["reconciled"] = "merge-already-applied",
-                ["operationId"] = operationId
-            };
+                return StageDispatchOutcome.Failed("merge-reconciliation-failed:no-merged-sha");
+            }
 
-            return StageDispatchOutcome.Advanced(
-                FactoryWorkState.Released,
-                [Event(OperatorEvents.ReleaseCompleted, workItem.WorkItemId, alreadyApplied, trigger.Id)]);
-        }
-
-        _operations?.Begin(operationId!, workItem.WorkItemId.Value, trigger.Id.Value, "release", trigger.Id.Value, 1,
-            "git-merge", workItem.Repository, headSha);
-
-        var merge = await _merges.MergeAsync(workItem.Repository, headSha, cancellationToken).ConfigureAwait(false);
-        if (!merge.Ok || string.IsNullOrWhiteSpace(merge.MergedSha))
-        {
-            if (operationId is not null) { _operations!.MarkFailed(operationId, merge.Reason ?? "merge-failed"); }
-            return StageDispatchOutcome.Failed(merge.Reason ?? "merge-failed");
-        }
-
-        if (operationId is not null) { _operations!.MarkApplied(operationId, merge.MergedSha!, "git:rev-parse"); }
-
-        if (!trigger.Data.TryGetValue("acceptanceContract", out var contractJson))
-        {
-            return StageDispatchOutcome.Failed(ContractNotExecutable);
-        }
-
-        var (contract, _) = AcceptanceContract.Parse(contractJson);
-        if (contract is null || _builds is null || _candidates is null)
-        {
-            return StageDispatchOutcome.Failed(ContractNotExecutable);
-        }
-
-        var mergedSha = merge.MergedSha!;
-        var destination = Path.Combine(_verificationRoot, mergedSha[..Math.Min(12, mergedSha.Length)]);
-        var postMergeOk = false;
-        ContractRunResult? mergedContract = null;
-        var detail = string.Empty;
-
-        var session = CandidateSession.None;
-        try
-        {
-            var revisionPath = await _merges
-                .MaterialiseAsync(workItem.Repository, mergedSha, destination, cancellationToken)
-                .ConfigureAwait(false);
-
-            var (buildOk, buildDetail) = await _builds.VerifyAsync(revisionPath, cancellationToken).ConfigureAwait(false);
-            detail = buildOk ? "build-passed" : "build-failed:" + buildDetail;
-
-            if (buildOk)
+            // The ledger proves the effect was attempted; Git proves the revision is actually present. Both are needed.
+            if (!await _merges.ContainsAsync(workItem.Repository, mergedSha, cancellationToken).ConfigureAwait(false))
             {
-                session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
-                if (session.IdentityVerified)
+                return StageDispatchOutcome.Failed("merge-reconciliation-failed:git-does-not-contain-merged-sha");
+            }
+        }
+        else
+        {
+            _operations?.Begin(operationId!, workItem.WorkItemId.Value, trigger.Id.Value, "release", trigger.Id.Value, 1,
+                "git-merge", workItem.Repository, headSha);
+
+            var merge = await _merges.MergeAsync(workItem.Repository, headSha, cancellationToken).ConfigureAwait(false);
+            if (!merge.Ok || string.IsNullOrWhiteSpace(merge.MergedSha))
+            {
+                if (operationId is not null)
                 {
-                    mergedContract = await _contractRunner.RunAsync(contract, session.BaseAddress, cancellationToken).ConfigureAwait(false);
-                    postMergeOk = mergedContract.Passed;
-                    detail = postMergeOk ? "contract-passed-on-merged-revision" : "contract-failed:" + mergedContract.FailureSummary;
+                    _operations!.MarkFailed(operationId, merge.Reason ?? "merge-failed");
+                }
+
+                return StageDispatchOutcome.Failed(merge.Reason ?? "merge-failed");
+            }
+
+            mergedSha = merge.MergedSha!;
+            if (operationId is not null)
+            {
+                _operations!.MarkApplied(operationId, mergedSha, "git:rev-parse");
+            }
+        }
+
+        // Re-execute anything that is not a verified record for exactly this merged revision and contract.
+        var verified = _releaseVerifications.Find(
+            workItem.WorkItemId.Value, mergedSha, contract.Digest, headSha, baseSha);
+
+        if (verified is not { Verified: true })
+        {
+            var verifier = _releaseVerifier ?? new PostMergeReleaseVerifier(
+                _merges, _builds, _regressions, _candidates, _contractRunner, _verificationRoot);
+
+            ReleaseVerificationResult verification;
+            try
+            {
+                verification = await verifier.VerifyAsync(
+                    new ReleaseVerificationRequest(
+                        workItem.WorkItemId.Value,
+                        workItem.Repository,
+                        mergedSha,
+                        headSha,
+                        baseSha,
+                        operationId ?? string.Empty,
+                        contract),
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                return StageDispatchOutcome.Failed("post-merge-verification-failed:" + exception.Message);
+            }
+
+            verified = new ReleaseVerificationRecord(
+                workItem.WorkItemId.Value,
+                operationId ?? string.Empty,
+                headSha,
+                baseSha,
+                mergedSha,
+                verification.MergedTreeSha,
+                contract.Digest,
+                verification.BuildEvidenceDigest,
+                verification.RegressionEvidenceDigest,
+                verification.ContractEvidenceDigest,
+                verification.ScenarioSummary,
+                verification.VerifierVersion,
+                verification.Ok ? ReleaseVerificationRecord.VerifiedOutcome : ReleaseVerificationRecord.FailedOutcome,
+                verification.Detail,
+                DateTimeOffset.UtcNow);
+
+            // The verification fact is durable before the state/event commit that publishes Released.
+            _releaseVerifications.Append(verified);
+
+            if (operationId is not null)
+            {
+                if (verification.Ok)
+                {
+                    _operations!.MarkVerified(operationId, verified.RecordDigest, verification.Detail);
                 }
                 else
                 {
-                    detail = "candidate-identity-unverified";
+                    _operations!.MarkVerificationFailed(operationId, verification.Detail);
                 }
             }
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+
+        if (!verified.Verified)
         {
-            return StageDispatchOutcome.Failed("post-merge-verification-failed:" + exception.Message);
-        }
-        finally
-        {
-            await session.Stop().ConfigureAwait(false);
+            // A merged revision that fails is terminal: D-08 A's rework edge is pre-merge only.
+            return StageDispatchOutcome.Failed("post-merge-verification-failed:" + verified.Detail);
         }
 
         var evidence = new Dictionary<string, string>(trigger.Data, StringComparer.Ordinal)
         {
             ["mergedSha"] = mergedSha,
-            ["postMergeDetail"] = detail,
-            ["postMergeScenarios"] = mergedContract is null
-                ? string.Empty
-                : string.Join(",", mergedContract.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
+            ["mergedTreeSha"] = verified.MergedTreeSha ?? string.Empty,
+            ["postMergeDetail"] = verified.Detail,
+            ["postMergeScenarios"] = verified.ScenarioSummary,
+            ["buildEvidenceDigest"] = verified.BuildEvidenceDigest,
+            ["regressionEvidenceDigest"] = verified.RegressionEvidenceDigest,
+            ["contractEvidenceDigest"] = verified.ContractEvidenceDigest,
+            ["verificationRecordDigest"] = verified.RecordDigest,
+            ["verifierVersion"] = verified.VerifierVersion,
+            ["verifiedAtUtc"] = verified.VerifiedAtUtc.ToString("O"),
+            ["reconciled"] = mergeWasApplied ? "merge-already-applied" : "fresh-merge",
+            ["operationId"] = operationId ?? string.Empty
         };
-
-        if (!postMergeOk)
-        {
-            // A merged revision that fails is terminal: D-08 A's rework edge is pre-merge only.
-            return StageDispatchOutcome.Failed("post-merge-verification-failed:" + detail);
-        }
 
         return StageDispatchOutcome.Advanced(
             FactoryWorkState.Released,

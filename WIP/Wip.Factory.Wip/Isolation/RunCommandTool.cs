@@ -28,10 +28,13 @@ public sealed class RunCommandTool : ITool<RunCommandRequest, RunCommandResult>
         "new", "restore", "build", "test", "run", "publish"
     };
 
-    private readonly BoundedProcessRunner _runner;
+    /// <summary>The closed interface allowlist, exposed so the security policy can verify what actually enforces it.</summary>
+    public static IReadOnlyCollection<string> AllowedSubcommandsForPolicy => AllowedSubcommands.ToArray();
+
+    private readonly IProcessRunner _runner;
     private readonly string _dotnetPath;
 
-    public RunCommandTool(BoundedProcessRunner? runner = null, string? dotnetPath = null)
+    public RunCommandTool(IProcessRunner? runner = null, string? dotnetPath = null)
     {
         _runner = runner ?? new BoundedProcessRunner();
         _dotnetPath = dotnetPath ?? "dotnet";

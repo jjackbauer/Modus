@@ -5,9 +5,18 @@ using System.Net.Sockets;
 namespace Wip.Factory.Host.Factory;
 
 /// <summary>A started candidate, with the process identity the factory actually owns.</summary>
-public sealed record CandidateSession(Uri BaseAddress, int ProcessId, bool IdentityVerified, Func<ValueTask> Stop)
+public sealed record CandidateSession(
+    Uri BaseAddress,
+    int ProcessId,
+    bool IdentityVerified,
+    Func<ValueTask> Stop,
+    string? IdentityProof = null,
+    Func<bool>? IsAlive = null)
 {
     public static CandidateSession None => new(new Uri("http://127.0.0.1:1/"), 0, false, static () => ValueTask.CompletedTask);
+
+    /// <summary>True when the process is still running. A session with no probe is treated as alive (test stubs).</summary>
+    public bool IsAliveNow() => IsAlive is null || IsAlive();
 }
 
 /// <summary>Starts a built application for verification. Tests substitute a stub; the real one runs dotnet.</summary>
@@ -17,9 +26,9 @@ public interface ICandidateHost
 }
 
 /// <summary>
-/// Starts the candidate on a factory-allocated loopback port and proves the process the factory started is the
-/// one listening (v0.3 §7.2). A stale listener on a reused port cannot impersonate it because the port is new
-/// and the PID is ours.
+/// Starts the candidate on a factory-allocated loopback port and proves that the listener belongs to the process tree
+/// the factory launched (v0.3 §7.2, v0.4 FAC-P1-01). A stale or competing listener is refused instead of being
+/// treated as the candidate.
 /// </summary>
 public sealed class DotnetRunCandidateHost : ICandidateHost
 {
@@ -28,9 +37,13 @@ public sealed class DotnetRunCandidateHost : ICandidateHost
     public const string IdentityUnverified = "candidate-identity-unverified";
 
     private readonly TimeSpan _readiness;
+    private readonly IListenerIdentityProver _identityProver;
 
-    public DotnetRunCandidateHost(TimeSpan? readiness = null)
-        => _readiness = readiness ?? TimeSpan.FromSeconds(60);
+    public DotnetRunCandidateHost(TimeSpan? readiness = null, IListenerIdentityProver? identityProver = null)
+    {
+        _readiness = readiness ?? TimeSpan.FromSeconds(60);
+        _identityProver = identityProver ?? new WindowsTcpListenerIdentityProver();
+    }
 
     public async ValueTask<CandidateSession> StartAsync(string worktreePath, CancellationToken cancellationToken = default)
     {
@@ -81,11 +94,26 @@ public sealed class DotnetRunCandidateHost : ICandidateHost
             throw new InvalidOperationException($"{IdentityUnverified}: the candidate exited before verification.");
         }
 
-        return new CandidateSession(baseAddress, process.Id, IdentityVerified: true, async () =>
+        // Connectivity alone is not identity. The OS listener table must name our process or a descendant.
+        var identity = _identityProver.Prove(port, process.Id);
+        if (!identity.Verified)
         {
             TryKill(process);
-            await Task.CompletedTask.ConfigureAwait(false);
-        });
+            throw new InvalidOperationException(
+                $"{IdentityUnverified}:{identity.Proof}:{identity.Detail}");
+        }
+
+        return new CandidateSession(
+            baseAddress,
+            process.Id,
+            IdentityVerified: true,
+            Stop: async () =>
+            {
+                TryKill(process);
+                await Task.CompletedTask.ConfigureAwait(false);
+            },
+            IdentityProof: identity.Proof + ":" + identity.ListenerProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            IsAlive: () => !CandidateProcess.HasExited(process));
     }
 
     private async Task<bool> WaitForListenerAsync(int port, Process process, CancellationToken cancellationToken)

@@ -145,7 +145,7 @@ public sealed class ReworkLoopTests
         var worktree = Path.Combine(basePath, "worktree");
         Directory.CreateDirectory(repository);
         Directory.CreateDirectory(worktree);
-        await File.WriteAllTextAsync(Path.Combine(worktree, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+        FactoryTestWorkspace.Write(worktree);
 
         var (root, error) = FactoryControlRoot.Resolve(repository, Path.Combine(basePath, "control"));
         Assert.NotNull(root);
@@ -155,7 +155,7 @@ public sealed class ReworkLoopTests
         var runner = new CountingRunner(worktree);
         var handler = new FactoryStageDispatchHandler(
             runner, new StubCandidateHost(server.BaseAddress), new StubBuild(),
-            merges: new StubMerge(), verificationRoot: Path.Combine(basePath, "verify"),
+            merges: new StubMerge(), verificationRoot: Path.Combine(root!.Root, "verify"),
             targetHead: _ => Task.FromResult<string?>("base-1"));
 
         var runtime = new FactoryRuntime(root!, runner, new StubCandidateHost(server.BaseAddress), new StubBuild(), new StubMerge(), handler);
@@ -179,7 +179,7 @@ public sealed class ReworkLoopTests
         public ValueTask<string> MaterialiseAsync(string repositoryPath, string mergedSha, string destination, CancellationToken cancellationToken = default)
         {
             Directory.CreateDirectory(destination);
-            File.WriteAllText(Path.Combine(destination, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+            FactoryTestWorkspace.Write(destination);
             return ValueTask.FromResult(destination);
         }
     }

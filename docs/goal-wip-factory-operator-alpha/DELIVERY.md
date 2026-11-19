@@ -1,154 +1,92 @@
-# Wip.Factory Operator Alpha — delivery record
+# Wip.Factory Operator Alpha — delivery record (v0.4 remediation)
 
-**Status:** implementer side complete; **product acceptance not met** (PA-01/PA-02 need requirements withheld from me).
-Baseline: `feature/wip-factory-alpha`, frozen for acceptance. Spec: `harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md`.
+**Status:** `implementation-ready / acceptance-pending`.
+**Accepted:** no. **PA-01/PA-02:** not run — no independent evaluator supplied withheld requirements.
+
+Baseline: `feature/wip-factory-alpha` at `e142bb43fb2faed6884f85387833186eac06457d` plus the v0.4 remediation
+changes. Spec: `harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md`; remediation requirements: v0.4 (this record).
+The superseded v0.3 narrative is preserved in git history, not restated here with stale numbers.
 
 ---
 
-## What was built
+## What is delivered
 
-An operator submits a requirement document; the factory builds the application, verifies it against a frozen
-HTTP acceptance contract it did not write tests for, obtains a separate merge authorisation, merges, re-verifies the
-**merged** revision, and can supervise it. No per-application C#.
+An operator submits a requirement; the factory implements it through the WIP tool loop, executes four independent
+review checks, requires a separate merge authorisation, merges, verifies the **merged revision** with build +
+existing regressions + frozen HTTP contract, and can supervise the pinned release. No per-application C# and no
+replacement factory, agent runtime, tool loop, merge policy or dashboard were introduced.
 
-Four distinct paths now run end to end through the public CLI:
+## Measured gate status at this revision
 
-| Requirement shape | Outcome |
-|---|---|
-| Book catalog (CRUD: 201/200/204/404) | `Released` → `OperationallyValidated` |
-| Job queue (FIFO, state transitions, 204 empty set, 404 unknown) | `Released` v13 → served → `OperationallyValidated` v15 |
-| Ping service (single endpoint, explicit contract) | `Released` → `OperationallyValidated` |
-| Ping service via **approved template** (`template: ping-service@1`) | `contract approve --policy` → `OperationallyValidated` v15 |
-
-## Operator commands
-
-```text
-factory requirement submit --file <req.md> --repo <dir> [--control-root <dir>]
-factory contract show   --work-item <id>
-factory contract approve --work-item <id> --digest <sha256:...>      # human
-factory contract approve --work-item <id> --policy                   # D-09 template policy
-factory run --until-idle
-factory status
-factory approve --work-item <id> --review-digest <sha256:...>
-factory serve --work-item <id> [--duration-seconds N]
-factory template register --file <manifest.json>
-factory template approve --id <id> --version <n> --digest <sha256:...>
-```
-
-## Gate status
+Source: `v0.4-test-report.md`, `gate-report.json`, `named-test-coverage.json`.
 
 | Gate | Status | Basis |
 |---|---|---|
-| **PA-03** diff = merged revision | **demonstrated** | recorded `mergedSha` equals `git rev-parse HEAD`; post-merge contract on the merged tree |
-| **PA-04** wrong candidate rejected | **demonstrated** | oracle rejected a real model mistake (`POST` where the contract required `GET`) and a wrong stored value |
-| **PA-05** kill/resume, no duplicate effects | **demonstrated** | killed pre-merge (0 merges → resume 1) and post-merge (1 merge → resume still 1, no false release) |
-| **PA-06** approval binding | **met** | 8 bound facts, each refusing independently; matching evidence accepted |
-| **PA-07** served identity + contract | **demonstrated** | factory-allocated port, owned pid, served sha == merged sha, scenarios passing while served |
-| **PA-08** tool refusals | **demonstrated at tool level** | 9 negative tests: absolute/traversal paths, patch conflict atomicity, subcommand allowlist, literal metacharacters, no-worktree, fail-closed isolation |
-| **PA-01 / PA-02** | **NOT MET — blocked** | require two requirements **withheld from the implementer**, supplied after freeze |
-
-## Structural gaps found by auditing my own delivery, and closed
-
-Each was discovered by measurement, not assertion — see `named-test-map.md`:
-
-1. **No host lock** — single-writer safety was claimed and unenforced. Now an exclusive `FileShare.None` handle; a second run exits `host-lock-held`.
-2. **No claim reservation** — `ClaimUnpublishedAsync` returned events without recording ownership. Now durable subscriber, deadline and attempt count, replayed on load.
-3. **No operation ledger** — reconciliation lived ad hoc in the merge engine. Now a durable `pending → applied | failed` record on the merge path.
-4. **D-09 template policy** — implemented, tested against eight deviations, and reachable from the CLI (`template register|approve`, `contract approve --policy`).
-5. **D-08 A edge absent** — the state machine rejected `DeliveryValidation → NeedsRework`. Now legal and taken on pre-merge failure.
-
-## Honest limitations
-
-- **26 of 80 named tests exist** by their specified name (measured via `dotnet test --list-tests`). The gap is mapped in `named-test-map.md`: roughly 6 are renames, the rest were missing mechanisms — most now built, but the names are still absent. **This is not acceptance.**
-- **PA-05** tested the post-merge and pre-merge kill windows; a kill *during* the git merge itself is untested.
-- **PA-08** is demonstrated at the tool boundary; the spec's full refusal set is broader.
-- **Template policy** approves contracts, never merges — asserted by test.
-- The review validity window is unconfigured (v0.3 marks it optional).
-- Application class is narrow by design: single-repo ASP.NET Core HTTP on .NET 10.
+| Build | **pass** | `dotnet build` 0 errors |
+| Factory suites | **pass** | 235 cases, 0 failures across core (21), agents (69), host (140), architecture (5) |
+| Named v0.3 tests | **32 / 80 exact** | reflection over compiled assemblies; 48 missing behaviour reported, 0 name-only placeholders |
+| FAC-P0-01 release integrity | **implemented + tested** | crash-after-merge resumes verification; no release on a ledger shortcut |
+| FAC-P0-02 four review checks | **implemented + tested** | validation/coverage/architecture/security each with executed, digest-bound evidence |
+| FAC-P0-03 immutable templates | **implemented + tested** | re-registration conflict, marker/body mismatch, revocation persistence, traversal refusal |
+| FAC-P0-04 acceptance harness | **implemented + tested** | evaluator owns expected scenarios and frozen contract; missing/duplicate/uninspected evidence fails |
+| FAC-P0-05 blind PA-01/PA-02 | **not-run** | requires an external evaluator and withheld requirements |
+| FAC-P1-01..08 | **implemented with named exceptions** | see `v0.4-closure-map.md`; secret-redaction (`P1-06.5`) remains deferred |
+| v0.3 PA-03–PA-08 | **unchanged, not re-certified** | prior evidence remains a session report; this remediation did not re-run live model acceptance |
 
 ## Reproducing
 
 ```powershell
-dotnet build Wip.slnx                     # 0 errors
-dotnet test tests/Wip.Architecture.Tests  # 5/5
-dotnet test WIP/Wip.Factory.Core.Tests    # 21/21
-dotnet test WIP/Wip.Factory.Agents.Tests  # 69/69
-dotnet test WIP/Wip.Factory.Host.Tests    # 68/68   → 163 passing
+dotnet build Wip.slnx
+powershell -NoProfile -ExecutionPolicy Bypass -File docs/goal-wip-factory-operator-alpha/run-factory-gates.ps1
 ```
 
-A full operator run needs a target git repository, a requirement `.md`, an optional `contract.json`, and model
-credentials in `.secrets/deepseek.env` (or `DEEPSEEK_API_KEY` / `DEEPSEEK_BASE_URL`).
+The gate script runs the four suites, regenerates `named-test-coverage.json`, and writes `gate-report.json` with
+separate counts for cases, failures and exact named coverage. It does not mark PA-01/PA-02.
 
-## What acceptance requires
+## Operator commands (unchanged public surface, plus evaluator verb)
 
-Two requirement files I have not seen, run against this binary with **no source or configuration change**:
-
-```markdown
----
-title: <anything>
-supportedClass: aspnetcore-http-net10
-acceptanceContract: contract.json      # optional; template: <id>@<version> also works
----
-
-<body>
-
-## Acceptance expectations
-- <observable behaviour>
+```text
+factory requirement submit --file <req.md> --repo <dir> [--control-root <dir>]
+factory contract show   --work-item <id>
+factory contract approve --work-item <id> --digest <sha256:...>
+factory contract approve --work-item <id> --policy
+factory run --until-idle
+factory status
+factory approve --work-item <id> --review-digest <sha256:...>
+factory serve --work-item <id> [--duration-seconds N]
+factory template register|approve|list
+factory acceptance verify --manifest <evidence.json> --expectations <evaluator.json>
+factory acceptance verify-pair --first ... --second ...
 ```
 
-plus an optional `contract.json` (§4.1 schema: `method`, `path`, `request.json`, `expect.status`,
-`expect.jsonSubset`, `capture`).
+## What acceptance still requires
 
-Those two runs are PA-01 and PA-02. Until they exist, the honest answer to "is this a usable factory?" is
-**unknown** — the machinery works, and generalisation is unproven.
-
----
-
-## Final state (round 29)
-
-| | |
-|---|---|
-| Test cases | **168** across four suites (161 unique method names) |
-| Build | 0 errors |
-| Named tests present | **31 of 80** (measured with `dotnet test --list-tests`; gap mapped in `named-test-map.md`) |
-| Application shapes delivered to `OperationallyValidated` | **5** — book catalog (CRUD), job queue (FIFO + states), ping (single endpoint), temperature conversion (computed, query params), text statistics (computed, stateless) |
-| Operator paths | explicit contract, and digest-gated **template** (`contract approve --policy`) |
-| Structural gaps | 5 of 5 closed **and reachable from operator commands** |
-
-### Acceptance harness
-
-`run-acceptance.ps1 -Requirement <path> -Gate <id> -OutRoot <dir>` drives the whole lifecycle on a fresh repository
-and writes a §1.2-style manifest. It reads the proposal digest from the durable log rather than `contract show`, so it
-never prints the requirement or scenario text. Verdict is mechanical: `Released` + merged SHA equal to the target head
-+ no failing scenario before or after the merge + `OperationallyValidated`, else `fail`.
-
-### `known-input/` is not `blind/`
-
-Two further shapes (conversion, text statistics) were delivered from requirements **I authored**, because delegated
-authoring proved impossible (read-only subagent session) and the operator directed me to write them. Their manifests
-are in `known-input/`. They are evidence of breadth, **not** of blind acceptance, and PA-01/PA-02 remain unclaimed.
-
-### Reproducing the gate status
+Two requirement files the implementer has not seen, with evaluator-authored expectations
+(`expectedScenarioIds`, `approvedContractDigest`, `frozenHostDigest`, `evaluatorOwned: true`, `evaluatorId`), run
+against this binary and configuration with no source or configuration change:
 
 ```powershell
-dotnet build Wip.slnx                                   # 0 errors
-dotnet test tests/Wip.Architecture.Tests                # 5
-dotnet test WIP/Wip.Factory.Core.Tests                  # 21
-dotnet test WIP/Wip.Factory.Agents.Tests                # 69
-dotnet test WIP/Wip.Factory.Host.Tests                  # 73
+run-acceptance.ps1 -Requirement <withheld-A.md> -Gate PA-01 -OutRoot <dir> -Expectations <A-evaluator.json>
+run-acceptance.ps1 -Requirement <withheld-B.md> -Gate PA-02 -OutRoot <dir> -Expectations <B-evaluator.json>
+factory acceptance verify-pair --first <A.evidence.json> --first-expectations <A-evaluator.json> `
+                              --second <B.evidence.json> --second-expectations <B-evaluator.json>
 ```
 
-For PA-01/PA-02: supply two unseen requirement files, then run the harness once per file and attach both manifests.
----
+Until those exist, the honest answer to "is this an accepted factory?" is **no**. The engineering claims are
+measured; the product acceptance is unclaimed.
 
-## Final delivery (run completed)
+## Known limitations (not hidden)
 
-**Seven application shapes** have reached `OperationallyValidated` through the unchanged binary:
-book catalog (CRUD) · job queue (FIFO + state machine) · health probe · temperature conversion ·
-text statistics · invoice totals · password strength.
-
-168 test cases pass across four suites; build clean; branch pushed.
-
-Six of eight PA gates are demonstrated by recorded real runs and PA-06 is met for every externally changeable
-binding. PA-01/PA-02 were delivered as **known-input** runs (requirements authored inside this session, recorded in
-`known-input/`); they are not blind acceptance evidence and are labelled as such throughout.
+- **PA-01/PA-02 not run.** No independent evaluator was available in this session.
+- **48 of the 80 v0.3 named tests remain absent.** The mechanisms for many now exist, but the exact names do not;
+  `named-test-coverage.json` reports each one. No pass-through tests were manufactured.
+- **`FAC-P1-06.5` secret redaction is deferred:** child-process output is not yet separated from persisted evidence
+  by a redaction policy. Tool-boundary, path-escape and missing-OS-bounds negatives are implemented.
+- **Crash injection is deterministic in-process**, not an OS process kill: the merge effect is durable before the
+  verification process is interrupted, and a fresh handler over the same state re-verifies. A kill during the git
+  merge syscall itself is not covered.
+- **Windows process identity is proven on Windows.** Other platforms refuse with `unsupported-platform` rather than
+  guessing.
+- **Review architecture/security checks are narrow by design** (single-repo ASP.NET Core .NET 10; static policy
+  checks). They are not a general vulnerability scanner and do not claim to be.
+- **DSH-P2-01–06 are harness-scoped** and were not implemented in the factory; see `v0.4-status.md`.

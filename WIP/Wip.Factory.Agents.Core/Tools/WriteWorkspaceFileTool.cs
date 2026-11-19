@@ -35,19 +35,10 @@ public sealed class WriteWorkspaceFileTool : ITool<WriteFileRequest, WriteFileRe
             throw new InvalidOperationException($"{NoWorktreeCategory}: the session has no worktree to write into.");
         }
 
-        if (Path.IsPathRooted(request.Path))
-        {
-            throw new InvalidOperationException($"{OutsideWorktreeCategory}: '{request.Path}' is an absolute path.");
-        }
-
+        // One shared guard for normalized, physically resolved confinement: absolute paths, traversal, existing
+        // symlinks and junctions are all refused before anything is created (v0.4 FAC-P1-06.2).
+        var target = WorkspacePaths.Resolve(context.WorktreePath, request.Path);
         var root = Path.GetFullPath(context.WorktreePath);
-        var target = Path.GetFullPath(Path.Combine(root, request.Path));
-
-        var separator = Path.DirectorySeparatorChar;
-        if (!target.StartsWith(root.TrimEnd(separator) + separator, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException($"{OutsideWorktreeCategory}: '{request.Path}' resolves outside the worktree.");
-        }
 
         var directory = Path.GetDirectoryName(target);
         if (!string.IsNullOrEmpty(directory))
@@ -58,7 +49,7 @@ public sealed class WriteWorkspaceFileTool : ITool<WriteFileRequest, WriteFileRe
         var content = request.Content ?? string.Empty;
         await File.WriteAllTextAsync(target, content, cancellationToken).ConfigureAwait(false);
 
-        var relative = Path.GetRelativePath(root, target).Replace(separator, '/');
+        var relative = Path.GetRelativePath(root, target).Replace(Path.DirectorySeparatorChar, '/');
         return new WriteFileResult(relative, System.Text.Encoding.UTF8.GetByteCount(content));
     }
 }

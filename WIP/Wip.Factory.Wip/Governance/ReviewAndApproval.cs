@@ -25,6 +25,46 @@ public enum ReviewCheckKind
 /// <summary>Outcome of one check. A check that did not run is absent, never implicitly passing.</summary>
 public sealed record ReviewCheckResult(ReviewCheckKind Kind, bool Passed, string Detail);
 
+/// <summary>
+/// Executed evidence for one mandatory review check (v0.4 FAC-P0-02). It carries who executed the check, the exact
+/// reviewed revision, the policy it applied, the structured outcome, when it ran, and a digest of the artifact it
+/// produced. A boolean or a human-readable summary alone is not evidence.
+/// </summary>
+public sealed record ReviewCheckExecution(
+    ReviewCheckKind Kind,
+    string CheckId,
+    string ExecutedBy,
+    string ExecutedVersion,
+    string ReviewedSha,
+    string PolicyVersion,
+    string Outcome,
+    string SubjectDigest,
+    string ArtifactDigest,
+    DateTimeOffset ExecutedAtUtc,
+    string Detail)
+{
+    public const string PassedOutcome = "passed";
+    public const string FailedOutcome = "failed";
+    public const string SkippedOutcome = "skipped";
+    public const string ErrorOutcome = "error";
+    public const string NotApplicableOutcome = "not-applicable";
+
+    public bool Passed => string.Equals(Outcome, PassedOutcome, StringComparison.Ordinal);
+
+    /// <summary>A record satisfies the evidence contract only when every field needed to bind it is present.</summary>
+    public bool IsComplete
+        => !string.IsNullOrWhiteSpace(CheckId)
+           && !string.IsNullOrWhiteSpace(ExecutedBy)
+           && !string.IsNullOrWhiteSpace(ExecutedVersion)
+           && !string.IsNullOrWhiteSpace(ReviewedSha)
+           && !string.IsNullOrWhiteSpace(PolicyVersion)
+           && !string.IsNullOrWhiteSpace(Outcome)
+           && !string.IsNullOrWhiteSpace(SubjectDigest)
+           && ArtifactDigest.StartsWith("sha256:", StringComparison.Ordinal)
+           && ArtifactDigest.Length > "sha256:".Length
+           && ExecutedAtUtc != default;
+}
+
 /// <summary>The version baseline an approval is bound to (F-F.4).</summary>
 public sealed record ReviewBaseline(
     string HeadCommitSha,
@@ -58,7 +98,8 @@ public sealed record FactoryReviewArtifact(
     string Disposition,
     AgentProfileVersion ReviewerProfileVersion,
     SessionId ReviewerSessionId,
-    string ContentDigest);
+    string ContentDigest,
+    IReadOnlyList<ReviewCheckExecution>? Executions = null);
 
 /// <summary>Result of assembling a review. A rejected review is still an artifact; an incomplete one is not.</summary>
 public sealed record ReviewBuildResult(bool Accepted, FactoryReviewArtifact? Artifact, string? Reason)
@@ -83,6 +124,14 @@ public sealed class FactoryReviewService
     public const string MissingConformanceCategory = "review-incomplete:architectural-conformance";
     public const string SecurityGateFailedCategory = "security-gate-failed";
     public const string SecurityGateMissingCategory = "security-gate-missing";
+
+    /// <summary>An executed-evidence record is absent, incomplete, stale or failed (v0.4 FAC-P0-02).</summary>
+    public const string EvidenceMissingCategory = "review-evidence-missing";
+    public const string EvidenceIncompleteCategory = "review-evidence-incomplete";
+    public const string EvidenceStaleCategory = "review-evidence-stale";
+    public const string EvidenceDuplicateCategory = "review-evidence-duplicate";
+    public const string EvidenceContractMismatchCategory = "review-evidence-contract-mismatch";
+    public const string EvidenceCheckFailedCategory = "review-check-failed";
 
     public ReviewBuildResult Evaluate(
         ReviewRequirement requirement,
@@ -145,6 +194,142 @@ public sealed class FactoryReviewService
             DigestOf(reviewId, requirement, baseline, checks));
 
         return new ReviewBuildResult(true, artifact, null);
+    }
+
+    /// <summary>
+    /// Assembles a review from <b>executed evidence</b>. Every mandatory check must be present exactly once, complete,
+    /// bound to the exact reviewed revision, consistent with the frozen contract, and genuinely passing. A skipped,
+    /// thrown, timed-out or differently-revisioned check is missing or failed — never passed (v0.4 FAC-P0-02).
+    /// </summary>
+    public ReviewBuildResult EvaluateWithEvidence(
+        ReviewRequirement requirement,
+        ReviewBaseline baseline,
+        IReadOnlyDictionary<string, string> toolVersions,
+        IReadOnlyList<ReviewCheckExecution> executions,
+        IReadOnlyList<ReviewFinding> findings,
+        IReadOnlyList<string> exclusions,
+        string riskClassification,
+        AgentProfileVersion reviewerProfileVersion,
+        SessionId reviewerSessionId,
+        string requiredHeadSha,
+        string requiredContractDigest)
+    {
+        ArgumentNullException.ThrowIfNull(requirement);
+        ArgumentNullException.ThrowIfNull(baseline);
+        ArgumentNullException.ThrowIfNull(executions);
+        ArgumentNullException.ThrowIfNull(findings);
+        ArgumentException.ThrowIfNullOrWhiteSpace(requiredHeadSha);
+        ArgumentException.ThrowIfNullOrWhiteSpace(requiredContractDigest);
+
+        var byKind = new Dictionary<ReviewCheckKind, ReviewCheckExecution>();
+        foreach (var execution in executions)
+        {
+            if (!byKind.TryAdd(execution.Kind, execution))
+            {
+                return ReviewBuildResult.Refused(EvidenceDuplicateCategory + ":" + execution.Kind);
+            }
+        }
+
+        foreach (var kind in Enum.GetValues<ReviewCheckKind>())
+        {
+            if (!byKind.TryGetValue(kind, out var execution))
+            {
+                return ReviewBuildResult.Refused(EvidenceMissingCategory + ":" + KindName(kind));
+            }
+
+            if (!execution.IsComplete)
+            {
+                return ReviewBuildResult.Refused(EvidenceIncompleteCategory + ":" + KindName(kind));
+            }
+
+            if (!string.Equals(execution.ReviewedSha, requiredHeadSha, StringComparison.Ordinal))
+            {
+                return ReviewBuildResult.Refused(EvidenceStaleCategory + ":" + KindName(kind));
+            }
+
+            if (kind == ReviewCheckKind.RequirementCoverage
+                && !string.Equals(execution.SubjectDigest, requiredContractDigest, StringComparison.Ordinal))
+            {
+                return ReviewBuildResult.Refused(EvidenceContractMismatchCategory + ":" + KindName(kind));
+            }
+
+            if (!execution.Passed)
+            {
+                var category = kind == ReviewCheckKind.Security
+                    ? SecurityGateFailedCategory
+                    : EvidenceCheckFailedCategory + ":" + KindName(kind);
+                return ReviewBuildResult.Refused(category + ":" + execution.Detail);
+            }
+        }
+
+        var checks = executions
+            .OrderBy(static execution => execution.Kind)
+            .Select(static execution => new ReviewCheckResult(execution.Kind, execution.Passed, execution.Detail))
+            .ToArray();
+
+        var reviewId = "review-" + Guid.NewGuid().ToString("N");
+        var ordered = executions.OrderBy(static execution => execution.Kind).ToArray();
+
+        var artifact = new FactoryReviewArtifact(
+            reviewId,
+            requirement,
+            baseline,
+            toolVersions,
+            checks,
+            findings,
+            exclusions,
+            riskClassification,
+            "Accepted",
+            reviewerProfileVersion,
+            reviewerSessionId,
+            DigestOfEvidence(reviewId, requirement, baseline, ordered),
+            ordered);
+
+        return new ReviewBuildResult(true, artifact, null);
+    }
+
+    private static string KindName(ReviewCheckKind kind) => kind switch
+    {
+        ReviewCheckKind.Validation => "validation",
+        ReviewCheckKind.RequirementCoverage => "requirement-coverage",
+        ReviewCheckKind.ArchitecturalConformance => "architectural-conformance",
+        ReviewCheckKind.Security => "security",
+        _ => kind.ToString()
+    };
+
+    /// <summary>The digest that binds a merge approval to the exact executed evidence.</summary>
+    public static string DigestOfEvidence(
+        string reviewId,
+        ReviewRequirement requirement,
+        ReviewBaseline baseline,
+        IReadOnlyList<ReviewCheckExecution> executions)
+    {
+        var payload = JsonSerializer.Serialize(
+            new
+            {
+                reviewId,
+                requirement = new { requirement.ArtifactId, requirement.Version, requirement.AcceptanceCriterionIds },
+                baseline,
+                executions = executions
+                    .OrderBy(static execution => execution.Kind)
+                    .Select(static execution => new
+                    {
+                        kind = execution.Kind.ToString(),
+                        execution.CheckId,
+                        execution.ExecutedBy,
+                        execution.ExecutedVersion,
+                        execution.ReviewedSha,
+                        execution.PolicyVersion,
+                        execution.Outcome,
+                        execution.SubjectDigest,
+                        execution.ArtifactDigest,
+                        executedAtUtc = execution.ExecutedAtUtc.ToString("O")
+                    })
+                    .ToArray()
+            },
+            CanonicalOptions);
+
+        return "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload))).ToLowerInvariant();
     }
 
     /// <summary>The digest that binds an approval to this exact review content.</summary>

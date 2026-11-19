@@ -24,6 +24,20 @@ public sealed record BoundedExecutionResult(
     bool IsolationApplied);
 
 /// <summary>
+/// Runs one command under caller-declared bounds. An implementation that cannot apply the bounds must report
+/// <c>IsolationApplied=false</c> rather than pretending the run was bounded (v0.4 FAC-P1-06.3).
+/// </summary>
+public interface IProcessRunner
+{
+    ValueTask<BoundedExecutionResult> RunAsync(
+        string command,
+        IReadOnlyList<string> arguments,
+        string workingDirectory,
+        ProcessBounds bounds,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// Runs an implementation shell command under real OS resource bounds (F-N.5). It reuses WIP's existing
 /// job-object primitive for memory and process-count limits and enforces wall time itself, so untrusted
 /// generated commands cannot run unbounded in the privileged host.
@@ -33,7 +47,7 @@ public sealed record BoundedExecutionResult(
 /// time, process memory and process count. It reports <see cref="BoundedExecutionResult.IsolationApplied"/>
 /// so a caller can tell a genuinely bounded run from one where the OS refused to apply limits.
 /// </remarks>
-public sealed class BoundedProcessRunner
+public sealed class BoundedProcessRunner : IProcessRunner
 {
     public async ValueTask<BoundedExecutionResult> RunAsync(
         string command,

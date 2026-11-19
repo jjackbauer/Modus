@@ -1,0 +1,418 @@
+{
+  "generatedAtUtc": "2026-11-19T09:43:09.8003671\u002B00:00",
+  "sourceRevision": "e142bb43fb2faed6884f85387833186eac06457d",
+  "specification": "harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md",
+  "semantics": {
+    "exact": "a compiled xUnit method with the exact name and at least one assertion",
+    "missing": "the named behaviour has no executable test at final SHA",
+    "nameOnly": "the method exists but no assertion was found; CI gate failure"
+  },
+  "counts": {
+    "named": 80,
+    "exact": 32,
+    "missing": 48,
+    "nameOnly": 0
+  },
+  "entries": [
+    {
+      "Name": "Intake_GivenRequirementFile_CommitsWorkItemAndEmitsRequirementSubmitted",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Intake_GivenFileWithoutAcceptanceExpectations_IsRefused",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Intake_GivenUnsupportedClass_IsRefusedBeforeImplementation",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Intake_GivenIdenticalContentTwice_IsIdempotent",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Intake_GivenRestart_RequirementAndContractProposalAreRecoverable",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Intake_GivenTamperedFrozenContract_BlocksWorkItem",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenAmbiguousUnobservableProse_RequiresResolutionBeforeFreeze",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenModelAttemptToEditFrozenOracle_IsRefused",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenWrongImplementation_FailsOriginalScenarios",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenPassingGeneratedTestsButFailingScenarios_StillFails",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Host_GivenSubmittedRequirement_RunsWithoutFactorySourceChange",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Host_GivenSecondRun_ResumesWithoutRepeatingAppliedOperations",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Host_GivenConcurrentRun_ExitsHostLockHeld",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Host_GivenControlRootInsideTarget_RefusesToStart",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Host_GivenStatus_ReportsStateVersionDigestAndLastFailure",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "StageHandler_GivenUnknownEvent_ReturnsNoOp",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "StageHandler_GivenIllegalTarget_FailsWithIllegalTransition",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "StageHandler_GivenReplayedEvent_DoesNotRepeatSideEffects",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "StageHandler_GivenExhaustedAttempts_QuarantinesWithPersistedCount",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "StageHandler_GivenArchitectureGate_IsDeterministicNotModelDriven",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Claim_GivenCrashAfterClaim_IsReclaimableAfterDeadline",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Claim_GivenLiveClaim_IsNotDispatchedTwice",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Operation_GivenMergeAlreadyApplied_ReconcilesWithoutSecondMerge",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Operation_GivenDeliveryAlreadyRunning_ReconcilesOwnership",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Merge_GivenApprovalAppliedBeforeRestart_IsRefusedAfterRestart",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenAbsolutePath_IsRefused",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenTraversalPath_IsRefused",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenApplyPatchConflict_RefusesAtomically",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenSearchText_RespectsMatchCap",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenToolOutsideProfile_IsDeniedAtInvocation",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenMissingIsolation_FailsClosed",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenSubcommandOutsideAllowlist_IsRefused",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenShellMetacharacters_TreatsThemAsLiterals",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenLongRunningCommand_IsTerminatedAtWallTime",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "AgentLoop_GivenToolError_ContinuesWithObservation",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "AgentLoop_GivenStepBudget_FailsWithCategory",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Production_GivenConversationalAnswerWithoutDiff_FailsNoAttributableChange",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Production_GivenEmptyDiff_FailsStage",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Delivery_GivenStaleReleaseOnReusedPort_IsNotAcceptedAsCandidate",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Delivery_GivenVerifiedCandidate_ReportsProcessStoppedNotDeployed",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenSubmission_EmitsConsumableRequirementSubmitted",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenContractProposal_RecordsWithoutStateTransition",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenPendingContractApproval_StopsWithoutBusyLoop",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenContractApproved_TransitionsProposedToRequirementsAligned",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenOnlyUnlistedEvent_DoesNotAdvance",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenEarlyFailure_UsesLegalBlockedOrCancelledTransition",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenPreMergeDeliveryFailure_TransitionsToNeedsRework",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenMergeAlreadyApplied_DoesNotUsePreMergeReworkEdge",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenReadyForDelivery_RequiresDistinctMergeAuthorization",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenRealMerge_RecordsAndVerifiesMergedSha",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Lifecycle_GivenPostMergeContractFailure_NeverRecordsReleased",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenProposalChanged_InvalidatesPriorAuthorization",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenApprovedTemplateAndValidParameters_AutoApprovesWithProvenance",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenUnknownOrRevokedTemplate_FallsBackToHumanApproval",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenTemplateAssertionEdited_RefusesPolicyApproval",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenTemplateParamOutOfBounds_RefusesPolicyApproval",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenNonTemplateProposal_DoesNotAutoApprove",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenPolicyContractApproval_CannotAuthorizeMerge",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenScenarioCaptureAndSubstitution_ExecutesInOrder",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenSubsetAndArrayAssertions_UsesSpecifiedSemantics",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenSeparateApplicationRun_ResetsScenarioState",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Operation_GivenThreeWritesInStage_HasThreeUniqueStableIds",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Operation_GivenReplayOfSameEffect_ReusesOriginalOperationId",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Operation_GivenUncertainMergeState_ReconcilesGitBeforeRetry",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Store_GivenSubmitApproveServeConcurrentProcesses_SerializesMutations",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Store_GivenRestart_OperatorStatusReadsDurableState",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Store_GivenDependencyRelease_BlockedItemWakesOnce",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Approval_GivenAnyBoundFieldChanged_RefusesMerge",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Review_GivenPassingFlagWithoutExecutionProof_RefusesAcceptance",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Verification_GivenHeadChangedAfterReview_RefusesMergeApproval",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Verification_GivenMergeCommitDifferentFromHead_RunsContractOnMergedTree",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Supervisor_GivenServeExit_DoesNotClaimAlwaysOnDaemon",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Supervisor_GivenSecondServe_RefusesDuplicateOwnership",
+      "Status": "exact-and-executable",
+      "SourceFile": null
+    },
+    {
+      "Name": "Supervisor_GivenRestart_UsesPinnedReleaseArtifact",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenSymlinkOrJunctionEscape_Refuses",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "ToolGateway_GivenLargeOutput_BoundsCaptureMemoryAndMarksTruncation",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Execution_GivenTrustedEnvironmentWithoutResourceControls_StillFailsClosed",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Contract_GivenHumanRejectsProposal_AllowsReproposalWithoutImplementation",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "Workflow_GivenRealFactoryHost_NeverInvokesDemoImplementation",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    },
+    {
+      "Name": "PA02_GivenDifferentBlindRequirement_UsesUnchangedFactoryBinary",
+      "Status": "missing-behavior",
+      "SourceFile": null
+    }
+  ]
+}

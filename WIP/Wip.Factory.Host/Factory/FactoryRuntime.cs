@@ -9,6 +9,7 @@ using Wip.Factory.Contracts.Work;
 using Wip.Factory.Core;
 using Wip.Factory.Core.Fanout;
 using Wip.Factory.Persistence;
+using Wip.Factory.Wip.Governance;
 
 namespace Wip.Factory.Host.Factory;
 
@@ -46,6 +47,7 @@ public sealed class FactoryRuntime
     private readonly IMergeEngine? _merges;
     private readonly ICandidateBuildVerifier? _builds;
     private readonly FactoryTemplateRegistry _templates;
+    private readonly Func<CancellationToken, Task<string?>>? _targetHeadProbe;
 
     public FactoryRuntime(
         FactoryControlRoot root,
@@ -53,12 +55,14 @@ public sealed class FactoryRuntime
         ICandidateHost? candidates = null,
         ICandidateBuildVerifier? builds = null,
         IMergeEngine? merges = null,
-        IStageDispatchHandler? handler = null)
+        IStageDispatchHandler? handler = null,
+        Func<CancellationToken, Task<string?>>? targetHeadProbe = null)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
         _candidates = candidates;
         _merges = merges;
         _builds = builds;
+        _targetHeadProbe = targetHeadProbe;
         _templates = new FactoryTemplateRegistry(root.Root);
         _root.EnsureCreated();
         _store = new LocalFactoryStore(_root.Root);
@@ -77,6 +81,9 @@ public sealed class FactoryRuntime
     }
 
     public FactoryControlRoot Root => _root;
+
+    /// <summary>Bounded restarts for one supervised serve window (v0.4 FAC-P1-02.2).</summary>
+    public const int MaxServeRestarts = 2;
 
     public LocalFactoryStore Store => _store;
 
@@ -137,6 +144,21 @@ public sealed class FactoryRuntime
         }
 
         // Idempotent by requirement digest: an identical revision is not duplicated (v0.3 §3.2.1).
+        // The shared mutation lease spans the duplicate check and the commit, so two processes cannot both
+        // observe "no existing item" and create it twice (v0.4 FAC-P1-03).
+        FactoryMutationLock mutation;
+        try
+        {
+            mutation = await FactoryMutationLock.AcquireAsync(_root.Root, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (MutationLockUnavailableException exception)
+        {
+            return SubmitResult.Refused(exception.Category);
+        }
+
+        try
+        {
         var existing = await FindByRequirementDigestAsync(document.Digest, cancellationToken).ConfigureAwait(false);
         if (existing is not null)
         {
@@ -189,6 +211,11 @@ public sealed class FactoryRuntime
         }
 
         return new SubmitResult(true, workItemId.Value, snapshot.State.ToString(), document.Digest, []);
+        }
+        finally
+        {
+            mutation.Dispose();
+        }
     }
 
     /// <summary>
@@ -320,12 +347,6 @@ public sealed class FactoryRuntime
             return (false, "contract-digest-mismatch");
         }
 
-        var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
-        if (snapshot is null)
-        {
-            return (false, "work-item-not-found");
-        }
-
         var submitted = await SubmittedPayloadAsync(workItemId, cancellationToken).ConfigureAwait(false);
         var data = new Dictionary<string, string>(submitted, StringComparer.Ordinal)
         {
@@ -336,13 +357,34 @@ public sealed class FactoryRuntime
             ["approvalKind"] = "operator"
         };
 
-        var frozen = snapshot with { Version = snapshot.Version + 1 };
-        var commit = await _store.CommitAsync(
-            new WorkItemCommit(frozen, snapshot.Version, [FactoryStageDispatchHandler.Event(
-                FactoryEventTypes.ContractApproved, snapshot.WorkItemId, data)]),
-            cancellationToken).ConfigureAwait(false);
+        // A concurrent dispatch may advance the aggregate between our read and our commit. CAS refuses that
+        // commit; re-read and retry so a legitimate approval is not silently lost (FAC-P1-03).
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
+            if (snapshot is null)
+            {
+                return (false, "work-item-not-found");
+            }
 
-        return commit.Succeeded ? (true, null) : (false, commit.Reason ?? "approve-commit-refused");
+            var frozen = snapshot with { Version = snapshot.Version + 1 };
+            var commit = await _store.CommitAsync(
+                new WorkItemCommit(frozen, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                    FactoryEventTypes.ContractApproved, snapshot.WorkItemId, data)]),
+                cancellationToken).ConfigureAwait(false);
+
+            if (commit.Succeeded)
+            {
+                return (true, null);
+            }
+
+            if (commit.Status != CommitStatus.VersionConflict)
+            {
+                return (false, commit.Reason ?? "approve-commit-refused");
+            }
+        }
+
+        return (false, "approve-version-conflict");
     }
 
     /// <summary>The submitted event payload for a work item, so later stages keep the requirement text.</summary>
@@ -450,9 +492,9 @@ public sealed class FactoryRuntime
 
     /// <summary>
     /// Records the operator's merge authorisation, bound to the exact review evidence. D-09 authorises contract
-    /// approval only; this is a separate, human-authorised merge (v0.3 §2, §3.4 step 4).
-    /// </summary>
-    /// approval only; this is a separate, human-authorised merge (v0.3 §2, §3.4 step 4).
+    /// approval only; this is a separate, human-authorised merge (v0.3 §2, §3.4 step 4; v0.4 FAC-P1-05).
+    /// The approval binds head/base, target branch, requirement revision, frozen contract, all four check evidence
+    /// digests and the policy/profile/runner versions, and it refuses missing, stale or already-applied evidence.
     /// </summary>
     public async ValueTask<(bool Ok, string? Error)> ApproveMergeAsync(
         string workItemId,
@@ -460,10 +502,11 @@ public sealed class FactoryRuntime
         CancellationToken cancellationToken = default)
     {
         var events = await _store.ReadAllAsync(cancellationToken).ConfigureAwait(false);
-        var review = events.LastOrDefault(e =>
-            string.Equals(e.Subject, workItemId, StringComparison.Ordinal)
-            && string.Equals(e.Type, OperatorEvents.ReviewAccepted, StringComparison.Ordinal));
+        var mine = events
+            .Where(e => string.Equals(e.Subject, workItemId, StringComparison.Ordinal))
+            .ToArray();
 
+        var review = mine.LastOrDefault(static e => string.Equals(e.Type, OperatorEvents.ReviewAccepted, StringComparison.Ordinal));
         if (review is null)
         {
             return (false, "no-review-to-approve");
@@ -475,26 +518,156 @@ public sealed class FactoryRuntime
             return (false, "review-digest-mismatch");
         }
 
-        var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
-        if (snapshot is null)
+        // One approval authorizes one merge. The approval id is durable in the event log, so a restarted process
+        // cannot apply the same approval a second time.
+        if (mine.Any(e => string.Equals(e.Type, OperatorEvents.MergeApproved, StringComparison.Ordinal)
+                          && e.Data.TryGetValue("approvalDigest", out var applied)
+                          && string.Equals(applied, reviewDigest, StringComparison.Ordinal)))
         {
-            return (false, "work-item-not-found");
+            return (false, "approval-already-applied");
+        }
+
+        var evidence = new ReviewEvidenceStore(ReviewEvidencePath).ReadFor(workItemId);
+        if (evidence.Count != 4)
+        {
+            return (false, "approval-missing-check-evidence");
+        }
+
+        var aggregate = ReviewEvidenceStore.AggregateDigest(evidence);
+        if (!review.Data.TryGetValue("evidenceDigest", out var recordedEvidence)
+            || !string.Equals(recordedEvidence, aggregate, StringComparison.Ordinal))
+        {
+            return (false, "approval-evidence-mismatch");
+        }
+
+        if (!review.Data.TryGetValue("headSha", out var headSha) || string.IsNullOrWhiteSpace(headSha))
+        {
+            return (false, "approval-incomplete");
+        }
+
+        var baseSha = review.Data.TryGetValue("baseSha", out var boundBase) ? boundBase : string.Empty;
+
+        if (evidence.Any(execution => !execution.IsComplete
+                                      || !execution.Passed
+                                      || !string.Equals(execution.ReviewedSha, headSha, StringComparison.Ordinal)))
+        {
+            return (false, "approval-evidence-stale");
+        }
+
+        if (!review.Data.TryGetValue("contractDigest", out var reviewContract) || string.IsNullOrWhiteSpace(reviewContract))
+        {
+            return (false, "approval-incomplete");
+        }
+
+        var submitted = mine.LastOrDefault(static e => string.Equals(e.Type, FactoryEventTypes.RequirementSubmitted, StringComparison.Ordinal));
+        if (submitted is null)
+        {
+            return (false, "no-submitted-requirement");
+        }
+
+        if (!submitted.Data.TryGetValue("acceptanceContract", out var submittedContractJson))
+        {
+            return (false, "approval-contract-missing");
+        }
+
+        var (submittedContract, _) = AcceptanceContract.Parse(submittedContractJson);
+        if (submittedContract is null
+            || !string.Equals(submittedContract.Digest, reviewContract, StringComparison.Ordinal))
+        {
+            return (false, "approval-contract-changed");
+        }
+
+        var requirementDigest = submitted.Data.TryGetValue("requirementDigest", out var submittedRequirement)
+            ? submittedRequirement
+            : string.Empty;
+
+        if (review.Data.TryGetValue("requirementDigest", out var reviewedRequirement)
+            && !string.Equals(reviewedRequirement, requirementDigest, StringComparison.Ordinal))
+        {
+            return (false, "approval-requirement-changed");
+        }
+
+        // The target branch must not have moved since the reviewed baseline.
+        var targetHead = _targetHeadProbe is null
+            ? await TargetHeadAsync(_root.TargetRepository, cancellationToken).ConfigureAwait(false)
+            : await _targetHeadProbe(cancellationToken).ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(targetHead)
+            && !string.IsNullOrWhiteSpace(baseSha)
+            && !string.Equals(targetHead.Trim(), baseSha.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, "approval-target-moved");
         }
 
         var data = new Dictionary<string, string>(review.Data, StringComparer.Ordinal)
         {
             ["approvedBy"] = Environment.UserName,
             ["approvedAtUtc"] = DateTimeOffset.UtcNow.ToString("O"),
-            ["approvalKind"] = "operator-merge"
+            ["approvalKind"] = "operator-merge",
+            ["approvalId"] = "approval-" + Guid.NewGuid().ToString("N"),
+            ["approvalDigest"] = reviewDigest,
+            ["targetBranch"] = "main",
+            ["requirementDigest"] = requirementDigest,
+            ["evidenceDigest"] = aggregate,
+            ["validationEvidenceDigest"] = CheckDigest(evidence, ReviewCheckKind.Validation),
+            ["coverageEvidenceDigest"] = CheckDigest(evidence, ReviewCheckKind.RequirementCoverage),
+            ["architectureEvidenceDigest"] = CheckDigest(evidence, ReviewCheckKind.ArchitecturalConformance),
+            ["securityEvidenceDigest"] = CheckDigest(evidence, ReviewCheckKind.Security),
+            ["templateProvenanceDigest"] = TemplateProvenance(submitted.Data, mine)
         };
 
-        var bound = snapshot with { Version = snapshot.Version + 1 };
-        var commit = await _store.CommitAsync(
-            new WorkItemCommit(bound, snapshot.Version, [FactoryStageDispatchHandler.Event(
-                OperatorEvents.MergeApproved, snapshot.WorkItemId, data)]),
-            cancellationToken).ConfigureAwait(false);
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
+            if (snapshot is null)
+            {
+                return (false, "work-item-not-found");
+            }
 
-        return commit.Succeeded ? (true, null) : (false, commit.Reason ?? "approve-commit-refused");
+            var bound = snapshot with { Version = snapshot.Version + 1 };
+            var commit = await _store.CommitAsync(
+                new WorkItemCommit(bound, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                    OperatorEvents.MergeApproved, snapshot.WorkItemId, data)]),
+                cancellationToken).ConfigureAwait(false);
+
+            if (commit.Succeeded)
+            {
+                return (true, null);
+            }
+
+            if (commit.Status != CommitStatus.VersionConflict)
+            {
+                return (false, commit.Reason ?? "approve-commit-refused");
+            }
+        }
+
+        return (false, "approve-version-conflict");
+    }
+
+    private string ReviewEvidencePath => Path.Combine(_root.Root, "verify", "review-evidence.log");
+
+    private static string CheckDigest(IReadOnlyList<ReviewCheckExecution> evidence, ReviewCheckKind kind)
+        => evidence.FirstOrDefault(execution => execution.Kind == kind)?.ArtifactDigest ?? string.Empty;
+
+    /// <summary>Binds an approval to the validated template provenance when the requirement named a template.</summary>
+    private static string TemplateProvenance(
+        IReadOnlyDictionary<string, string> submitted,
+        IReadOnlyList<FactoryEventEnvelope> events)
+    {
+        if (!submitted.TryGetValue("templateReference", out var reference) || string.IsNullOrWhiteSpace(reference))
+        {
+            return string.Empty;
+        }
+
+        var approval = events.LastOrDefault(static e =>
+            string.Equals(e.Type, FactoryEventTypes.ContractApproved, StringComparison.Ordinal));
+
+        var manifest = approval?.Data.TryGetValue("manifestDigest", out var recorded) == true
+            ? recorded
+            : string.Empty;
+
+        var parameters = submitted.TryGetValue("templateParameters", out var value) ? value : "{}";
+        return FactoryStageDispatchHandler.Digest(reference + "|" + manifest + "|" + parameters);
     }
 
     /// <summary>Durable event history for one work item, in commit order.</summary>
@@ -513,128 +686,237 @@ public sealed class FactoryRuntime
     /// duration: it materialises the exact released sha, starts it, proves identity, executes the frozen contract
     /// against the served process, records the observation, and only then allows OperationallyValidated.
     /// </summary>
-    public async ValueTask<(bool Ok, string? Error, int ProcessId, string? Url)> ServeAsync(
+    public async ValueTask<ServeOutcome> ServeAsync(
         string workItemId,
         TimeSpan duration,
         CancellationToken cancellationToken = default)
     {
         if (_candidates is null || _merges is null)
         {
-            return (false, "serve-unavailable", 0, null);
+            return ServeOutcome.Refused("serve-unavailable");
         }
 
         var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
         if (snapshot is null)
         {
-            return (false, "work-item-not-found", 0, null);
+            return ServeOutcome.Refused("work-item-not-found");
         }
 
         if (snapshot.State is not (FactoryWorkState.Released or FactoryWorkState.OperationallyValidated))
         {
-            return (false, "not-released", 0, null);
+            return ServeOutcome.Refused("not-released");
         }
 
         var events = await EventsAsync(workItemId, cancellationToken).ConfigureAwait(false);
         var release = events.LastOrDefault(static e => string.Equals(e.Type, OperatorEvents.ReleaseCompleted, StringComparison.Ordinal));
         if (release is null || !release.Data.TryGetValue("mergedSha", out var mergedSha) || string.IsNullOrWhiteSpace(mergedSha))
         {
-            return (false, "no-release-manifest", 0, null);
+            return ServeOutcome.Refused("no-release-manifest");
         }
 
         if (!release.Data.TryGetValue("acceptanceContract", out var contractJson))
         {
-            return (false, "contract-not-executable", 0, null);
+            return ServeOutcome.Refused("contract-not-executable", mergedSha);
         }
 
         var (contract, _) = AcceptanceContract.Parse(contractJson);
         if (contract is null)
         {
-            return (false, "contract-not-executable", 0, null);
+            return ServeOutcome.Refused("contract-not-executable", mergedSha);
         }
 
-        var destination = Path.Combine(_root.Root, "serve", mergedSha[..Math.Min(12, mergedSha.Length)]);
-        string revisionPath;
+        // One supervisor per (control root, work item). The OS-exclusive handle is the exclusivity mechanism and the
+        // durable journal makes the owner inspectable after recovery.
+        SupervisorLease lease;
         try
         {
-            revisionPath = await _merges.MaterialiseAsync(_root.TargetRepository, mergedSha, destination, cancellationToken)
+            lease = await SupervisorLease.AcquireAsync(_root.Root, workItemId, mergedSha, cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (MutationLockUnavailableException exception)
         {
-            return (false, "serve-revision-unavailable:" + exception.Message, 0, null);
+            return ServeOutcome.Refused(exception.Category, mergedSha);
         }
 
-        // A served revision must be built first: `dotnet run --no-build` in a fresh checkout has no output.
-        if (_builds is not null)
+        using (lease)
         {
-            var (serveBuildOk, serveBuildDetail) = await _builds.VerifyAsync(revisionPath, cancellationToken).ConfigureAwait(false);
-            if (!serveBuildOk)
+            var journal = new ServeStatusJournal(Path.Combine(
+                _root.Root, "serve", SafeName(workItemId) + ".status.log"));
+
+            var destination = Path.Combine(_root.Root, "serve", mergedSha[..Math.Min(12, mergedSha.Length)]);
+            string revisionPath;
+            try
             {
-                return (false, "serve-build-failed:" + serveBuildDetail, 0, null);
+                revisionPath = await _merges
+                    .MaterialiseAsync(_root.TargetRepository, mergedSha, destination, cancellationToken)
+                    .ConfigureAwait(false);
             }
-        }
-
-        CandidateSession session;
-        try
-        {
-            session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            // A named refusal, never an unhandled exception (v0.3 §8).
-            return (false, "serve-candidate-failed:" + exception.Message, 0, null);
-        }
-
-        if (!session.IdentityVerified)
-        {
-            await session.Stop().ConfigureAwait(false);
-            return (false, "serve-identity-unproven", 0, null);
-        }
-
-        try
-        {
-            var probe = await new AcceptanceContractRunner()
-                .RunAsync(contract, session.BaseAddress, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (!probe.Passed)
+            catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                return (false, "serve-contract-failed:" + probe.FailureSummary, session.ProcessId, session.BaseAddress.ToString());
+                journal.Append(workItemId, mergedSha, "failed", 0, 0, "serve-revision-unavailable:" + exception.Message);
+                return ServeOutcome.Refused("serve-revision-unavailable:" + exception.Message, mergedSha);
             }
 
-            // The served process is the materialised release, so the observed identity is that release's sha.
-            var data = new Dictionary<string, string>(release.Data, StringComparer.Ordinal)
+            // A served revision must be built first: `dotnet run --no-build` in a fresh checkout has no output.
+            if (_builds is not null)
             {
-                ["expectedSha"] = mergedSha,
-                ["observedSha"] = mergedSha,
-                ["processId"] = session.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                ["servedUrl"] = session.BaseAddress.ToString(),
-                ["scenarios"] = string.Join(",", probe.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
-            };
+                var (serveBuildOk, serveBuildDetail) = await _builds
+                    .VerifyAsync(revisionPath, cancellationToken)
+                    .ConfigureAwait(false);
 
-            var observed = snapshot with { Version = snapshot.Version + 1 };
-            await _store.CommitAsync(
-                new WorkItemCommit(observed, snapshot.Version, [FactoryStageDispatchHandler.Event(
-                    OperatorEvents.ReleaseObserved, snapshot.WorkItemId, data)]),
-                cancellationToken).ConfigureAwait(false);
-
-            await RunAsync(4, cancellationToken).ConfigureAwait(false);
-
-            // Supervise: stay alive for the requested duration, probing liveness.
-            var deadline = DateTimeOffset.UtcNow + duration;
-            while (DateTimeOffset.UtcNow < deadline)
-            {
-                await Task.Delay(250, cancellationToken).ConfigureAwait(false);
+                if (!serveBuildOk)
+                {
+                    journal.Append(workItemId, mergedSha, "failed", 0, 0, "serve-build-failed:" + serveBuildDetail);
+                    return ServeOutcome.Refused("serve-build-failed:" + serveBuildDetail, mergedSha);
+                }
             }
 
-            return (true, null, session.ProcessId, session.BaseAddress.ToString());
-        }
-        finally
-        {
-            await session.Stop().ConfigureAwait(false);
+            CandidateSession session;
+            try
+            {
+                session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // A named refusal, never an unhandled exception (v0.3 §8).
+                journal.Append(workItemId, mergedSha, "failed", 0, 0, "serve-candidate-failed:" + exception.Message);
+                return ServeOutcome.Refused("serve-candidate-failed:" + exception.Message, mergedSha);
+            }
+
+            try
+            {
+                if (!session.IdentityVerified)
+                {
+                    journal.Append(workItemId, mergedSha, "failed", session.ProcessId, 0, "serve-identity-unproven");
+                    return ServeOutcome.Refused("serve-identity-unproven", mergedSha);
+                }
+
+                journal.Append(workItemId, mergedSha, "serving", session.ProcessId, 0, "pinned release " + mergedSha);
+
+                var probe = await new AcceptanceContractRunner()
+                    .RunAsync(contract, session.BaseAddress, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!probe.Passed)
+                {
+                    journal.Append(workItemId, mergedSha, "failed", session.ProcessId, 0,
+                        "serve-contract-failed:" + probe.FailureSummary);
+                    return new ServeOutcome(
+                        false, "serve-contract-failed:" + probe.FailureSummary, session.ProcessId,
+                        session.BaseAddress.ToString(), "failed", 0, mergedSha);
+                }
+
+                // The served process is the materialised release, so the observed identity is that release's sha.
+                var data = new Dictionary<string, string>(release.Data, StringComparer.Ordinal)
+                {
+                    ["expectedSha"] = mergedSha,
+                    ["observedSha"] = mergedSha,
+                    ["processId"] = session.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    ["servedUrl"] = session.BaseAddress.ToString(),
+                    ["scenarios"] = string.Join(",", probe.Scenarios.Select(static s => s.Id + "=" + (s.Passed ? "pass" : "fail")))
+                };
+
+                var observed = snapshot with { Version = snapshot.Version + 1 };
+                var observation = await _store.CommitAsync(
+                    new WorkItemCommit(observed, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                        OperatorEvents.ReleaseObserved, snapshot.WorkItemId, data)]),
+                    cancellationToken).ConfigureAwait(false);
+
+                if (!observation.Succeeded)
+                {
+                    journal.Append(workItemId, mergedSha, "failed", session.ProcessId, 0,
+                        "serve-observation-refused:" + observation.Reason);
+                    return new ServeOutcome(
+                        false, "serve-observation-refused:" + observation.Reason, session.ProcessId,
+                        session.BaseAddress.ToString(), "failed", 0, mergedSha);
+                }
+
+                await RunAsync(4, cancellationToken).ConfigureAwait(false);
+
+                var deadline = DateTimeOffset.UtcNow + duration;
+                var restarts = 0;
+
+                while (DateTimeOffset.UtcNow < deadline)
+                {
+                    if (!session.IsAliveNow())
+                    {
+                        journal.Append(workItemId, mergedSha, "crashed", session.ProcessId, restarts,
+                            "supervised process exited");
+                        await session.Stop().ConfigureAwait(false);
+
+                        if (restarts >= MaxServeRestarts)
+                        {
+                            journal.Append(workItemId, mergedSha, "failed", session.ProcessId, restarts,
+                                "supervisor-restart-budget-exhausted");
+                            return new ServeOutcome(
+                                false, "supervisor-restart-budget-exhausted", session.ProcessId,
+                                session.BaseAddress.ToString(), "failed", restarts, mergedSha);
+                        }
+
+                        restarts++;
+                        try
+                        {
+                            session = await _candidates.StartAsync(revisionPath, cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception exception) when (exception is not OperationCanceledException)
+                        {
+                            journal.Append(workItemId, mergedSha, "failed", 0, restarts, "restart-failed:" + exception.Message);
+                            return ServeOutcome.Refused("supervisor-restart-failed:" + exception.Message, mergedSha);
+                        }
+
+                        if (!session.IdentityVerified)
+                        {
+                            journal.Append(workItemId, mergedSha, "failed", session.ProcessId, restarts,
+                                "restart-identity-unproven");
+                            return new ServeOutcome(
+                                false, "serve-identity-unproven", session.ProcessId,
+                                session.BaseAddress.ToString(), "failed", restarts, mergedSha);
+                        }
+
+                        // The restarted process must pass the frozen contract before it is reported healthy again.
+                        var restartProbe = await new AcceptanceContractRunner()
+                            .RunAsync(contract, session.BaseAddress, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (!restartProbe.Passed)
+                        {
+                            journal.Append(workItemId, mergedSha, "failed", session.ProcessId, restarts,
+                                "restart-contract-failed:" + restartProbe.FailureSummary);
+                            return new ServeOutcome(
+                                false, "serve-contract-failed:" + restartProbe.FailureSummary, session.ProcessId,
+                                session.BaseAddress.ToString(), "failed", restarts, mergedSha);
+                        }
+
+                        journal.Append(workItemId, mergedSha, "restarted", session.ProcessId, restarts,
+                            "bounded restart " + restarts + " of " + MaxServeRestarts);
+                    }
+
+                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                }
+
+                journal.Append(workItemId, mergedSha, "stopped", session.ProcessId, restarts,
+                    "timed serve stopped; not an always-on daemon");
+
+                return new ServeOutcome(
+                    true, null, session.ProcessId, session.BaseAddress.ToString(), "stopped", restarts, mergedSha);
+            }
+            finally
+            {
+                await session.Stop().ConfigureAwait(false);
+            }
         }
     }
 
+    private static string SafeName(string value)
+    {
+        var builder = new System.Text.StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            builder.Append(char.IsLetterOrDigit(character) || character is '-' or '_' or '.' ? character : '_');
+        }
+
+        return builder.ToString();
+    }
     /// <summary>The latest review evidence for a work item, read from durable storage rather than a cached copy.</summary>
     private async ValueTask<MergeAuthority?> CurrentEvidenceAsync(string workItemId, CancellationToken cancellationToken)
     {
@@ -644,6 +926,9 @@ public sealed class FactoryRuntime
         {
             return null;
         }
+
+        var evidence = new ReviewEvidenceStore(ReviewEvidencePath).ReadFor(workItemId);
+        var submitted = events.LastOrDefault(static e => string.Equals(e.Type, FactoryEventTypes.RequirementSubmitted, StringComparison.Ordinal));
 
         return new MergeAuthority(
             review.Data.TryGetValue("reviewDigest", out var reviewDigest) ? reviewDigest : string.Empty,
@@ -655,7 +940,17 @@ public sealed class FactoryRuntime
             FactoryPolicy.PolicyVersion,
             FactoryPolicy.GuidelinesVersion,
             FactoryPolicy.ProfileVersion,
-            FactoryPolicy.RunnerVersion);
+            FactoryPolicy.RunnerVersion,
+            TargetBranch: "main",
+            RequirementDigest: review.Data.TryGetValue("requirementDigest", out var requirementDigest) ? requirementDigest : string.Empty,
+            EvidenceDigest: review.Data.TryGetValue("evidenceDigest", out var evidenceDigest) ? evidenceDigest : string.Empty,
+            ValidationEvidenceDigest: CheckDigest(evidence, ReviewCheckKind.Validation),
+            CoverageEvidenceDigest: CheckDigest(evidence, ReviewCheckKind.RequirementCoverage),
+            ArchitectureEvidenceDigest: CheckDigest(evidence, ReviewCheckKind.ArchitecturalConformance),
+            SecurityEvidenceDigest: CheckDigest(evidence, ReviewCheckKind.Security),
+            TemplateProvenanceDigest: submitted is null
+                ? string.Empty
+                : TemplateProvenance(submitted.Data, events));
     }
 
     private static async Task<string?> TargetHeadAsync(string repositoryPath, CancellationToken cancellationToken)

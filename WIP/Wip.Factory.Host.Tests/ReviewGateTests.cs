@@ -147,7 +147,7 @@ public sealed class ReviewGateTests
         var worktree = Path.Combine(basePath, "worktree");
         Directory.CreateDirectory(repository);
         Directory.CreateDirectory(worktree);
-        await File.WriteAllTextAsync(Path.Combine(worktree, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+        FactoryTestWorkspace.Write(worktree);
 
         var (root, error) = FactoryControlRoot.Resolve(repository, Path.Combine(basePath, "control"));
         Assert.NotNull(root);

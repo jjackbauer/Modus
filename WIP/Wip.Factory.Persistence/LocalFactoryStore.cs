@@ -4,8 +4,24 @@ using Wip.Factory.Contracts.Events;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Persistence;
 using Wip.Factory.Contracts.Work;
+using Wip.Factory.Core.Io;
 
 namespace Wip.Factory.Persistence;
+
+/// <summary>
+/// Raised when the committed log contains an unreadable record that is not the trailing record. Interior corruption
+/// is a real integrity failure: it must be visible, never silently skipped (v0.4 FAC-P1-03.5).
+/// </summary>
+public sealed class FactoryStoreCorruptionException : InvalidOperationException
+{
+    public FactoryStoreCorruptionException(string logPath, int lineNumber, string detail)
+        : base($"store-corrupt:{Path.GetFileName(logPath)}:{lineNumber}:{detail}")
+    {
+        LineNumber = lineNumber;
+    }
+
+    public int LineNumber { get; }
+}
 
 /// <summary>
 /// The local durable factory store (D-02). One append-only log is the whole store: a work-state change
@@ -14,8 +30,10 @@ namespace Wip.Factory.Persistence;
 /// a torn write indistinguishable from a write that never happened.
 /// </summary>
 /// <remarks>
-/// A process-wide mutex serializes appends. Fencing counters are derived from the log on load, so
-/// tokens stay monotonic across restarts even though lease <i>tickets</i> themselves are ephemeral.
+/// Every read-modify-append critical section holds an OS-exclusive file lock and rebuilds the in-memory view from
+/// the committed log first, so two processes cannot validate competing commits against the same stale version.
+/// Fencing counters are derived from the log on load, so tokens stay monotonic across restarts even though lease
+/// <i>tickets</i> themselves are ephemeral.
 /// </remarks>
 public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbox, IEventLease
 {
@@ -28,6 +46,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
     };
 
     private readonly string _logPath;
+    private readonly string _lockPath;
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     private readonly Dictionary<WorkItemId, WorkItemSnapshot> _snapshots = [];
@@ -48,6 +67,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         ArgumentException.ThrowIfNullOrWhiteSpace(directory);
         Directory.CreateDirectory(directory);
         _logPath = Path.Combine(directory, LogFileName);
+        _lockPath = Path.Combine(directory, "factory.lock");
     }
 
     /// <summary>Number of trailing records discarded as torn during the most recent load.</summary>
@@ -60,7 +80,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             return _snapshots.TryGetValue(workItemId, out var snapshot) ? snapshot : null;
         }
         finally
@@ -78,7 +98,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
 
             var currentVersion = _snapshots.TryGetValue(commit.Snapshot.WorkItemId, out var current)
                 ? current.Version
@@ -134,7 +154,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             return _events.Select(static stored => stored.Envelope).ToArray();
         }
         finally
@@ -156,7 +176,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             var now = DateTimeOffset.UtcNow;
             var selected = _events
                 .Where(stored => !stored.Published
@@ -202,7 +222,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             var index = _events.FindIndex(stored => stored.Envelope.Id.Equals(eventId));
             if (index < 0 || _events[index].Published)
             {
@@ -233,7 +253,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             var key = InboxKey(subscriber, eventId);
             if (_inbox.ContainsKey(key))
             {
@@ -266,7 +286,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             var key = InboxKey(subscriber, eventId);
             if (_inbox.TryGetValue(key, out var entry) && entry.Acknowledged)
             {
@@ -298,7 +318,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             return _inbox.TryGetValue(InboxKey(subscriber, eventId), out var entry) && entry.Acknowledged;
         }
         finally
@@ -321,7 +341,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
 
             var key = LeaseKey(workItemId, stage);
             var now = DateTimeOffset.UtcNow;
@@ -362,7 +382,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             var key = LeaseKey(ticket.WorkItemId, ticket.Stage);
 
             if (!_leases.TryGetValue(key, out var held)
@@ -400,7 +420,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             return _maxFencingToken.TryGetValue(workItemId, out var newest)
                 && newest == fencingToken.Value;
         }
@@ -421,7 +441,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             if (_quarantine.ContainsKey(eventId.Value))
             {
                 return;
@@ -451,7 +471,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             return _quarantine.Values.OrderBy(static q => q.QuarantinedAtUtc).ToArray();
         }
         finally
@@ -467,7 +487,7 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            EnsureLoaded();
+            using var crossProcess = await EnterAsync(cancellationToken).ConfigureAwait(false);
             if (!_quarantine.ContainsKey(eventId.Value))
             {
                 return false;
@@ -488,6 +508,36 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
         {
             _gate.Release();
         }
+    }
+
+    /// <summary>
+    /// Enters the cross-process critical section for this store. The file lock serializes <i>read-modify-append</i>
+    /// across processes; the in-memory view is rebuilt from the committed log first, so a commit is never validated
+    /// against a stale snapshot. The lease is held until the calling method completes (FAC-P1-03).
+    /// </summary>
+    private async ValueTask<IDisposable> EnterAsync(CancellationToken cancellationToken)
+    {
+        var lease = await CrossProcessFileLock
+            .AcquireAsync(_lockPath, TimeSpan.FromSeconds(30), cancellationToken)
+            .ConfigureAwait(false);
+
+        Reset();
+        EnsureLoaded();
+        return lease;
+    }
+
+    /// <summary>Discards the in-memory projection so the next load observes only committed records.</summary>
+    private void Reset()
+    {
+        _snapshots.Clear();
+        _events.Clear();
+        _claims.Clear();
+        _inbox.Clear();
+        _leases.Clear();
+        _maxFencingToken.Clear();
+        _quarantine.Clear();
+        _tornRecordCount = 0;
+        _loaded = false;
     }
 
     private static string InboxKey(SubscriberId subscriber, FactoryEventId eventId)
@@ -531,17 +581,26 @@ public sealed class LocalFactoryStore : IWorkItemStore, IEventOutbox, IEventInbo
             {
                 record = JsonSerializer.Deserialize<LogRecord>(line, SerializerOptions);
             }
-            catch (JsonException) when (index == lastNonEmptyIndex)
+            catch (JsonException exception) when (index == lastNonEmptyIndex)
             {
                 // Only a trailing record can be a torn write: it was never a committed fact.
-                // An unparseable record anywhere else is real corruption and must not be hidden.
                 record = null;
+            }
+            catch (JsonException exception)
+            {
+                // An unparseable record anywhere else is real corruption: fail visibly, never skip it.
+                throw new FactoryStoreCorruptionException(_logPath, index + 1, exception.Message);
             }
 
             if (record is null)
             {
-                _tornRecordCount++;
-                continue;
+                if (index == lastNonEmptyIndex)
+                {
+                    _tornRecordCount++;
+                    continue;
+                }
+
+                throw new FactoryStoreCorruptionException(_logPath, index + 1, "null-record");
             }
 
             Apply(record);

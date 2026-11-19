@@ -131,7 +131,7 @@ public sealed class ServeTests
         public ValueTask<string> MaterialiseAsync(string repositoryPath, string mergedSha, string destination, CancellationToken cancellationToken = default)
         {
             Directory.CreateDirectory(destination);
-            File.WriteAllText(Path.Combine(destination, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+            FactoryTestWorkspace.Write(destination);
             return ValueTask.FromResult(destination);
         }
     }
@@ -153,7 +153,7 @@ public sealed class ServeTests
         var worktree = Path.Combine(basePath, "worktree");
         Directory.CreateDirectory(repository);
         Directory.CreateDirectory(worktree);
-        await File.WriteAllTextAsync(Path.Combine(worktree, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+        FactoryTestWorkspace.Write(worktree);
 
         var (root, error) = FactoryControlRoot.Resolve(repository, Path.Combine(basePath, "control"));
         Assert.NotNull(root);
@@ -163,7 +163,7 @@ public sealed class ServeTests
         var merge = new StubMerge();
         var handler = new FactoryStageDispatchHandler(
             new ScriptedRunner(worktree), host, new StubBuild(),
-            merges: merge, verificationRoot: Path.Combine(basePath, "verify"),
+            merges: merge, verificationRoot: Path.Combine(root!.Root, "verify"),
             targetHead: _ => Task.FromResult<string?>("base-1"));
 
         var runtime = new FactoryRuntime(root!, new ScriptedRunner(worktree), host, new StubBuild(), merge, handler);

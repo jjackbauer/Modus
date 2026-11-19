@@ -33,7 +33,8 @@ public static class FactoryCli
             "approve" => await ApproveAsync(rest, output, error).ConfigureAwait(false),
             "serve" => await ServeAsync(rest, output, error).ConfigureAwait(false),
             "template" => await TemplateAsync(rest, output, error).ConfigureAwait(false),
-            _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status").ConfigureAwait(false)
+            "acceptance" => await AcceptanceAsync(rest, output, error, json).ConfigureAwait(false),
+            _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status|approve|serve|template|acceptance").ConfigureAwait(false)
         };
     }
 
@@ -264,7 +265,9 @@ public static class FactoryCli
 
         await output.WriteLineAsync($"serving          : {result.Url}").ConfigureAwait(false);
         await output.WriteLineAsync($"process id       : {result.ProcessId}").ConfigureAwait(false);
-        await output.WriteLineAsync($"supervised for   : {duration.TotalSeconds}s (process stopped on exit)").ConfigureAwait(false);
+        await output.WriteLineAsync($"pinned release   : {result.MergedSha}").ConfigureAwait(false);
+        await output.WriteLineAsync($"status           : {result.Status} (restarts: {result.RestartCount})").ConfigureAwait(false);
+        await output.WriteLineAsync($"supervised for   : {duration.TotalSeconds}s (timed serve; not an always-on daemon)").ConfigureAwait(false);
         return Ok;
     }
 
@@ -400,6 +403,97 @@ public static class FactoryCli
         }
 
         return new RealModelImplementationRunner(root, baseUrl, apiKey);
+    }
+
+    /// <summary>
+    /// Evaluator-side acceptance verification. It reads an evidence manifest and evaluator-owned expectations and
+    /// returns a nonzero exit code unless every expected scenario passed in both phases (FAC-P0-04).
+    /// </summary>
+    private static async Task<int> AcceptanceAsync(string[] rest, TextWriter output, TextWriter error, bool json)
+    {
+        var action = rest.Length > 0 ? rest[0] : string.Empty;
+
+        if (string.Equals(action, "verify", StringComparison.Ordinal))
+        {
+            var manifestPath = Value(rest, "--manifest");
+            var expectationsPath = Value(rest, "--expectations");
+            if (manifestPath is null || expectationsPath is null)
+            {
+                return await FailAsync(error, Usage, "usage: factory acceptance verify --manifest <evidence.json> --expectations <evaluator.json>").ConfigureAwait(false);
+            }
+
+            if (!File.Exists(manifestPath) || !File.Exists(expectationsPath))
+            {
+                return await FailAsync(error, Refused, "acceptance-file-not-found").ConfigureAwait(false);
+            }
+
+            var evidence = AcceptanceJson.ReadEvidence(await File.ReadAllTextAsync(manifestPath).ConfigureAwait(false));
+            var expectations = AcceptanceJson.ReadExpectations(await File.ReadAllTextAsync(expectationsPath).ConfigureAwait(false));
+            if (evidence is null || expectations is null)
+            {
+                return await FailAsync(error, Refused, AcceptanceEvaluator.ScenarioUnparseable).ConfigureAwait(false);
+            }
+
+            return await WriteVerdictAsync(AcceptanceEvaluator.Evaluate(evidence, expectations), output, error, json).ConfigureAwait(false);
+        }
+
+        if (string.Equals(action, "verify-pair", StringComparison.Ordinal))
+        {
+            var firstPath = Value(rest, "--first");
+            var firstExpectationsPath = Value(rest, "--first-expectations");
+            var secondPath = Value(rest, "--second");
+            var secondExpectationsPath = Value(rest, "--second-expectations");
+
+            if (firstPath is null || firstExpectationsPath is null || secondPath is null || secondExpectationsPath is null)
+            {
+                return await FailAsync(error, Usage,
+                    "usage: factory acceptance verify-pair --first <a.json> --first-expectations <a-eval.json> --second <b.json> --second-expectations <b-eval.json>").ConfigureAwait(false);
+            }
+
+            var files = new[] { firstPath, firstExpectationsPath, secondPath, secondExpectationsPath };
+            if (files.Any(path => !File.Exists(path)))
+            {
+                return await FailAsync(error, Refused, "acceptance-file-not-found").ConfigureAwait(false);
+            }
+
+            var first = AcceptanceJson.ReadEvidence(await File.ReadAllTextAsync(firstPath).ConfigureAwait(false));
+            var firstExpectations = AcceptanceJson.ReadExpectations(await File.ReadAllTextAsync(firstExpectationsPath).ConfigureAwait(false));
+            var second = AcceptanceJson.ReadEvidence(await File.ReadAllTextAsync(secondPath).ConfigureAwait(false));
+            var secondExpectations = AcceptanceJson.ReadExpectations(await File.ReadAllTextAsync(secondExpectationsPath).ConfigureAwait(false));
+
+            if (first is null || firstExpectations is null || second is null || secondExpectations is null)
+            {
+                return await FailAsync(error, Refused, AcceptanceEvaluator.ScenarioUnparseable).ConfigureAwait(false);
+            }
+
+            return await WriteVerdictAsync(
+                AcceptanceEvaluator.EvaluateBlindPair(first, firstExpectations, second, secondExpectations),
+                output, error, json).ConfigureAwait(false);
+        }
+
+        return await FailAsync(error, Usage, "usage: factory acceptance verify|verify-pair").ConfigureAwait(false);
+    }
+
+    private static async Task<int> WriteVerdictAsync(AcceptanceVerdict verdict, TextWriter output, TextWriter error, bool json)
+    {
+        if (json)
+        {
+            await output.WriteLineAsync(JsonSerializer.Serialize(verdict, Json)).ConfigureAwait(false);
+        }
+        else if (verdict.Passed)
+        {
+            await output.WriteLineAsync("acceptance: pass").ConfigureAwait(false);
+        }
+        else
+        {
+            await output.WriteLineAsync("acceptance: fail (" + verdict.FailureCategory + ")").ConfigureAwait(false);
+            foreach (var reason in verdict.Reasons)
+            {
+                await error.WriteLineAsync("  " + reason).ConfigureAwait(false);
+            }
+        }
+
+        return verdict.Passed ? Ok : Refused;
     }
 
     private static string? Value(string[] args, string name)

@@ -36,6 +36,10 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
     private static readonly CapabilityVersion Version = new("1.0.0");
     private static readonly CapabilityPermission WorkspaceWrite = new("workspace.write");
 
+    /// <summary>The closed set of tools the implementation profile may invoke. The security check verifies it.</summary>
+    public static IReadOnlyList<CapabilityId> PinnedToolIds { get; } =
+        [ListFilesId, ReadFileId, SearchTextId, ApplyPatchId, WriteFileId, RunCommandId];
+
     /// <summary>Baseline ignore list so generated diffs stay source-only (bin/obj were being committed).</summary>
     public static readonly string DefaultGitIgnore = "bin/" + Environment.NewLine + "obj/" + Environment.NewLine;
 

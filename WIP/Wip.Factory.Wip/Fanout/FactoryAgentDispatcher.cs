@@ -61,6 +61,7 @@ public sealed class FactoryAgentDispatcher
     public const string PermissionDeniedCategory = "permission-denied";
     public const string EmptyModelContentCategory = "empty-model-content";
     public const string NoSessionCategory = "session-not-found";
+    public const string ForgedToolCategory = "forged-tool-definition";
 
     private readonly IAgentProfileRegistry _profiles;
     private readonly IReadOnlyDictionary<AgentDefinitionId, FactoryAgentDefinition> _definitions;
@@ -120,6 +121,25 @@ public sealed class FactoryAgentDispatcher
                     $"{reference.CapabilityId.Value}@{reference.Version.Value}",
                     0,
                     0);
+            }
+        }
+
+        // The model-facing definitions must be a subset of the pinned profile. A caller that forges a tool
+        // definition cannot widen what the WIP tool loop will invoke (v0.4 FAC-P1-06.1/.6).
+        if (dispatch.Tools is { Count: > 0 } definitions)
+        {
+            var pinned = profile.Draft.Tools
+                .Select(static reference => reference.CapabilityId.Value)
+                .ToHashSet(StringComparer.Ordinal);
+
+            var forged = definitions
+                .Where(definition => !pinned.Contains(definition.Name))
+                .Select(static definition => definition.Name)
+                .ToArray();
+
+            if (forged.Length > 0)
+            {
+                return Refuse(dispatch, ForgedToolCategory, string.Join(",", forged), 0, 0);
             }
         }
 

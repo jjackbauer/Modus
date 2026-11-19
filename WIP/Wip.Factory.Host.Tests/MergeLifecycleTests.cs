@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Wip.Factory.Host.Factory;
+using Wip.Factory.Wip.Governance;
 using Xunit;
 
 namespace Wip.Factory.Host.Tests;
@@ -136,7 +137,7 @@ public sealed class MergeLifecycleTests
         public ValueTask<string> MaterialiseAsync(string repositoryPath, string mergedSha, string destination, CancellationToken cancellationToken = default)
         {
             Directory.CreateDirectory(destination);
-            File.WriteAllText(Path.Combine(destination, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+            FactoryTestWorkspace.Write(destination);
             return ValueTask.FromResult(destination);
         }
     }
@@ -162,7 +163,7 @@ public sealed class MergeLifecycleTests
         var worktree = Path.Combine(basePath, "worktree");
         Directory.CreateDirectory(repository);
         Directory.CreateDirectory(worktree);
-        await File.WriteAllTextAsync(Path.Combine(worktree, "App.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\" />");
+        FactoryTestWorkspace.Write(worktree);
 
         var (root, error) = FactoryControlRoot.Resolve(repository, Path.Combine(basePath, "control"));
         Assert.NotNull(root);
@@ -173,7 +174,7 @@ public sealed class MergeLifecycleTests
             host,
             new StubBuild(),
             merges: merge,
-            verificationRoot: Path.Combine(basePath, "verify"),
+            verificationRoot: Path.Combine(root!.Root, "verify"),
             targetHead: targetHead,
             currentEvidence: evidence is null ? null : (_, _) => Task.FromResult(evidence()));
 
@@ -307,9 +308,18 @@ public sealed class MergeLifecycleTests
             new StubCandidateHost(server.BaseAddress), merge, _ => Task.FromResult<string?>("base-1"), () => captured);
 
         var review = (await runtime.EventsAsync(workItem)).Last(static e => e.Type == OperatorEvents.ReviewAccepted);
+        var evidence = new ReviewEvidenceStore(Path.Combine(runtime.Root.Root, "verify", "review-evidence.log")).ReadFor(workItem);
         captured = new MergeAuthority(
             review.Data["reviewDigest"], review.Data["headSha"], review.Data["baseSha"], review.Data["contractDigest"],
-            review.Data["policyVersion"], review.Data["guidelinesVersion"], review.Data["profileVersion"], review.Data["runnerVersion"]);
+            review.Data["policyVersion"], review.Data["guidelinesVersion"], review.Data["profileVersion"], review.Data["runnerVersion"],
+            TargetBranch: "main",
+            RequirementDigest: review.Data["requirementDigest"],
+            EvidenceDigest: review.Data["evidenceDigest"],
+            ValidationEvidenceDigest: evidence.Single(static e => e.Kind == ReviewCheckKind.Validation).ArtifactDigest,
+            CoverageEvidenceDigest: evidence.Single(static e => e.Kind == ReviewCheckKind.RequirementCoverage).ArtifactDigest,
+            ArchitectureEvidenceDigest: evidence.Single(static e => e.Kind == ReviewCheckKind.ArchitecturalConformance).ArtifactDigest,
+            SecurityEvidenceDigest: evidence.Single(static e => e.Kind == ReviewCheckKind.Security).ArtifactDigest,
+            TemplateProvenanceDigest: string.Empty);
 
         Assert.True((await runtime.ApproveMergeAsync(workItem, review.Data["reviewDigest"])).Ok);
         await runtime.RunAsync(16);
