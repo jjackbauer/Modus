@@ -559,21 +559,88 @@ Screenshots: `e2e-intake-validated-1440-dark.png`, `e2e-submitted-1440-dark.png`
 `e2e-work-detail-{320,390,1440,1920}-dark.png`, `e2e-release-{320,390,1440,1920}-dark.png`,
 `e2e-work-detail-{1440,390}-light.png`, `e2e-release-1440-light.png`.
 
-### 14.6 Support checks (partial VG evidence, not a gate pass)
+### 14.6 Verification gates — measured
 
-`.evidence/pr3/vg-checks.json` measured overview, queue, work detail and release detail:
+**VG-01 responsive.** Overview, queue, work detail and release detail were measured at 320, 390,
+768, 1024, 1280, 1440 and 1920 CSS px: 0 document overflow, 0 clipped actions, 0 visible text below
+12px (`.evidence/pr3/vg-checks.json`). Merge, contract and serve dialogs were opened and closed at
+the same seven widths, plus both themes at 390 and 1440: 25 cases, 0 failures (`dialogs-check.json`);
+every dialog stayed inside the viewport, had no horizontal scroll, kept its footer reachable and
+kept focus inside. WCAG text spacing (1.5 line height, 0.12em letter spacing, 0.16em word spacing,
+2em paragraph spacing) at 320 and 1440: 0 overflow. A physical browser zoom is not reachable from
+page-level automation, so 200% zoom was tested as its layout equivalent, a 720 CSS-px viewport at
+1440 device pixels: 0 overflow and no clipped controls. This is recorded as a limitation, not as a
+physical zoom run.
 
-- 4 routes × 7 widths: 0 document overflow, 0 clipped action buttons, 0 visible text below 12px.
-- WCAG text spacing (1.5 line height, 0.12em letter spacing, 0.16em word spacing, 2em paragraph
-  spacing) at 320 and 1440: 0 overflow on overview, queue and work detail.
-- Emulated 200% zoom (720 CSS px at 1440 device width): 0 overflow; body text remains 15px and
-  dense metadata 13px.
-- Accessibility tree on work detail: 1 tablist, 6 tabs, 9 headings, 5 buttons.
+**VG-02 readability.** The documented tokens still measure 15px body, 13px dense metadata, 12px
+floor; the width sweep found 0 user-facing text below 12px. Text spacing is measured above. A fresh
+full contrast audit was not run in this increment, so VG-02 is not claimed complete.
 
-**Not done:** a real NVDA/Narrator pass, a physical 200% browser-zoom run, the full VG-06 state
-matrix, the VG-08 large-data fixture and the VG-09 human visual review. No VG gate is claimed
-complete. The automated accessibility tree is not a substitute for a screen reader.
+**VG-03 keyboard and screen reader.** The real NVDA pass used NVDA 2026.3.1 (portable, debug log,
+`--minimal --disable-addons`) with headed Chrome foregrounded:
 
+- Login page, Factory overview, Work queue, the queue table (caption, 8 columns, rows including
+  state and attention), all four filter fields, the view switch and the table scroll region.
+- Navigation drawer at 390: "Open navigation" / "Close navigation", opened with Enter, closed with
+  Escape, focus returned to the toggle.
+- Work detail: the heading is announced on route entry (after the shell fix below), the tablist and
+  tab selection are announced, and the Evidence tab announces "Latest review verdict", "Review
+  accepted", the four checks and "Exact identity".
+- Merge dialog: NVDA reads the dialog title, description, "Verdict Review accepted", the four
+  checks and their details. Contract dialog: title, description and "This proposal cannot be
+  approved." Serve dialog: title, description and the contract/URL rule. Intake: the summary is
+  announced as "3 problems need attention" with the three field links and the field alerts.
+- 53 of 55 scripted expectations matched (`vg03-nvda.json`). The two misses are script attribution,
+  not unannounced controls: the search edit's typed value is not echoed in this NVDA speech
+  configuration (the edit itself is announced), and the work-detail state line is not reached by
+  the scripted arrow sequence because route focus leaves NVDA in focus mode; the same
+  "Operationally validated" state is announced in the queue table row. This is recorded as a
+  detail-page reading gap, not hidden.
+- Keyboard-only mutations (contract freeze, merge authorization, serve start/stop) were executed in
+  the item 7 E2E; the dialogs that carry them were additionally read under NVDA in this pass.
+
+**VG-04 safety/truth.** The E2E proved requirement-digest binding, review-digest binding to the
+merge dialog, post-merge verification on the merged revision, one merge decision per fixture, and a
+serving state that agreed between work detail and release detail. A stale merge authorization was
+not exercised; VG-04 is not claimed complete.
+
+**VG-05 visual evidence.** 60+ screenshots across both themes and 320–1920; no approved regression
+baseline or pixel diff was produced, so VG-05 is not claimed complete.
+
+**VG-06 interaction states.** Measured in `.evidence/pr3/vg06-states.json`: delayed projection shows
+the loading state (`role=status`, `aria-live=polite`); an empty result shows "No work matches these
+filters" with a Clear filters action; an aborted work-items request shows the network error and a
+"Reload this page" action, and the reload returns the rows; offline shows "Offline · showing the
+last durable facts" within 0.8s, keeps the durable rows, and returns to live activity when the
+browser reconnects; a nonexistent work item shows 404 `work-item-not-found` with no retry action and
+the exact ID in the breadcrumb; a viewer role sees disabled merge and dispatch controls and receives
+403 `forbidden` from the merge endpoint. Non-executable contract and stale intake drafts are covered
+above. Not every major panel has every state exercised, so VG-06 is not claimed complete.
+
+**VG-07 technical.** `cargo test --workspace` suites were green; the web crate has 24 tests and the
+server 13. The hydrate wasm check and release server/wasm builds succeeded, and the browser checks
+ran on the authenticated demo fixture. No .NET source changed in this increment, so the adapter
+suite/build was not re-run.
+
+**VG-08 large data.** 100 real work items were submitted through the control-plane API (API p50
+1.39s, p95 2.59s, max 2.71s; 100/100 accepted). The queue then projected 104 items and 144 events
+in 1.33s, rendered 104 rows at 1440 with 0 overflow (104 mobile cards at 390, 0 overflow). This
+meets the >=100 work-item leg but not the >=1000-event leg, and does not cover long diffs, many
+sessions or dozens of approvals, so VG-08 is partial.
+
+**VG-09 design coherence.** No human visual review was conducted in this increment; VG-09 remains
+open.
+
+### 14.6.1 Two gaps found by this round and fixed
+
+- **Route-change focus (J1).** NVDA stayed on the old control after navigation. The shell now
+  focuses the new route's `h1` after the data-driven heading renders, keeps retrying briefly while
+  a reactive refresh can replace the node, and stops the moment the operator focuses a control or a
+  dialog is open. Verified on direct loads of queue/work/release and on SPA queue→detail.
+- **Offline truth (IA-03/VG-06).** The activity stream could remain "live" while the browser was
+  offline. The shell now listens to the browser's offline/online events, sets an explicit offline
+  state, closes the stream so buffered heartbeats cannot claim live, and reopens it on reconnect.
+  Transient read failures gained a safe "Reload this page" retry.
 ### 14.7 Still open after this increment
 
 - **C-01**: `Timeline` is still not built, so C-01 remains open. `InlineValidation`,
@@ -592,5 +659,9 @@ complete. The automated accessibility tree is not a substitute for a screen read
 - Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
-- VG-01 is not complete as a gate (no real 200% zoom/NVDA run); VG-06, VG-08 and VG-09 are open.
-  The plan is not complete and must not be marked so.
+- **Remaining VG work:** VG-02 has no fresh full contrast audit; VG-04 did not exercise a stale
+  merge authorization; VG-05 has no approved regression baseline; VG-06 did not exercise every
+  panel and state combination; VG-08 reached 104 work items but only 144 events and no long
+  diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom
+  is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan is not
+  complete and must not be marked so.

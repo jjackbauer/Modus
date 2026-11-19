@@ -281,6 +281,19 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | D-13 | Search/filter state has two homes (component signals and localStorage) with no URL | `work.rs:182-230` | **Done:** the URL holds search, state, attention, sort and view; localStorage stores only named views | PR 3 |
 | D-14 | Status is carried by a chip instead of a label in several lists | `releases.rs:78-84`, `agents.rs:81`, `work_detail.rs:719` | `StatusIndicator` with text + tone; chips only for counts/tags, never as the sole status carrier | PR 2/PR 3 |
 
+## 7.1 Verification gates after the NVDA/state round
+
+| Gate | Status | Evidence |
+|---|---|---|
+| VG-01 responsive | Measured at 7 widths for 4 routes and 25 dialog cases, both themes; 0 overflow, 0 clipped actions; text spacing 0 overflow; 200% zoom tested as a 720 CSS-px layout equivalent, not a physical zoom | `vg-checks.json`, `dialogs-check.json`, `zoom-check.json` |
+| VG-02 readability | 15/13/12px tokens and no text below 12px; text spacing measured. No fresh full contrast audit | `vg-checks.json`; design-system §2 |
+| VG-03 keyboard + screen reader | Met with notes: real NVDA 2026.3.1 pass over navigation, queue, table, detail tabs, evidence, merge/contract/serve dialogs and intake errors (53/55 scripted expectations; two documented script misses); keyboard-only mutations covered by the E2E; route focus fixed | `vg03-nvda.json`, `nvda-vg6.log`, `e2e-verify.json` |
+| VG-04 safety/truth | Partial: digest binding, serving consistency and one-decision-per-merge proven; stale merge authorization not exercised | `e2e-verify.json` |
+| VG-05 visual regression | Partial: 60+ both-theme screenshots; no approved baseline/pixel diff | `.evidence/pr3/shots/` |
+| VG-06 interaction states | Partial: loading, empty, transient error + reload, offline/resync, 404, viewer denial, stale intake and non-executable contract measured; not every panel | `vg06-states.json` |
+| VG-07 technical | Rust/wasm/browser green; .NET suite not re-run because no adapter source changed | `cargo-test-workspace.txt`, E2E JSON |
+| VG-08 large data | Partial: 104 work items, 144 events, 1.33s projection, 0 overflow at 1440/390; below the 1000-event leg and no long diff/session fixtures | `vg08-large.json` |
+| VG-09 design coherence | Open: no human visual review | — |
 ## 8. Decisions recorded by this inventory
 
 1. **Template policy approval moves to Settings.** Registration and approval are the same object's
@@ -331,16 +344,16 @@ journeys are finished.
 
 | Item | Status (through the PR 3 completion increment) | What is still missing |
 |---|---|---|
-| J1 navigation | Done: three task groups, `aria-current="page"`, ≤1024px drawer with Menu button, backdrop, Escape, Tab trap, focus in/return, body scroll lock, closed drawer removed from the tab order | Real screen-reader announcement of the drawer (VG-03); route-change focus management for the new page heading |
+| J1 navigation | Done: three task groups, `aria-current="page"`, ≤1024px drawer with Menu button, backdrop, Escape, Tab trap, focus in/return, body scroll lock, closed drawer removed from the tab order. Added: route-change focus moves to the new page h1; NVDA announced "Open navigation"/"Close navigation" and the new heading | A broader AT/drawer matrix is still under VG-06/VG-09 |
 | J2 queue toolbar | Done: visible labels on every field, two-row toolbar, Filters toggle at ≤760px, Clear filters with a stated disabled reason, `aria-expanded`/`aria-controls`, labelled view switch, and purpose-built cards at ≤860px. Extended in the PR 3 completion increment: saved-view rename/delete with an active indicator, URL state, 280px board region with arrows and a hint, priority definition | Real screen-reader verification of the saved-view status announcement and the board scroll region (VG-03) |
-| D-05 status repetition | Closed: one state line, one derived indicator, one health fact, one attention line, no merge panel; the header is the only decision surface | Real screen-reader verification (VG-03) |
+| D-05 status repetition | Closed: one state line, one derived indicator, one health fact, one attention line, no merge panel; the header is the only decision surface | The attention line was not specifically exercised under NVDA; it remains in the VG-06 matrix |
 | D-06 KPI grids | Partially done: queue tiles replaced by a labelled summary | Overview, Quality, Pipeline and Agents still use metric grids |
 | D-07 refresh | Deferred to PR 3 | Per-page Refresh buttons remain until `FreshnessIndicator` exists |
 | D-08 breadcrumbs | Partially done: current crumb is not a link, instance crumb targets `/overview`, work-detail back link removed, labels match the new nav | Release detail still has an in-page back link |
 | Responsive containment | Done and measured: 224 headless Chrome measurements (16 routes × 7 widths × 2 themes), 0 documents with horizontal overflow, 0 visible text below 12px | Keyboard-focusable table scroll regions and the remaining mobile data layouts (B-02/B-04) |
 | Type and contrast | Done: 15px body, 13px metadata, 12px floor, faint tokens 7.50/8.10 dark and 5.43/5.06 light | Real 200% browser zoom; WCAG text spacing measured at 320/1440 with 0 overflow (VG-02) |
-| J3 contract decision | Done: one header entry; dialog shows requirement text, declared scenarios, unresolved questions, effects and exact digest; `Confirmation` assertion; non-executable proposals stay disabled | Real screen-reader reading of the dialog (VG-03) |
+| J3 contract decision | Done: one header entry; dialog shows requirement text, declared scenarios, unresolved questions, effects and exact digest; `Confirmation` assertion; non-executable proposals stay disabled. NVDA read the dialog title, description and non-executable notice | A live approval under NVDA was not executed (the keyboard path is covered by the E2E; the dialog was read and cancelled) |
 | J4 merge decision | Done: one header entry; `EvidenceSummary` + exact digest + typed `Confirmation`; the server still revalidates the digest | A derived “authorization recorded; dispatch executes it” state, because the adapter records the authorization as an event and merges on the next dispatch cycle |
-| J5 serve | Done: release detail owns start/stop; work detail reports state and deep-links; live preview URL is enriched from `factory.release.observed.v1` and probed HTTP 200 in the E2E | Release detail still uses its local `ServeConfirm` markup instead of the shared `Confirmation`; real screen-reader run |
+| J5 serve | Done: release detail owns start/stop; work detail reports state and deep-links; live preview URL is enriched from `factory.release.observed.v1` and probed HTTP 200 in the E2E; NVDA read the serve dialog title, description and contract/URL rule | Release detail still uses its local `ServeConfirm` markup instead of the shared `Confirmation` |
 | J6 intake | Done: field summary with anchors, parser-code mapping, draft storage with a privacy note, exact-document `Confirmation`, stale-document invalidation | Per-route document titles (C-03) still generic; template approval remains in the Quality/Settings decision from D-04 |
-| J7 end-to-end | Done on `WORK-b3a440a4`: intake → dispatch → contract → review → merge → post-merge verification → serve start/stop, both themes, 7 widths, keyboard paths, 0 errors | A real screen-reader pass, a physical 200% zoom run and the VG-06/08/09 gates |
+| J7 end-to-end | Done on `WORK-b3a440a4`: intake → dispatch → contract → review → merge → post-merge verification → serve start/stop, both themes, 7 widths, keyboard paths, 0 errors; real NVDA pass added | A physical 200% zoom run, the complete VG-06 matrix, VG-08 event/scale legs and VG-09 |

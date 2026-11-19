@@ -128,7 +128,7 @@ Consequences:
 | "Done", "Complete" for a work item | Released / Closed, whichever is true |
 | "Approved" for a merge authorization | Merge authorized |
 | "Verified" for a merge or a passing local test | Release verified (only after post-merge verification) |
-| "Failed" for a transport disconnect | Activity disconnected / reconnecting |
+| "Failed" for a transport disconnect | Activity disconnected / reconnecting / offline |
 | "0" for an unmeasured value | Not measured |
 | "Paused", "Scheduled", "Retrying" | Only the factory states that exist; this control plane has no such verbs |
 
@@ -154,6 +154,7 @@ no page uppercases a status, substitutes a synonym, or invents a new human statu
 | `serving_view` / `serving_status_label` | reconciled serving state | journal `serving` with no tracked process → "Not currently serving" |
 | `serving_status_explanation` | what an operator should believe about a serving state | one sentence per code |
 | `freshness_view` | transport delivery freshness | live / reconnecting / stale / disconnected |
+| `ConnectionIndicator` (shell) | browser transport availability, including `navigator.onLine` | Live activity / Activity stale / Offline · showing the last durable facts / Activity reconnecting |
 | `role_label` | session role | `admin` → "Administrator" |
 
 Rules:
@@ -164,6 +165,9 @@ Rules:
 - The adjective "failed" belongs to a verification or a serve attempt; it is never used for a
   transport disconnect.
 - Status is text plus a restrained mark. Colour never carries the only copy of the meaning.
+- The connection indicator is shell chrome for transport availability, not a factory status. "Offline"
+  means the browser has no network; it never means the factory failed. The last durable facts remain
+  on screen and are labelled as such.
 
 - Attention identities: `Wip.Factory.ControlApi/ReadModels/ReadModelWorkDetail.cs::BuildAttention`
   and `control-plane/server/src/overview.rs::canonical_attention`.
