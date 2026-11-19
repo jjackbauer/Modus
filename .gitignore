@@ -28,6 +28,7 @@ TestResults/
 
 # Execution evidence TRX files are contractual artifacts
 !docs/execution/evidence/**/*.trx
+!docs/goal-wip-factory-operator-alpha/engineering/evidence/*.trx
 
 # Test console logs and hang attachments stay on disk; TRX is the committed evidence
 docs/execution/evidence/**/test-results/*.out.txt
@@ -47,6 +48,7 @@ packages/
 # Execution evidence logs are contractual artifacts (red.log, verify.log)
 !docs/execution/**/*.log
 !.github/requirements/proof-artifacts/**/*.log
+!docs/goal-wip-factory-operator-alpha/engineering/evidence/*.log
 
 # Local scratch and generated runtime state (kept on disk, not committed)
 .tmp/
