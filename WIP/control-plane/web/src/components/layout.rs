@@ -73,7 +73,9 @@ pub fn ActionToolbar(#[prop(into)] label: String, children: Children) -> impl In
 }
 
 /// Search, labelled filters, saved views and an always-available clear. On narrow screens the
-/// filter fields collapse behind a named button instead of being hidden with no way back.
+/// filter fields collapse behind a named button instead of being hidden with no way back. Clear
+/// stays in the first row so it is reachable while the fields are collapsed, and it states why it
+/// is disabled when nothing is filtering.
 #[component]
 pub fn FilterBar(
     #[prop(into)] label: String,
@@ -104,6 +106,15 @@ pub fn FilterBar(
                 >
                     {move || if open.get() { "Hide filters" } else { "Filters" }}
                 </button>
+                <button
+                    class="btn btn-sm queue-clear"
+                    type="button"
+                    disabled=move || !active.get()
+                    title=move || if active.get() { "Clear search, state and attention filters" } else { "No filters are applied" }
+                    on:click=move |_| on_clear.run(())
+                >
+                    "Clear filters"
+                </button>
                 {trailing.map(|trailing| view! { <div class="toolbar-actions">{trailing}</div> })}
             </div>
             <div
@@ -112,15 +123,6 @@ pub fn FilterBar(
                 class:open=move || open.get()
             >
                 {fields}
-                <button
-                    class="btn btn-sm"
-                    type="button"
-                    disabled=move || !active.get()
-                    title=move || if active.get() { "Clear search, state and attention filters" } else { "No filters are applied" }
-                    on:click=move |_| on_clear.run(())
-                >
-                    "Clear filters"
-                </button>
             </div>
             {secondary.map(|secondary| view! { <div class="toolbar-secondary">{secondary}</div> })}
         </div>
