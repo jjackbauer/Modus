@@ -1,7 +1,8 @@
 # Engineering evidence index
 
 **Candidate source revision:** `1d1e5128120fae2865e112615173c351e5fd8fa9` (branch
-`feature/wip-factory-alpha`). **Engineering status:** `ENGINEERING_COMPLETE` per
+`feature/wip-factory-alpha`). **Handoff commit/tag:** `5f6f2cb` / `v0.4-engineering-1d1e512`
+(adds only the measured evidence and this index). **Engineering status:** `ENGINEERING_COMPLETE` per
 `ENGINEERING_TEST_RESULTS.json`. **Acceptance:** `HISTORICAL_FAILURE_PRESERVED` / `NOT_ACCEPTED`.
 
 The gate run executed in a clean detached worktree at that revision, so the untracked concurrent work in the main
