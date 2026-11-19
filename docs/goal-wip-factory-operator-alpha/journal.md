@@ -802,3 +802,18 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Implications**: Supplying the real blind pair now costs two file paths and one command per requirement.
 - **Confidence**: High
 - **Related**: EVD-093
+## OBS-053 — Named coverage measured again: 31 of 80
+
+- **Source**: `dotnet test --list-tests` over the four suites after adding five named tests
+- **Fact**: 168 executable test methods; **31 of the 80** v0.3-named tests now exist under their exact specified names
+  (was 26 measured last time). The five added are `StageHandler_GivenUnknownEvent_ReturnsNoOp`,
+  `Lifecycle_GivenOnlyUnlistedEvent_DoesNotAdvance`, `StageHandler_GivenIllegalTarget_FailsWithIllegalTransition`,
+  `Store_GivenRestart_OperatorStatusReadsDurableState` and `Contract_GivenProposalChanged_InvalidatesPriorAuthorization`
+  — each asserting observable behaviour, including the illegal-transition case where the worker refuses to advance and
+  leaves the committed state untouched.
+- **Implications**: The remaining 49 named tests are those whose mechanisms do **not** exist or are not exposed:
+  template-policy negatives under their exact spec names, supervisor duplicate ownership, host-lock variants,
+  contract tamper detection, model-edit refusal, and the blind PA-02 name. Writing them would require building the
+  mechanism first, which is the rule I have applied throughout.
+- **Confidence**: High
+- **Related**: EVD-094..096, OBS-049, named-test-map.md
