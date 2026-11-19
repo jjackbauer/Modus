@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "supportedClass": "aspnetcore-http-net10",
+  "scenarios": [
+    { "id": "AC-1", "method": "POST", "path": "/invoices",
+      "request": { "json": { "items": [ { "name": "a", "quantity": 2, "unitPrice": 10 }, { "name": "b", "quantity": 1, "unitPrice": 5 } ] } },
+      "expect": { "status": 200, "jsonSubset": { "total": 25, "itemCount": 2 } } },
+    { "id": "AC-2", "method": "POST", "path": "/invoices",
+      "request": { "json": { "items": [ { "name": "x", "quantity": 3, "unitPrice": 4.5 } ] } },
+      "expect": { "status": 200, "jsonSubset": { "total": 13.5, "itemCount": 1 } } },
+    { "id": "AC-3", "method": "POST", "path": "/invoices",
+      "request": { "json": { "items": [] } },
+      "expect": { "status": 422 } }
+  ]
+}

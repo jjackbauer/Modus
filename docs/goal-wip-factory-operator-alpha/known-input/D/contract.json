@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "supportedClass": "aspnetcore-http-net10",
+  "scenarios": [
+    { "id": "AC-1", "method": "POST", "path": "/strength",
+      "request": { "json": { "password": "Abc123!x" } },
+      "expect": { "status": 200, "jsonSubset": { "score": 4, "verdict": "strong" } } },
+    { "id": "AC-2", "method": "POST", "path": "/strength",
+      "request": { "json": { "password": "abcdefgh" } },
+      "expect": { "status": 200, "jsonSubset": { "score": 1, "verdict": "weak" } } },
+    { "id": "AC-3", "method": "POST", "path": "/strength",
+      "request": { "json": { "password": "" } },
+      "expect": { "status": 422 } }
+  ]
+}

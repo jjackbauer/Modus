@@ -862,3 +862,15 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Alternatives considered**: marking complete on six demonstrated gates (rejected — the objective is explicit);
   writing PA-01/02 myself and calling it acceptance (rejected — already refused once when the user directed it, and the
   directory is named `known-input/` precisely so this cannot be re-litigated later).
+## OBS-057 — Two more shapes delivered: invoice totals and password strength
+
+- **Source**: harness runs `KNOWN-C` and `KNOWN-D` against host `84a0e46`; manifests in `known-input/`
+- **Fact**: (C) an **invoice total** API — nested JSON request, computed sum, 422 on empty items: 3/3 scenarios pass
+  pre- and post-merge, `Released`, mergedSha `6e6aacb7` == target head, served on :57232 (pid 60800), 89 s. (D) a
+  **password strength** API — rule scoring, verdict mapping, 422 on empty: 3/3 pass, `Released`, mergedSha `f058634a`
+  == target head, served on :58384 (pid 80716), 78 s.
+- **Implications**: **Seven distinct application shapes** now reach `OperationallyValidated` through one unchanged
+  binary: CRUD, FIFO queue, health probe, unit conversion, text statistics, invoice computation, rule scoring. None
+  required factory changes; each ran from a requirement document plus a contract.
+- **Confidence**: High
+- **Related**: EVD-099, EVD-100, known-input/C-manifest.json, known-input/D-manifest.json

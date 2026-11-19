@@ -139,3 +139,16 @@ dotnet test WIP/Wip.Factory.Host.Tests                  # 73
 ```
 
 For PA-01/PA-02: supply two unseen requirement files, then run the harness once per file and attach both manifests.
+---
+
+## Final delivery (run completed)
+
+**Seven application shapes** have reached `OperationallyValidated` through the unchanged binary:
+book catalog (CRUD) · job queue (FIFO + state machine) · health probe · temperature conversion ·
+text statistics · invoice totals · password strength.
+
+168 test cases pass across four suites; build clean; branch pushed.
+
+Six of eight PA gates are demonstrated by recorded real runs and PA-06 is met for every externally changeable
+binding. PA-01/PA-02 were delivered as **known-input** runs (requirements authored inside this session, recorded in
+`known-input/`); they are not blind acceptance evidence and are labelled as such throughout.
