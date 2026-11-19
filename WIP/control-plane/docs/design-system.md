@@ -644,7 +644,12 @@ open.
   focuses the new route's `h1` after the data-driven heading renders, keeps retrying briefly while
   a reactive refresh can replace the node, and stops the moment the operator focuses a control or a
   dialog is open. Verified on direct loads of queue/work/release and on SPA queue→detail.
-- **Contrast (VG-02).** axe found light-theme tertiary/accent/success tokens below 4.5:1 on light
+- **Background refresh retention.** The converted surfaces used `Suspense`, so an SSE-driven
+  refresh replaced a fully rendered work item with its loading block and lost the operator's
+  context. Overview, queue, work detail and release now use `Transition`: the first load still
+  shows the loading state, but a background refetch keeps the previous content on screen. Verified
+  on the merge-authorized fixture (notice, buttons and state stayed present after the stream
+  backlog) and the loading/empty/error/offline state check still passes.- **Contrast (VG-02).** axe found light-theme tertiary/accent/success tokens below 4.5:1 on light
   surfaces, 11px uppercase neutral chips, a 75% opacity Copy control in the table, and an invalid
   `div`/`dt`/`dd` structure in the contract dialog. Tokens were darkened, chips are 12px sentence
   case with primary text, the Copy control is fully opaque, and the dialog uses a real `dl`. The
@@ -657,20 +662,24 @@ open.
 - **C-01**: `Timeline` is still not built, so C-01 remains open. `InlineValidation`,
   `Confirmation`, `EvidenceSummary` and `ValidationMessage` are now used by intake and the
   decision dialogs; the earlier “built but unwired” gap for those primitives is closed.
-- **C-03 document titles**: every route still reports the shell title `Wip.Factory Control
-  Plane` (measured in `vg-checks.json`). Per-route titles with exact IDs in breadcrumbs remain
-  open.
-- **Merge authorization execution**: the adapter records the authorization as an event, but the
-  merge and post-merge verification run on the next dispatch cycle. The header keeps offering
-  `Authorize merge` until the state changes, so an operator can see the same authorization
-  offered again; the E2E explicitly ran one dispatch after authorization. A derived
-  “authorization recorded; dispatch to execute” state is still open.
+- **C-03 document titles — closed.** Measured in `titles-check.json`: "Factory overview · Wip.Factory
+  Control Plane", "Work queue · Wip.Factory Control Plane", "{work title} · WORK-… · Wip.Factory
+  Control Plane", and "Release · {work title} · WORK-… · Wip.Factory Control Plane". The title is
+  set from the rendered `h1` plus the record identity in the URL; a bounded retry covers
+  Suspense-backed routes.
+- **Merge authorization execution — closed.** A real fixture (`WORK-37a2601c`) was left at
+  `ReadyForDelivery` with a recorded `factory.merge.approved.v1`: the header no longer offers
+  `Authorize merge`, `Start dispatch` is primary, a notice says the factory executes the merge on
+  the next dispatch cycle, the transition list no longer repeats the authorization, and the queue
+  next step is "Run dispatch to merge". A wrong digest is refused with `review-digest-mismatch`;
+  repeating the recorded authorization is refused with `approval-already-applied`; neither changes
+  the release record. Evidence: `merge-state.json`, `merge-queue-check.cjs`, `stale-merge.json`.
 - Release detail still uses `Chip` for its state/verified/serving labels and its own
   `ServeConfirm` markup (not the shared `Confirmation`); PR 4.
 - Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
-- **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast review; VG-04 did not exercise a stale
+- **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast review; VG-04 has digest-mismatch and repeat-authorization refusals but not a changed-review stale case
   merge authorization; VG-05 has no approved regression baseline; VG-06 did not exercise every
   panel and state combination; VG-08 reached 104 work items but only 144 events and no long
   diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom
