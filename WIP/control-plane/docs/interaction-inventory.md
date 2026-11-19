@@ -329,11 +329,11 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 Recorded after the PR 2 foundation commit. This table is evidence of movement, not a claim that the
 journeys are finished.
 
-| Item | Status after PR 2 | What is still missing |
+| Item | Status (through the PR 3 completion increment) | What is still missing |
 |---|---|---|
 | J1 navigation | Done: three task groups, `aria-current="page"`, ≤1024px drawer with Menu button, backdrop, Escape, Tab trap, focus in/return, body scroll lock, closed drawer removed from the tab order | Real screen-reader announcement of the drawer (VG-03); route-change focus management for the new page heading |
-| J2 queue toolbar | Done: visible labels on every field, two-row toolbar, Filters toggle at ≤760px, Clear filters with a stated disabled reason, `aria-expanded`/`aria-controls`, labelled view switch, and purpose-built cards at ≤860px instead of the squeezed table | Closed in the PR 3 completion increment: saved-view rename/delete with an active indicator, URL state, 280px board region with arrows and a hint, priority definition. The 320px board uses the same scroll region |
-| D-05 status repetition | Done for the header: one state label, one derived indicator, one health fact; `CONTRACT FROZEN`/`DISPATCH ACTIVE` chips removed | Closed: one attention line, merge panel removed; the header is the only decision surface |
+| J2 queue toolbar | Done: visible labels on every field, two-row toolbar, Filters toggle at ≤760px, Clear filters with a stated disabled reason, `aria-expanded`/`aria-controls`, labelled view switch, and purpose-built cards at ≤860px. Extended in the PR 3 completion increment: saved-view rename/delete with an active indicator, URL state, 280px board region with arrows and a hint, priority definition | Real screen-reader verification of the saved-view status announcement and the board scroll region (VG-03) |
+| D-05 status repetition | Closed: one state line, one derived indicator, one health fact, one attention line, no merge panel; the header is the only decision surface | Real screen-reader verification (VG-03) |
 | D-06 KPI grids | Partially done: queue tiles replaced by a labelled summary | Overview, Quality, Pipeline and Agents still use metric grids |
 | D-07 refresh | Deferred to PR 3 | Per-page Refresh buttons remain until `FreshnessIndicator` exists |
 | D-08 breadcrumbs | Partially done: current crumb is not a link, instance crumb targets `/overview`, work-detail back link removed, labels match the new nav | Release detail still has an in-page back link |
