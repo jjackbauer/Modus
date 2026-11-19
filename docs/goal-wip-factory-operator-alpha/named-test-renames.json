@@ -1,0 +1,78 @@
+{
+  "$comment": "v0.4 FAC-P1-08.1 classification map. A mapped test exists in the compiled suites and contains an assertion; the spec name is reported as equivalent-but-renamed, not as exact coverage.",
+  "renames": {
+    "Operation_GivenMergeAlreadyApplied_ReconcilesWithoutSecondMerge": {
+      "equivalent": "Release_GivenCrashAfterMergeBeforeVerification_ReconcilesGitAndReverifies",
+      "reason": "The v0.4 release-integrity test seeds an applied merge, replays it, and asserts one Git merge plus reverification."
+    },
+    "Operation_GivenDeliveryAlreadyRunning_ReconcilesOwnership": {
+      "equivalent": "Supervisor_GivenSecondServe_RefusesDuplicateOwnership",
+      "reason": "A second serve over the same released work item is refused by the durable supervisor lease."
+    },
+    "Merge_GivenApprovalAppliedBeforeRestart_IsRefusedAfterRestart": {
+      "equivalent": "Approval_GivenRestartAfterApplied_RefusesDuplicate",
+      "reason": "A fresh runtime over the same control root refuses to apply the same approval twice."
+    },
+    "ToolGateway_GivenToolOutsideProfile_IsDeniedAtInvocation": {
+      "equivalent": "Factory_GivenForgedToolDefinition_InvokerRefuses",
+      "reason": "The production dispatcher refuses a model-facing tool definition outside the pinned profile."
+    },
+    "ToolGateway_GivenLongRunningCommand_IsTerminatedAtWallTime": {
+      "equivalent": "Isolation_GivenImplementationShellExecution_IsBoundedByResourceLimits",
+      "reason": "The bounded runner terminates a long-running child at its wall-time bound under the OS job object."
+    },
+    "Delivery_GivenStaleReleaseOnReusedPort_IsNotAcceptedAsCandidate": {
+      "equivalent": "Candidate_GivenUnrelatedProcessStealsPort_RefusesIdentity",
+      "reason": "The listener-ownership proof refuses a port owned by an unrelated process."
+    },
+    "Delivery_GivenVerifiedCandidate_ReportsProcessStoppedNotDeployed": {
+      "equivalent": "Supervisor_GivenTimedServeExit_DoesNotClaimAlwaysOn",
+      "reason": "A timed serve reports stopped and never claims an always-on deployment."
+    },
+    "Lifecycle_GivenReadyForDelivery_RequiresDistinctMergeAuthorization": {
+      "equivalent": "Merge_GivenWrongReviewDigest_RefusesApproval",
+      "reason": "ReadyForDelivery alone does not authorize a merge; a distinct operator digest is required."
+    },
+    "Lifecycle_GivenRealMerge_RecordsAndVerifiesMergedSha": {
+      "equivalent": "Merge_GivenApprovedReview_MergesAndVerifiesTheMergedRevision",
+      "reason": "The post-merge contract runs on the materialised merged revision and the merged SHA is recorded."
+    },
+    "Lifecycle_GivenPostMergeContractFailure_NeverRecordsReleased": {
+      "equivalent": "Release_GivenPostMergeContractFailureAndRestart_NeverReportsReleased",
+      "reason": "A failed post-merge contract stays failed across restart and never records Released."
+    },
+    "Verification_GivenHeadChangedAfterReview_RefusesMergeApproval": {
+      "equivalent": "Approval_GivenAnyBoundFieldChanged_RefusesMerge",
+      "reason": "The theory mutates headSha among the bound fields and refuses the merge."
+    },
+    "Verification_GivenMergeCommitDifferentFromHead_RunsContractOnMergedTree": {
+      "equivalent": "Merge_GivenApprovedReview_MergesAndVerifiesTheMergedRevision",
+      "reason": "Verification materialises the merged SHA, not the pre-merge worktree."
+    },
+    "Supervisor_GivenRestart_UsesPinnedReleaseArtifact": {
+      "equivalent": "Supervisor_GivenHostRestart_ServesPinnedRelease",
+      "reason": "A restarted host serves the recorded merged SHA rather than a newer target HEAD."
+    },
+    "ToolGateway_GivenSymlinkOrJunctionEscape_Refuses": {
+      "equivalent": "Factory_GivenSymlinkEscape_RefusesBeforeWrite",
+      "reason": "The physical path guard refuses a junction traversal before creating any file."
+    },
+    "Execution_GivenTrustedEnvironmentWithoutResourceControls_StillFailsClosed": {
+      "equivalent": "Factory_GivenMissingOSBounds_FailsClosed",
+      "reason": "A run without applied OS bounds throws the named isolation-unavailable refusal."
+    },
+    "Store_GivenSubmitApproveServeConcurrentProcesses_SerializesMutations": {
+      "equivalent": "Store_GivenConcurrentSubmitApproveAndRun_NoLostUpdates",
+      "reason": "Concurrent submit, approve and dispatch are serialized under the cross-process store lock with no lost facts."
+    },
+    "StageHandler_GivenReplayedEvent_DoesNotRepeatSideEffects": {
+      "equivalent": "Host_GivenSecondRun_ResumesWithoutRepeatingAppliedOperations",
+      "reason": "A second dispatch pass claims nothing and does not duplicate the proposal."
+    },
+    "Contract_GivenPassingGeneratedTestsButFailingScenarios_StillFails": {
+      "equivalent": "Contract_GivenWrongImplementation_FailsOriginalScenarios",
+      "reason": "The operator oracle is the frozen HTTP contract; generated tests are not an acceptance input, and a wrong implementation still fails its original scenarios."
+    }
+  },
+  "superseded": {}
+}

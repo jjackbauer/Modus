@@ -201,7 +201,7 @@ public sealed class AcceptanceContractTests
     }
 
     [Fact]
-    public async Task Contract_GivenCaptureAndSubstitution_ExecutesInOrder()
+    public async Task Contract_GivenScenarioCaptureAndSubstitution_ExecutesInOrder()
     {
         var seen = new List<string>();
         using var server = new StubServer((method, path) =>

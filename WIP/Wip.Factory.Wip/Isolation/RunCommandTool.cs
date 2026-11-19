@@ -10,7 +10,8 @@ public sealed record RunCommandResult(
     string StandardOutput,
     string StandardError,
     bool TerminatedByWallTime,
-    bool IsolationApplied);
+    bool IsolationApplied,
+    int Redactions = 0);
 
 /// <summary>
 /// Runs a bounded <c>dotnet</c> subcommand inside the session worktree (v0.3 §6.1). There is no shell: the
@@ -31,13 +32,18 @@ public sealed class RunCommandTool : ITool<RunCommandRequest, RunCommandResult>
     /// <summary>The closed interface allowlist, exposed so the security policy can verify what actually enforces it.</summary>
     public static IReadOnlyCollection<string> AllowedSubcommandsForPolicy => AllowedSubcommands.ToArray();
 
+    /// <summary>The redaction policy applied to child-process output before it becomes an observation.</summary>
+    public static string RedactionPolicyVersion => SecretRedactor.PolicyVersion;
+
     private readonly IProcessRunner _runner;
+    private readonly ISecretRedactor _redactor;
     private readonly string _dotnetPath;
 
-    public RunCommandTool(IProcessRunner? runner = null, string? dotnetPath = null)
+    public RunCommandTool(IProcessRunner? runner = null, string? dotnetPath = null, ISecretRedactor? redactor = null)
     {
         _runner = runner ?? new BoundedProcessRunner();
         _dotnetPath = dotnetPath ?? "dotnet";
+        _redactor = redactor ?? new SecretRedactor();
     }
 
     public async ValueTask<RunCommandResult> ExecuteAsync(
@@ -75,13 +81,38 @@ public sealed class RunCommandTool : ITool<RunCommandRequest, RunCommandResult>
             throw new InvalidOperationException($"{IsolationUnavailableCategory}: resource controls were not applied.");
         }
 
+        // Child-process output can contain credentials. Redact before it reaches a model observation or evidence;
+        // an unredactable result is a named refusal, never raw output (v0.4 FAC-P1-06.5).
+        var redactions = 0;
+        var standardOutput = Redact(result.StandardOutput, ref redactions);
+        var standardError = Redact(result.StandardError, ref redactions);
+
         return new RunCommandResult(
             request.Subcommand,
             result.ExitCode,
-            Trim(result.StandardOutput),
-            Trim(result.StandardError),
+            Trim(standardOutput),
+            Trim(standardError),
             result.TerminatedByWallTime,
-            result.IsolationApplied);
+            result.IsolationApplied,
+            redactions);
+    }
+
+    private string Redact(string value, ref int redactions)
+    {
+        try
+        {
+            var redacted = _redactor.Redact(value, out var count);
+            redactions += count;
+            return redacted;
+        }
+        catch (SecretRedactionException)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            throw new SecretRedactionException(exception.GetType().Name);
+        }
     }
 
     private static string Trim(string text)

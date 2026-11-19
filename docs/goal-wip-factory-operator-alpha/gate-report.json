@@ -1,6 +1,6 @@
 {
-    "generatedAtUtc":  "2026-11-19T09:47:24.9951577Z",
-    "sourceRevision":  "c2946c989c00f61ffe5ed1e886bcc98da14586cd",
+    "generatedAtUtc":  "2026-11-19T09:59:07.0213054Z",
+    "sourceRevision":  "292bc2fb9984380cb9974be550a7b5de66de6a59",
     "suites":  [
                    {
                        "suite":  "factory-core",
@@ -20,7 +20,7 @@
                        "suite":  "factory-host",
                        "project":  "WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj",
                        "exitCode":  0,
-                       "passedCases":  140,
+                       "passedCases":  164,
                        "failedCases":  0
                    },
                    {
@@ -32,14 +32,16 @@
                    }
                ],
     "totals":  {
-                   "passedCases":  235,
+                   "passedCases":  259,
                    "failedCases":  0,
                    "suiteCount":  4
                },
     "namedCoverage":  {
                           "named":  80,
-                          "exact":  32,
-                          "missing":  48,
+                          "exact":  56,
+                          "renamed":  18,
+                          "missing":  6,
+                          "superseded":  0,
                           "nameOnly":  0
                       },
     "namedCoverageDetail":  "named-test-coverage.json",

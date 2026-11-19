@@ -23,14 +23,14 @@ Source: `v0.4-test-report.md`, `gate-report.json`, `named-test-coverage.json`.
 | Gate | Status | Basis |
 |---|---|---|
 | Build | **pass** | `dotnet build` 0 errors |
-| Factory suites | **pass** | 235 cases, 0 failures across core (21), agents (69), host (140), architecture (5) |
-| Named v0.3 tests | **32 / 80 exact** | reflection over compiled assemblies; 48 missing behaviour reported, 0 name-only placeholders |
+| Factory suites | **pass** | 259 cases, 0 failures across core (21), agents (69), host (164), architecture (5) |
+| Named v0.3 tests | **56 / 80 exact** | plus 18 equivalent-but-renamed; 6 missing behaviours reported; 0 name-only placeholders |
 | FAC-P0-01 release integrity | **implemented + tested** | crash-after-merge resumes verification; no release on a ledger shortcut |
 | FAC-P0-02 four review checks | **implemented + tested** | validation/coverage/architecture/security each with executed, digest-bound evidence |
 | FAC-P0-03 immutable templates | **implemented + tested** | re-registration conflict, marker/body mismatch, revocation persistence, traversal refusal |
 | FAC-P0-04 acceptance harness | **implemented + tested** | evaluator owns expected scenarios and frozen contract; missing/duplicate/uninspected evidence fails |
 | FAC-P0-05 blind PA-01/PA-02 | **not-run** | requires an external evaluator and withheld requirements |
-| FAC-P1-01..08 | **implemented with named exceptions** | see `v0.4-closure-map.md`; secret-redaction (`P1-06.5`) remains deferred |
+| FAC-P1-01..08 | **implemented with named exceptions** | see `v0.4-closure-map.md`; secret redaction and its security-policy check are implemented |
 | v0.3 PA-03–PA-08 | **unchanged, not re-certified** | prior evidence remains a session report; this remediation did not re-run live model acceptance |
 
 ## Reproducing
@@ -78,10 +78,10 @@ measured; the product acceptance is unclaimed.
 ## Known limitations (not hidden)
 
 - **PA-01/PA-02 not run.** No independent evaluator was available in this session.
-- **48 of the 80 v0.3 named tests remain absent.** The mechanisms for many now exist, but the exact names do not;
-  `named-test-coverage.json` reports each one. No pass-through tests were manufactured.
-- **`FAC-P1-06.5` secret redaction is deferred:** child-process output is not yet separated from persisted evidence
-  by a redaction policy. Tool-boundary, path-escape and missing-OS-bounds negatives are implemented.
+- **56 of the 80 v0.3 named tests are exact; 18 more are proven under explicitly mapped names; 6 remain absent.**
+  `named-test-coverage.json` and `named-test-renames.json` report each one. No pass-through tests were manufactured.
+- **Child-process output is redacted** by the versioned `factory/redaction@1` policy; a redactor failure is the named
+  `redaction-failed` refusal. Tool-boundary, path-escape and missing-OS-bounds negatives are implemented.
 - **Crash injection is deterministic in-process**, not an OS process kill: the merge effect is durable before the
   verification process is interrupted, and a fresh handler over the same state re-verifies. A kill during the git
   merge syscall itself is not covered.

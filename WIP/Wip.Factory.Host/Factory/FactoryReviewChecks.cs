@@ -536,6 +536,11 @@ public sealed class SecurityPolicyReviewCheck : IReviewCheck
             subcommands.SequenceEqual(["build", "new", "publish", "restore", "run", "test"], StringComparer.Ordinal),
             string.Join(",", subcommands)));
 
+        checks.Add(new ArchitectureCheck(
+            "child-output-redaction",
+            string.Equals(RunCommandTool.RedactionPolicyVersion, "factory/redaction@1", StringComparison.Ordinal),
+            RunCommandTool.RedactionPolicyVersion));
+
         var passed = checks.All(static check => check.Passed);
         var detail = string.Join(";", checks.Select(static check => check.Name + "=" + (check.Passed ? "pass" : "fail:" + check.Detail)));
         var subject = ReviewEvidence.Digest(ReviewPolicy.SecurityPolicyVersion + "|" + string.Join("|", toolIds));

@@ -7,16 +7,29 @@ namespace Wip.Factory.Host.Tests;
 
 /// <summary>
 /// FAC-P1-08: v0.3's 80 named supporting tests are inventoried against compiled xUnit methods, not against a prose
-/// count. Missing names are reported as missing behaviour; a name present without an assertion is a name-only
-/// placeholder and fails the CI gate (v0.4 FAC-P1-08.1–6).
+/// count. Each name is classified as exact, equivalent-but-renamed (with an explicit mapping), missing behaviour, or
+/// invalid/superseded. A name present without an assertion is a name-only placeholder and fails the CI gate.
 /// </summary>
 public sealed class TraceabilityTests
 {
     private const string MissingStatus = "missing-behavior";
     private const string ExactStatus = "exact-and-executable";
+    private const string RenamedStatus = "equivalent-but-renamed";
+    private const string SupersededStatus = "invalid-superseded";
     private const string NameOnlyStatus = "name-only-no-assertion";
 
-    public sealed record CoverageEntry(string Name, string Status, string? SourceFile);
+    public sealed record CoverageEntry(string Name, string Status, string? SourceFile, string? Reason = null);
+
+    private sealed record RenameEntry(string Equivalent, string Reason);
+
+    private sealed record TraceabilityMap(
+        IReadOnlyDictionary<string, RenameEntry> Renames,
+        IReadOnlyDictionary<string, string> Superseded)
+    {
+        public static TraceabilityMap Empty { get; } = new(
+            new Dictionary<string, RenameEntry>(StringComparer.Ordinal),
+            new Dictionary<string, string>(StringComparer.Ordinal));
+    }
 
     private static string RepositoryRoot()
     {
@@ -44,6 +57,42 @@ public sealed class TraceabilityTests
             .Select(static match => match.Groups[1].Value)
             .Where(static name => name.Contains('_', StringComparison.Ordinal))
             .ToArray();
+    }
+
+    private static TraceabilityMap LoadMap(string? root = null)
+    {
+        var path = Path.Combine(root ?? RepositoryRoot(), "docs", "goal-wip-factory-operator-alpha", "named-test-renames.json");
+        if (!File.Exists(path))
+        {
+            return TraceabilityMap.Empty;
+        }
+
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var renames = new Dictionary<string, RenameEntry>(StringComparer.Ordinal);
+        var superseded = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        if (document.RootElement.TryGetProperty("renames", out var renameNode))
+        {
+            foreach (var property in renameNode.EnumerateObject())
+            {
+                var equivalent = property.Value.TryGetProperty("equivalent", out var value) ? value.GetString() ?? string.Empty : string.Empty;
+                var reason = property.Value.TryGetProperty("reason", out var why) ? why.GetString() ?? string.Empty : string.Empty;
+                if (equivalent.Length > 0)
+                {
+                    renames[property.Name] = new RenameEntry(equivalent, reason);
+                }
+            }
+        }
+
+        if (document.RootElement.TryGetProperty("superseded", out var supersededNode))
+        {
+            foreach (var property in supersededNode.EnumerateObject())
+            {
+                superseded[property.Name] = property.Value.GetString() ?? "superseded by a later specification";
+            }
+        }
+
+        return new TraceabilityMap(renames, superseded);
     }
 
     private static HashSet<string> CompiledTestNames()
@@ -108,27 +157,44 @@ public sealed class TraceabilityTests
     private static IReadOnlyList<CoverageEntry> Inventory(
         IReadOnlyList<string> specNames,
         IReadOnlySet<string> compiledNames,
-        Func<string, string?> sourceWithoutAssertion)
+        Func<string, string?> sourceWithoutAssertion,
+        TraceabilityMap? map = null)
     {
+        map ??= TraceabilityMap.Empty;
         var entries = new List<CoverageEntry>(specNames.Count);
+
         foreach (var name in specNames)
         {
-            if (!compiledNames.Contains(name))
+            if (compiledNames.Contains(name))
             {
-                entries.Add(new CoverageEntry(name, MissingStatus, null));
+                var offender = sourceWithoutAssertion(name);
+                entries.Add(offender is null
+                    ? new CoverageEntry(name, ExactStatus, null)
+                    : new CoverageEntry(name, NameOnlyStatus, offender));
                 continue;
             }
 
-            var offender = sourceWithoutAssertion(name);
-            entries.Add(offender is null
-                ? new CoverageEntry(name, ExactStatus, null)
-                : new CoverageEntry(name, NameOnlyStatus, offender));
+            if (map.Superseded.TryGetValue(name, out var reason))
+            {
+                entries.Add(new CoverageEntry(name, SupersededStatus, null, reason));
+                continue;
+            }
+
+            if (map.Renames.TryGetValue(name, out var rename)
+                && compiledNames.Contains(rename.Equivalent)
+                && sourceWithoutAssertion(rename.Equivalent) is null)
+            {
+                entries.Add(new CoverageEntry(name, RenamedStatus, rename.Equivalent, rename.Reason));
+                continue;
+            }
+
+            entries.Add(new CoverageEntry(name, MissingStatus, null));
         }
 
         return entries;
     }
 
-    /// <summary>Missing behaviour is reported; a name-only placeholder or a duplicate name fails CI.</summary>
+    /// <summary>Missing behaviour is reported; a name-only placeholder fails CI.</summary>
     internal static int GateExitCode(IReadOnlyList<CoverageEntry> entries)
         => entries.Any(static entry => entry.Status == NameOnlyStatus) ? 1 : 0;
 
@@ -157,6 +223,26 @@ public sealed class TraceabilityTests
     }
 
     [Fact]
+    public void Traceability_GivenEquivalentBehaviourUnderAnotherName_ReportsRenamed()
+    {
+        var map = new TraceabilityMap(
+            new Dictionary<string, RenameEntry>(StringComparer.Ordinal)
+            {
+                ["Spec_GivenX_DoesY"] = new("Existing_GivenX_DoesY", "same observable assertion")
+            },
+            new Dictionary<string, string>(StringComparer.Ordinal));
+
+        var entries = Inventory(
+            ["Spec_GivenX_DoesY"],
+            new HashSet<string>(["Existing_GivenX_DoesY"], StringComparer.Ordinal),
+            static _ => null,
+            map);
+
+        Assert.Equal(RenamedStatus, entries[0].Status);
+        Assert.Equal("Existing_GivenX_DoesY", entries[0].SourceFile);
+    }
+
+    [Fact]
     public void CI_GivenPassingTraceabilityGate_ReturnsZero()
     {
         var entries = Inventory(
@@ -173,12 +259,23 @@ public sealed class TraceabilityTests
         var root = RepositoryRoot();
         var specNames = SpecNames();
         var compiled = CompiledTestNames();
+        var map = LoadMap(root);
 
-        var entries = Inventory(specNames, compiled, name => SourceWithoutAssertion(root, name));
+        var entries = Inventory(specNames, compiled, name => SourceWithoutAssertion(root, name), map);
 
         Assert.Equal(80, specNames.Count);
         Assert.Equal(80, entries.Count);
         Assert.DoesNotContain(entries, static entry => entry.Status == NameOnlyStatus);
+
+        var counts = new
+        {
+            named = entries.Count,
+            exact = entries.Count(static entry => entry.Status == ExactStatus),
+            renamed = entries.Count(static entry => entry.Status == RenamedStatus),
+            missing = entries.Count(static entry => entry.Status == MissingStatus),
+            superseded = entries.Count(static entry => entry.Status == SupersededStatus),
+            nameOnly = entries.Count(static entry => entry.Status == NameOnlyStatus)
+        };
 
         var report = new
         {
@@ -188,16 +285,12 @@ public sealed class TraceabilityTests
             semantics = new
             {
                 exact = "a compiled xUnit method with the exact name and at least one assertion",
+                renamed = "the behaviour is proven by the mapped compiled test with at least one assertion",
                 missing = "the named behaviour has no executable test at final SHA",
+                superseded = "the name is invalid under a later specification revision",
                 nameOnly = "the method exists but no assertion was found; CI gate failure"
             },
-            counts = new
-            {
-                named = entries.Count,
-                exact = entries.Count(static entry => entry.Status == ExactStatus),
-                missing = entries.Count(static entry => entry.Status == MissingStatus),
-                nameOnly = entries.Count(static entry => entry.Status == NameOnlyStatus)
-            },
+            counts,
             entries
         };
 
@@ -208,7 +301,7 @@ public sealed class TraceabilityTests
             File.WriteAllText(output, json);
         }
 
-        Assert.Equal(80, entries.Count);
+        Assert.Equal(counts.named, counts.exact + counts.renamed + counts.missing + counts.superseded + counts.nameOnly);
     }
 
     private static string ReadHeadSha(string root)

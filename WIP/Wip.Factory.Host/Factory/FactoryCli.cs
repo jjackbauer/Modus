@@ -387,6 +387,16 @@ public static class FactoryCli
                 status.Version,
                 digest)).ConfigureAwait(false);
         }
+
+        var failures = statuses.Where(static status => !string.IsNullOrWhiteSpace(status.LastFailure)).ToArray();
+        if (failures.Length > 0)
+        {
+            await output.WriteLineAsync("last failure:").ConfigureAwait(false);
+            foreach (var status in failures)
+            {
+                await output.WriteLineAsync($"  {status.WorkItemId}: {status.LastFailure}").ConfigureAwait(false);
+            }
+        }
     }
 
     /// <summary>

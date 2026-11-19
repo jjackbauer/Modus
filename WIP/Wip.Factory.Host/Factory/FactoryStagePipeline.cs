@@ -420,6 +420,13 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             return StageDispatchOutcome.Failed(ContractNotExecutable + ":" + string.Join(",", contractErrors));
         }
 
+        if (trigger.Data.TryGetValue("acceptanceContractDigest", out var frozenContractDigest)
+            && !string.IsNullOrWhiteSpace(frozenContractDigest)
+            && !string.Equals(frozenContractDigest, contract.Digest, StringComparison.Ordinal))
+        {
+            return StageDispatchOutcome.Failed("contract-tampered");
+        }
+
         if (_candidates is null || _builds is null)
         {
             return StageDispatchOutcome.Failed("review-harness-unavailable");
@@ -531,6 +538,7 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
             ["reviewedSha"] = reviewedSha,
             ["reviewPolicyVersion"] = ReviewPolicy.CheckRunnerVersion,
             ["contractDigest"] = contract.Digest,
+            ["acceptanceContractDigest"] = contract.Digest,
             ["policyVersion"] = FactoryPolicy.PolicyVersion,
             ["guidelinesVersion"] = FactoryPolicy.GuidelinesVersion,
             ["profileVersion"] = FactoryPolicy.ProfileVersion,
@@ -710,6 +718,13 @@ public sealed class FactoryStageDispatchHandler : IStageDispatchHandler
         if (contract is null)
         {
             return StageDispatchOutcome.Failed(ContractNotExecutable + ":" + string.Join(",", contractErrors));
+        }
+
+        if (trigger.Data.TryGetValue("acceptanceContractDigest", out var frozenContractDigest)
+            && !string.IsNullOrWhiteSpace(frozenContractDigest)
+            && !string.Equals(frozenContractDigest, contract.Digest, StringComparison.Ordinal))
+        {
+            return StageDispatchOutcome.Failed("contract-tampered");
         }
 
         if (_builds is null || _candidates is null)

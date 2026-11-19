@@ -87,7 +87,7 @@ public sealed class ImplementationStageTests
     }
 
     [Fact]
-    public async Task Production_GivenEmptyDiff_FailsNoAttributableChange()
+    public async Task Production_GivenEmptyDiff_FailsStage()
     {
         var root = Root(out _);
         // A runner that claims success but reports zero changed files: the factory must not believe it.
@@ -102,7 +102,7 @@ public sealed class ImplementationStageTests
     }
 
     [Fact]
-    public async Task Production_GivenConversationalAnswerWithoutDiff_FailsStage()
+    public async Task Production_GivenConversationalAnswerWithoutDiff_FailsNoAttributableChange()
     {
         var root = Root(out _);
         var runner = new ScriptedRunner(ImplementationOutcome.Failed(ImplementationOutcome.NoAttributableChange));

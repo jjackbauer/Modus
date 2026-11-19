@@ -32,7 +32,8 @@ public sealed record WorkItemStatus(
     string RequirementDigest,
     string? ProposalDigest,
     string? FrozenContractDigest,
-    int EventCount);
+    int EventCount,
+    string? LastFailure = null);
 
 /// <summary>
 /// The operator-facing factory runtime: one composition root over the durable store, the dispatch worker and
@@ -197,6 +198,7 @@ public sealed class FactoryRuntime
             // Store the operator bytes; the digest pins the canonical form derived from them, so
             // whitespace and key order cannot change what was approved.
             data["acceptanceContract"] = acceptanceContractJson!;
+            data["acceptanceContractDigest"] = contract.Digest;
             data["contractDigest"] = contract.Digest;
         }
 
@@ -302,10 +304,11 @@ public sealed class FactoryRuntime
                 id,
                 snapshot.State.ToString(),
                 snapshot.Version,
-                LastValue(mine, FactoryEventTypes.RequirementSubmitted, "requirementDigest"),
+                LastValue(mine, FactoryEventTypes.RequirementSubmitted, "requirementDigest") ?? string.Empty,
                 LastValue(mine, FactoryEventTypes.ContractProposed, "proposalDigest"),
                 LastValue(mine, FactoryEventTypes.ContractApproved, "contractDigest"),
-                mine.Length));
+                mine.Length,
+                LastFailure(mine)));
         }
 
         return statuses;
@@ -993,6 +996,39 @@ public sealed class FactoryRuntime
             {
                 return value;
             }
+        }
+
+        return null;
+    }
+
+    /// <summary>The most recent operator-visible failure category, from durable evidence.</summary>
+    private static string? LastFailure(IReadOnlyList<FactoryEventEnvelope> events)
+    {
+        for (var index = events.Count - 1; index >= 0; index--)
+        {
+            var envelope = events[index];
+            if (!string.Equals(envelope.Type, OperatorEvents.StageFailed, StringComparison.Ordinal)
+                && !string.Equals(envelope.Type, "factory.stage.failed.v1", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (envelope.Data.TryGetValue("failureCategory", out var category) && !string.IsNullOrWhiteSpace(category))
+            {
+                return category;
+            }
+
+            if (envelope.Data.TryGetValue("rejectReason", out var rejection) && !string.IsNullOrWhiteSpace(rejection))
+            {
+                return rejection;
+            }
+
+            if (envelope.Data.TryGetValue("reason", out var reason) && !string.IsNullOrWhiteSpace(reason))
+            {
+                return reason;
+            }
+
+            return envelope.Type;
         }
 
         return null;

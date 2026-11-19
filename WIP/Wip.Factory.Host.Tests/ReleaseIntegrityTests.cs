@@ -68,6 +68,8 @@ public sealed class ReleaseIntegrityTests
 
         public int ContainsCalls { get; private set; }
 
+        public bool ContainsResult { get; set; } = true;
+
         public ValueTask<MergeResult> MergeAsync(string repositoryPath, string headSha, CancellationToken cancellationToken = default)
         {
             MergeCalls++;
@@ -80,7 +82,7 @@ public sealed class ReleaseIntegrityTests
         public ValueTask<bool> ContainsAsync(string repositoryPath, string mergedSha, CancellationToken cancellationToken = default)
         {
             ContainsCalls++;
-            return ValueTask.FromResult(true);
+            return ValueTask.FromResult(ContainsResult);
         }
 
         public ValueTask<string?> ResolveTreeAsync(string repositoryPath, string mergedSha, CancellationToken cancellationToken = default)
@@ -301,6 +303,45 @@ public sealed class ReleaseIntegrityTests
         Assert.Equal(1, different.Calls);
         Assert.Equal(StageDispatchKind.Failed, outcome.Kind);
         Assert.Equal(2, setup.Store.ReadAll().Count);
+    }
+
+    [Fact]
+    public async Task Operation_GivenUncertainMergeState_ReconcilesGitBeforeRetry()
+    {
+        var setup = Create();
+        var merge = new StubMerge { ContainsResult = false };
+
+        var operationId = OperationId(setup);
+        setup.Ledger.Begin(operationId, setup.Snapshot.WorkItemId.Value, setup.Trigger.Id.Value, "release",
+            setup.Trigger.Id.Value, 1, "git-merge", setup.Repository, "head-sha-1");
+        setup.Ledger.MarkApplied(operationId, "merged-sha-1", "git:rev-parse");
+
+        var verifier = new FakeVerifier();
+        var outcome = await Handler(setup, merge, verifier).HandleAsync(setup.Snapshot, setup.Trigger);
+
+        Assert.Equal(StageDispatchKind.Failed, outcome.Kind);
+        Assert.Contains("merge-reconciliation-failed", outcome.FailureCategory, StringComparison.Ordinal);
+        Assert.Equal(0, merge.MergeCalls);
+        Assert.Equal(0, verifier.Calls);
+    }
+
+    [Fact]
+    public async Task Lifecycle_GivenMergeAlreadyApplied_DoesNotUsePreMergeReworkEdge()
+    {
+        var setup = Create();
+        var merge = new StubMerge();
+
+        var operationId = OperationId(setup);
+        setup.Ledger.Begin(operationId, setup.Snapshot.WorkItemId.Value, setup.Trigger.Id.Value, "release",
+            setup.Trigger.Id.Value, 1, "git-merge", setup.Repository, "head-sha-1");
+        setup.Ledger.MarkApplied(operationId, "merged-sha-1", "git:rev-parse");
+
+        var outcome = await Handler(setup, merge, new FakeVerifier { Succeed = false })
+            .HandleAsync(setup.Snapshot, setup.Trigger);
+
+        // Post-merge failure is terminal; the D-08 A rework edge is pre-merge only.
+        Assert.Equal(StageDispatchKind.Failed, outcome.Kind);
+        Assert.DoesNotContain(outcome.Events, static e => e.Type == OperatorEvents.ReworkRequested);
     }
 
     private static class ContractDigestExtensions
