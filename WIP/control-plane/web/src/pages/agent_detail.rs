@@ -11,6 +11,7 @@ use crate::api;
 use crate::components::ui::{
     Chip, EmptyBlock, LoadingBlock, MetricCard, Panel, error_view, time_ago,
 };
+use crate::components::{Timeline, TimelineItem};
 use crate::context::AppContext;
 
 #[component]
@@ -146,9 +147,9 @@ fn AgentBody(agent: control_plane_domain::AgentDetail, instance: String) -> impl
                         view! { <EmptyBlock title="No session evidence" detail="No durable model session trace exists for this role. That does not imply the role is unhealthy; some roles are deterministic stage handlers."/> }.into_any()
                     } else {
                         view! {
-                            <div class="timeline">
+                            <Timeline label="Session evidence">
                                 {sessions.into_iter().map(|session| view! { <SessionRow session=session/> }).collect_view()}
-                            </div>
+                            </Timeline>
                         }.into_any()
                     }}
                 </Panel>
@@ -160,18 +161,15 @@ fn AgentBody(agent: control_plane_domain::AgentDetail, instance: String) -> impl
                             view! { <EmptyBlock title="No adaptation events recorded" detail="Reflection, candidate evaluation, promotion and rollback events appear here when the factory's adaptation plane records them."/> }.into_any()
                         } else {
                             view! {
-                                <div class="timeline">
+                                <Timeline label="Improvement and adaptation events">
                                     {improvements.into_iter().map(|event| view! {
-                                        <div class="event">
-                                            <div class="event-time">{time_ago(Some(&event.time_utc.to_rfc3339()))}</div>
-                                            <div class="event-main">
-                                                <div class="event-title"><Chip label=event.r#type.clone() tone="info"/></div>
-                                                <div class="small muted">{event.summary.clone().unwrap_or_default()}</div>
-                                                <details class="evidence"><summary>"Technical data"</summary><pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre></details>
-                                            </div>
-                                        </div>
+                                        <TimelineItem time=time_ago(Some(&event.time_utc.to_rfc3339()))>
+                                            <div class="event-title"><Chip label=event.r#type.clone() tone="info"/></div>
+                                            <div class="small muted">{event.summary.clone().unwrap_or_default()}</div>
+                                            <details class="evidence"><summary>"Technical data"</summary><pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre></details>
+                                        </TimelineItem>
                                     }).collect_view()}
-                                </div>
+                                </Timeline>
                             }.into_any()
                         }}
                     </div>
@@ -316,9 +314,7 @@ fn RollbackButton(
 #[component]
 fn SessionRow(session: AgentSession) -> impl IntoView {
     view! {
-        <div class="event">
-            <div class="event-time">{time_ago(Some(&session.recorded_at_utc.to_rfc3339()))}</div>
-            <div class="event-main">
+        <TimelineItem time=time_ago(Some(&session.recorded_at_utc.to_rfc3339()))>
                 <div class="event-title">
                     <strong class="mono">{session.session_id.clone()}</strong>
                     <Chip label=session.outcome.to_uppercase() tone=if session.outcome == "completed" { "success" } else { "danger" }/>
@@ -335,8 +331,7 @@ fn SessionRow(session: AgentSession) -> impl IntoView {
                         <pre>{serde_json::to_string_pretty(&session.tool_invocations).unwrap_or_default()}</pre>
                     </details>
                 })}
-            </div>
-        </div>
+        </TimelineItem>
     }
 }
 

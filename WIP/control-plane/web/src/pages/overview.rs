@@ -25,6 +25,7 @@ use crate::components::status::{
 };
 use crate::components::table::{Column, DataTable};
 use crate::components::ui::{LoadingBlock, Notice, error_view, time_ago, timestamp};
+use crate::components::{Timeline, TimelineItem};
 use crate::context::AppContext;
 
 #[component]
@@ -623,32 +624,30 @@ fn LiveActivityFeed(fallback: Vec<EventStreamEnvelope>, instance: Signal<String>
                 .into_any()
             } else {
                 view! {
-                    <div class="timeline compact">
+                    <Timeline label="Durable factory activity" compact=true>
                         {feed
                             .into_iter()
                             .map(|event| {
                                 let work_item = event.work_item_id.clone().unwrap_or_default();
                                 let href = format!("/i/{}/work/{work_item}", instance.get());
                                 view! {
-                                    <div class="event">
-                                        <div class="event-time" title=timestamp(Some(&event.time_utc.to_rfc3339()))>
-                                            {time_ago(Some(&event.time_utc.to_rfc3339()))}
+                                    <TimelineItem
+                                        time=time_ago(Some(&event.time_utc.to_rfc3339()))
+                                        time_title=timestamp(Some(&event.time_utc.to_rfc3339()))
+                                    >
+                                        <div class="event-title">
+                                            {if work_item.is_empty() {
+                                                view! { <span>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</span> }.into_any()
+                                            } else {
+                                                view! { <a href=href>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</a> }.into_any()
+                                            }}
                                         </div>
-                                        <div class="event-main">
-                                            <div class="event-title">
-                                                {if work_item.is_empty() {
-                                                    view! { <span>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</span> }.into_any()
-                                                } else {
-                                                    view! { <a href=href>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</a> }.into_any()
-                                                }}
-                                            </div>
-                                            <div class="event-type">{event.r#type.clone()}</div>
-                                        </div>
-                                    </div>
+                                        <div class="event-type">{event.r#type.clone()}</div>
+                                    </TimelineItem>
                                 }
                             })
                             .collect_view()}
-                    </div>
+                    </Timeline>
                 }
                 .into_any()
             }

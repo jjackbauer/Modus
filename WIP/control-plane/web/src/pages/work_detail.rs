@@ -19,7 +19,7 @@ use crate::components::ui::{
 };
 use crate::components::{
     Confirmation, DiffViewer, EvidenceCheck, EvidenceSummary, HealthState, StatusIndicator,
-    TabItem, TabPanel, Tabs, TypedConfirmation,
+    TabItem, TabPanel, Tabs, Timeline, TimelineItem, TypedConfirmation,
 };
 use crate::context::AppContext;
 
@@ -850,27 +850,24 @@ fn AgentTab(
                     view! { <EmptyBlock title="No implementation attempt yet" detail="The factory records an attempt only when the implementation stage is dispatched."/> }.into_any()
                 } else {
                     view! {
-                        <div class="timeline">
+                        <Timeline label="Implementation attempts">
                             {attempts.into_iter().map(|attempt| view! {
-                                <div class="event">
-                                    <div class="event-time">{time_ago(Some(&attempt.finished_at_utc.to_rfc3339()))}</div>
-                                    <div class="event-main">
-                                        <div class="event-title">
-                                            <strong>{format!("Attempt {}", attempt.attempt_number)}</strong>
-                                            <StatusIndicator label=outcome_label(&attempt.outcome).to_string() tone=if attempt.outcome == "succeeded" { "success" } else { "danger" } raw=attempt.outcome.clone()/>
-                                            <span class="tiny mono">{attempt.session_id.clone()}</span>
-                                        </div>
-                                        <div class="tiny faint">{attempt.failure_category.clone().unwrap_or_default()}</div>
-                                        {attempt.detail.clone().map(|detail| view! { <div class="tiny muted">{detail}</div> })}
-                                        <div class="tiny mono">
-                                            {attempt.base_sha.as_ref().map(|sha| format!("base {}", short_sha(Some(sha)))).unwrap_or_default()}
-                                            " · "
-                                            {attempt.head_sha.as_ref().map(|sha| format!("head {}", short_sha(Some(sha)))).unwrap_or_default()}
-                                        </div>
+                                <TimelineItem time=time_ago(Some(&attempt.finished_at_utc.to_rfc3339()))>
+                                    <div class="event-title">
+                                        <strong>{format!("Attempt {}", attempt.attempt_number)}</strong>
+                                        <StatusIndicator label=outcome_label(&attempt.outcome).to_string() tone=if attempt.outcome == "succeeded" { "success" } else { "danger" } raw=attempt.outcome.clone()/>
+                                        <span class="tiny mono">{attempt.session_id.clone()}</span>
                                     </div>
-                                </div>
+                                    <div class="tiny faint">{attempt.failure_category.clone().unwrap_or_default()}</div>
+                                    {attempt.detail.clone().map(|detail| view! { <div class="tiny muted">{detail}</div> })}
+                                    <div class="tiny mono">
+                                        {attempt.base_sha.as_ref().map(|sha| format!("base {}", short_sha(Some(sha)))).unwrap_or_default()}
+                                        " · "
+                                        {attempt.head_sha.as_ref().map(|sha| format!("head {}", short_sha(Some(sha)))).unwrap_or_default()}
+                                    </div>
+                                </TimelineItem>
                             }).collect_view()}
-                        </div>
+                        </Timeline>
                     }.into_any()
                 }}
             </Panel>
@@ -1275,7 +1272,7 @@ fn EventsListFiltered(
     filter: RwSignal<String>,
 ) -> impl IntoView {
     view! {
-        <div class="timeline">
+        <Timeline label="Factory events">
             {move || {
                 let needle = filter.get().to_ascii_lowercase();
                 events.iter().filter(|event| {
@@ -1287,25 +1284,25 @@ fn EventsListFiltered(
                     let event = event.clone();
                     let href = if instance.is_empty() { None } else { Some(format!("/i/{}/work/{}", instance, event.work_item_id.clone().unwrap_or_default())) };
                     view! {
-                        <div class="event">
-                            <div class="event-time" title=timestamp(Some(&event.time_utc.to_rfc3339()))>{time_ago(Some(&event.time_utc.to_rfc3339()))}</div>
-                            <div class="event-main">
-                                <div class="event-title">
-                                    {href.map(|href| view! { <a href=href>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</a> })}
-                                    {(!event.summary.is_some()).then(|| view! { <span>{event.r#type.clone()}</span> })}
-                                    <span class="event-type">{event.r#type.clone()}</span>
-                                </div>
-                                <div class="tiny faint mono">{event.id.clone()}</div>
-                                <details class="evidence">
-                                    <summary>"Technical data"</summary>
-                                    <pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre>
-                                </details>
+                        <TimelineItem
+                            time=time_ago(Some(&event.time_utc.to_rfc3339()))
+                            time_title=timestamp(Some(&event.time_utc.to_rfc3339()))
+                        >
+                            <div class="event-title">
+                                {href.map(|href| view! { <a href=href>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</a> })}
+                                {(!event.summary.is_some()).then(|| view! { <span>{event.r#type.clone()}</span> })}
+                                <span class="event-type">{event.r#type.clone()}</span>
                             </div>
-                        </div>
+                            <div class="tiny faint mono">{event.id.clone()}</div>
+                            <details class="evidence">
+                                <summary>"Technical data"</summary>
+                                <pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre>
+                            </details>
+                        </TimelineItem>
                     }
                 }).collect_view()
             }}
-        </div>
+        </Timeline>
     }
 }
 

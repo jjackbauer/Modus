@@ -12,6 +12,7 @@ pub mod planning;
 pub mod shell;
 pub mod status;
 pub mod table;
+pub mod timeline;
 pub mod tabs;
 pub mod ui;
 
@@ -25,4 +26,5 @@ pub use status::{
     EntityIdentity, FreshnessIndicator, HealthState, MetadataList, MetadataRow, StatusIndicator,
 };
 pub use table::{Column, DataTable, Sort, SortDirection, TableState};
+pub use timeline::{Timeline, TimelineItem};
 pub use tabs::{TabItem, TabPanel, Tabs};

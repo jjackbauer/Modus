@@ -5,6 +5,7 @@ use control_plane_domain::{AgentDetail, short_digest};
 
 use crate::api;
 use crate::components::ui::{Chip, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago};
+use crate::components::{Timeline, TimelineItem};
 use crate::context::AppContext;
 
 #[component]
@@ -142,21 +143,18 @@ fn ImprovementBody(agent: AgentDetail) -> impl IntoView {
                         view! { <EmptyBlock title="No adaptation events recorded" detail="Reflection requested, candidate evaluated, profile promoted and profile rolled back appear here only when the factory records them. No activity is fabricated for this page."/> }.into_any()
                     } else {
                         view! {
-                            <div class="timeline">
+                            <Timeline label="Adaptation events">
                                 {events.into_iter().map(|event| view! {
-                                    <div class="event">
-                                        <div class="event-time">{time_ago(Some(&event.time_utc.to_rfc3339()))}</div>
-                                        <div class="event-main">
-                                            <div class="event-title">
-                                                <Chip label=adaptation_kind(&event.r#type).to_string() tone=adaptation_tone(&event.r#type)/>
-                                                <span class="tiny faint mono">{event.r#type.clone()}</span>
-                                            </div>
-                                            <div class="small muted">{event.summary.clone().unwrap_or_default()}</div>
-                                            <details class="evidence"><summary>"Evidence data"</summary><pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre></details>
+                                    <TimelineItem time=time_ago(Some(&event.time_utc.to_rfc3339()))>
+                                        <div class="event-title">
+                                            <Chip label=adaptation_kind(&event.r#type).to_string() tone=adaptation_tone(&event.r#type)/>
+                                            <span class="tiny faint mono">{event.r#type.clone()}</span>
                                         </div>
-                                    </div>
+                                        <div class="small muted">{event.summary.clone().unwrap_or_default()}</div>
+                                        <details class="evidence"><summary>"Evidence data"</summary><pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre></details>
+                                    </TimelineItem>
                                 }).collect_view()}
-                            </div>
+                            </Timeline>
                         }.into_any()
                     }}
                 </Panel>
