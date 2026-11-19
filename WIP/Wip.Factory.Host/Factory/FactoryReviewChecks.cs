@@ -343,10 +343,24 @@ public static class ArchitectureInspection
             frameworks.Length == 0 ? "no-target-framework" : string.Join(",", frameworks)));
 
         var webProjects = projects.Where(IsAspNetCoreProject).ToArray();
+        var nonWebProjects = projects.Where(path => !IsAspNetCoreProject(path)).ToArray();
+        var unsupportedApplications = nonWebProjects
+            .Where(path => !IsTestProject(path) && IsExecutableProject(path))
+            .ToArray();
+
         checks.Add(new ArchitectureCheck(
             "aspnetcore-web-sdk",
-            projects.Length > 0 && webProjects.Length == projects.Length,
-            webProjects.Length + "/" + projects.Length + " web projects"));
+            projects.Length > 0 && webProjects.Length >= 1,
+            webProjects.Length + "/" + projects.Length + " web projects; "
+            + nonWebProjects.Count(IsTestProject) + " test projects; "
+            + nonWebProjects.Count(path => !IsTestProject(path)) + " library projects"));
+
+        checks.Add(new ArchitectureCheck(
+            "no-unsupported-application-project",
+            unsupportedApplications.Length == 0,
+            unsupportedApplications.Length == 0
+                ? "one web application; test/library projects permitted"
+                : string.Join(",", unsupportedApplications.Select(path => Path.GetRelativePath(root, path)))));
 
         var entryPoint = Directory
             .EnumerateFiles(root, "Program.cs", SearchOption.AllDirectories)
@@ -433,6 +447,45 @@ public static class ArchitectureInspection
         return document.Descendants().Any(element =>
             element.Name.LocalName == "FrameworkReference"
             && string.Equals(element.Attribute("Include")?.Value, "Microsoft.AspNetCore.App", StringComparison.Ordinal));
+    }
+
+    /// <summary>A test project is permitted alongside the one web application.</summary>
+    private static bool IsTestProject(string projectPath)
+    {
+        var name = Path.GetFileNameWithoutExtension(projectPath);
+        if (name.Contains("test", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        try
+        {
+            var text = File.ReadAllText(projectPath);
+            return text.Contains("Microsoft.NET.Test.Sdk", StringComparison.Ordinal)
+                   || text.Contains("xunit", StringComparison.OrdinalIgnoreCase)
+                   || text.Contains("nunit", StringComparison.OrdinalIgnoreCase)
+                   || text.Contains("MSTest", StringComparison.Ordinal);
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>A non-test project that declares an executable output is a second application, not a library.</summary>
+    private static bool IsExecutableProject(string projectPath)
+    {
+        try
+        {
+            var document = XDocument.Load(projectPath);
+            return document.Descendants()
+                .Where(element => element.Name.LocalName == "OutputType")
+                .Any(element => element.Value.Contains("Exe", StringComparison.OrdinalIgnoreCase));
+        }
+        catch (Exception exception) when (exception is IOException or System.Xml.XmlException)
+        {
+            return false;
+        }
     }
 
     private static bool IsInside(string root, string path)

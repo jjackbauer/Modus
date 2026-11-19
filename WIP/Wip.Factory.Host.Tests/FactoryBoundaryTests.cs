@@ -10,6 +10,7 @@ using Wip.Factory.Adaptation;
 using Wip.Factory.Agents.Core.Tools;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Profiles;
+using Wip.Factory.Host.Factory;
 using Wip.Factory.Wip.Fanout;
 using Wip.Factory.Wip.Isolation;
 using Xunit;
@@ -192,5 +193,51 @@ public sealed class FactoryBoundaryTests
             await tool.ExecuteAsync(new RunCommandRequest("build", []), context, CancellationToken.None));
 
         Assert.Contains(RunCommandTool.IsolationUnavailableCategory, error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Architecture_GivenWebApplicationPlusTestProject_Allows()
+    {
+        var worktree = Path.Combine(Path.GetTempPath(), "factory-arch-tests-" + Guid.NewGuid().ToString("N"));
+        FactoryTestWorkspace.Write(worktree);
+        var tests = Path.Combine(worktree, "tests");
+        Directory.CreateDirectory(tests);
+        File.WriteAllText(Path.Combine(tests, "IsoWeekTests.csproj"), """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+              </PropertyGroup>
+              <ItemGroup>
+                <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+                <PackageReference Include="xunit" Version="2.9.3" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var result = ArchitectureInspection.Inspect(worktree);
+
+        Assert.True(result.Passed, string.Join(";", result.Checks.Select(static check => check.Name + "=" + check.Passed + ":" + check.Detail)));
+    }
+
+    [Fact]
+    public void Architecture_GivenSecondExecutableApplication_Refuses()
+    {
+        var worktree = Path.Combine(Path.GetTempPath(), "factory-arch-secondapp-" + Guid.NewGuid().ToString("N"));
+        FactoryTestWorkspace.Write(worktree);
+        var sidecar = Path.Combine(worktree, "tools");
+        Directory.CreateDirectory(sidecar);
+        File.WriteAllText(Path.Combine(sidecar, "Sidecar.csproj"), """
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <OutputType>Exe</OutputType>
+              </PropertyGroup>
+            </Project>
+            """);
+
+        var result = ArchitectureInspection.Inspect(worktree);
+
+        Assert.False(result.Passed);
+        Assert.Contains(result.Checks, static check => check.Name == "no-unsupported-application-project" && !check.Passed);
     }
 }
