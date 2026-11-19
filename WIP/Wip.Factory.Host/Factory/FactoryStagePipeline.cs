@@ -21,6 +21,7 @@ public static class OperatorEvents
     public const string ImplementationRequested = "factory.implementation.requested.v1";
     public const string ImplementationCompleted = "factory.implementation.completed.v1";
     public const string ReviewAccepted = "factory.review.accepted.v1";
+    public const string ContractRejected = "factory.contract.rejected.v1";
     public const string MergeApproved = "factory.merge.approved.v1";
     public const string DeliveryRequested = "factory.delivery.requested.v1";
     public const string CandidateReady = "factory.release.candidate-ready.v1";

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Wip.Factory.Host.Factory;
 
@@ -215,9 +216,17 @@ public sealed record ContractProposal(
     IReadOnlyList<ContractScenario> Scenarios,
     string RequirementDigest,
     string ProposalDigest,
-    string? ExecutableContractDigest = null)
+    string? ExecutableContractDigest = null,
+    IReadOnlyList<string>? UnresolvedQuestions = null)
 {
     public bool Executable => ExecutableContractDigest is not null;
+
+    /// <summary>True when an expectation cannot be checked as an observable HTTP outcome.</summary>
+    public bool HasUnresolvedQuestions => UnresolvedQuestions is { Count: > 0 };
+
+    private static readonly Regex ObservableCue = new(
+        @"(?i)\b(returns|status|responds|GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\b|\b[1-5]\d{2}\b",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public static ContractProposal From(RequirementDocument requirement, string? executableContractDigest = null)
     {
@@ -231,6 +240,14 @@ public sealed record ContractProposal(
                 expectation))
             .ToArray();
 
+        // A prose expectation with no observable outcome must be resolved before freeze rather than being
+        // silently converted into a scenario nobody can execute.
+        var unresolved = requirement.Expectations
+            .Select((expectation, index) => (Expectation: expectation, Id: "AC-" + (index + 1)))
+            .Where(static pair => !ObservableCue.IsMatch(pair.Expectation))
+            .Select(static pair => pair.Id + ":" + pair.Expectation)
+            .ToArray();
+
         var canonical = string.Join(
             '\n',
             "schema:" + 1,
@@ -240,7 +257,14 @@ public sealed record ContractProposal(
 
         var digest = "sha256:" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();
 
-        return new ContractProposal(1, requirement.SupportedClassId, scenarios, requirement.Digest, digest, executableContractDigest);
+        return new ContractProposal(
+            1,
+            requirement.SupportedClassId,
+            scenarios,
+            requirement.Digest,
+            digest,
+            executableContractDigest,
+            unresolved);
     }
 
     public string ToJson() => JsonSerializer.Serialize(this, SerializerOptions);

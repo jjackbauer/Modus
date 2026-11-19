@@ -350,6 +350,18 @@ public sealed class FactoryRuntime
             return (false, "contract-digest-mismatch");
         }
 
+        var history = await _store.ReadAllAsync(cancellationToken).ConfigureAwait(false);
+        if (RejectedAfterProposal(history, workItemId, expectedDigest))
+        {
+            return (false, "contract-rejected");
+        }
+
+        if (!proposal.Executable && proposal.HasUnresolvedQuestions)
+        {
+            // Ambiguous/unobservable prose cannot be frozen as if it were a testable oracle.
+            return (false, "contract-ambiguous:" + string.Join(";", proposal.UnresolvedQuestions!));
+        }
+
         var submitted = await SubmittedPayloadAsync(workItemId, cancellationToken).ConfigureAwait(false);
         var data = new Dictionary<string, string>(submitted, StringComparer.Ordinal)
         {
@@ -388,6 +400,102 @@ public sealed class FactoryRuntime
         }
 
         return (false, "approve-version-conflict");
+    }
+
+    /// <summary>
+    /// Records an explicit human rejection of the current contract proposal without changing the work state and
+    /// without any implementation side effect. A rejected digest cannot then be approved; a revised requirement
+    /// creates a new proposal to consider (v0.3 #78).
+    /// </summary>
+    public async ValueTask<(bool Ok, string? Error)> ContractRejectAsync(
+        string workItemId,
+        string proposalDigest,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var (proposal, error) = await ContractShowAsync(workItemId, cancellationToken).ConfigureAwait(false);
+        if (proposal is null)
+        {
+            return (false, error);
+        }
+
+        if (!string.Equals(proposal.ProposalDigest, proposalDigest, StringComparison.Ordinal))
+        {
+            return (false, "contract-digest-mismatch");
+        }
+
+        var data = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [FactoryDispatchOptions.WorkItemDataKey] = workItemId,
+            ["proposalDigest"] = proposalDigest,
+            ["requirementDigest"] = proposal.RequirementDigest,
+            ["reason"] = string.IsNullOrWhiteSpace(reason) ? "operator-rejected" : reason,
+            ["rejectedBy"] = Environment.UserName,
+            ["rejectedAtUtc"] = DateTimeOffset.UtcNow.ToString("O")
+        };
+
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            var snapshot = await _store.LoadAsync(new WorkItemId(workItemId), cancellationToken).ConfigureAwait(false);
+            if (snapshot is null)
+            {
+                return (false, "work-item-not-found");
+            }
+
+            if (snapshot.State != FactoryWorkState.Proposed)
+            {
+                return (false, "not-awaiting-contract-approval");
+            }
+
+            var rejected = snapshot with { Version = snapshot.Version + 1 };
+            var commit = await _store.CommitAsync(
+                new WorkItemCommit(rejected, snapshot.Version, [FactoryStageDispatchHandler.Event(
+                    OperatorEvents.ContractRejected, snapshot.WorkItemId, data)]),
+                cancellationToken).ConfigureAwait(false);
+
+            if (commit.Succeeded)
+            {
+                return (true, null);
+            }
+
+            if (commit.Status != CommitStatus.VersionConflict)
+            {
+                return (false, commit.Reason ?? "reject-commit-refused");
+            }
+        }
+
+        return (false, "reject-version-conflict");
+    }
+
+    private static bool RejectedAfterProposal(
+        IReadOnlyList<FactoryEventEnvelope> events,
+        string workItemId,
+        string proposalDigest)
+    {
+        var lastProposal = -1;
+        var lastRejection = -1;
+
+        for (var index = 0; index < events.Count; index++)
+        {
+            var envelope = events[index];
+            if (!string.Equals(envelope.Subject, workItemId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (string.Equals(envelope.Type, FactoryEventTypes.ContractProposed, StringComparison.Ordinal))
+            {
+                lastProposal = index;
+            }
+            else if (string.Equals(envelope.Type, OperatorEvents.ContractRejected, StringComparison.Ordinal)
+                     && envelope.Data.TryGetValue("proposalDigest", out var rejectedDigest)
+                     && string.Equals(rejectedDigest, proposalDigest, StringComparison.Ordinal))
+            {
+                lastRejection = index;
+            }
+        }
+
+        return lastRejection >= 0 && lastRejection > lastProposal;
     }
 
     /// <summary>The submitted event payload for a work item, so later stages keep the requirement text.</summary>

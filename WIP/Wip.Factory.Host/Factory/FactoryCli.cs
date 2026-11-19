@@ -136,6 +136,15 @@ public static class FactoryCli
                 await output.WriteLineAsync($"  {scenario.Id}  {scenario.Expectation}").ConfigureAwait(false);
             }
 
+            if (proposal.HasUnresolvedQuestions)
+            {
+                await output.WriteLineAsync("unresolved (must be resolved before approval):").ConfigureAwait(false);
+                foreach (var question in proposal.UnresolvedQuestions!)
+                {
+                    await output.WriteLineAsync($"  {question}").ConfigureAwait(false);
+                }
+            }
+
             await output.WriteLineAsync($"next            : factory contract approve --work-item {workItem} --digest {proposal.ProposalDigest}").ConfigureAwait(false);
             return Ok;
         }
@@ -172,7 +181,26 @@ public static class FactoryCli
             return Ok;
         }
 
-        return await FailAsync(error, Usage, "usage: factory contract show|approve").ConfigureAwait(false);
+        if (string.Equals(action, "reject", StringComparison.Ordinal))
+        {
+            if (digest is null)
+            {
+                return await FailAsync(error, Usage, "usage: factory contract reject --work-item <id> --digest <sha256:...> [--reason <text>]").ConfigureAwait(false);
+            }
+
+            var reason = Value(rest, "--reason");
+            var (rejectOk, rejectError) = await runtime.ContractRejectAsync(workItem, digest, reason).ConfigureAwait(false);
+            if (!rejectOk)
+            {
+                return await FailAsync(error, Refused, rejectError ?? "contract-reject-refused").ConfigureAwait(false);
+            }
+
+            await output.WriteLineAsync($"contract rejected: {digest}").ConfigureAwait(false);
+            await output.WriteLineAsync("next             : submit a revised requirement, or approve a different proposal").ConfigureAwait(false);
+            return Ok;
+        }
+
+        return await FailAsync(error, Usage, "usage: factory contract show|approve|reject").ConfigureAwait(false);
     }
 
     /// <summary>Operator/admin surface for D-09 templates. Never reachable from model tools.</summary>

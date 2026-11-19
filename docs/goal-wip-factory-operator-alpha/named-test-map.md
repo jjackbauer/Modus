@@ -7,24 +7,15 @@ assertions at this revision.
 | Class | Count |
 |---|---:|
 | Named in v0.3 §12.2–12.3 | 80 |
-| `exact-and-executable` | 56 |
+| `exact-and-executable` | 61 |
 | `equivalent-but-renamed` (mapped, assertion-probed) | 18 |
-| `missing behavior` | 6 |
+| `missing behavior` | 1 |
 | `invalid-superseded` | 0 |
 | `name-only-no-assertion` (fails the gate) | 0 |
 
-**Accounted for: 74 of 80.** The gap is real: six behaviours are not proven under either their exact name or a mapped
-one. The map does not convert renamed behaviour into exact coverage, and no pass-through tests were written to move
-the number.
-
-## Remaining six
-
-1. `Contract_GivenAmbiguousUnobservableProse_RequiresResolutionBeforeFreeze`
-2. `Contract_GivenModelAttemptToEditFrozenOracle_IsRefused`
-3. `AgentLoop_GivenToolError_ContinuesWithObservation`
-4. `AgentLoop_GivenStepBudget_FailsWithCategory`
-5. `Contract_GivenHumanRejectsProposal_AllowsReproposalWithoutImplementation`
-6. `PA02_GivenDifferentBlindRequirement_UsesUnchangedFactoryBinary` (blind; not-run)
+**Accounted for: 79 of 80.** The only remaining name is
+`PA02_GivenDifferentBlindRequirement_UsesUnchangedFactoryBinary`: the blind gate is **not-run**, not missing code.
+No independent evaluator supplied a second withheld requirement.
 
 ## Why some names are mapped rather than duplicated
 
@@ -33,6 +24,18 @@ For example, `Operation_GivenMergeAlreadyApplied_ReconcilesWithoutSecondMerge` i
 verification and no false release. `ToolGateway_GivenSymlinkOrJunctionEscape_Refuses` is proven by
 `Factory_GivenSymlinkEscape_RefusesBeforeWrite`, which builds a real junction and asserts no file escaped. Mapping
 keeps the suite honest; cloning the test under a second name would inflate coverage without adding a counterexample.
+
+## Round-3 additions
+
+- `Contract_GivenHumanRejectsProposal_AllowsReproposalWithoutImplementation` — `contract reject` records a durable
+  rejection, refuses later approval of that digest, leaves the state Proposed, and permits a revised requirement to
+  produce a new proposal.
+- `Contract_GivenAmbiguousUnobservableProse_RequiresResolutionBeforeFreeze` — expectations with no observable HTTP
+  cue are surfaced as unresolved questions and cannot be frozen.
+- `AgentLoop_GivenToolError_ContinuesWithObservation` / `AgentLoop_GivenStepBudget_FailsWithCategory` — the runtime
+  loop's continuation and budget stop are asserted by exact name.
+- `Contract_GivenModelAttemptToEditFrozenOracle_IsRefused` — a model-shaped path escape toward the control root is
+  refused and the frozen contract digest is unchanged.
 
 ## Reproduce
 

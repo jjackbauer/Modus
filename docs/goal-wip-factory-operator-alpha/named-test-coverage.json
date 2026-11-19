@@ -1,6 +1,6 @@
 {
-  "generatedAtUtc": "2026-11-19T10:01:24.4488078\u002B00:00",
-  "sourceRevision": "4e6c9ec616de3c8b4eae7ce314c223788227a133",
+  "generatedAtUtc": "2026-11-19T10:07:48.6353060\u002B00:00",
+  "sourceRevision": "cac2922a3b9e7f7f33769cf2bdb679ac8c8a78df",
   "specification": "harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md",
   "semantics": {
     "exact": "a compiled xUnit method with the exact name and at least one assertion",
@@ -11,9 +11,9 @@
   },
   "counts": {
     "named": 80,
-    "exact": 56,
+    "exact": 61,
     "renamed": 18,
-    "missing": 6,
+    "missing": 1,
     "superseded": 0,
     "nameOnly": 0
   },
@@ -56,13 +56,13 @@
     },
     {
       "Name": "Contract_GivenAmbiguousUnobservableProse_RequiresResolutionBeforeFreeze",
-      "Status": "missing-behavior",
+      "Status": "exact-and-executable",
       "SourceFile": null,
       "Reason": null
     },
     {
       "Name": "Contract_GivenModelAttemptToEditFrozenOracle_IsRefused",
-      "Status": "missing-behavior",
+      "Status": "exact-and-executable",
       "SourceFile": null,
       "Reason": null
     },
@@ -224,13 +224,13 @@
     },
     {
       "Name": "AgentLoop_GivenToolError_ContinuesWithObservation",
-      "Status": "missing-behavior",
+      "Status": "exact-and-executable",
       "SourceFile": null,
       "Reason": null
     },
     {
       "Name": "AgentLoop_GivenStepBudget_FailsWithCategory",
-      "Status": "missing-behavior",
+      "Status": "exact-and-executable",
       "SourceFile": null,
       "Reason": null
     },
@@ -482,7 +482,7 @@
     },
     {
       "Name": "Contract_GivenHumanRejectsProposal_AllowsReproposalWithoutImplementation",
-      "Status": "missing-behavior",
+      "Status": "exact-and-executable",
       "SourceFile": null,
       "Reason": null
     },

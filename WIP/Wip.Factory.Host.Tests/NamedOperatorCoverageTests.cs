@@ -2,9 +2,14 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
+using Wip.Abstractions.Agents;
 using Wip.Abstractions.Capabilities;
+using Wip.Abstractions.Chat;
 using Wip.Abstractions.Identifiers;
+using Wip.Abstractions.Tools;
+using Wip.Factory.Agents.Core.Tools;
 using Wip.Factory.Contracts.Events;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Persistence;
@@ -15,6 +20,7 @@ using Wip.Factory.Host.Factory;
 using Wip.Factory.Persistence;
 using Wip.Factory.Wip.Governance;
 using Wip.Factory.Wip.Isolation;
+using Wip.Runtime.Runtime;
 using Xunit;
 
 namespace Wip.Factory.Host.Tests;
@@ -530,6 +536,238 @@ public sealed class NamedOperatorCoverageTests
         Assert.Equal(FactoryWorkState.ReadyForImplementation, (await store.LoadAsync(dependent))!.State);
         Assert.Equal(2, (await store.LoadAsync(dependent))!.Version);
         Assert.Equal(0, second.Claimed);
+    }
+
+    [Fact]
+    public async Task AgentLoop_GivenToolError_ContinuesWithObservation()
+    {
+        var toolCall = new ToolCall("call-1", "tool.echo", JsonDocument.Parse("{}").RootElement);
+        var model = new ScriptedChatModel(
+            new ChatResponse(ChatMessage.Assistant(string.Empty, [toolCall]), "model.test", "test"),
+            new ChatResponse(ChatMessage.Assistant("recovered"), "model.test", "test"));
+        var invoker = new ErrorToolInvoker();
+        var executor = new AgentExecutor(model, invoker);
+
+        var result = await executor.ExecuteAsync(
+            new AgentExecutionRequest(
+                new SessionId("session-loop"),
+                "do work",
+                "model.test",
+                options: new AgentLoopOptions { MaxSteps = 4, MaxConsecutiveToolFailures = 10 }),
+            new CapabilityContext(new SessionId("session-loop"), Path.GetTempPath()),
+            CancellationToken.None);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(2, result.Steps.Count);
+        Assert.Equal(1, invoker.Calls);
+        Assert.Contains(
+            model.Requests[1].Messages,
+            static message => message.Role == ChatRole.Tool
+                              && message.ToolCallId == "call-1"
+                              && message.Content.Contains("tool exploded", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AgentLoop_GivenStepBudget_FailsWithCategory()
+    {
+        var toolCall = new ToolCall("call-1", "tool.echo", JsonDocument.Parse("{}").RootElement);
+        var model = new RepeatingChatModel(new ChatResponse(
+            ChatMessage.Assistant(string.Empty, [toolCall]), "model.test", "test"));
+        var executor = new AgentExecutor(model, new ErrorToolInvoker());
+
+        var result = await executor.ExecuteAsync(
+            new AgentExecutionRequest(
+                new SessionId("session-budget"),
+                "never finish",
+                "model.test",
+                options: new AgentLoopOptions { MaxSteps = 2, MaxConsecutiveToolFailures = 10 }),
+            new CapabilityContext(new SessionId("session-budget"), Path.GetTempPath()),
+            CancellationToken.None);
+
+        Assert.Equal(AgentExecutionStatus.MaxStepsReached, result.Status);
+        Assert.NotNull(result.Error);
+        Assert.Contains("Max steps", result.Error, StringComparison.Ordinal);
+        Assert.Equal(2, model.Calls);
+    }
+
+    private sealed class ScriptedChatModel : IChatModel
+    {
+        private readonly Queue<ChatResponse> _responses;
+
+        public ScriptedChatModel(params ChatResponse[] responses) => _responses = new Queue<ChatResponse>(responses);
+
+        public int Calls { get; private set; }
+
+        public List<ChatRequest> Requests { get; } = [];
+
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            Requests.Add(request);
+            return ValueTask.FromResult(_responses.Count > 1 ? _responses.Dequeue() : _responses.Peek());
+        }
+
+        public IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+    }
+
+    private sealed class RepeatingChatModel : IChatModel
+    {
+        private readonly ChatResponse _response;
+
+        public RepeatingChatModel(ChatResponse response) => _response = response;
+
+        public int Calls { get; private set; }
+
+        public ValueTask<ChatResponse> CompleteAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            return ValueTask.FromResult(_response);
+        }
+
+        public IAsyncEnumerable<StreamingChunk> StreamAsync(
+            ChatRequest request,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+            => throw new NotSupportedException();
+    }
+
+    private sealed class ErrorToolInvoker : IToolInvoker
+    {
+        public int Calls { get; private set; }
+
+        public ValueTask<ToolResult> InvokeAsync(
+            ToolCall call,
+            CapabilityContext context,
+            CancellationToken cancellationToken)
+        {
+            Calls++;
+            return ValueTask.FromResult(ToolResult.Error(call.Id, "tool exploded"));
+        }
+    }
+
+    [Fact]
+    public async Task Contract_GivenHumanRejectsProposal_AllowsReproposalWithoutImplementation()
+    {
+        var root = Root(out _);
+        var runtime = new FactoryRuntime(root);
+        var submit = await runtime.SubmitAsync(Requirement(1), null, ContractJson);
+        Assert.True(submit.Accepted, string.Join(";", submit.Errors));
+
+        await runtime.RunAsync(8);
+        var (proposal, _) = await runtime.ContractShowAsync(submit.WorkItemId!);
+        Assert.NotNull(proposal);
+
+        var rejected = await runtime.ContractRejectAsync(submit.WorkItemId!, proposal!.ProposalDigest, "prose is not what we meant");
+        Assert.True(rejected.Ok, rejected.Error);
+
+        var approveAfterReject = await runtime.ContractApproveAsync(submit.WorkItemId!, proposal.ProposalDigest);
+        Assert.False(approveAfterReject.Ok);
+        Assert.Equal("contract-rejected", approveAfterReject.Error);
+
+        var afterReject = await runtime.EventsAsync(submit.WorkItemId!);
+        Assert.DoesNotContain(afterReject, static envelope => envelope.Type == OperatorEvents.ImplementationRequested);
+        Assert.Equal("Proposed", Assert.Single(await runtime.StatusAsync()).State);
+
+        // A revised requirement is a new proposal; nothing was implemented for the rejected one.
+        var revised = await runtime.SubmitAsync(Requirement(2), null, ContractJson);
+        Assert.True(revised.Accepted, string.Join(";", revised.Errors));
+        Assert.NotEqual(submit.WorkItemId, revised.WorkItemId);
+
+        await runtime.RunAsync(8);
+        Assert.NotNull((await runtime.ContractShowAsync(revised.WorkItemId!)).Proposal);
+    }
+
+    [Fact]
+    public async Task Contract_GivenModelAttemptToEditFrozenOracle_IsRefused()
+    {
+        var basePath = Path.Combine(Path.GetTempPath(), "factory-oracle-" + Guid.NewGuid().ToString("N"));
+        var repository = Path.Combine(basePath, "target");
+        var worktree = Path.Combine(basePath, "worktree");
+        Directory.CreateDirectory(repository);
+        FactoryTestWorkspace.Write(worktree);
+
+        var (root, error) = FactoryControlRoot.Resolve(repository, Path.Combine(basePath, "control"));
+        Assert.NotNull(root);
+        Assert.Null(error);
+
+        var runtime = new FactoryRuntime(root!);
+        var submit = await runtime.SubmitAsync(Requirement(), null, ContractJson);
+        Assert.True(submit.Accepted, string.Join(";", submit.Errors));
+
+        var context = new CapabilityContext(new SessionId("session-oracle"), worktree);
+        var tool = new WriteWorkspaceFileTool();
+
+        var refusal = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await tool.ExecuteAsync(
+                new WriteFileRequest("../control/factory.log", "tampered"), context, CancellationToken.None));
+
+        Assert.Contains(WorkspacePaths.OutsideWorktreeCategory, refusal.Message, StringComparison.Ordinal);
+
+        var submitted = (await runtime.EventsAsync(submit.WorkItemId!))
+            .Single(static envelope => envelope.Type == FactoryEventTypes.RequirementSubmitted);
+        Assert.Equal(
+            AcceptanceContract.Parse(ContractJson).Contract!.Digest,
+            submitted.Data["acceptanceContractDigest"]);
+    }
+
+    [Fact]
+    public async Task Contract_GivenAmbiguousUnobservableProse_RequiresResolutionBeforeFreeze()
+    {
+        var root = Root(out _);
+        var runtime = new FactoryRuntime(root);
+
+        const string ambiguous = """
+            ---
+            title: Pleasant service
+            supportedClass: aspnetcore-http-net10
+            ---
+
+            Make the service nice.
+
+            ## Acceptance expectations
+            - The experience should be pleasant.
+            """;
+
+        var submit = await runtime.SubmitAsync(ambiguous);
+        Assert.True(submit.Accepted, string.Join(";", submit.Errors));
+
+        await runtime.RunAsync(8);
+        var (proposal, _) = await runtime.ContractShowAsync(submit.WorkItemId!);
+        Assert.NotNull(proposal);
+        Assert.True(proposal!.HasUnresolvedQuestions);
+
+        var approve = await runtime.ContractApproveAsync(submit.WorkItemId!, proposal.ProposalDigest);
+
+        Assert.False(approve.Ok);
+        Assert.StartsWith("contract-ambiguous", approve.Error, StringComparison.Ordinal);
+        Assert.Equal("Proposed", Assert.Single(await runtime.StatusAsync()).State);
+        Assert.DoesNotContain(
+            await runtime.EventsAsync(submit.WorkItemId!),
+            static envelope => envelope.Type == OperatorEvents.ImplementationRequested);
+
+        // Resolution is a revised, observable requirement, not an approval of the ambiguous one.
+        var resolved = await runtime.SubmitAsync(Requirement(2), null, ContractJson);
+        Assert.True(resolved.Accepted, string.Join(";", resolved.Errors));
+        Assert.NotEqual(submit.WorkItemId, resolved.WorkItemId);
+
+        await runtime.RunAsync(8);
+        var (resolvedProposal, _) = await runtime.ContractShowAsync(resolved.WorkItemId!);
+        Assert.False(resolvedProposal!.HasUnresolvedQuestions);
+        Assert.True((await runtime.ContractApproveAsync(resolved.WorkItemId!, resolvedProposal.ProposalDigest)).Ok);
+        await runtime.RunAsync(1);
+        Assert.Equal(
+            "RequirementsAligned",
+            Assert.Single(await runtime.StatusAsync(), status => status.WorkItemId == resolved.WorkItemId).State);
     }
 
     private sealed class FailingStageHandler : IStageDispatchHandler

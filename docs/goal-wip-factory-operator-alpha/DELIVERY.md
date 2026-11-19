@@ -24,8 +24,8 @@ Source: `v0.4-test-report.md`, `gate-report.json`, `named-test-coverage.json`.
 | Gate | Status | Basis |
 |---|---|---|
 | Build | **pass** | `dotnet build` 0 errors |
-| Factory suites | **pass** | 259 cases, 0 failures across core (21), agents (69), host (164), architecture (5) |
-| Named v0.3 tests | **56 / 80 exact** | plus 18 equivalent-but-renamed; 6 missing behaviours reported; 0 name-only placeholders |
+| Factory suites | **pass** | 264 cases, 0 failures across core (21), agents (69), host (169), architecture (5) |
+| Named v0.3 tests | **61 / 80 exact** | plus 18 equivalent-but-renamed; 1 missing (blind PA-02, not-run); 0 name-only placeholders |
 | FAC-P0-01 release integrity | **implemented + tested** | crash-after-merge resumes verification; no release on a ledger shortcut |
 | FAC-P0-02 four review checks | **implemented + tested** | validation/coverage/architecture/security each with executed, digest-bound evidence |
 | FAC-P0-03 immutable templates | **implemented + tested** | re-registration conflict, marker/body mismatch, revocation persistence, traversal refusal |
@@ -79,7 +79,7 @@ measured; the product acceptance is unclaimed.
 ## Known limitations (not hidden)
 
 - **PA-01/PA-02 not run.** No independent evaluator was available in this session.
-- **56 of the 80 v0.3 named tests are exact; 18 more are proven under explicitly mapped names; 6 remain absent.**
+- **61 of the 80 v0.3 named tests are exact; 18 more are proven under explicitly mapped names; only the blind PA-02 remains unrun.**
   `named-test-coverage.json` and `named-test-renames.json` report each one. No pass-through tests were manufactured.
 - **Child-process output is redacted** by the versioned `factory/redaction@1` policy; a redactor failure is the named
   `redaction-failed` refusal. Tool-boundary, path-escape and missing-OS-bounds negatives are implemented.
