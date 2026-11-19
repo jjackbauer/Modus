@@ -1,0 +1,98 @@
+{
+    "gate":  "KNOWN-INPUT-A",
+    "hostDigest":  "sha256:b921c4c1f84d4c94b9fadd77e3ecde3a09e7c3d01bf3fdef04cfea6d838a9990",
+    "configDigest":  "sha256:3afdf0bec8bb5565a329cd47c8787ba56a42e253e8194ca3da7574972f113bb7",
+    "requirementDigest":  "sha256:0a432c4e2d45f360f5e227dd259a2f97ad58ff7e12f1f3a6c2cced0dd6b66dfb",
+    "contractDigest":  "sha256:ca05a4ddef7f9800979e824c1fcb22d96a08ebd25288be37d1bc4d7ec5332053",
+    "modelEvidenceKind":  "live",
+    "modelProvider":  "deepseek",
+    "knownInput":  true,
+    "blind":  false,
+    "preMerge":  [
+                     {
+                         "id":  "AC-1",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-2",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-3",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-4",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     }
+                 ],
+    "postMerge":  [
+                      {
+                          "id":  "AC-1",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-2",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-3",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-4",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      }
+                  ],
+    "released":  true,
+    "mergedSha":  "4d8a2080cb80611a1d38caa010fbc16c6f7956a8",
+    "targetHeadSha":  "4d8a2080cb80611a1d38caa010fbc16c6f7956a8",
+    "operationallyValidated":  true,
+    "recordedAtUtc":  "2026-11-19T10:11:39.0226886Z",
+    "commands":  [
+                     {
+                         "command":  "requirement submit",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (proposal)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "contract approve",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (implementation+review)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "approve (merge)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (merge+verify)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "serve",
+                         "exit":  0
+                     }
+                 ]
+}

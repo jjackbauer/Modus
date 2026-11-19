@@ -1,0 +1,6 @@
+{
+    "gate":  "KNOWN-INPUT-A",
+    "exit":  0,
+    "output":  "acceptance: pass",
+    "verdict":  "pass"
+}

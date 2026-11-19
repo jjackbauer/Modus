@@ -32,7 +32,7 @@ Source: `v0.4-test-report.md`, `gate-report.json`, `named-test-coverage.json`.
 | FAC-P0-04 acceptance harness | **implemented + tested** | evaluator owns expected scenarios and frozen contract; missing/duplicate/uninspected evidence fails |
 | FAC-P0-05 blind PA-01/PA-02 | **not-run** | requires an external evaluator and withheld requirements |
 | FAC-P1-01..08 | **implemented with named exceptions** | see `v0.4-closure-map.md`; secret redaction and its security-policy check are implemented |
-| v0.3 PA-03–PA-08 | **unchanged, not re-certified** | prior evidence remains a session report; this remediation did not re-run live model acceptance |
+| v0.3 PA-03–PA-08 | **mechanics re-exercised (known-input)** | one live-model run at `e29df4d` passed intake, four review checks, merge, post-merge verification and serve with 4/4 scenarios in both phases; this is not blind PA-01/PA-02 |
 
 ## Reproducing
 
@@ -78,7 +78,7 @@ measured; the product acceptance is unclaimed.
 
 ## Known limitations (not hidden)
 
-- **PA-01/PA-02 not run.** No independent evaluator was available in this session.
+- **PA-01/PA-02 not run.** No independent evaluator was available in this session. A fresh live **known-input** run\n  (`v0.4-known-input-run.md`) passed end to end but is explicitly not blind acceptance.
 - **61 of the 80 v0.3 named tests are exact; 18 more are proven under explicitly mapped names; only the blind PA-02 remains unrun.**
   `named-test-coverage.json` and `named-test-renames.json` report each one. No pass-through tests were manufactured.
 - **Child-process output is redacted** by the versioned `factory/redaction@1` policy; a redactor failure is the named
