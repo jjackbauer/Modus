@@ -76,20 +76,20 @@ function ConvertFrom-ScenarioSummary {
 
 # 0. Evaluator expectations are mandatory and authoritative.
 if (-not (Test-Path $Expectations)) {
-    Write-Error "acceptance-expectations-missing"
+    [Console]::Error.WriteLine("acceptance-expectations-missing")
     exit 2
 }
 $expect = Get-Content -Raw -Path $Expectations | ConvertFrom-Json
 if (-not $expect.evaluatorOwned -or [string]::IsNullOrWhiteSpace($expect.evaluatorId)) {
-    Write-Error "acceptance-evaluator-missing"
+    [Console]::Error.WriteLine("acceptance-evaluator-missing")
     exit 2
 }
 if (-not $expect.expectedScenarioIds -or $expect.expectedScenarioIds.Count -eq 0) {
-    Write-Error "acceptance-expectations-empty"
+    [Console]::Error.WriteLine("acceptance-expectations-empty")
     exit 2
 }
 if ([string]::IsNullOrWhiteSpace($expect.approvedContractDigest)) {
-    Write-Error "acceptance-contract-not-inspected"
+    [Console]::Error.WriteLine("acceptance-contract-not-inspected")
     exit 2
 }
 
