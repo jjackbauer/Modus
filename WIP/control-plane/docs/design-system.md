@@ -572,9 +572,16 @@ page-level automation, so 200% zoom was tested as its layout equivalent, a 720 C
 1440 device pixels: 0 overflow and no clipped controls. This is recorded as a limitation, not as a
 physical zoom run.
 
-**VG-02 readability.** The documented tokens still measure 15px body, 13px dense metadata, 12px
-floor; the width sweep found 0 user-facing text below 12px. Text spacing is measured above. A fresh
-full contrast audit was not run in this increment, so VG-02 is not claimed complete.
+**VG-02 readability and contrast.** The documented tokens still measure 15px body, 13px dense
+metadata, 12px floor; the width sweep found 0 user-facing text below 12px. Text spacing is measured
+above. axe-core 4.11 ran 17 audits (overview, queue, work detail, release, intake, the three
+decision dialogs and login, in both themes) under the WCAG 2.0/2.1 A/AA rule tags: 0 violations
+(`axe-results.json`). The audit found and this increment fixed real defects: light-theme
+`--text-tertiary`, `--accent` and `--success` were below 4.5:1 on the light canvases; neutral chips
+used 11px uppercase tertiary text; the table Copy control was rendered at 75% opacity; and the
+contract dialog used a `<div class="metadata-list">` around `dt`/`dd` instead of a `dl`. All are
+corrected and the rerun is clean. axe is automated, so this is not a substitute for a manual
+contrast review; VG-02 is met for the automated AA rule set.
 
 **VG-03 keyboard and screen reader.** The real NVDA pass used NVDA 2026.3.1 (portable, debug log,
 `--minimal --disable-addons`) with headed Chrome foregrounded:
@@ -637,7 +644,11 @@ open.
   focuses the new route's `h1` after the data-driven heading renders, keeps retrying briefly while
   a reactive refresh can replace the node, and stops the moment the operator focuses a control or a
   dialog is open. Verified on direct loads of queue/work/release and on SPA queue→detail.
-- **Offline truth (IA-03/VG-06).** The activity stream could remain "live" while the browser was
+- **Contrast (VG-02).** axe found light-theme tertiary/accent/success tokens below 4.5:1 on light
+  surfaces, 11px uppercase neutral chips, a 75% opacity Copy control in the table, and an invalid
+  `div`/`dt`/`dd` structure in the contract dialog. Tokens were darkened, chips are 12px sentence
+  case with primary text, the Copy control is fully opaque, and the dialog uses a real `dl`. The
+  full axe rerun is clean in both themes.- **Offline truth (IA-03/VG-06).** The activity stream could remain "live" while the browser was
   offline. The shell now listens to the browser's offline/online events, sets an explicit offline
   state, closes the stream so buffered heartbeats cannot claim live, and reopens it on reconnect.
   Transient read failures gained a safe "Reload this page" retry.
@@ -659,7 +670,7 @@ open.
 - Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
-- **Remaining VG work:** VG-02 has no fresh full contrast audit; VG-04 did not exercise a stale
+- **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast review; VG-04 did not exercise a stale
   merge authorization; VG-05 has no approved regression baseline; VG-06 did not exercise every
   panel and state combination; VG-08 reached 104 work items but only 144 events and no long
   diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom

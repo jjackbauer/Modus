@@ -286,7 +286,7 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | Gate | Status | Evidence |
 |---|---|---|
 | VG-01 responsive | Measured at 7 widths for 4 routes and 25 dialog cases, both themes; 0 overflow, 0 clipped actions; text spacing 0 overflow; 200% zoom tested as a 720 CSS-px layout equivalent, not a physical zoom | `vg-checks.json`, `dialogs-check.json`, `zoom-check.json` |
-| VG-02 readability | 15/13/12px tokens and no text below 12px; text spacing measured. No fresh full contrast audit | `vg-checks.json`; design-system §2 |
+| VG-02 readability | Met for automated AA: axe-core 4.11, 17 runs both themes, 0 violations; 15/13/12px tokens, no text below 12px, text spacing measured. Manual contrast review still desirable | `axe-results.json`, `vg-checks.json` |
 | VG-03 keyboard + screen reader | Met with notes: real NVDA 2026.3.1 pass over navigation, queue, table, detail tabs, evidence, merge/contract/serve dialogs and intake errors (53/55 scripted expectations; two documented script misses); keyboard-only mutations covered by the E2E; route focus fixed | `vg03-nvda.json`, `nvda-vg6.log`, `e2e-verify.json` |
 | VG-04 safety/truth | Partial: digest binding, serving consistency and one-decision-per-merge proven; stale merge authorization not exercised | `e2e-verify.json` |
 | VG-05 visual regression | Partial: 60+ both-theme screenshots; no approved baseline/pixel diff | `.evidence/pr3/shots/` |
