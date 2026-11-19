@@ -244,7 +244,7 @@ pub fn WorkQueuePage() -> impl IntoView {
     let active_view = RwSignal::new(Option::<String>::None);
     let refresh = context.refresh;
     let refresh_error = RwSignal::new(None::<api::UiError>);
-    let last_good = RwSignal::new(None::<Page<WorkItemSummary>>);
+    let last_good = RwSignal::new(None::<(String, Page<WorkItemSummary>)>);
     let filters_active = Signal::derive(move || {
         !search.get().trim().is_empty() || !state.get().is_empty() || !indicator.get().is_empty()
     });
@@ -346,6 +346,7 @@ pub fn WorkQueuePage() -> impl IntoView {
         let indicator = indicator.get();
         let search = search.get();
         let sort = sort.get();
+        let request_key = format!("{instance}|{state}|{indicator}|{search}|{sort}");
         let _ = refresh.get();
         let error_slot = refresh_error;
         let previous_slot = last_good;
@@ -366,14 +367,14 @@ pub fn WorkQueuePage() -> impl IntoView {
                 {
                     Ok(page) => {
                         error_slot.set(None);
-                        previous_slot.set(Some(page.clone()));
+                        previous_slot.set(Some((request_key.clone(), page.clone())));
                         Some(Ok(page))
                     }
                     Err(error) => {
                         error_slot.set(Some(error.clone()));
                         match previous_slot.get_untracked() {
-                            Some(previous) => Some(Ok(previous)),
-                            None => Some(Err(error)),
+                            Some((key, previous)) if key == request_key => Some(Ok(previous)),
+                            _ => Some(Err(error)),
                         }
                     }
                 }

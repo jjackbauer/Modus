@@ -34,11 +34,12 @@ pub fn OverviewPage() -> impl IntoView {
     let instance = move || params.get().get("instance").unwrap_or_default();
     let refresh = context.refresh;
     let refresh_error = RwSignal::new(None::<api::UiError>);
-    let last_good = RwSignal::new(None::<Overview>);
+    let last_good = RwSignal::new(None::<(String, Overview)>);
     let has_write = Signal::derive(move || context.can_write());
 
     let overview = LocalResource::new(move || {
         let instance = instance();
+        let request_key = instance.clone();
         let _ = refresh.get();
         let error_slot = refresh_error;
         let previous_slot = last_good;
@@ -49,14 +50,14 @@ pub fn OverviewPage() -> impl IntoView {
                 match api::overview(&instance).await {
                     Ok(data) => {
                         error_slot.set(None);
-                        previous_slot.set(Some(data.clone()));
+                        previous_slot.set(Some((request_key.clone(), data.clone())));
                         Some(Ok(data))
                     }
                     Err(error) => {
                         error_slot.set(Some(error.clone()));
                         match previous_slot.get_untracked() {
-                            Some(previous) => Some(Ok(previous)),
-                            None => Some(Err(error)),
+                            Some((key, previous)) if key == request_key => Some(Ok(previous)),
+                            _ => Some(Err(error)),
                         }
                     }
                 }

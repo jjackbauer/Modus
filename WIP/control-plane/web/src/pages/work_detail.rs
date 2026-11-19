@@ -53,7 +53,7 @@ pub fn WorkDetailPage() -> impl IntoView {
     let dialog = RwSignal::new(None::<Dialog>);
     let refresh = context.refresh;
     let refresh_error = RwSignal::new(None::<api::UiError>);
-    let last_good = RwSignal::new(None::<WorkItemDetail>);
+    let last_good = RwSignal::new(None::<(String, WorkItemDetail)>);
     let location = use_location();
     let requested =
         Signal::derive(move || location.query.get().get("authorize").unwrap_or_default());
@@ -61,6 +61,7 @@ pub fn WorkDetailPage() -> impl IntoView {
     let detail = LocalResource::new(move || {
         let instance = instance.get();
         let work_item_id = work_item_id.get();
+        let request_key = work_item_id.clone();
         let _ = refresh.get();
         let error_slot = refresh_error;
         let previous_slot = last_good;
@@ -71,14 +72,14 @@ pub fn WorkDetailPage() -> impl IntoView {
                 match api::work_item(&instance, &work_item_id).await {
                     Ok(data) => {
                         error_slot.set(None);
-                        previous_slot.set(Some(data.clone()));
+                        previous_slot.set(Some((request_key.clone(), data.clone())));
                         Some(Ok(data))
                     }
                     Err(error) => {
                         error_slot.set(Some(error.clone()));
                         match previous_slot.get_untracked() {
-                            Some(previous) => Some(Ok(previous)),
-                            None => Some(Err(error)),
+                            Some((id, previous)) if id == request_key => Some(Ok(previous)),
+                            _ => Some(Err(error)),
                         }
                     }
                 }
