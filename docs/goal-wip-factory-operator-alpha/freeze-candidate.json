@@ -1,13 +1,16 @@
 {
-    "codeRevision":  "53350402b8f8f3422dbd5c457e13b42a27c36f2c",
-    "measuredCodeRevision":  "e29df4d2be41ef53dc3b5d71226c8f1565b8c48c",
+    "codeRevision":  "baa3bfc11450c754f48cc6e7aa60b70b72723bc9",
     "hostBinary":  "WIP/Wip.Factory.Host/bin/Debug/net10.0/Wip.Factory.Host.dll",
-    "hostDigest":  "sha256:b921c4c1f84d4c94b9fadd77e3ecde3a09e7c3d01bf3fdef04cfea6d838a9990",
+    "hostDigest":  "sha256:f3109d3455049649b85d776ed037fb1c4aeb6518c768ecb738e8eecdebd09f8b",
+    "workspaceDependencyDigest":  "sha256:1d11c5aa2133b1d60d239b2cd76dccf4fabfc05271edc03f2c2e9ebdedf2d8e2",
+    "hostOutputDigest":  "sha256:4db453231f18565a8900de19032d0200729d812ed651d678a1ac7a235b8e33d4",
+    "hostOutputAlgorithm":  "sha256 over newline-joined \"\u003cdll-name\u003e=\u003csha256\u003e\" for all Wip*.dll in bin/Debug/net10.0, sorted by name",
     "configDigest":  "sha256:3afdf0bec8bb5565a329cd47c8787ba56a42e253e8194ca3da7574972f113bb7",
     "configInputs":  [
                          "WIP/Wip.Factory.Host/Wip.Factory.Host.csproj",
                          "WIP/Wip.Factory.Host/Program.cs"
                      ],
-    "generatedAtUtc":  "2026-11-19T10:09:52.6796363Z",
-    "note":  "Candidate freeze measured by the implementer. The independent evaluator must re-measure before revealing either blind requirement; a rebuild changes the digest."
+    "generatedAtUtc":  "2026-11-19T11:18:32.7477661Z",
+    "note":  "Candidate freeze for the remediated worktree-retry build. The spent 2026-11-19 PA-01/PA-02 tasks must not be reused; a new unseen pair is required. Evaluator must re-measure before reveal.",
+    "evidenceCommit":  "d1563d5f890bb8e06d1bbe621f2443d48312e3ae"
 }
