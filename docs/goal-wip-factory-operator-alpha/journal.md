@@ -817,3 +817,13 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   mechanism first, which is the rule I have applied throughout.
 - **Confidence**: High
 - **Related**: EVD-094..096, OBS-049, named-test-map.md
+## OBS-054 — Precision: 168 test cases, 161 unique method names
+
+- **Source**: same measurement as OBS-053
+- **Fact**: The suites execute **168 test cases** (5 + 21 + 69 + 73). Unique **method names** are **161**, because
+  theory rows collapse to one name per method. OBS-053 says "168 executable test methods", which conflates the two.
+  The named-coverage figure is unaffected: **31 of 80** spec names present.
+- **Implications**: Recorded because three earlier numbers in this goal were wrong (OBS-036, OBS-037, OBS-049) and the
+  discipline only holds if small imprecisions are corrected too. When reporting counts, say which one is meant.
+- **Confidence**: High
+- **Related**: OBS-053, EVD-095
