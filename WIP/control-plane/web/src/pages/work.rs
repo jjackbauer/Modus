@@ -632,7 +632,7 @@ pub fn WorkQueuePage() -> impl IntoView {
                     </div>
                 }.into_any())
             />
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading durable work items…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading durable work items…"/> }>
                 {move || match work.get().flatten() {
                     None => view! { <LoadingBlock label="Loading durable work items…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -654,7 +654,7 @@ pub fn WorkQueuePage() -> impl IntoView {
                         }}
                     }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
@@ -750,6 +750,7 @@ fn next_step_label(item: &WorkItemSummary) -> &'static str {
     match item.state.as_str() {
         "ReadyForImplementation" => "Start dispatch",
         "NeedsRework" => "Dispatch a rework attempt",
+        "ReadyForDelivery" => "Run dispatch to merge",
         "Released" | "OperationallyValidated" => "Start supervised serve",
         "InImplementation" | "InReview" | "DeliveryValidation" => "Monitor execution",
         "Blocked" | "Failed" | "Cancelled" | "Closed" => "Inspect evidence",
@@ -2207,6 +2208,11 @@ mod tests {
         );
         assert_eq!(next_step_label(&item), "Authorize merge");
         item.awaiting_merge_approval = false;
+        assert_eq!(
+            next_step_label(&item),
+            "Run dispatch to merge",
+            "a recorded authorization waits for the dispatch cycle, not another authorization"
+        );
         item.awaiting_contract_approval = true;
         assert_eq!(next_step_label(&item), "Freeze or reject the contract");
         item.awaiting_contract_approval = false;

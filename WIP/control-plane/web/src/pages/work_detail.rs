@@ -70,7 +70,7 @@ pub fn WorkDetailPage() -> impl IntoView {
     });
 
     view! {
-        <Suspense fallback=move || view! { <LoadingBlock label="Loading the work item from durable factory state…"/> }>
+        <Transition fallback=move || view! { <LoadingBlock label="Loading the work item from durable factory state…"/> }>
             {move || match detail.get().flatten() {
                 None => view! { <LoadingBlock label="Loading the work item from durable factory state…"/> }.into_any(),
                 Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -84,7 +84,7 @@ pub fn WorkDetailPage() -> impl IntoView {
                     />
                 }.into_any(),
             }}
-        </Suspense>
+        </Transition>
     }
 }
 
@@ -176,7 +176,27 @@ fn WorkDetailBody(
         .rev()
         .find(|review| review.outcome == "accepted")
         .cloned();
-    let can_merge = state == "ReadyForDelivery" && latest_accepted_review.is_some();
+    // The adapter records the authorization as an event and merges on the next dispatch cycle.
+    // Until that dispatch runs, the authorisation surface must not offer the same decision again.
+    let merge_authorized = data
+        .events
+        .iter()
+        .any(|event| event.r#type == "factory.merge.approved.v1");
+    let pending_merge_execution = merge_authorized && state == "ReadyForDelivery";
+    let can_merge =
+        state == "ReadyForDelivery" && latest_accepted_review.is_some() && !merge_authorized;
+    // The adapter's transition list can still name the authorization after it has been recorded;
+    // hide that one entry while the decision waits for the dispatch cycle, but keep every other
+    // legal transition visible.
+    let next_actions_for_view: Vec<NextAction> = if pending_merge_execution {
+        next_actions
+            .iter()
+            .filter(|action| !action.label.to_ascii_lowercase().contains("authorize merge"))
+            .cloned()
+            .collect()
+    } else {
+        next_actions.clone()
+    };
     let merge_digest = summary
         .review_digest
         .clone()
@@ -297,6 +317,13 @@ fn WorkDetailBody(
                 </Notice>
             })}
 
+            {pending_merge_execution.then(|| view! {
+                <Notice kind="accent">
+                    <strong>"Merge authorized. "</strong>
+                    <span>"The factory executes the merge and post-merge verification on the next dispatch cycle. Start dispatch to continue; the authorization is not offered again."</span>
+                </Notice>
+            })}
+
             <Tabs
                 label="Work item views".to_string()
                 tabs=TABS.to_vec()
@@ -317,7 +344,7 @@ fn WorkDetailBody(
                         serving=tab_serving.clone()
                         instance=instance
                         work_item_id=tab_work_item_id.clone()
-                        next_actions=next_actions.clone()
+                        next_actions=next_actions_for_view.clone()
                         is_terminal=is_terminal
                     />
                 }.into_any(),
@@ -821,7 +848,7 @@ fn AgentTab(
             </Panel>
 
             <Panel title="Agent sessions and tool evidence".to_string()>
-                <Suspense fallback=move || view! { <LoadingBlock label="Loading durable session traces…"/> }>
+                <Transition fallback=move || view! { <LoadingBlock label="Loading durable session traces…"/> }>
                     {move || match sessions.get().flatten() {
                         None => view! { <LoadingBlock label="Loading durable session traces…"/> }.into_any(),
                         Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -837,7 +864,7 @@ fn AgentTab(
                             }
                         }
                     }}
-                </Suspense>
+                </Transition>
             </Panel>
         </div>
     }
@@ -1071,7 +1098,7 @@ fn SourceTab(instance: String, work_item_id: String) -> impl IntoView {
     });
 
     view! {
-        <Suspense fallback=move || view! { <LoadingBlock label="Loading reviewed source evidence…"/> }>
+        <Transition fallback=move || view! { <LoadingBlock label="Loading reviewed source evidence…"/> }>
             {move || match diff.get().flatten() {
                 None => view! { <LoadingBlock label="Loading reviewed source evidence…"/> }.into_any(),
                 Some(Err(error)) => {
@@ -1090,7 +1117,7 @@ fn SourceTab(instance: String, work_item_id: String) -> impl IntoView {
                     />
                 }.into_any(),
             }}
-        </Suspense>
+        </Transition>
     }
 }
 
@@ -1171,7 +1198,7 @@ fn LineageTab(instance: String, work_item_id: String) -> impl IntoView {
     });
 
     view! {
-        <Suspense fallback=move || view! { <LoadingBlock label="Loading execution lineage…"/> }>
+        <Transition fallback=move || view! { <LoadingBlock label="Loading execution lineage…"/> }>
             {move || match lineage.get().flatten() {
                 None => view! { <LoadingBlock label="Loading execution lineage…"/> }.into_any(),
                 Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -1190,7 +1217,7 @@ fn LineageTab(instance: String, work_item_id: String) -> impl IntoView {
                     </Panel>
                 }.into_any(),
             }}
-        </Suspense>
+        </Transition>
     }
 }
 

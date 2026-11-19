@@ -60,7 +60,7 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                 <a class="tiny" href=format!("/i/{}/releases", instance.get())>"← Releases"</a>
                 <a class="tiny" href=format!("/i/{}/work/{}", instance.get(), work_item_id.get())>"Work detail"</a>
             </div>
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading release identity and evidence…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading release identity and evidence…"/> }>
                 {move || match release.get().flatten() {
                     None => view! { <LoadingBlock label="Loading release identity and evidence…"/> }.into_any(),
                     Some(Err(error)) => {
@@ -244,7 +244,7 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                         }.into_any()
                     }
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }

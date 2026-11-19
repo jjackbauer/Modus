@@ -78,13 +78,13 @@ pub fn OverviewPage() -> impl IntoView {
                 >"Start dispatch cycle"</button>
             </PageHeader>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading the factory command centre…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading the factory command centre…"/> }>
                 {move || match overview.get().flatten() {
                     None => view! { <LoadingBlock label="Loading the factory command centre…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                     Some(Ok(data)) => view! { <OverviewBody data=data/> }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
