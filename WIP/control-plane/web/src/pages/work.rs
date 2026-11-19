@@ -11,11 +11,12 @@ use control_plane_domain::{
 };
 
 use crate::api;
-use crate::components::feedback::EmptyState;
+use crate::components::Confirmation;
+use crate::components::feedback::{EmptyState, FieldError, InlineValidation};
 use crate::components::layout::FilterBar;
 use crate::components::status::{EntityIdentity, StatusIndicator};
 use crate::components::table::{Column, DataTable, Sort, SortDirection, TableState};
-use crate::components::ui::{EmptyBlock, LoadingBlock, error_view, time_ago};
+use crate::components::ui::{DigestCopy, EmptyBlock, LoadingBlock, Notice, error_view, time_ago};
 use crate::context::AppContext;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1200,11 +1201,248 @@ fn WorkPriority(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl I
     }
 }
 
+/// The local checks with the field each one belongs to. The factory parser is still the
+/// authority; this only tells the operator where to fix what.
+fn intake_field_errors(draft: &RequirementDraft) -> Vec<FieldError> {
+    let mut errors = Vec::new();
+    if draft.title.trim().is_empty() {
+        errors.push(FieldError::new("intake-title", "Title", "A title is required."));
+    }
+    if draft.description.trim().is_empty() {
+        errors.push(FieldError::new(
+            "intake-description",
+            "Description",
+            "A description is required.",
+        ));
+    }
+    if draft
+        .acceptance_expectations
+        .iter()
+        .all(|line| line.trim().is_empty())
+    {
+        errors.push(FieldError::new(
+            "intake-expectations",
+            "Observable acceptance expectations",
+            "Add at least one observable acceptance expectation. The factory refuses a requirement without one.",
+        ));
+    }
+    if draft.supported_class.trim() != control_plane_domain::SUPPORTED_CLASS {
+        errors.push(FieldError::new(
+            "intake-document",
+            "Generated document",
+            "The generated document names a supported class the factory alpha does not accept.",
+        ));
+    }
+    if let Some(json) = draft.acceptance_contract_json.as_deref() {
+        if !json.trim().is_empty() {
+            if let Err(message) = control_plane_domain::draft::validate_acceptance_contract(json) {
+                errors.push(FieldError::new(
+                    "intake-contract",
+                    "Acceptance contract JSON",
+                    message,
+                ));
+            }
+        }
+    }
+    errors
+}
+
+/// Maps the factory parser's stable codes to a field and a sentence an operator can act on. The
+/// raw code is not repeated here; it stays in the technical details rendered beside the verdict.
+fn map_parser_error(raw: &str) -> FieldError {
+    let code = raw.trim();
+    match code {
+        "requirement-missing-title" => FieldError::new(
+            "intake-title",
+            "Title",
+            "The factory parser found no title. Add one in the Title field.",
+        ),
+        "requirement-without-acceptance-expectations" => FieldError::new(
+            "intake-expectations",
+            "Observable acceptance expectations",
+            "The factory refuses a requirement without an observable expectation. Add at least one line that states an HTTP outcome, such as 'GET /health returns 200'.",
+        ),
+        "requirement-unterminated-front-matter" => FieldError::new(
+            "intake-document",
+            "Generated document",
+            "The generated document's metadata block is not closed. A field probably contains a line of three dashes; simplify the title or description.",
+        ),
+        _ if code.starts_with("requirement-unknown-metadata:") => FieldError::new(
+            "intake-document",
+            "Generated document",
+            "The generated document contains a metadata key the factory parser does not know. Remove it from the field that produced it.",
+        ),
+        _ if code.starts_with("unsupported-class") => FieldError::new(
+            "intake-document",
+            "Generated document",
+            "The factory alpha accepts only its supported application class. This build should never produce another value; report the generated document.",
+        ),
+        _ if code.starts_with("contract-invalid:json") => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "The acceptance contract is not valid JSON. Check the brackets, quotes and commas.",
+        ),
+        "contract-invalid:root-must-be-an-object" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "The acceptance contract must be a JSON object, not an array or a scalar.",
+        ),
+        "contract-invalid:schemaVersion" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "The contract needs a numeric schemaVersion (use 1).",
+        ),
+        "contract-invalid:supportedClass" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "The contract supportedClass must name the factory's supported application class.",
+        ),
+        "contract-invalid:scenarios" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "The contract needs a non-empty scenarios array.",
+        ),
+        "contract-invalid:duplicate-scenario-id" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "Two scenarios share the same id. Give every scenario a unique id.",
+        ),
+        "contract-invalid:scenario-missing-id-method-or-path" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "Every scenario needs a non-empty id, method and path.",
+        ),
+        "contract-invalid:scenario-not-an-object" => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "Every entry in the scenarios array must be a JSON object.",
+        ),
+        _ if code.starts_with("contract-invalid:scenario-expect-status") => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "Every scenario needs expect.status with an HTTP status code.",
+        ),
+        _ if code.starts_with("contract-unsupported-form:path-must-be-relative") => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "A scenario path must start with '/'. Absolute URLs are not accepted.",
+        ),
+        _ if code.starts_with("contract-unsupported-form:absolute-url-not-allowed") => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "A scenario path must be relative to the served application; absolute URLs are not accepted.",
+        ),
+        _ if code
+            .starts_with("contract-unsupported-form:capture-must-be-a-string-expression") =>
+        {
+            FieldError::new(
+                "intake-contract",
+                "Acceptance contract JSON",
+                "A capture value must be a string expression.",
+            )
+        }
+        _ if code.starts_with("contract-") => FieldError::new(
+            "intake-contract",
+            "Acceptance contract JSON",
+            "The factory rejected the acceptance contract. Check its schema, supported class, scenarios and expected statuses.",
+        ),
+        _ => FieldError::new(
+            "intake-document",
+            "Generated document",
+            "The factory parser rejected the document. The raw code is preserved in Technical details.",
+        ),
+    }
+}
+
+fn map_parser_errors(errors: &[String]) -> Vec<FieldError> {
+    errors.iter().map(|raw| map_parser_error(raw)).collect()
+}
+
+/// The message for one control, derived from the shared error list so the summary and the field
+/// cannot disagree about which problem belongs where.
+fn field_error(combined: Signal<Vec<FieldError>>, field_id: &'static str) -> Signal<Option<String>> {
+    Signal::derive(move || {
+        combined
+            .get()
+            .into_iter()
+            .find(|error| error.field_id == field_id)
+            .map(|error| error.message)
+    })
+}
+
+/// A labelled control with a persistent label, a required marker and a field-associated error.
+/// The error paragraph is `ValidationMessage`, so its id matches the summary's anchor.
+#[component]
+fn IntakeField(
+    id: &'static str,
+    #[prop(into)] label: String,
+    #[prop(optional)] span2: bool,
+    #[prop(optional)] required: bool,
+    #[prop(optional_no_strip)] hint: Option<String>,
+    error: Signal<Option<String>>,
+    children: Children,
+) -> impl IntoView {
+    let class = if span2 { "field span-2" } else { "field" };
+    view! {
+        <div class=class>
+            <label class="field-label" for=id>
+                {label}
+                {required.then(|| view! { <span class="field-required">" (required)"</span> })}
+            </label>
+            {hint.map(|hint| view! { <p class="form-hint">{hint}</p> })}
+            {children()}
+            {move || error.get().map(|message| view! {
+                <crate::components::feedback::ValidationMessage field_id=id.to_string() message=message/>
+            })}
+        </div>
+    }
+}
+
+fn focus_by_id(id: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        use wasm_bindgen::JsCast;
+        if let Some(element) = web_sys::window()
+            .and_then(|window| window.document())
+            .and_then(|document| document.get_element_by_id(id))
+        {
+            if let Ok(element) = element.dyn_into::<web_sys::HtmlElement>() {
+                let _ = element.focus();
+            }
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    let _ = id;
+}
+
+/// The fields of a requirement draft are stored while the operator is still writing. The stored
+/// form is the same typed draft the submit handler builds, so it cannot drift from what is sent.
+#[allow(dead_code)]
+const INTAKE_DRAFT_KEY: &str = "cp_intake_draft";
+
+#[allow(dead_code)]
+fn intake_draft_is_empty(draft: &RequirementDraft) -> bool {
+    draft.title.trim().is_empty()
+        && draft.description.trim().is_empty()
+        && draft.functional_requirements.is_empty()
+        && draft.acceptance_expectations.is_empty()
+        && draft.constraints.is_empty()
+        && draft.non_goals.is_empty()
+        && draft.template_reference.is_none()
+        && draft.template_parameters_json.is_none()
+        && draft.acceptance_contract_json.is_none()
+        && draft.deadline_utc.is_none()
+        && draft.tags.is_empty()
+        && draft.links.is_empty()
+        && draft.notes.is_none()
+}
 #[component]
 fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoView {
     let context = AppContext::provide();
     let preview_instance = instance.clone();
     let submit_instance = instance.clone();
+    let template_instance = instance.clone();
+
     let title = RwSignal::new(String::new());
     let description = RwSignal::new(String::new());
     let functional = RwSignal::new(String::new());
@@ -1214,8 +1452,24 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
     let contract_json = RwSignal::new(String::new());
     let template_reference = RwSignal::new(String::new());
     let template_parameters = RwSignal::new(String::new());
-    let selected_template = RwSignal::new(String::new());
-    let template_instance = instance.clone();
+    let priority = RwSignal::new("normal".to_string());
+    let deadline = RwSignal::new(String::new());
+    let tags = RwSignal::new(String::new());
+    let links = RwSignal::new(String::new());
+    let notes = RwSignal::new(String::new());
+
+    let confirmed = RwSignal::new(false);
+    let attempted = RwSignal::new(false);
+    let preview = RwSignal::new(None::<Preview>);
+    let preview_document = RwSignal::new(None::<String>);
+    let parser_issues = RwSignal::new(Vec::<FieldError>::new());
+    let parser_raw = RwSignal::new(Vec::<String>::new());
+    let error = RwSignal::new(None::<api::UiError>);
+    let busy = RwSignal::new(false);
+    let idempotency_key = RwSignal::new(api::new_idempotency_key());
+    #[cfg(target_arch = "wasm32")]
+    let draft_loaded = RwSignal::new(false);
+
     let templates = LocalResource::new(move || {
         let instance = template_instance.clone();
         async move {
@@ -1226,16 +1480,6 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
             }
         }
     });
-    let priority = RwSignal::new("normal".to_string());
-    let deadline = RwSignal::new(String::new());
-    let tags = RwSignal::new(String::new());
-    let links = RwSignal::new(String::new());
-    let notes = RwSignal::new(String::new());
-    let confirmed = RwSignal::new(false);
-    let preview = RwSignal::new(None::<Preview>);
-    let error = RwSignal::new(None::<api::UiError>);
-    let busy = RwSignal::new(false);
-    let idempotency_key = RwSignal::new(api::new_idempotency_key());
 
     let build_draft = move || RequirementDraft {
         title: title.get(),
@@ -1255,8 +1499,110 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
         notes: non_empty(&notes.get()),
     };
 
+    let document = Signal::derive(move || build_draft().to_markdown());
+    let local_errors = Signal::derive(move || intake_field_errors(&build_draft()));
+    let preview_current = Signal::derive(move || match preview_document.get() {
+        Some(saved) => saved == document.get(),
+        None => false,
+    });
+    let combined_errors = Signal::derive(move || {
+        let mut errors = local_errors.get();
+        if preview_current.get() {
+            // The parser repeats what the local checks already say about title, description and
+            // expectations. Keep the local wording and add only the parser's new facts, so the
+            // summary counts problems rather than repetitions.
+            for issue in parser_issues.get() {
+                if !errors
+                    .iter()
+                    .any(|existing| existing.field_id == issue.field_id)
+                {
+                    errors.push(issue);
+                }
+            }
+        }
+        errors
+    });
+    // Errors are not announced before the operator has asked the parser or the submit path to
+    // check the form; a fresh form must not open with three red messages.
+    let visible_errors = Signal::derive(move || {
+        if attempted.get() {
+            combined_errors.get()
+        } else {
+            Vec::new()
+        }
+    });
+    let title_error = field_error(visible_errors, "intake-title");
+    let description_error = field_error(visible_errors, "intake-description");
+    let expectations_error = field_error(visible_errors, "intake-expectations");
+    let contract_error = field_error(visible_errors, "intake-contract");
+    let document_error = field_error(visible_errors, "intake-document");
+    let no_error = Signal::derive(|| None::<String>);
+    let stale_preview = Signal::derive(move || preview.get().is_some() && !preview_current.get());
+    let can_submit = Signal::derive(move || {
+        !busy.get()
+            && confirmed.get()
+            && preview_current.get()
+            && preview.get().map(|value| value.valid).unwrap_or(false)
+            && local_errors.get().is_empty()
+    });
+
+    // Load once. The save effect below waits for `draft_loaded`, so an empty form can never
+    // overwrite the stored draft before it has been read.
+    #[cfg(target_arch = "wasm32")]
+    {
+        Effect::new(move |_| {
+            if draft_loaded.get() {
+                return;
+            }
+            if let Some(storage) =
+                web_sys::window().and_then(|window| window.local_storage().ok().flatten())
+            {
+                if let Ok(Some(raw)) = storage.get_item(INTAKE_DRAFT_KEY) {
+                    if let Ok(draft) = serde_json::from_str::<RequirementDraft>(&raw) {
+                        title.set(draft.title);
+                        description.set(draft.description);
+                        functional.set(draft.functional_requirements.join("\n"));
+                        expectations.set(draft.acceptance_expectations.join("\n"));
+                        constraints.set(draft.constraints.join("\n"));
+                        non_goals.set(draft.non_goals.join("\n"));
+                        contract_json.set(draft.acceptance_contract_json.unwrap_or_default());
+                        template_reference.set(draft.template_reference.unwrap_or_default());
+                        template_parameters.set(draft.template_parameters_json.unwrap_or_default());
+                        priority.set(
+                            draft
+                                .priority
+                                .filter(|value| !value.trim().is_empty())
+                                .unwrap_or_else(|| "normal".to_string()),
+                        );
+                        deadline.set(draft.deadline_utc.unwrap_or_default());
+                        tags.set(draft.tags.join(", "));
+                        links.set(draft.links.join("\n"));
+                        notes.set(draft.notes.unwrap_or_default());
+                    }
+                }
+            }
+            draft_loaded.set(true);
+        });
+
+        Effect::new(move |_| {
+            if !draft_loaded.get() {
+                return;
+            }
+            let draft = build_draft();
+            if let Some(storage) =
+                web_sys::window().and_then(|window| window.local_storage().ok().flatten())
+            {
+                if intake_draft_is_empty(&draft) {
+                    let _ = storage.remove_item(INTAKE_DRAFT_KEY);
+                } else if let Ok(raw) = serde_json::to_string(&draft) {
+                    let _ = storage.set_item(INTAKE_DRAFT_KEY, &raw);
+                }
+            }
+        });
+    }
     let on_preview = move |_| {
-        let draft = build_draft.clone()();
+        attempted.set(true);
+        let draft = build_draft();
         let request = control_plane_domain::PreviewRequest {
             requirement: draft.to_markdown(),
             title: None,
@@ -1267,31 +1613,56 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
         error.set(None);
         busy.set(true);
         spawn_local(async move {
-            let result = api::preview(&instance, &csrf, &request).await;
-            match result {
-                Ok(value) => preview.set(Some(value)),
-                Err(issue) => error.set(Some(issue)),
+            match api::preview(&instance, &csrf, &request).await {
+                Ok(value) => {
+                    let raw = value.errors.clone();
+                    let rejected = !raw.is_empty();
+                    parser_issues.set(map_parser_errors(&raw));
+                    parser_raw.set(raw);
+                    preview_document.set(Some(request.requirement.clone()));
+                    confirmed.set(false);
+                    preview.set(Some(value));
+                    if rejected {
+                        focus_by_id("intake-validation-summary");
+                    }
+                }
+                Err(issue) => {
+                    preview.set(None);
+                    preview_document.set(None);
+                    parser_issues.set(Vec::new());
+                    parser_raw.set(Vec::new());
+                    error.set(Some(issue));
+                }
             }
             busy.set(false);
         });
     };
 
     let on_submit = move |_| {
-        let draft = build_draft.clone()();
-        let local_errors = draft.validation_errors();
-        if !local_errors.is_empty() {
+        attempted.set(true);
+        let draft = build_draft();
+        if !intake_field_errors(&draft).is_empty() {
+            focus_by_id("intake-validation-summary");
+            return;
+        }
+        if !preview_current.get() {
             error.set(Some(api::UiError::new(
                 0,
-                "local-validation",
-                local_errors.join(" "),
+                "preview-current-required",
+                if preview.get().is_some() {
+                    "The generated document changed after the last parser check. Validate again before submitting."
+                } else {
+                    "Validate the requirement with the factory parser before submitting."
+                },
             )));
+            focus_by_id("intake-validate");
             return;
         }
         let Some(preview_value) = preview.get() else {
             error.set(Some(api::UiError::new(
                 0,
                 "preview-required",
-                "Validate the requirement with the factory before submitting.",
+                "Validate the requirement with the factory parser before submitting.",
             )));
             return;
         };
@@ -1307,7 +1678,7 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
             error.set(Some(api::UiError::new(
                 0,
                 "confirmation-required",
-                "Confirm that this is the exact requirement you intend to submit.",
+                "Confirm that the generated requirement shown is the exact document you intend to submit.",
             )));
             return;
         }
@@ -1317,7 +1688,7 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
             title: None,
             acceptance_contract_json: draft.acceptance_contract_json.clone(),
             planning: Some(draft.planning_input()),
-            explicitly_confirmed: Some(true),
+            explicitly_confirmed: Some(confirmed.get()),
         };
         let instance = submit_instance.clone();
         let csrf = context.csrf.get();
@@ -1330,6 +1701,12 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
                     context.notify_success(format!("Work item {} created.", response.work_item_id));
                     idempotency_key.set(api::new_idempotency_key());
                     busy.set(false);
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(storage) =
+                        web_sys::window().and_then(|window| window.local_storage().ok().flatten())
+                    {
+                        let _ = storage.remove_item(INTAKE_DRAFT_KEY);
+                    }
                     on_created.run(response.work_item_id);
                 }
                 Err(issue) => {
@@ -1340,9 +1717,36 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
         });
     };
 
-    let build_markdown = build_draft.clone();
-    let markdown = move || build_markdown().to_markdown();
-    let rendered = move || render_markdown(&markdown());
+    let clear_draft = move || {
+        title.set(String::new());
+        description.set(String::new());
+        functional.set(String::new());
+        expectations.set(String::new());
+        constraints.set(String::new());
+        non_goals.set(String::new());
+        contract_json.set(String::new());
+        template_reference.set(String::new());
+        template_parameters.set(String::new());
+        priority.set("normal".to_string());
+        deadline.set(String::new());
+        tags.set(String::new());
+        links.set(String::new());
+        notes.set(String::new());
+        preview.set(None);
+        preview_document.set(None);
+        parser_issues.set(Vec::new());
+        parser_raw.set(Vec::new());
+        confirmed.set(false);
+        attempted.set(false);
+        error.set(None);
+        #[cfg(target_arch = "wasm32")]
+        if let Some(storage) =
+            web_sys::window().and_then(|window| window.local_storage().ok().flatten())
+        {
+            let _ = storage.remove_item(INTAKE_DRAFT_KEY);
+        }
+        context.notify_success("Draft cleared from this browser.");
+    };
     view! {
         <section class="panel intake-panel">
             <header class="panel-header">
@@ -1350,129 +1754,342 @@ fn WorkIntakeForm(instance: String, on_created: Callback<String>) -> impl IntoVi
                 <span class="tiny faint">"The factory parser is authoritative; planning metadata is control-plane only."</span>
             </header>
             <div class="panel-body">
+                <div id="intake-validation-summary" class="intake-validation" tabindex="-1">
+                    {move || attempted.get().then(|| view! {
+                        <InlineValidation errors=visible_errors.get()/>
+                    })}
+                </div>
+
                 <div class="form-grid">
-                    <label class="field span-2">"Title"
-                        <input class="input" prop:value=move || title.get() on:input=move |event| { title.set(event_target_value(&event)); preview.set(None); }/>
-                    </label>
-                    <label class="field span-2">"Description"
-                        <textarea class="textarea" placeholder="What should exist, for whom, and why?" prop:value=move || description.get() on:input=move |event| description.set(event_target_value(&event))></textarea>
-                    </label>
-                    <label class="field">"Functional requirements (one per line)"
-                        <textarea class="textarea small-area" placeholder="Numbered internally; these do not become acceptance bullets." prop:value=move || functional.get() on:input=move |event| functional.set(event_target_value(&event))></textarea>
-                    </label>
-                    <label class="field">"Observable acceptance expectations (one per line)"
-                        <textarea class="textarea small-area" placeholder="GET /health returns HTTP 200 with status ok" prop:value=move || expectations.get() on:input=move |event| expectations.set(event_target_value(&event))></textarea>
-                    </label>
-                    <label class="field">"Constraints (one per line)"
-                        <textarea class="textarea small-area" prop:value=move || constraints.get() on:input=move |event| constraints.set(event_target_value(&event))></textarea>
-                    </label>
-                    <label class="field">"Non-goals (one per line)"
-                        <textarea class="textarea small-area" prop:value=move || non_goals.get() on:input=move |event| non_goals.set(event_target_value(&event))></textarea>
-                    </label>
+                    <IntakeField id="intake-title" label="Title" span2=true required=true error=title_error>
+                        <input
+                            id="intake-title"
+                            class="input"
+                            autocomplete="off"
+                            aria-required="true"
+                            aria-invalid=move || title_error.get().is_some().to_string()
+                            aria-describedby=move || if title_error.get().is_some() { "intake-title-error" } else { "" }
+                            prop:value=move || title.get()
+                            on:input=move |event| title.set(event_target_value(&event))
+                        />
+                    </IntakeField>
+                    <IntakeField id="intake-description" label="Description" span2=true required=true error=description_error>
+                        <textarea
+                            id="intake-description"
+                            class="textarea"
+                            aria-required="true"
+                            aria-invalid=move || description_error.get().is_some().to_string()
+                            aria-describedby=move || if description_error.get().is_some() { "intake-description-error" } else { "" }
+                            placeholder="What should exist, for whom, and why?"
+                            prop:value=move || description.get()
+                            on:input=move |event| description.set(event_target_value(&event))
+                        ></textarea>
+                    </IntakeField>
+                    <IntakeField
+                        id="intake-functional"
+                        label="Functional requirements"
+                        error=no_error
+                        hint=Some("One per line. These are not acceptance bullets.".to_string())
+                    >
+                        <textarea
+                            id="intake-functional"
+                            class="textarea small-area"
+                            prop:value=move || functional.get()
+                            on:input=move |event| functional.set(event_target_value(&event))
+                        ></textarea>
+                    </IntakeField>
+                    <IntakeField
+                        id="intake-expectations"
+                        label="Observable acceptance expectations"
+                        required=true
+                        error=expectations_error
+                        hint=Some("One observable HTTP outcome per line, such as GET /health returns 200. The factory treats every line as an expectation.".to_string())
+                    >
+                        <textarea
+                            id="intake-expectations"
+                            class="textarea small-area"
+                            aria-required="true"
+                            aria-invalid=move || expectations_error.get().is_some().to_string()
+                            aria-describedby=move || if expectations_error.get().is_some() { "intake-expectations-error" } else { "" }
+                            placeholder="GET /health returns HTTP 200 with status ok"
+                            prop:value=move || expectations.get()
+                            on:input=move |event| expectations.set(event_target_value(&event))
+                        ></textarea>
+                    </IntakeField>
+                    <IntakeField id="intake-constraints" label="Constraints" error=no_error hint=Some("One per line.".to_string())>
+                        <textarea
+                            id="intake-constraints"
+                            class="textarea small-area"
+                            prop:value=move || constraints.get()
+                            on:input=move |event| constraints.set(event_target_value(&event))
+                        ></textarea>
+                    </IntakeField>
+                    <IntakeField id="intake-non-goals" label="Non-goals" error=no_error hint=Some("One per line.".to_string())>
+                        <textarea
+                            id="intake-non-goals"
+                            class="textarea small-area"
+                            prop:value=move || non_goals.get()
+                            on:input=move |event| non_goals.set(event_target_value(&event))
+                        ></textarea>
+                    </IntakeField>
                 </div>
 
                 <details class="intake-advanced">
                     <summary>"Acceptance contract, template and planning metadata"</summary>
                     <div class="form-grid" style="margin-top:12px">
-                        <label class="field span-2">"Acceptance contract JSON (optional)"
-                            <textarea class="textarea code-area" placeholder=r#"{"schemaVersion":1,"supportedClass":"aspnetcore-http-net10","scenarios":[...]}"# prop:value=move || contract_json.get() on:input=move |event| { contract_json.set(event_target_value(&event)); preview.set(None); }></textarea>
-                        </label>
+                        <IntakeField
+                            id="intake-contract"
+                            label="Acceptance contract JSON"
+                            span2=true
+                            error=contract_error
+                            hint=Some("Optional. Without an executable contract the factory can record a proposal but cannot approve or verify it.".to_string())
+                        >
+                            <textarea
+                                id="intake-contract"
+                                class="textarea code-area"
+                                aria-invalid=move || contract_error.get().is_some().to_string()
+                                aria-describedby=move || if contract_error.get().is_some() { "intake-contract-error" } else { "" }
+                                placeholder=r#"{"schemaVersion":1,"supportedClass":"aspnetcore-http-net10","scenarios":[...]}"#
+                                prop:value=move || contract_json.get()
+                                on:input=move |event| contract_json.set(event_target_value(&event))
+                            ></textarea>
+                        </IntakeField>
                         <div class="form-grid span-2">
-                            <label class="field">"Approved template"
-                                <select class="select" on:change=move |event| {
-                                    let value = event_target_value(&event);
-                                    selected_template.set(value.clone());
-                                    template_reference.set(value);
-                                }>
+                            <IntakeField id="intake-template" label="Approved template" error=no_error>
+                                <select
+                                    id="intake-template"
+                                    class="select"
+                                    prop:value=move || template_reference.get()
+                                    on:change=move |event| template_reference.set(event_target_value(&event))
+                                >
                                     <option value="">"Custom requirement (no template)"</option>
                                     {move || match templates.get().flatten() {
                                         Some(Ok(list)) => list.into_iter().filter(|template| template.approved && !template.revoked).map(|template| {
                                             let value = format!("{}@{}", template.template_id, template.template_version);
-                                            view! { <option value=value>{template.template_id}" v"{template.template_version}</option> }
+                                            view! { <option value=value.clone()>{template.template_id}" v"{template.template_version}</option> }
                                         }).collect_view().into_any(),
                                         _ => view! { <option value="" disabled>"Loading approved templates…"</option> }.into_any(),
                                     }}
                                 </select>
-                            </label>
-                            <label class="field">"Template reference"
-                                <input class="input" placeholder="template-id@version" prop:value=move || template_reference.get() on:input=move |event| template_reference.set(event_target_value(&event))/>
-                            </label>
+                            </IntakeField>
+                            <IntakeField id="intake-template-reference" label="Template reference" error=no_error hint=Some("template-id@version".to_string())>
+                                <input
+                                    id="intake-template-reference"
+                                    class="input"
+                                    placeholder="template-id@version"
+                                    prop:value=move || template_reference.get()
+                                    on:input=move |event| template_reference.set(event_target_value(&event))
+                                />
+                            </IntakeField>
                         </div>
-                        <label class="field">"Template parameters JSON (optional)"
-                            <input class="input" placeholder=r#"{"path":"/health"}"# prop:value=move || template_parameters.get() on:input=move |event| template_parameters.set(event_target_value(&event))/>
-                        </label>
-                        <label class="field">"Priority (planning only)"
-                            <select class="select" on:change=move |event| priority.set(event_target_value(&event))>
+                        <IntakeField
+                            id="intake-template-parameters"
+                            label="Template parameters JSON"
+                            error=no_error
+                            hint=Some(r#"Optional, for example {"path":"/health"}"#.to_string())
+                        >
+                            <input
+                                id="intake-template-parameters"
+                                class="input"
+                                prop:value=move || template_parameters.get()
+                                on:input=move |event| template_parameters.set(event_target_value(&event))
+                            />
+                        </IntakeField>
+                        <IntakeField id="intake-priority" label="Priority (planning only)" error=no_error>
+                            <select
+                                id="intake-priority"
+                                class="select"
+                                prop:value=move || priority.get()
+                                on:change=move |event| priority.set(event_target_value(&event))
+                            >
                                 <option value="normal">"Normal"</option>
                                 <option value="high">"High"</option>
                                 <option value="urgent">"Urgent"</option>
                                 <option value="low">"Low"</option>
                             </select>
-                        </label>
-                        <label class="field">"Deadline (planning only)"
-                            <input class="input" type="date" prop:value=move || deadline.get() on:input=move |event| deadline.set(event_target_value(&event))/>
-                        </label>
-                        <label class="field">"Tags (comma separated, planning only)"
-                            <input class="input" prop:value=move || tags.get() on:input=move |event| tags.set(event_target_value(&event))/>
-                        </label>
-                        <label class="field">"Related links (one per line, planning only)"
-                            <input class="input" prop:value=move || links.get() on:input=move |event| links.set(event_target_value(&event))/>
-                        </label>
-                        <label class="field span-2">"Operator notes (planning only)"
-                            <textarea class="textarea small-area" prop:value=move || notes.get() on:input=move |event| notes.set(event_target_value(&event))></textarea>
-                        </label>
+                        </IntakeField>
+                        <IntakeField id="intake-deadline" label="Deadline (planning only)" error=no_error>
+                            <input
+                                id="intake-deadline"
+                                class="input"
+                                type="date"
+                                prop:value=move || deadline.get()
+                                on:input=move |event| deadline.set(event_target_value(&event))
+                            />
+                        </IntakeField>
+                        <IntakeField id="intake-tags" label="Tags (comma separated, planning only)" error=no_error>
+                            <input
+                                id="intake-tags"
+                                class="input"
+                                prop:value=move || tags.get()
+                                on:input=move |event| tags.set(event_target_value(&event))
+                            />
+                        </IntakeField>
+                        <IntakeField id="intake-links" label="Related links (one per line, planning only)" error=no_error>
+                            <input
+                                id="intake-links"
+                                class="input"
+                                prop:value=move || links.get()
+                                on:input=move |event| links.set(event_target_value(&event))
+                            />
+                        </IntakeField>
+                        <IntakeField id="intake-notes" label="Operator notes (planning only)" span2=true error=no_error>
+                            <textarea
+                                id="intake-notes"
+                                class="textarea small-area"
+                                prop:value=move || notes.get()
+                                on:input=move |event| notes.set(event_target_value(&event))
+                            ></textarea>
+                        </IntakeField>
                     </div>
                     <p class="form-hint">
                         "Priority, deadline, tags, links and notes are stored by the control plane and are never converted into factory scheduling or execution authority."
                     </p>
                 </details>
 
-                <div class="row wrap" style="margin-top:16px">
-                    <button class="btn" disabled=move || busy.get() on:click=on_preview>"Validate with factory parser"</button>
-                    <label class="check">
-                        <input type="checkbox" prop:checked=move || confirmed.get() on:change=move |event| confirmed.set(event_target_checked(&event))/>
-                        <span>"I have inspected the generated requirement and confirm it is the exact document to submit."</span>
-                    </label>
+                <div class="intake-draft-row">
+                    <button class="btn btn-quiet btn-sm" type="button" on:click=move |_| clear_draft()>
+                        "Clear draft"
+                    </button>
+                    <p class="tiny faint">
+                        "Draft fields are stored in this browser (localStorage) so a refresh or a trip to another page does not lose them. Nothing is sent to the factory until you validate or submit. Clear draft removes the stored copy."
+                    </p>
+                </div>
+
+                {move || stale_preview.get().then(|| view! {
+                    <Notice kind="warn">
+                        <strong>"The generated document changed after the last parser check. "</strong>
+                        <span>"Validate again to bind the parser result and the confirmation to the new bytes."</span>
+                    </Notice>
+                })}
+
+                {move || error.get().map(|issue| view! {
+                    <Notice kind="danger">
+                        <strong>"The request did not complete. "</strong>
+                        <span>{issue.message.clone()}</span>
+                        <span class="tiny mono">"Code: "{issue.code.clone()}</span>
+                    </Notice>
+                })}
+
+                {move || preview.get().map(|value| {
+                    let current = preview_current.get();
+                    view! {
+                        <div class="preview-result">
+                            <div class="row-between">
+                                <strong>
+                                    {if !current {
+                                        "Parser result for an earlier version of the document"
+                                    } else if value.valid {
+                                        "Factory parser accepted this exact document"
+                                    } else {
+                                        "Factory parser rejected this exact document"
+                                    }}
+                                </strong>
+                                <span class="tiny mono">{short_digest(value.requirement_digest.as_deref())}</span>
+                            </div>
+                            {(!current).then(|| view! {
+                                <p class="small form-error">"This verdict does not apply to the generated document below."</p>
+                            })}
+                            {(current && !value.errors.is_empty()).then(|| view! {
+                                <ul class="form-errors">
+                                    {map_parser_errors(&value.errors).into_iter().map(|issue| view! {
+                                        <li>
+                                            <a href=format!("#{}", issue.field_id)>{issue.label}</a>
+                                            {format!(": {}", issue.message)}
+                                        </li>
+                                    }).collect_view()}
+                                </ul>
+                            })}
+                            {(current && !value.contract_scenarios.is_empty()).then(|| view! {
+                                <div class="tiny faint">
+                                    "Contract scenarios: "
+                                    {value.contract_scenarios.iter().map(|scenario| scenario.id.clone()).collect::<Vec<_>>().join(", ")}
+                                </div>
+                            })}
+                        </div>
+                    }
+                })}
+
+                {move || {
+                    let raw = parser_raw.get();
+                    if raw.is_empty() || !preview_current.get() {
+                        return None;
+                    }
+                    Some(view! {
+                        <details class="technical-details">
+                            <summary>"Technical details (raw parser codes)"</summary>
+                            <ul>
+                                {raw.into_iter().map(|code| view! { <li><code class="mono">{code}</code></li> }).collect_view()}
+                            </ul>
+                        </details>
+                    })
+                }}
+
+                <div class="intake-document" id="intake-document" tabindex="-1" aria-label="Exact generated requirement">
+                    <div class="label">"Generated requirement (the exact bytes sent after confirmation)"</div>
+                    <pre class="requirement-draft">{move || document.get()}</pre>
+                    {move || preview_current.get().then(|| preview.get()).flatten().map(|value| view! {
+                        <DigestCopy
+                            label="Factory digest of the exact document being submitted".to_string()
+                            value=value.requirement_digest.clone()
+                        />
+                    })}
+                    {move || document_error.get().map(|message| view! {
+                        <p class="field-error" role="alert">{message}</p>
+                    })}
+                    <details class="md-render">
+                        <summary>"Rendered preview"</summary>
+                        <div class="md panel" inner_html=move || render_markdown(&document.get())></div>
+                    </details>
+                </div>
+
+                <div class="intake-confirmation">
+                    <Confirmation
+                        assertion="I have read the exact generated requirement shown above and confirm it is the document to submit to the factory.".to_string()
+                        checked=confirmed
+                    />
+                </div>
+
+                <div class="intake-actions">
+                    <button
+                        class="btn"
+                        id="intake-validate"
+                        type="button"
+                        disabled=move || busy.get()
+                        on:click=on_preview
+                    >
+                        {move || if busy.get() { "Validating…" } else { "Validate with factory parser" }}
+                    </button>
                     <span class="spacer"></span>
-                    <button class="btn btn-primary" disabled=move || busy.get() || !confirmed.get() || preview.get().map(|value| !value.valid).unwrap_or(true) on:click=on_submit>
+                    <button
+                        class="btn btn-primary"
+                        type="button"
+                        disabled=move || !can_submit.get()
+                        on:click=on_submit
+                    >
                         {move || if busy.get() { "Submitting…" } else { "Submit to factory" }}
                     </button>
                 </div>
-
-                {move || error.get().map(|issue| view! { <div class="form-error" role="alert">{issue.message}</div> })}
-                {move || preview.get().map(|value| view! {
-                    <div class="preview-result">
-                        <div class="row-between">
-                            <strong>{if value.valid { "Factory parser accepted this document" } else { "Factory parser rejected this document" }}</strong>
-                            <span class="tiny mono">{short_digest(value.requirement_digest.as_deref())}</span>
-                        </div>
-                        {(!value.errors.is_empty()).then(|| view! {
-                            <ul class="form-errors">{value.errors.iter().map(|error| view! { <li>{error.clone()}</li> }).collect_view()}</ul>
-                        })}
-                        {(!value.contract_scenarios.is_empty()).then(|| view! {
-                            <div class="tiny faint">"Contract scenarios: "{value.contract_scenarios.iter().map(|scenario| scenario.id.clone()).collect::<Vec<_>>().join(", ")}</div>
-                        })}
-                    </div>
-                })}
-                <div class="row" style="margin-top:8px">
-                    <span class="tiny faint">{move || format!("{} planning error(s)", build_draft().validation_errors().len())}</span>
-                </div>
-
-                <div class="intake-preview-grid">
-                    <div class="stack">
-                        <div class="label">"Generated requirement (exact bytes sent after confirmation)"</div>
-                        <pre class="requirement-draft">{markdown}</pre>
-                    </div>
-                    <div class="stack">
-                        <div class="label">"Rendered preview"</div>
-                        <div class="md panel" style="padding:16px" inner_html=rendered></div>
-                    </div>
-                </div>
+                <p class="tiny faint intake-submit-hint">
+                    {move || {
+                        let parsed = preview.get().map(|value| value.valid).unwrap_or(false);
+                        if preview_current.get() && parsed {
+                            if confirmed.get() {
+                                "Ready to submit the exact document shown."
+                            } else {
+                                "Confirm the exact generated requirement to enable submission."
+                            }
+                        } else if preview.get().is_some() {
+                            "The parser verdict does not apply to the current document. Validate again."
+                        } else {
+                            "Validate the generated document with the factory parser to enable submission."
+                        }
+                    }}
+                </p>
             </div>
         </section>
     }
 }
-
 fn lines(value: &str) -> Vec<String> {
     value
         .lines()
@@ -1768,5 +2385,76 @@ mod tests {
         assert_eq!(declared_priority_rank(Some("urgent")), 0);
         assert_eq!(declared_priority_rank(Some("low")), 3);
         assert_eq!(declared_priority_rank(None), 4);
+    }
+
+    fn supported_draft() -> RequirementDraft {
+        RequirementDraft {
+            supported_class: control_plane_domain::SUPPORTED_CLASS.to_string(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn every_local_validation_message_points_at_the_field_that_needs_fixing() {
+        let errors = intake_field_errors(&supported_draft());
+        let ids: Vec<&str> = errors.iter().map(|error| error.field_id.as_str()).collect();
+        assert_eq!(
+            ids,
+            vec!["intake-title", "intake-description", "intake-expectations"]
+        );
+
+        let mut filled = supported_draft();
+        filled.title = "Health".to_string();
+        filled.description = "Add a health endpoint.".to_string();
+        filled.acceptance_expectations = vec!["GET /health returns 200".to_string()];
+        assert!(intake_field_errors(&filled).is_empty());
+
+        filled.acceptance_contract_json = Some("{not json}".to_string());
+        let errors = intake_field_errors(&filled);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].field_id, "intake-contract");
+    }
+
+    #[test]
+    fn parser_codes_become_human_messages_and_keep_the_field_context() {
+        let title = map_parser_error("requirement-missing-title");
+        assert_eq!(title.field_id, "intake-title");
+        assert!(title.message.to_lowercase().contains("title"));
+        assert!(
+            !title.message.contains("requirement-missing-title"),
+            "the raw code belongs in technical details, not the summary"
+        );
+
+        let expectations = map_parser_error("requirement-without-acceptance-expectations");
+        assert_eq!(expectations.field_id, "intake-expectations");
+
+        let status = map_parser_error("contract-invalid:scenario-expect-status:AC-1");
+        assert_eq!(status.field_id, "intake-contract");
+        assert!(status.message.to_lowercase().contains("status"));
+
+        let absolute = map_parser_error("contract-unsupported-form:absolute-url-not-allowed:AC-2");
+        assert_eq!(absolute.field_id, "intake-contract");
+        assert!(absolute.message.contains("relative"));
+
+        let unknown = map_parser_error("some-new-code");
+        assert_eq!(unknown.field_id, "intake-document");
+        assert!(!unknown.message.contains("some-new-code"));
+    }
+
+    #[test]
+    fn the_stored_draft_is_the_same_typed_draft_that_would_be_submitted() {
+        let mut draft = supported_draft();
+        draft.title = "Health".to_string();
+        draft.description = "Add a health endpoint.".to_string();
+        draft.functional_requirements = vec!["Expose readiness".to_string()];
+        draft.acceptance_expectations = vec!["GET /health returns 200".to_string()];
+        draft.tags = vec!["ops".to_string()];
+        draft.priority = Some("high".to_string());
+
+        let raw = serde_json::to_string(&draft).expect("draft serialises");
+        let restored: RequirementDraft = serde_json::from_str(&raw).expect("draft restores");
+        assert_eq!(restored, draft);
+        assert!(!intake_draft_is_empty(&restored));
+        assert!(intake_draft_is_empty(&RequirementDraft::default()));
     }
 }

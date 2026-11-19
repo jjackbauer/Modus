@@ -1343,8 +1343,9 @@ pre.diff {
 
 .banner {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-default);
@@ -3774,7 +3775,93 @@ td.numeric {
 .field-error {
   margin: 0;
   color: var(--danger);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+}
+
+.field-required {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.intake-validation {
+  min-height: 0;
+}
+
+.intake-draft-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.intake-draft-row p {
+  flex: 1 1 320px;
+  margin: 0;
+  max-width: 80ch;
+}
+
+.intake-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.intake-actions .spacer {
+  flex: 1 1 auto;
+}
+
+.intake-submit-hint {
+  margin: 0;
+}
+
+.intake-document {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  scroll-margin-top: 96px;
+}
+
+.intake-document .requirement-draft {
+  min-height: 0;
+  max-height: 360px;
+}
+
+.intake-confirmation {
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+}
+
+.technical-details summary,
+.md-render summary {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.technical-details ul {
+  margin: var(--space-2) 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 2px;
+}
+
+.md-render .md {
+  margin-top: var(--space-2);
+}
+
+@media (max-width: 760px) {
+  .intake-panel .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
 }
 
 .confirmation {
@@ -3858,6 +3945,90 @@ td.numeric {
     grid-template-columns: 1fr;
     gap: 2px;
   }
+}
+
+/* One attention line: the adapter may raise several conditions, but the page states them once
+   and keeps the detail in the decision dialog and the lifecycle panel. */
+.attention-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.attention-line-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.attention-line-text strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.attention-line-link {
+  margin-left: auto;
+  font-weight: 600;
+}
+
+#work-actions {
+  scroll-margin-top: 96px;
+}
+
+/* Contract scenarios are a definition list so a 320px dialog never turns a path into a
+   character-per-line column. */
+.scenario-block {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.scenario-block h3 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 620;
+}
+
+.scenario-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenario {
+  padding: var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  overflow-wrap: anywhere;
+}
+
+.scenario-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 6px;
+}
+
+.scenario-kind {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.scenario .metadata-list {
+  margin: 0;
 }
 
 /* Diff: the legend explains the marks and the content region is the scroll container. */

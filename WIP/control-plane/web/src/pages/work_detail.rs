@@ -3,20 +3,24 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::{use_location, use_params_map};
 
 use control_plane_domain::{
-    AgentSession, Attempt, Attention, Contract, Diff, FactoryEvent, NextAction, Planning, Release,
-    ReviewExecution, ReviewHistory, Stage, WorkItemDetail, format_duration_seconds,
+    AgentSession, Attempt, Attention, Contract, ContractScenario, Diff, FactoryEvent, NextAction,
+    Release, ReviewExecution, ReviewHistory, Stage, WorkItemDetail, format_duration_seconds,
     indicator_label, indicator_tone, outcome_label, review_kind_label, role_label, serving_view,
     severity_label, severity_tone, short_digest, short_sha, stage_state_label, stage_tone,
     state_label, state_tone,
 };
 
 use crate::api;
+use crate::components::feedback::typed_confirmation_matches;
 use crate::components::modal::Modal;
 use crate::components::ui::{
     DigestCopy, DigestLine, EmptyBlock, InfoRow, LoadingBlock, Notice, Panel, error_view,
     time_ago, timestamp,
 };
-use crate::components::{DiffViewer, HealthState, StatusIndicator, TabItem, TabPanel, Tabs};
+use crate::components::{
+    Confirmation, DiffViewer, EvidenceCheck, EvidenceSummary, HealthState, StatusIndicator,
+    TabItem, TabPanel, Tabs, TypedConfirmation,
+};
 use crate::context::AppContext;
 
 /// One panel is reused for every tab, so `aria-controls` always resolves and the roving tabindex
@@ -37,8 +41,6 @@ enum Dialog {
     ApproveContract { digest: String },
     RejectContract { digest: String },
     ApproveMerge { digest: String },
-    Serve { duration: i32 },
-    StopServe,
 }
 
 #[component]
@@ -133,13 +135,8 @@ fn WorkDetailBody(
         }
     };
 
-    // Stopping a serve window is a governed mutation, so it goes through the same confirmation
-    // dialog as starting one instead of firing on the first click.
-    let open_stop_serve = Callback::new({
-        let dialog = dialog;
-        move |_| dialog.set(Some(Dialog::StopServe))
-    });
-
+    // One entry point per decision, all in the header action row. The lifecycle panel shows the
+    // evidence and the current state, never a second button for the same mutation.
     let open_contract = Callback::new({
         let dialog = dialog;
         let digest = contract.proposal_digest.clone().unwrap_or_default();
@@ -172,7 +169,6 @@ fn WorkDetailBody(
             }))
         }
     });
-    let open_serve = Callback::new(move |_| dialog.set(Some(Dialog::Serve { duration: 60 })));
 
     let has_approve_contract = contract.awaiting_approval;
     let latest_accepted_review = reviews
@@ -206,7 +202,6 @@ fn WorkDetailBody(
         }));
         deep_link_opened.set(true);
     });
-    let can_serve = matches!(state.as_str(), "Released" | "OperationallyValidated");
     let can_dispatch = matches!(
         state.as_str(),
         "Proposed"
@@ -228,6 +223,8 @@ fn WorkDetailBody(
     let indicator_tone_value = indicator_tone(indicator.as_deref());
     let show_indicator = indicator.is_some() && indicator_text != state_label(&state);
     let state_text = state_label(&state).to_string();
+
+    let show_decision = has_approve_contract || can_merge;
 
     // The tab body renders inside a `move` closure that takes ownership of everything it
     // references. Dedicated clones keep the decision dialog bound to the same authoritative
@@ -261,22 +258,20 @@ fn WorkDetailBody(
                         <HealthState health=health.clone()/>
                     </div>
                 </div>
-                <div class="work-actions">
+                <div class="work-actions" id="work-actions">
                     {can_dispatch.then(|| view! {
-                        <button class="btn btn-primary" disabled=move || !context.can_write() || data.dispatch_active on:click=dispatch.clone()>"Start dispatch"</button>
-                    })}
-                    {can_merge.then(|| view! {
-                        <button class="btn" disabled=move || !context.can_write() on:click=move |event| open_merge.run(event)>"Authorize merge"</button>
+                        <button
+                            class=if show_decision { "btn" } else { "btn btn-primary" }
+                            disabled=move || !context.can_write() || data.dispatch_active
+                            on:click=dispatch.clone()
+                        >"Start dispatch"</button>
                     })}
                     {has_approve_contract.then(|| view! {
-                        <button class="btn" disabled=move || !context.can_write() on:click=move |event| open_contract.run(event)>"Approve contract"</button>
+                        <button class="btn btn-primary" disabled=move || !context.can_write() on:click=move |event| open_contract.run(event)>"Approve contract"</button>
+                        <button class="btn btn-quiet" disabled=move || !context.can_write() on:click=move |event| open_reject.run(event)>"Reject contract"</button>
                     })}
-                    {can_serve.then(|| {
-                        if serving.active {
-                            view! { <button class="btn btn-danger" disabled=move || !context.can_write() on:click=move |event| open_stop_serve.run(event)>"Stop serve"</button> }.into_any()
-                        } else {
-                            view! { <button class="btn" disabled=move || !context.can_write() on:click=move |event| open_serve.run(event)>"Start serve"</button> }.into_any()
-                        }
+                    {can_merge.then(|| view! {
+                        <button class="btn btn-primary" disabled=move || !context.can_write() on:click=move |event| open_merge.run(event)>"Authorize merge"</button>
                     })}
                     <button class="btn btn-quiet" on:click=move |_| context.touch()>"Refresh"</button>
                 </div>
@@ -292,9 +287,7 @@ fn WorkDetailBody(
             </div>
 
             {(!attention.is_empty()).then(|| view! {
-                <div class="attention-list compact-attention">
-                    {attention.iter().cloned().map(|item| view! { <AttentionCompact item=item/> }).collect_view()}
-                </div>
+                <AttentionLine items=attention.clone() decision_waiting=show_decision/>
             })}
 
             {summary.last_failure.clone().map(|failure| view! {
@@ -321,14 +314,9 @@ fn WorkDetailBody(
                     <LifecycleTab
                         data=data.clone()
                         contract=tab_contract.clone()
-                        on_approve=open_contract.clone()
-                        on_reject=open_reject.clone()
-                        on_merge=open_merge.clone()
-                        can_merge=can_merge
-                        can_serve=can_serve
                         serving=tab_serving.clone()
-                        on_serve=open_serve.clone()
-                        on_stop_serve=open_stop_serve.clone()
+                        instance=instance
+                        work_item_id=tab_work_item_id.clone()
                         next_actions=next_actions.clone()
                         is_terminal=is_terminal
                     />
@@ -368,7 +356,6 @@ fn WorkDetailBody(
                 contract=contract.clone()
                 requirement=requirement.clone()
                 accepted_review=latest_accepted_review.clone()
-                serving=serving.clone()
             />
         </section>
     }
@@ -378,26 +365,15 @@ fn WorkDetailBody(
 fn LifecycleTab(
     data: WorkItemDetail,
     contract: Contract,
-    on_approve: Callback<leptos::ev::MouseEvent>,
-    on_reject: Callback<leptos::ev::MouseEvent>,
-    on_merge: Callback<leptos::ev::MouseEvent>,
-    can_merge: bool,
-    can_serve: bool,
     serving: control_plane_domain::Serving,
-    on_serve: Callback<leptos::ev::MouseEvent>,
-    on_stop_serve: Callback<leptos::ev::MouseEvent>,
+    instance: Signal<String>,
+    work_item_id: String,
     next_actions: Vec<NextAction>,
     is_terminal: bool,
 ) -> impl IntoView {
-    let context = AppContext::provide();
     let stages = data.stages;
     let reviews = data.reviews;
     let release = data.release;
-    let review_digest = reviews
-        .iter()
-        .rev()
-        .find(|review| review.outcome == "accepted")
-        .and_then(|review| review.review_digest.clone());
 
     view! {
         <div class="split">
@@ -408,17 +384,20 @@ fn LifecycleTab(
                     </div>
                 </Panel>
 
-                <ContractPanel contract=contract on_approve=on_approve on_reject=on_reject/>
+                <ContractPanel contract=contract/>
 
                 <ReviewMatrix reviews=reviews.clone()/>
 
                 <ReleaseEvidence release=release.clone()/>
 
-                <ServingPanel serving=serving on_serve=on_serve on_stop_serve=on_stop_serve can_serve=can_serve/>
+                <ServingPanel serving=serving instance=instance.get() work_item_id=work_item_id/>
             </div>
 
             <div class="stack">
-                <Panel title="Next legal actions".to_string()>
+                <Panel title="What the factory allows next".to_string()>
+                    <p class="tiny faint">
+                        "This is the factory's own transition list. The governed buttons for the actions it names are in the action row at the top of this page; this list does not perform them."
+                    </p>
                     {if next_actions.is_empty() {
                         view! { <EmptyBlock title="No action offered" detail="The control plane does not expose a transition the factory has not authorised."/> }.into_any()
                     } else {
@@ -442,20 +421,6 @@ fn LifecycleTab(
                         "Factory legal targets: "
                         {data.legal_state_targets.join(" · ")}
                     </div>
-                </Panel>
-
-                <Panel title="Merge authorization".to_string()>
-                    {if can_merge {
-                        view! {
-                            <div class="stack">
-                                <p class="small muted">"A separate human authorization is required. It binds the exact review evidence, head/base revisions, contract digest and policy versions."</p>
-                                <div class="digest-line"><span class="tiny faint">"Review digest"</span><code class="mono">{short_digest(review_digest.as_deref())}</code></div>
-                                <button class="btn btn-primary" disabled=move || !context.can_write() on:click=move |event| on_merge.run(event)>"Open authorization"</button>
-                            </div>
-                        }.into_any()
-                    } else {
-                        view! { <div class="tiny faint">"Merge authorization becomes available only after an accepted review leaves the item ReadyForDelivery."</div> }.into_any()
-                    }}
                 </Panel>
 
                 <Panel title="Planning metadata".to_string()>
@@ -525,14 +490,10 @@ fn StageRow(stage: Stage) -> impl IntoView {
 }
 
 #[component]
-fn ContractPanel(
-    contract: Contract,
-    on_approve: Callback<leptos::ev::MouseEvent>,
-    on_reject: Callback<leptos::ev::MouseEvent>,
-) -> impl IntoView {
-    let context = AppContext::provide();
+fn ContractPanel(contract: Contract) -> impl IntoView {
     let scenarios = contract.scenarios.clone();
     let unresolved = contract.unresolved_questions.clone();
+    let awaiting = contract.awaiting_approval;
     view! {
         <Panel title="Frozen acceptance contract".to_string()>
             <div class="stack">
@@ -549,16 +510,7 @@ fn ContractPanel(
                     <DigestLine label="Accepted contract digest".to_string() value=contract.accepted_contract_digest.clone()/>
                     <DigestLine label="Requirement digest".to_string() value=contract.requirement_digest.clone()/>
                 </div>
-                {(!scenarios.is_empty()).then(|| view! {
-                    <div class="table-wrap">
-                        <table class="data">
-                            <thead><tr><th>"Scenario"</th><th>"Kind"</th><th>"Path"</th><th>"Expectation"</th></tr></thead>
-                            <tbody>{scenarios.into_iter().map(|scenario| view! {
-                                <tr><td class="mono">{scenario.id}</td><td>{scenario.kind}</td><td class="mono">{scenario.path}</td><td>{scenario.expectation}</td></tr>
-                            }).collect_view()}</tbody>
-                        </table>
-                    </div>
-                })}
+                <ContractScenarios scenarios=scenarios/>
                 {(!unresolved.is_empty()).then(|| view! {
                     <Notice kind="warn">
                         <strong>"Unresolved proposal questions. "</strong>
@@ -567,21 +519,66 @@ fn ContractPanel(
                     </Notice>
                 })}
                 {contract.rejection_reason.clone().map(|reason| view! { <Notice kind="danger"><strong>"Rejected: "</strong>{reason}</Notice> })}
-                <div class="row">
+                <div class="stack">
                     {(!contract.executable && contract.is_frozen).then(|| view! {
                     <Notice kind="danger"><strong>"Non-executable frozen contract. "</strong><span>"Requirement coverage and post-merge verification cannot execute this proposal. Submit a revised requirement with an explicit acceptance contract."</span></Notice>
                 })}
                 {(!contract.executable && !contract.is_frozen).then(|| view! {
                     <Notice kind="warn"><strong>"Not executable. "</strong><span>"This proposal has no executable HTTP scenarios. The control plane will refuse approval because the review oracle could not run; add an acceptance contract and resubmit."</span></Notice>
                 })}
-                {contract.awaiting_approval.then(|| view! {
-                        <button class="btn btn-primary" disabled=move || !context.can_write() || !contract.executable on:click=move |event| on_approve.run(event)>"Approve exact digest"</button>
-                        <button class="btn btn-danger" disabled=move || !context.can_write() on:click=move |event| on_reject.run(event)>"Reject proposal"</button>
-                    })}
+                {awaiting.then(|| view! {
+                    <p class="small">
+                        <a href="#work-actions">"Approve or reject this exact proposal from the action row at the top of the page."</a>
+                    </p>
+                })}
                 </div>
             </div>
         </Panel>
     }
+}
+
+/// Scenarios are a definition list, not a four-column table: at 320px a table either clips or
+/// wraps every path into a character-per-line column. The list keeps the ID and kind together and
+/// gives the path and expectation their own rows.
+#[component]
+fn ContractScenarios(scenarios: Vec<ContractScenario>) -> impl IntoView {
+    if scenarios.is_empty() {
+        return view! {
+            <p class="small form-error">"No scenario is bound to this proposal."</p>
+        }
+        .into_any();
+    }
+    view! {
+        <section class="scenario-block" aria-labelledby="contract-scenarios-title">
+            <h3 id="contract-scenarios-title">
+                {format!("Declared scenarios ({})", scenarios.len())}
+            </h3>
+            <ul class="scenario-list">
+                {scenarios
+                    .into_iter()
+                    .map(|scenario| view! {
+                        <li class="scenario">
+                            <div class="scenario-head">
+                                <code class="mono">{scenario.id}</code>
+                                <span class="scenario-kind">{scenario.kind}</span>
+                            </div>
+                            <dl class="metadata-list compact">
+                                <div>
+                                    <dt>"Path"</dt>
+                                    <dd class="mono wrap">{scenario.path}</dd>
+                                </div>
+                                <div>
+                                    <dt>"Expectation"</dt>
+                                    <dd>{scenario.expectation}</dd>
+                                </div>
+                            </dl>
+                        </li>
+                    })
+                    .collect_view()}
+            </ul>
+        </section>
+    }
+    .into_any()
 }
 
 #[component]
@@ -684,12 +681,17 @@ fn ReleaseEvidence(release: Option<Release>) -> impl IntoView {
 #[component]
 fn ServingPanel(
     serving: control_plane_domain::Serving,
-    on_serve: Callback<leptos::ev::MouseEvent>,
-    on_stop_serve: Callback<leptos::ev::MouseEvent>,
-    can_serve: bool,
+    instance: String,
+    work_item_id: String,
 ) -> impl IntoView {
-    let context = AppContext::provide();
     let active = serving.active;
+    let release_href = format!("/i/{instance}/releases/{work_item_id}");
+    let has_release = serving
+        .merged_sha
+        .as_deref()
+        .is_some_and(|value| !value.trim().is_empty())
+        || serving.recorded_at_utc.is_some()
+        || active;
     view! {
         <Panel title="Supervised serving".to_string()>
             <div class="stack">
@@ -700,51 +702,61 @@ fn ServingPanel(
                 <InfoRow label="Merged revision".to_string()><span class="mono">{short_sha(serving.merged_sha.as_deref())}</span></InfoRow>
                 <InfoRow label="Last observation".to_string()>{serving.recorded_at_utc.map(|time| view! { <span>{time_ago(Some(&time.to_rfc3339()))}</span> }.into_any()).unwrap_or_else(|| view! { <span class="faint">"None"</span> }.into_any())}</InfoRow>
                 {serving.detail.clone().map(|detail| view! { <div class="tiny faint">{detail}</div> })}
-                {active.then(|| view! {
-                    <div class="stack">
-                        {serving.url.clone().map(|url| view! {
-                            <a class="btn" href=url.clone() target="_blank" rel="noopener noreferrer">"Open verified preview"</a>
-                        })}
-                        <button class="btn btn-danger" disabled=move || !context.can_write() on:click=move |event| on_stop_serve.run(event)>"Stop supervised serve"</button>
-                    </div>
+                {active.then(|| serving.url.clone()).flatten().map(|url| view! {
+                    <a class="btn" href=url.clone() target="_blank" rel="noopener noreferrer">"Open verified preview"</a>
                 })}
-                {(!active && can_serve).then(|| view! {
-                    <button class="btn" disabled=move || !context.can_write() on:click=move |event| on_serve.run(event)>"Start bounded serve window"</button>
+                <p class="small muted">
+                    "Starting or stopping a supervised serve is owned by the release page, which binds the release identity and its verification evidence. This page reports the current serving state and does not repeat the mutation."
+                </p>
+                {has_release.then(|| view! {
+                    <a class="btn" href=release_href.clone()>
+                        {if active { "Stop or inspect serve on the release page" } else { "Start serve on the release page" }}
+                    </a>
                 })}
-                <div class="tiny faint">
+                <p class="tiny faint">
                     "A verified release is not automatically a running application. The preview link appears only while the factory owns a reachable supervised process."
-                </div>
+                </p>
             </div>
         </Panel>
     }
 }
 
-#[component]
-fn PlanningSummary(planning: Planning) -> impl IntoView {
-    view! {
-        <div class="stack">
-            <div class="row-between"><span class="muted">"Priority"</span><span>{planning.priority.clone().unwrap_or_else(|| "—".to_string())}</span></div>
-            <div class="row-between"><span class="muted">"Deadline"</span><span>{planning.deadline_utc.clone().unwrap_or_else(|| "—".to_string())}</span></div>
-            <div class="row-between"><span class="muted">"Tags"</span><span>{planning.tags.join(", ")}</span></div>
-            {(!planning.links.is_empty()).then(|| view! { <div class="tiny mono">{planning.links.join(" · ")}</div> })}
-            {planning.notes.clone().map(|notes| view! { <div class="tiny muted">{notes}</div> })}
-            <div class="tiny faint">"Control-plane planning metadata. Not factory scheduling or execution authority."</div>
-        </div>
+fn severity_rank(severity: &str) -> u8 {
+    match severity {
+        "critical" => 2,
+        "warning" => 1,
+        _ => 0,
     }
 }
 
+/// One line for every condition the adapter raised. The details stay in the decision dialog and
+/// the lifecycle panel; this line answers "does this item need me" without repeating the cards.
 #[component]
-fn AttentionCompact(item: Attention) -> impl IntoView {
+fn AttentionLine(items: Vec<Attention>, decision_waiting: bool) -> impl IntoView {
+    let count = items.len();
+    let severity = items
+        .iter()
+        .map(|item| item.severity.as_str())
+        .max_by_key(|severity| severity_rank(severity))
+        .unwrap_or("info")
+        .to_string();
+    let titles = items
+        .iter()
+        .map(|item| item.title.clone())
+        .collect::<Vec<_>>()
+        .join(" · ");
     view! {
-        <div class=format!("attention attention-{}", if item.severity == "critical" { "danger" } else if item.severity == "warning" { "warn" } else { "info" })>
-            <div class="attention-bar"></div>
-            <div class="attention-body">
-                <div class="attention-title"><StatusIndicator label=severity_label(&item.severity).to_string() tone=severity_tone(&item.severity) raw=item.severity.clone()/><h3 class="attention-heading">{item.title}</h3></div>
-                <div class="small muted">{item.what_happened}</div>
-                <div class="tiny"><span class="faint">"Safe action: "</span>{item.safe_action}</div>
-                <div class="tiny faint">{item.consequence}</div>
-            </div>
-        </div>
+        <p class="attention-line" role="status">
+            <StatusIndicator label=severity_label(&severity).to_string() tone=severity_tone(&severity) raw=severity.clone()/>
+            <span class="attention-line-text">
+                <strong>{count}</strong>
+                {if count == 1 { " condition needs attention: " } else { " conditions need attention: " }}
+                {titles}
+            </span>
+            {decision_waiting.then(|| view! {
+                <a class="attention-line-link" href="#work-actions">"Decide at the top of the page"</a>
+            })}
+        </p>
     }
 }
 
@@ -880,10 +892,83 @@ fn SessionView(session: AgentSession) -> impl IntoView {
     }
 }
 
+/// The review's conclusion in operator words and the tone that supports it. Used by both the
+/// Evidence tab and the merge dialog so the verdict cannot read differently in two places.
+fn review_verdict(review: &ReviewHistory) -> (String, &'static str) {
+    match review.outcome.as_str() {
+        "accepted" => ("Review accepted".to_string(), "success"),
+        "rejected" => ("Review rejected".to_string(), "danger"),
+        _ => (outcome_label(&review.outcome).to_string(), "neutral"),
+    }
+}
+
+fn review_checks(review: &ReviewHistory) -> Vec<EvidenceCheck> {
+    review
+        .executions
+        .iter()
+        .map(|execution| {
+            let detail = if execution.detail.trim().is_empty() {
+                execution.check_id.clone()
+            } else {
+                format!("{} · {}", execution.check_id, execution.detail)
+            };
+            EvidenceCheck {
+                label: review_kind_label(&execution.kind).to_string(),
+                outcome: outcome_label(&execution.outcome).to_string(),
+                tone: if execution.passed { "success" } else { "danger" },
+                detail: Some(detail),
+            }
+        })
+        .collect()
+}
+
+fn review_identity(review: &ReviewHistory) -> Vec<(String, String)> {
+    fn value(value: &Option<String>) -> String {
+        value
+            .clone()
+            .filter(|value| !value.trim().is_empty())
+            .unwrap_or_else(|| "Not recorded".to_string())
+    }
+    vec![
+        ("Review digest".to_string(), value(&review.review_digest)),
+        ("Reviewed head".to_string(), value(&review.head_sha)),
+        ("Reviewed base".to_string(), value(&review.base_sha)),
+        ("Contract digest".to_string(), value(&review.contract_digest)),
+        ("Evidence digest".to_string(), value(&review.evidence_digest)),
+    ]
+}
+
 #[component]
 fn EvidenceTab(data: WorkItemDetail) -> impl IntoView {
+    let latest_review = data
+        .reviews
+        .iter()
+        .rev()
+        .find(|review| review.outcome == "accepted")
+        .or_else(|| data.reviews.last())
+        .cloned();
     view! {
         <div class="stack">
+            <Panel title="Latest review verdict".to_string()>
+                {match latest_review {
+                    None => view! {
+                        <EmptyBlock title="No review verdict yet" detail="The four mandatory checks and their verdict appear here after the first review."/>
+                    }.into_any(),
+                    Some(review) => {
+                        let (verdict, tone) = review_verdict(&review);
+                        view! {
+                            <EvidenceSummary
+                                verdict=verdict
+                                tone=tone
+                                identity=review_identity(&review)
+                                checks=review_checks(&review)
+                                raw=review.checks_summary.clone()
+                            />
+                        }.into_any()
+                    }
+                }}
+            </Panel>
+
             <Panel title="Engineering versus independent acceptance".to_string()>
                 <div class="engineering-split">
                     <div class="engineering-box">
@@ -902,7 +987,7 @@ fn EvidenceTab(data: WorkItemDetail) -> impl IntoView {
                 </div>
             </Panel>
 
-            <Panel title="Review evidence".to_string()>
+            <Panel title="Review chronology".to_string()>
                 {if data.reviews.is_empty() {
                     view! { <EmptyBlock title="No review history" detail="The four mandatory checks appear here after the first review."/> }.into_any()
                 } else {
@@ -1178,7 +1263,6 @@ fn ActionDialog(
     contract: Contract,
     requirement: Option<control_plane_domain::Requirement>,
     accepted_review: Option<ReviewHistory>,
-    serving: control_plane_domain::Serving,
 ) -> impl IntoView {
     let context = AppContext::provide();
     let busy = RwSignal::new(false);
@@ -1186,7 +1270,6 @@ fn ActionDialog(
     let confirmed = RwSignal::new(false);
     let typed = RwSignal::new(String::new());
     let reason = RwSignal::new(String::new());
-    let duration = RwSignal::new(60i32);
 
     // Closing is refused while a governed mutation is in flight: the dialog must not disappear
     // before the factory answers, and a user's typed evidence must not be discarded silently.
@@ -1214,7 +1297,6 @@ fn ActionDialog(
         let confirmed_value = confirmed.get();
         let typed_value = typed.get();
         let reason_value = reason.get();
-        let duration_value = duration.get();
         busy.set(true);
         error.set(None);
         spawn_local(async move {
@@ -1258,10 +1340,6 @@ fn ActionDialog(
                     )
                     .await
                 }
-                Dialog::Serve { .. } => {
-                    api::start_serve(&instance, &csrf, &work_item_id, duration_value).await
-                }
-                Dialog::StopServe => api::stop_serve(&instance, &csrf, &work_item_id).await,
             };
 
             busy.set(false);
@@ -1324,26 +1402,18 @@ fn ActionDialog(
                         proposal_digest,
                         requirement_digest,
                         confirmed,
-                        can_submit_contract(executable, confirmed),
                     )
                 }
                 Dialog::ApproveMerge { digest } => {
                     let expected = digest.clone();
                     let review = accepted_review.clone();
                     let title = format!("Authorize merge for {work_title}");
-                    build_merge_authorization(
-                        &title,
-                        review,
-                        expected.clone(),
-                        typed,
-                        Signal::derive({
-                            let expected = expected.clone();
-                            move || typed.get().trim() == expected.trim()
-                        }),
-                    )
+                    build_merge_authorization(&title, review, expected, confirmed, typed)
                 }
                 Dialog::RejectContract { digest } => {
                     let proposal_digest = digest.clone();
+                    let requirement_digest = contract.requirement_digest.clone();
+                    let scenarios = contract.scenarios.clone();
                     let title = format!("Reject contract proposal for {work_title}");
                     let body = view! {
                         <div class="stack decision">
@@ -1352,81 +1422,40 @@ fn ActionDialog(
                                 <strong>"A rejection is durable. "</strong>
                                 <span>"The factory records it against this exact proposal digest and refuses a later approval of the same digest. To proceed, submit a revised requirement."</span>
                             </Notice>
-                            <DigestCopy label="Proposal digest being rejected".to_string() value=Some(proposal_digest.clone())/>
-                            <label class="field">"Reason (optional)"
+                            <EvidenceSummary
+                                verdict="Proposal awaiting a rejection decision".to_string()
+                                tone="waiting"
+                                identity=vec![
+                                    ("Proposal digest".to_string(), proposal_digest.clone()),
+                                    (
+                                        "Requirement digest".to_string(),
+                                        requirement_digest.clone().unwrap_or_else(|| "Not recorded".to_string()),
+                                    ),
+                                ]
+                                checks=scenario_evidence(&scenarios)
+                                items_label=Some("scenario".to_string())
+                            />
+                            <label class="field" for="reject-reason">"Reason (optional)"
                                 <textarea
                                     class="textarea"
+                                    id="reject-reason"
                                     rows="3"
                                     prop:value=move || reason.get()
                                     on:input=move |event| reason.set(event_target_value(&event))
                                 ></textarea>
                             </label>
+                            <Confirmation
+                                assertion="I understand this rejection is durable and applies to the exact proposal digest above, not to the requirement in general.".to_string()
+                                checked=confirmed
+                            />
                         </div>
                     }.into_any();
                     (
                         title,
-                        Some("This records a durable rejection against the exact digest below.".to_string()),
+                        Some("This records a durable rejection against the exact digest above.".to_string()),
                         body,
-                        Signal::derive(|| true),
+                        Signal::derive(move || confirmed.get()),
                         "Record rejection",
-                    )
-                }
-                Dialog::Serve { .. } => {
-                    let title = format!("Start supervised serve for {work_title}");
-                    let body = view! {
-                        <div class="stack decision">
-                            {failure_notice.clone()}
-                            <p class="small muted">
-                                "The factory materialises the exact released revision, proves process identity, runs the frozen contract and then supervises the process for the bounded window below. A serve window never implies independent acceptance."
-                            </p>
-                            <label class="field">"Serve window (seconds, 10-300)"
-                                <input
-                                    class="input"
-                                    type="number"
-                                    min="10"
-                                    max="300"
-                                    prop:value=move || duration.get().to_string()
-                                    on:input=move |event| duration.set(event_target_value(&event).parse().unwrap_or(60))
-                                />
-                            </label>
-                            <ul class="decision-list">
-                                <li>"The served URL is published only after the frozen contract passes against the running process."</li>
-                                <li>"The window ends automatically; the factory owns the process lifecycle."</li>
-                            </ul>
-                        </div>
-                    }.into_any();
-                    (
-                        title,
-                        Some("Starting a serve window is a governed mutation.".to_string()),
-                        body,
-                        Signal::derive(move || (10..=300).contains(&duration.get())),
-                        "Start supervised serve",
-                    )
-                }
-                Dialog::StopServe => {
-                    let active = serving.active;
-                    let process_id = serving.process_id.unwrap_or_default();
-                    let url = serving.url.clone();
-                    let title = format!("Stop supervised serve for {work_title}");
-                    let body = view! {
-                        <div class="stack decision">
-                            {failure_notice.clone()}
-                            <Notice kind="warning">
-                                <strong>"This asks the factory to stop the process it owns. "</strong>
-                                <span>"The published preview stops responding immediately. The release and its verification evidence remain recorded."</span>
-                            </Notice>
-                            <dl class="metadata-list">
-                                <div><dt>"Tracked process"</dt><dd class="mono">{if active && process_id > 0 { process_id.to_string() } else { "no process tracked by this adapter".to_string() }}</dd></div>
-                                {url.map(|url| view! { <div><dt>"Published URL"</dt><dd class="mono wrap">{url}</dd></div> })}
-                            </dl>
-                        </div>
-                    }.into_any();
-                    (
-                        title,
-                        Some("Stopping is a governed mutation on the factory-owned process.".to_string()),
-                        body,
-                        Signal::derive(|| true),
-                        "Stop the serve window",
                     )
                 }
             };
@@ -1461,6 +1490,32 @@ fn ActionDialog(
     }
 }
 
+fn scenario_evidence(scenarios: &[ContractScenario]) -> Vec<EvidenceCheck> {
+    if scenarios.is_empty() {
+        return vec![EvidenceCheck {
+            label: "No scenario is bound".to_string(),
+            outcome: "Cannot be approved".to_string(),
+            tone: "danger",
+            detail: Some(
+                "The factory cannot execute a proposal without an executable scenario."
+                    .to_string(),
+            ),
+        }];
+    }
+    scenarios
+        .iter()
+        .map(|scenario| EvidenceCheck {
+            label: scenario.id.clone(),
+            outcome: "Declared".to_string(),
+            tone: "neutral",
+            detail: Some(format!(
+                "{} {} — {}",
+                scenario.kind, scenario.path, scenario.expectation
+            )),
+        })
+        .collect()
+}
+
 fn can_submit_contract(executable: bool, confirmed: RwSignal<bool>) -> Signal<bool> {
     Signal::derive(move || executable && confirmed.get())
 }
@@ -1469,14 +1524,18 @@ fn build_contract_authorization(
     title: &str,
     executable: bool,
     requirement: Option<control_plane_domain::Requirement>,
-    scenarios: Vec<control_plane_domain::ContractScenario>,
+    scenarios: Vec<ContractScenario>,
     unresolved: Vec<String>,
     proposal_digest: String,
     requirement_digest: Option<String>,
     confirmed: RwSignal<bool>,
-    can_submit: Signal<bool>,
 ) -> (String, Option<String>, AnyView, Signal<bool>, &'static str) {
     let scenario_count = scenarios.len();
+    let evidence_checks = scenario_evidence(&scenarios);
+    let supported_class = requirement
+        .as_ref()
+        .map(|requirement| requirement.supported_class.clone())
+        .unwrap_or_else(|| "Not returned".to_string());
     let body = view! {
         <div class="stack decision">
             {(!executable).then(|| view! {
@@ -1485,6 +1544,20 @@ fn build_contract_authorization(
                     <span>"It has no executable HTTP scenarios, so requirement coverage and post-merge verification cannot run. The approval action is disabled; submit a revised requirement with an explicit acceptance contract."</span>
                 </Notice>
             })}
+            <EvidenceSummary
+                verdict=if executable { "Proposal ready for a freezing decision".to_string() } else { "Proposal cannot be executed".to_string() }
+                tone=if executable { "waiting" } else { "danger" }
+                identity=vec![
+                    ("Proposal digest".to_string(), proposal_digest.clone()),
+                    (
+                        "Requirement digest".to_string(),
+                        requirement_digest.clone().unwrap_or_else(|| "Not recorded".to_string()),
+                    ),
+                    ("Supported class".to_string(), supported_class),
+                ]
+                checks=evidence_checks
+                items_label=Some("scenario".to_string())
+            />
             <section class="decision-section">
                 <h3>"What you are freezing"</h3>
                 {match requirement {
@@ -1492,7 +1565,6 @@ fn build_contract_authorization(
                     Some(requirement) => view! {
                         <div class="stack">
                             <div class="metadata-list">
-                                <div><dt>"Supported class"</dt><dd class="mono">{requirement.supported_class.clone()}</dd></div>
                                 <div><dt>"Title"</dt><dd>{requirement.title.clone()}</dd></div>
                             </div>
                             <div>
@@ -1509,30 +1581,6 @@ fn build_contract_authorization(
                             })}
                         </div>
                     }.into_any(),
-                }}
-            </section>
-            <section class="decision-section">
-                <h3>{format!("Executable scenarios ({scenario_count})")}</h3>
-                {if scenarios.is_empty() {
-                    view! { <p class="small form-error">"No executable scenario is bound to this proposal."</p> }.into_any()
-                } else {
-                    view! {
-                        <div class="table-wrap">
-                            <table class="data compact">
-                                <thead><tr><th>"ID"</th><th>"Kind"</th><th>"Path"</th><th>"Expectation"</th></tr></thead>
-                                <tbody>
-                                    {scenarios.into_iter().map(|scenario| view! {
-                                        <tr>
-                                            <td class="mono tiny">{scenario.id}</td>
-                                            <td class="tiny">{scenario.kind}</td>
-                                            <td class="mono tiny wrap">{scenario.path}</td>
-                                            <td class="tiny">{scenario.expectation}</td>
-                                        </tr>
-                                    }).collect_view()}
-                                </tbody>
-                            </table>
-                        </div>
-                    }.into_any()
                 }}
             </section>
             <section class="decision-section">
@@ -1556,15 +1604,13 @@ fn build_contract_authorization(
                 </ul>
             </section>
             <DigestCopy label="Exact proposal digest being approved".to_string() value=Some(proposal_digest.clone())/>
-            <DigestCopy label="Requirement digest".to_string() value=requirement_digest/>
-            <label class="check">
-                <input
-                    type="checkbox"
-                    prop:checked=move || confirmed.get()
-                    on:change=move |event| confirmed.set(event_target_checked(&event))
-                />
-                <span>"I reviewed the requirement text, executable scenarios, unresolved questions and effect shown above, and I am freezing this exact digest."</span>
-            </label>
+            <Confirmation
+                assertion=format!(
+                    "I reviewed the requirement text, the {} declared scenario(s), the unresolved questions and the effect shown above, and I am freezing the exact proposal digest shown.",
+                    scenario_count
+                )
+                checked=confirmed
+            />
         </div>
     }.into_any();
 
@@ -1572,7 +1618,7 @@ fn build_contract_authorization(
         title.to_string(),
         Some("Every fact below belongs to the proposal this digest identifies.".to_string()),
         body,
-        can_submit,
+        can_submit_contract(executable, confirmed),
         "Freeze this exact contract",
     )
 }
@@ -1581,9 +1627,13 @@ fn build_merge_authorization(
     title: &str,
     review: Option<ReviewHistory>,
     expected_digest: String,
+    confirmed: RwSignal<bool>,
     typed: RwSignal<String>,
-    can_submit: Signal<bool>,
 ) -> (String, Option<String>, AnyView, Signal<bool>, &'static str) {
+    let can_submit = Signal::derive({
+        let expected = expected_digest.clone();
+        move || confirmed.get() && typed_confirmation_matches(&expected, &typed.get())
+    });
     let body = view! {
         <div class="stack decision">
             {match review {
@@ -1594,56 +1644,36 @@ fn build_merge_authorization(
                     </Notice>
                 }.into_any(),
                 Some(review) => {
-                    let mandatory_checks = review.executions.len();
+                    let (verdict, tone) = review_verdict(&review);
+                    let recorded = time_ago(review.recorded_at_utc.as_deref());
+                    let check_count = review.executions.len();
                     view! {
                         <div class="stack">
-                            <section class="decision-section">
-                                <h3>"Reviewed revision and verdict"</h3>
-                                <div class="metadata-list">
-                                    <div><dt>"Verdict"</dt><dd><StatusIndicator label=outcome_label(&review.outcome).to_string() tone=if review.outcome == "accepted" { "success" } else { "danger" } raw=review.outcome.clone()/></dd></div>
-                                    <div><dt>"Checks executed"</dt><dd>{mandatory_checks}</dd></div>
-                                    <div><dt>"Recorded"</dt><dd title=timestamp(review.recorded_at_utc.as_deref())>{time_ago(review.recorded_at_utc.as_deref())}</dd></div>
-                                </div>
-                                <DigestCopy label="Reviewed head revision".to_string() value=review.head_sha.clone()/>
-                                <DigestCopy label="Reviewed base revision".to_string() value=review.base_sha.clone()/>
-                                <DigestCopy label="Contract digest at review".to_string() value=review.contract_digest.clone()/>
-                                <DigestCopy label="Evidence digest bound to the verdict".to_string() value=review.evidence_digest.clone()/>
-                            </section>
-                            <section class="decision-section">
-                                <h3>"Mandatory checks"</h3>
-                                {if review.executions.is_empty() {
-                                    view! { <p class="small form-error">"The accepted verdict carries no check executions. This is not sufficient evidence to authorize a merge."</p> }.into_any()
-                                } else {
-                                    view! {
-                                        <div class="table-wrap">
-                                            <table class="data compact">
-                                                <thead><tr><th>"Check"</th><th>"Outcome"</th><th>"Executed by"</th><th>"Detail"</th></tr></thead>
-                                                <tbody>
-                                                    {review.executions.clone().into_iter().map(|execution| view! {
-                                                        <tr>
-                                                            <td>{review_kind_label(&execution.kind).to_string()}</td>
-                                                            <td><StatusIndicator label=outcome_label(&execution.outcome).to_string() tone=if execution.passed { "success" } else { "danger" } raw=execution.outcome.clone()/></td>
-                                                            <td class="tiny mono">{format!("{} · {}", execution.executed_by, execution.executed_version)}</td>
-                                                            <td class="tiny">{execution.detail.clone()}</td>
-                                                        </tr>
-                                                    }).collect_view()}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    }.into_any()
-                                }}
-                            </section>
-                            {review.checks_summary.clone().map(|summary| view! {
-                                <section class="decision-section">
-                                    <h3>"Recorded check summary"</h3>
-                                    <p class="small mono wrap">{summary}</p>
-                                </section>
-                            })}
+                            <EvidenceSummary
+                                verdict=verdict
+                                tone=tone
+                                identity=review_identity(&review)
+                                checks=review_checks(&review)
+                                raw=review.checks_summary.clone()
+                            />
+                            <p class="tiny faint">
+                                "Recorded "
+                                {recorded}
+                                " · "
+                                {check_count}
+                                " check(s) executed."
+                            </p>
                             {review.reason.clone().map(|reason| view! {
                                 <section class="decision-section">
                                     <h3>"Reviewer note"</h3>
                                     <p class="small muted">{reason}</p>
                                 </section>
+                            })}
+                            {review.executions.is_empty().then(|| view! {
+                                <Notice kind="danger">
+                                    <strong>"No check execution is recorded. "</strong>
+                                    <span>"This is not sufficient evidence to authorize a merge."</span>
+                                </Notice>
                             })}
                         </div>
                     }.into_any()
@@ -1665,16 +1695,15 @@ fn build_merge_authorization(
                 </ul>
             </section>
             <DigestCopy label="Exact review digest being authorized".to_string() value=Some(expected_digest.clone())/>
-            <label class="field">"Type the exact review digest above to confirm"
-                <input
-                    class="input mono wrap"
-                    autocomplete="off"
-                    spellcheck="false"
-                    prop:value=move || typed.get()
-                    on:input=move |event| typed.set(event_target_value(&event))
-                />
-            </label>
-            <p class="tiny faint">"The confirmation is compared with the digest above on submit, and the adapter refuses a mismatch independently."</p>
+            <Confirmation
+                assertion="I reviewed the accepted verdict, its checks and the exact identities shown above, and I authorize merging this reviewed head.".to_string()
+                checked=confirmed
+                typed=Some(TypedConfirmation {
+                    label: "Type the exact review digest above to confirm".to_string(),
+                    expected: expected_digest.clone(),
+                    value: typed,
+                })
+            />
         </div>
     }.into_any();
 

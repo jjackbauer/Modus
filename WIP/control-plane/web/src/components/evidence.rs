@@ -27,9 +27,18 @@ pub fn EvidenceSummary(
     /// Exact identifiers the verdict is bound to, in display order.
     identity: Vec<(String, String)>,
     checks: Vec<EvidenceCheck>,
+    /// Singular noun for the items in `checks`, when the caller is not listing executed checks
+    /// (for example "scenario" for a proposal that has not run yet). The heading pluralises it.
+    #[prop(optional_no_strip)] items_label: Option<String>,
     #[prop(optional_no_strip)] raw: Option<String>,
 ) -> impl IntoView {
     let check_count = checks.len();
+    let label = items_label.unwrap_or_else(|| "check".to_string());
+    let heading = if check_count == 1 {
+        format!("1 {label}")
+    } else {
+        format!("{check_count} {label}s")
+    };
     view! {
         <div class="evidence-summary">
             <div class="evidence-verdict">
@@ -38,9 +47,7 @@ pub fn EvidenceSummary(
             </div>
 
             <section class="evidence-block" aria-labelledby="evidence-checks-title">
-                <h3 id="evidence-checks-title">
-                    {if check_count == 1 { "1 check".to_string() } else { format!("{check_count} checks") }}
-                </h3>
+                <h3 id="evidence-checks-title">{heading}</h3>
                 {if checks.is_empty() {
                     view! {
                         <p class="muted small">
