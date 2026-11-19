@@ -282,8 +282,10 @@ Headless Chrome against the rebuilt release server (port 3101), 16 routes: `over
 
 - `DataTable`, `Tabs` as a standalone primitive, `FilterBar`, `EmptyState` actions,
   `FreshnessIndicator`, `EvidenceSummary`, `DiffViewer` are not yet shared components (C-01 partial).
+  **Resolved in §13.2** for all of these; `InlineValidation`, `Confirmation` and `EvidenceSummary`
+  are built and tested but not yet used by Intake.
 - Modal background is not inert; the dialog still renders inside `.app-frame`. A portal is required
-  before the background can be inerted safely (C-02).
+  before the background can be inerted safely (C-02). **Resolved in §13.1.**
 - Settings is still one long page; the 390px document overflow is addressed by containment, but the
   section subnavigation and the audit-table layout are PR 5 work (B-04).
 - Quality still approves template policies inline; the recorded decision is to move that to
@@ -292,9 +294,146 @@ Headless Chrome against the rebuilt release server (port 3101), 16 routes: `over
   selector or labelled scroll affordance (B-02). Saved views still lack rename/delete and URL state.
 - Several surfaces still pass explicit uppercase strings into `Chip` (stage status, review verdict,
   approval kind, role, serving status), so the label reads in capitals even though the CSS no longer
-  transforms it. This is C-04 copy/status governance, not a token defect.
+  transforms it. This is C-04 copy/status governance, not a token defect. **Closed for Overview,
+  the queue and Work detail in §13.3; Quality, Release, Pipeline and Settings remain.**
 - Overview, Quality, Pipeline and Agents still use KPI/`MetricCard` grids; only the queue summary was
-  replaced in this increment (D-06).
+  replaced in this increment (D-06). **Overview was converted in §13.4; Quality, Pipeline and Agents
+  remain open.**
 - The mobile work-detail tab strip still scrolls horizontally with no menu/segmented alternative
-  (B-05); the reference mockup replaces it with an evidence index.
+  (B-05); the reference mockup replaces it with an evidence index. **Resolved in §13.2/§13.6:**
+  at ≤860px the tablist is replaced by a labelled picker.
 - No real screen-reader run, and no 200% zoom / text-spacing pass yet (VG-02, VG-03).
+
+## 13. PR 3 high-frequency flows — implementation record
+
+This section records the third increment: `C-02` is closed, `C-01` now has shared primitives in
+use on Overview, the work queue and Work detail, and `C-04` is closed on those three surfaces.
+Quality, Pipeline, Release, Agents and Settings are unchanged and stay open for PR 4/PR 5.
+
+### 13.1 Dialog portal and inert background (C-02 closed)
+
+- The dialog is moved to a document-level portal on mount: the `.dialog-backdrop` becomes a direct
+  child of `<body>`. It can no longer be a descendant of `.app-frame`, so `inert` on the frame
+  cannot swallow the dialog.
+- While open: `.app-frame` carries `inert`, `<body>` carries `dialog-open` and `overflow: hidden`,
+  the dialog body scrolls (`overscroll-behavior: contain`), focus moves to the first control inside,
+  Tab/Shift+Tab stay inside, Escape closes only when the caller allows it, and the opener receives
+  focus back after the lock is lifted.
+- Overlapping open/close transitions use a counter: the frame is only made interactive again when
+  the last dialog has gone.
+- The module comment that claimed the frame was inert before this existed has been replaced by the
+  accurate description of what the code does.
+- At ≤520px the backdrop padding shrinks, the footer wraps and the dialog may use 94vh, so the
+  decision dialog stays usable at 320px.
+
+### 13.2 Shared primitives (C-01, implemented subset)
+
+New modules under `web/src/components/`:
+
+| Module | Primitives |
+|---|---|
+| `status.rs` | `StatusIndicator`, `HealthState`, `EntityIdentity`, `MetadataList`/`MetadataRow`, `FreshnessIndicator` |
+| `table.rs` | `DataTable`, `Column`, `Sort`, `SortDirection`, `TableState`, `aria_sort` |
+| `tabs.rs` | `Tabs`, `TabItem`, `TabPanel`, `roving_target` |
+| `feedback.rs` | `EmptyState`, `ErrorBoundary`, `InlineValidation`, `ValidationMessage`, `FieldError`, `Confirmation`, `TypedConfirmation` |
+| `layout.rs` | `PageHeader`, `Section`, `ActionToolbar`, `FilterBar` |
+| `evidence.rs` | `EvidenceSummary`, `EvidenceCheck`, `DiffViewer` |
+
+Properties:
+
+- `DataTable` renders a visible `<caption>`, `scope="col"` headers, `aria-sort` only for the column
+  the current ordering actually uses, a labelled `role="region"` scroll container with
+  `tabindex="0"` and a visible hint, and explicit populated/empty/loading/error states.
+- `Tabs` keeps one panel, `aria-controls`, `aria-selected`, roving tabindex and Arrow/Home/End; at
+  ≤860px the tablist is replaced by a labelled `<select>` that exposes the same selection, so the
+  last tab is never clipped.
+- `Confirmation` binds the assertion to the exact digest; the typed value must match after trimming
+  and the server compares again.
+- `FreshnessIndicator` derives live/reconnecting/stale/disconnected from `labels::freshness_view` and
+  always shows the last successful update.
+- `DiffViewer` adds the legend, a per-file copy-path control and a focusable, keyboard-scrollable
+  content region.
+- Pure logic is unit-tested: tone whitelist, `aria_sort`, `roving_target`, validation summary
+  pluralisation, confirmation satisfaction, typed-digest comparison, queue sort definitions.
+
+Usage in this increment: Overview (all sections), queue table and filter bar, Work detail tabs,
+status line and diff. `InlineValidation`, `Confirmation`, `ErrorBoundary` and `EvidenceSummary` are
+implemented and tested but not yet wired into Intake/Work detail forms — that is item 6 of the
+increment, still open.
+
+### 13.3 One status dictionary (C-04 closed on converted surfaces)
+
+- `labels.rs` gained `outcome_label`, `severity_label`, `health_label`/`health_tone` (moved out of
+  Work detail), `stage_state_label`, `serving_status_explanation` and `Freshness`/`freshness_view`,
+  with tests that keep unknown codes unchanged.
+- Overview, the queue and Work detail no longer call `.to_uppercase()` on any status and no longer
+  render a status as a `Chip`: 0 `.chip` elements on all three routes.
+- Status text is now a sentence-case word (`Ready for delivery`, `Waiting for merge approval`,
+  `Not currently serving`) with the raw code in the `title` attribute.
+- Serving status on Work detail now comes from `serving_view`, so the stage, header, panel and
+  release list cannot disagree.
+
+### 13.4 Overview conversion
+
+- The six KPI tiles are gone (0 `.metric-grid`, 0 `.metric`). One compact health strip carries
+  factory health, work items, durable events, last event, dispatch state and the projection clock.
+- Sections: "Decisions waiting" (one row per work item + action, facts before the link), "Where the
+  work is" (authoritative state counts with the definition sentence), "Serving now" (a reconciled
+  serving table), "Recent durable activity".
+- Aside: pending authorizations as a count summary that links to the audit inbox instead of
+  repeating the same decision, dispatch, execution capacity (deterministic demo runner stated
+  explicitly, tokens not shown as zero), recent releases and freshness.
+- No metric is fabricated; every count is either the adapter's or computed from the listed rows and
+  labelled as such.
+
+### 13.5 Queue table conversion (partial B-02)
+
+- The ad-hoc table is now a `DataTable`: full work ID with copy, title link, authoritative state,
+  derived attention (or "None recorded"), declared priority, next actionable step, updated, event
+  count and last failure.
+- The caption states the current ordering in words; header clicks reuse the adapter's own orderings
+  (`title`, `state`, `updated-desc`) and `aria-sort` follows the ordering actually shown. A creation
+  ordering deliberately claims no column.
+- The toolbar is a `FilterBar`: always-visible search, labelled state/attention/sort fields, a named
+  Filters toggle below 760px, Clear filters disabled with a stated reason when nothing is active.
+- Kanban widths, priority definitions, saved-view rename/delete and URL state are still open (B-02).
+
+### 13.6 Measured PR 3 gate
+
+Headless Chrome against the rebuilt release server (port 3101, `demo-runtime-pr3`), authenticated
+fixture, both themes. Raw JSON: `.evidence/pr3/pr3-verify.json`, `.evidence/pr3/pr3-verify-light.json`.
+
+| Gate | Result |
+|---|---|
+| Overview: KPI grids / metric cards | 0 / 0 |
+| Overview: sections and aside blocks | 4 sections, 5 aside blocks, 1 health strip, 2 deduplicated attention rows |
+| Overview: status chips | 0 (8 `StatusIndicator`s) |
+| Upper-case status tokens in visible text | 0 |
+| Queue: caption, scoped headers, sortable headers | caption with ordering in words; 3 `aria-sort` headers; State click → `ascending`, Updated → `none` |
+| Queue: chips / copy controls / filter fields | 0 / 2 / 3 |
+| Queue at 390px: mobile cards, document overflow | 2 cards, 0 |
+| Work detail: chips, status line | 0 chips; "Ready for delivery", "Waiting for merge approval", "Waiting for authorization" |
+| Tabs: roving tabindex, Arrow/End/Home, 390px picker | 6 tabs with one `tabindex="0"`; ArrowRight/End/Home move selection and focus; picker visible at 390 with all 6 options and switching works |
+| Dialog: portal, inert, scroll lock, focus | backdrop is a `<body>` child; `frame.inert === true`; `body.dialog-open`, `overflow: hidden`; focus inside; body scrollable |
+| Dialog: focus containment | background control cannot take focus; Tab from last wraps to Close; Shift+Tab from first wraps to Cancel |
+| Dialog: 390px and 320px | 378×793 within 390×844 with footer visible; 308px wide at 320 with footer visible; 0 document overflow |
+| Dialog: Escape | closes, removes `inert`, removes `dialog-open`, restores focus to "Authorize merge" |
+| 320px document overflow, 3 converted routes | 0 |
+| Visible text below 12px, 3 converted routes | 0 |
+| Page errors / unexpected console errors | 0 / 0 |
+| Screenshots | 15 files in `.evidence/pr3/shots/` (1440/390/320, both themes, dialog open/closed) |
+
+### 13.7 Still open after this increment
+
+- Item 5 (full queue redesign) is **partial**: Kanban fixed widths and a visible scroll affordance,
+  the priority definition panel, saved-view rename/delete and URL-restored filter state are not
+  implemented.
+- Item 6 (Work detail and Intake conversion) is **not started**: Work detail still shows duplicate
+  merge/contract entry points, the contract panel's scenario table still compresses at 320px, Intake
+  has no error summary or parser-code mapping, and drafts are not preserved across navigation.
+- Intake, the merge/contract dialogs and the release dialog do not yet use `Confirmation`,
+  `InlineValidation` or `EvidenceSummary`; the primitives exist and are tested but unwired.
+- Settings (B-04), Pipeline (B-03), the Quality review-matrix redesign and the template-policy move
+  to Settings (D-04) remain open.
+- No real screen-reader run and no 200% zoom/text-spacing pass yet (VG-03), so the plan is not
+  complete and no gate below VG-07 is claimed.

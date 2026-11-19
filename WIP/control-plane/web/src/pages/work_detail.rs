@@ -3,57 +3,34 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::{use_location, use_params_map};
 
 use control_plane_domain::{
-    AgentSession, Attempt, Attention, Contract, Diff, EventStreamEnvelope, FactoryEvent, Lineage,
-    Metric, NextAction, Planning, Release, ReviewExecution, ReviewHistory, Stage, WorkItemDetail,
-    format_duration_seconds, indicator_label, indicator_tone, render_markdown, review_kind_label,
-    short_digest, short_sha, stage_tone, state_label, state_tone,
+    AgentSession, Attempt, Attention, Contract, Diff, FactoryEvent, NextAction, Planning, Release,
+    ReviewExecution, ReviewHistory, Stage, WorkItemDetail, format_duration_seconds,
+    indicator_label, indicator_tone, outcome_label, review_kind_label, role_label, serving_view,
+    severity_label, severity_tone, short_digest, short_sha, stage_state_label, stage_tone,
+    state_label, state_tone,
 };
 
 use crate::api;
 use crate::components::modal::Modal;
 use crate::components::ui::{
-    Chip, DigestCopy, DigestLine, EmptyBlock, InfoRow, LoadingBlock, MetricCard, Notice, Panel, PanelActions,
-    error_view, time_ago, timestamp,
+    DigestCopy, DigestLine, EmptyBlock, InfoRow, LoadingBlock, Notice, Panel, error_view,
+    time_ago, timestamp,
 };
+use crate::components::{DiffViewer, HealthState, StatusIndicator, TabItem, TabPanel, Tabs};
 use crate::context::AppContext;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Tab {
-    Lifecycle,
-    Agent,
-    Evidence,
-    Source,
-    Lineage,
-    Events,
-}
-
-fn tab_index(tab: Tab) -> usize {
-    match tab {
-        Tab::Lifecycle => 0,
-        Tab::Agent => 1,
-        Tab::Evidence => 2,
-        Tab::Source => 3,
-        Tab::Lineage => 4,
-        Tab::Events => 5,
-    }
-}
-
-const TAB_COUNT: usize = 6;
-
-fn tab_at(index: usize) -> Tab {
-    match index % TAB_COUNT {
-        0 => Tab::Lifecycle,
-        1 => Tab::Agent,
-        2 => Tab::Evidence,
-        3 => Tab::Source,
-        4 => Tab::Lineage,
-        _ => Tab::Events,
-    }
-}
 
 /// One panel is reused for every tab, so `aria-controls` always resolves and the roving tabindex
 /// follows the selected tab.
 const TAB_PANEL_ID: &str = "work-tab-panel";
+
+const TABS: [TabItem; 6] = [
+    TabItem::new("lifecycle", "Lifecycle"),
+    TabItem::new("agent", "Agent activity"),
+    TabItem::new("evidence", "Evidence"),
+    TabItem::new("source", "Source & diff"),
+    TabItem::new("lineage", "Lineage"),
+    TabItem::new("events", "Events"),
+];
 
 #[derive(Debug, Clone)]
 enum Dialog {
@@ -70,7 +47,7 @@ pub fn WorkDetailPage() -> impl IntoView {
     let params = use_params_map();
     let instance = Signal::derive(move || params.get().get("instance").unwrap_or_default());
     let work_item_id = Signal::derive(move || params.get().get("work_item_id").unwrap_or_default());
-    let tab = RwSignal::new(Tab::Lifecycle);
+    let tab = RwSignal::new("lifecycle");
     let dialog = RwSignal::new(None::<Dialog>);
     let refresh = context.refresh;
     let location = use_location();
@@ -113,7 +90,7 @@ pub fn WorkDetailPage() -> impl IntoView {
 fn WorkDetailBody(
     data: WorkItemDetail,
     instance: Signal<String>,
-    tab: RwSignal<Tab>,
+    tab: RwSignal<&'static str>,
     dialog: RwSignal<Option<Dialog>>,
     requested: Signal<String>,
 ) -> impl IntoView {
@@ -131,7 +108,6 @@ fn WorkDetailBody(
     let attention = data.attention.clone();
     let next_actions = data.next_actions.clone();
     let contract = data.contract.clone();
-    let release = data.release.clone();
     let serving = data.serving.clone();
     let reviews = data.reviews.clone();
     let requirement = data.requirement.clone();
@@ -270,9 +246,19 @@ fn WorkDetailBody(
                     </div>
                     <h1 class="page-title">{title}</h1>
                     <div class="work-state-line">
-                        <span class="work-state">{state_text}</span>
-                        {show_indicator.then(|| view! { <span class="work-derived">{indicator_text.clone()}</span> })}
-                        <span class="tiny faint">"Health: "{health_label(&health)}</span>
+                        <StatusIndicator
+                            label=state_text
+                            tone=state_tone(&state)
+                            raw=state.clone()
+                        />
+                        {show_indicator.then(|| view! {
+                            <StatusIndicator
+                                label=indicator_text.clone()
+                                tone=indicator_tone_value
+                                raw=indicator.clone().unwrap_or_default()
+                            />
+                        })}
+                        <HealthState health=health.clone()/>
                     </div>
                 </div>
                 <div class="work-actions">
@@ -318,25 +304,20 @@ fn WorkDetailBody(
                 </Notice>
             })}
 
-            <div class="tabs" role="tablist" aria-label="Work item views">
-                {tab_button(tab, Tab::Lifecycle, "Lifecycle")}
-                {tab_button(tab, Tab::Agent, "Agent activity")}
-                {tab_button(tab, Tab::Evidence, "Evidence")}
-                {tab_button(tab, Tab::Source, "Source & diff")}
-                {tab_button(tab, Tab::Lineage, "Lineage")}
-                {tab_button(tab, Tab::Events, "Events")}
-            </div>
+            <Tabs
+                label="Work item views".to_string()
+                tabs=TABS.to_vec()
+                selected=tab
+                panel_id=TAB_PANEL_ID
+            />
 
-            <div
-                class="tab-panel"
-                role="tabpanel"
-                id=TAB_PANEL_ID
-                aria-labelledby=move || format!("work-tab-{}", tab_index(tab.get()))
-                tabindex="0"
+            <TabPanel
+                panel_id=TAB_PANEL_ID
+                labelled_by=Signal::derive(move || format!("{TAB_PANEL_ID}-tab-{}", tab.get()))
             >
 
             {move || match tab.get() {
-                Tab::Lifecycle => view! {
+                "lifecycle" => view! {
                     <LifecycleTab
                         data=data.clone()
                         contract=tab_contract.clone()
@@ -352,7 +333,7 @@ fn WorkDetailBody(
                         is_terminal=is_terminal
                     />
                 }.into_any(),
-                Tab::Agent => view! {
+                "agent" => view! {
                     <AgentTab
                         instance=instance.get()
                         work_item_id=tab_work_item_id.clone()
@@ -360,21 +341,21 @@ fn WorkDetailBody(
                         attempts=data.attempts.clone()
                     />
                 }.into_any(),
-                Tab::Evidence => view! {
+                "evidence" => view! {
                     <EvidenceTab data=data.clone()/>
                 }.into_any(),
-                Tab::Source => view! {
+                "source" => view! {
                     <SourceTab instance=instance.get() work_item_id=tab_work_item_id.clone()/>
                 }.into_any(),
-                Tab::Lineage => view! {
+                "lineage" => view! {
                     <LineageTab instance=instance.get() work_item_id=tab_work_item_id.clone()/>
                 }.into_any(),
-                Tab::Events => view! {
+                _ => view! {
                     <EventsTab events=data.events.clone() instance=instance.get()/>
                 }.into_any(),
             }}
 
-            </div>
+            </TabPanel>
 
             <ActionDialog
                 dialog=dialog
@@ -447,7 +428,7 @@ fn LifecycleTab(
                                     <div class="action-row">
                                         <div class="row-between">
                                             <strong>{action.label}</strong>
-                                            <Chip label=action.required_role.to_uppercase() tone=if action.available { "active" } else { "neutral" }/>
+                                            <StatusIndicator label=role_label(&action.required_role).to_string() tone=if action.available { "active" } else { "neutral" } raw=action.required_role.clone()/>
                                         </div>
                                         <p class="small muted">{action.reason}</p>
                                         <p class="tiny faint">{action.consequence}</p>
@@ -513,7 +494,7 @@ fn StageRow(stage: Stage) -> impl IntoView {
             <div class="stage-body">
                 <div class="stage-head">
                     <span class="stage-name">{stage.label}</span>
-                    <Chip label=stage.state.to_uppercase() tone=tone/>
+                    <StatusIndicator label=stage_state_label(&stage.state).to_string() tone=tone raw=stage.state.clone()/>
                     {duration.map(|duration| view! { <span class="tiny faint mono">{duration}</span> })}
                     {stage.attempts.gt(&1).then(|| view! { <span class="tiny faint">{stage.attempts}" attempt(s)"</span> })}
                 </div>
@@ -556,11 +537,11 @@ fn ContractPanel(
         <Panel title="Frozen acceptance contract".to_string()>
             <div class="stack">
                 <div class="row wrap">
-                    <Chip
-                        label=if contract.is_frozen { "FROZEN".to_string() } else if contract.awaiting_approval { "AWAITING APPROVAL".to_string() } else { "OPEN".to_string() }
+                    <StatusIndicator
+                        label=if contract.is_frozen { "Frozen".to_string() } else if contract.awaiting_approval { "Awaiting approval".to_string() } else { "Open".to_string() }
                         tone=if contract.is_frozen { "success" } else if contract.awaiting_approval { "waiting" } else { "neutral" }
                     />
-                    <Chip label=if contract.executable { "EXECUTABLE HTTP".to_string() } else { "NOT EXECUTABLE".to_string() } tone=if contract.executable { "active" } else { "danger" }/>
+                    <StatusIndicator label=if contract.executable { "Executable HTTP scenarios".to_string() } else { "Not executable".to_string() } tone=if contract.executable { "active" } else { "danger" }/>
                 </div>
                 <div class="grid grid-2">
                     <DigestLine label="Proposal digest".to_string() value=contract.proposal_digest.clone()/>
@@ -630,13 +611,13 @@ fn ReviewMatrix(reviews: Vec<ReviewHistory>) -> impl IntoView {
                             match execution {
                                 None => view! {
                                     <div class="review-cell review-missing">
-                                        <div class="row-between"><strong>{review_kind_label(kind)}</strong><Chip label="MISSING".to_string() tone="danger"/></div>
+                                        <div class="row-between"><strong>{review_kind_label(kind)}</strong><StatusIndicator label="Not run".to_string() tone="danger"/></div>
                                         <div class="tiny faint">"A check that did not run is never implicitly passing."</div>
                                     </div>
                                 }.into_any(),
                                 Some(execution) => view! {
                                     <div class=format!("review-cell {}", if execution.passed { "review-pass" } else { "review-fail" })>
-                                        <div class="row-between"><strong>{review_kind_label(kind)}</strong><Chip label=execution.outcome.to_uppercase() tone=if execution.passed { "success" } else { "danger" }/></div>
+                                        <div class="row-between"><strong>{review_kind_label(kind)}</strong><StatusIndicator label=outcome_label(&execution.outcome).to_string() tone=if execution.passed { "success" } else { "danger" } raw=execution.outcome.clone()/></div>
                                         <div class="tiny faint mono">{execution.check_id.clone()}</div>
                                         <div class="tiny faint">{execution.detail.clone()}</div>
                                         <div class="tiny mono">{short_digest(Some(&execution.artifact_digest))}</div>
@@ -660,9 +641,9 @@ fn ReleaseEvidence(release: Option<Release>) -> impl IntoView {
                 Some(release) => view! {
                     <div class="stack">
                         <div class="row wrap">
-                            <Chip label=if release.release_recorded { "RELEASE RECORDED".to_string() } else { "CANDIDATE".to_string() } tone=if release.release_recorded { "success" } else { "waiting" }/>
+                            <StatusIndicator label=if release.release_recorded { "Release recorded".to_string() } else { "Candidate".to_string() } tone=if release.release_recorded { "success" } else { "waiting" }/>
                             {release.verification.as_ref().map(|verification| view! {
-                                <Chip label=if verification.verified { "POST-MERGE VERIFIED".to_string() } else { "VERIFICATION FAILED".to_string() } tone=if verification.verified { "success" } else { "danger" }/>
+                                <StatusIndicator label=if verification.verified { "Post-merge verification passed".to_string() } else { "Post-merge verification failed".to_string() } tone=if verification.verified { "success" } else { "danger" }/>
                             })}
                         </div>
                         <div class="grid grid-2">
@@ -713,7 +694,7 @@ fn ServingPanel(
         <Panel title="Supervised serving".to_string()>
             <div class="stack">
                 <div class="row wrap">
-                    <Chip label=serving.status.clone().unwrap_or_else(|| "not-served".to_string()).to_uppercase() tone=if active { "success" } else if serving.status.as_deref() == Some("failed") { "danger" } else { "neutral" }/>
+                    <StatusIndicator label=serving_view(&serving).label.to_string() tone=serving_view(&serving).tone raw=serving_view(&serving).code.to_string()/>
                     {active.then(|| view! { <span class="tiny faint">"Process "{serving.process_id.unwrap_or_default()}" · restarts "{serving.restart_count.unwrap_or_default()}</span> })}
                 </div>
                 <InfoRow label="Merged revision".to_string()><span class="mono">{short_sha(serving.merged_sha.as_deref())}</span></InfoRow>
@@ -758,7 +739,7 @@ fn AttentionCompact(item: Attention) -> impl IntoView {
         <div class=format!("attention attention-{}", if item.severity == "critical" { "danger" } else if item.severity == "warning" { "warn" } else { "info" })>
             <div class="attention-bar"></div>
             <div class="attention-body">
-                <div class="attention-title"><Chip label=item.severity.to_uppercase() tone=if item.severity == "critical" { "danger" } else if item.severity == "warning" { "warn" } else { "info" }/><span>{item.title}</span></div>
+                <div class="attention-title"><StatusIndicator label=severity_label(&item.severity).to_string() tone=severity_tone(&item.severity) raw=item.severity.clone()/><h3 class="attention-heading">{item.title}</h3></div>
                 <div class="small muted">{item.what_happened}</div>
                 <div class="tiny"><span class="faint">"Safe action: "</span>{item.safe_action}</div>
                 <div class="tiny faint">{item.consequence}</div>
@@ -809,7 +790,7 @@ fn AgentTab(
                                     <div class="event-main">
                                         <div class="event-title">
                                             <strong>{format!("Attempt {}", attempt.attempt_number)}</strong>
-                                            <Chip label=attempt.outcome.to_uppercase() tone=if attempt.outcome == "succeeded" { "success" } else { "danger" }/>
+                                            <StatusIndicator label=outcome_label(&attempt.outcome).to_string() tone=if attempt.outcome == "succeeded" { "success" } else { "danger" } raw=attempt.outcome.clone()/>
                                             <span class="tiny mono">{attempt.session_id.clone()}</span>
                                         </div>
                                         <div class="tiny faint">{attempt.failure_category.clone().unwrap_or_default()}</div>
@@ -867,7 +848,7 @@ fn SessionView(session: AgentSession) -> impl IntoView {
                     <strong>{session.session_id.clone()}</strong>
                     <div class="tiny faint">{session.agent_definition_id.clone()}" · profile v"{session.profile_version}</div>
                 </div>
-                <Chip label=session.outcome.to_uppercase() tone=if session.outcome == "completed" { "success" } else { "danger" }/>
+                <StatusIndicator label=outcome_label(&session.outcome).to_string() tone=if session.outcome == "completed" { "success" } else { "danger" } raw=session.outcome.clone()/>
             </div>
             <div class="row wrap tiny faint">
                 <span class="mono">{session.model_id.clone()}</span>
@@ -885,7 +866,7 @@ fn SessionView(session: AgentSession) -> impl IntoView {
                             <div class="tool-invocation">
                                 <div class="row-between">
                                     <strong class="mono">{invocation.tool_name.clone()}</strong>
-                                    <Chip label=if invocation.failed { "FAILED".to_string() } else { "OK".to_string() } tone=if invocation.failed { "danger" } else { "success" }/>
+                                    <StatusIndicator label=if invocation.failed { "Failed".to_string() } else { "Succeeded".to_string() } tone=if invocation.failed { "danger" } else { "success" }/>
                                 </div>
                                 <div class="tiny faint mono">{invocation.arguments_digest.clone()}</div>
                                 <pre class="tool-excerpt">{format!("arguments:\n{}\n\nresult:\n{}", invocation.arguments_excerpt, invocation.result_excerpt)}</pre>
@@ -947,7 +928,7 @@ fn ReviewHistoryCard(review: ReviewHistory) -> impl IntoView {
         <div class="review-history">
             <div class="row-between">
                 <div class="row">
-                    <Chip label=review.outcome.to_uppercase() tone=if review.outcome == "accepted" { "success" } else { "danger" }/>
+                    <StatusIndicator label=outcome_label(&review.outcome).to_string() tone=if review.outcome == "accepted" { "success" } else { "danger" } raw=review.outcome.clone()/>
                     <span class="tiny mono">{short_digest(review.review_digest.as_deref())}</span>
                 </div>
                 <span class="tiny faint">{time_ago(review.recorded_at_utc.as_deref())}</span>
@@ -974,7 +955,7 @@ fn ExecutionCard(execution: ReviewExecution) -> impl IntoView {
         <div class=format!("review-cell {}", if execution.passed { "review-pass" } else { "review-fail" })>
             <div class="row-between">
                 <strong>{review_kind_label(&execution.kind).to_string()}</strong>
-                <Chip label=execution.outcome.to_uppercase() tone=if execution.passed { "success" } else { "danger" }/>
+                <StatusIndicator label=outcome_label(&execution.outcome).to_string() tone=if execution.passed { "success" } else { "danger" } raw=execution.outcome.clone()/>
             </div>
             <div class="tiny faint mono">{execution.check_id.clone()}</div>
             <div class="tiny faint">{execution.executed_by.clone()}" · "{execution.executed_version.clone()}</div>
@@ -1035,12 +1016,11 @@ fn DiffView(
     diff: Diff,
     selected: RwSignal<Option<String>>,
 ) -> impl IntoView {
-    let files = diff.files.clone();
-    let files_for_resource = files.clone();
     let patch = diff.patch.clone();
-    let selected_file = selected
-        .get()
-        .or_else(|| files.first().map(|file| file.path.clone()));
+    let base_sha = diff.base_sha.clone();
+    let head_sha = diff.head_sha.clone();
+    let files = diff.files.clone();
+    let truncated = diff.truncated;
     let file_content = LocalResource::new(move || {
         let instance = instance.clone();
         let work_item_id = work_item_id.clone();
@@ -1056,56 +1036,41 @@ fn DiffView(
     });
 
     view! {
-        <PanelActions
-            title="Reviewed diff".to_string()
-            actions=view! { <span class="tiny faint mono">{diff.base_sha.chars().take(10).collect::<String>()}" → "{diff.head_sha.chars().take(10).collect::<String>()}</span> }.into_any()
-        >
-            <div class="diff-shell">
-                <div class="diff-files">
-                    {files.into_iter().map(|file| {
-                        let path = file.path.clone();
-                        let active_path = selected.get().or_else(|| diff.files.first().map(|f| f.path.clone()));
-                        let active = active_path.as_deref() == Some(path.as_str());
-                        view! {
-                            <button class:active=active class="diff-file" on:click=move |_| selected.set(Some(path.clone()))>
-                                <span class="diff-file-status">{file.status.chars().next().unwrap_or('?')}</span>
-                                <span>{file.path.clone()}</span>
-                            </button>
-                        }
-                    }).collect_view()}
-                </div>
-                <div class="diff-content">
-                    {move || {
-                        let content = file_content.get().flatten();
-                        match content {
-                            Some(Ok(file)) => view! {
-                                <pre class="diff">{file.content.clone()}</pre>
-                            }.into_any(),
-                            Some(Err(error)) => view! { {error_view(error)} }.into_any(),
-                            None => view! {
-                                <pre class="diff">{patch.lines().map(|line| {
-                                    let class = if line.starts_with('+') && !line.starts_with("+++") {
-                                        "diff-add"
-                                    } else if line.starts_with('-') && !line.starts_with("---") {
-                                        "diff-del"
-                                    } else if line.starts_with("@@") {
-                                        "diff-hunk"
-                                    } else {
-                                        "diff-line"
-                                    };
-                                    view! { <span class=class>{format!("{line}\n")}</span> }
-                                }).collect_view()}</pre>
-                            }.into_any(),
-                        }
-                    }}
-                </div>
-            </div>
-            {diff.truncated.then(|| view! { <div class="tiny form-error">"The patch is truncated at the adapter byte bound; inspect individual changed files."</div> })}
-            <div class="tiny faint">"Only files changed by the reviewed revision are addressable. This is not unrestricted filesystem browsing."</div>
-        </PanelActions>
+        <Panel title="Reviewed diff".to_string()>
+            <DiffViewer
+                base_sha=base_sha
+                head_sha=head_sha
+                files=files
+                truncated=truncated
+                selected=selected
+            >
+                {move || {
+                    let content = file_content.get().flatten();
+                    match content {
+                        Some(Ok(file)) => view! {
+                            <pre class="diff">{file.content.clone()}</pre>
+                        }.into_any(),
+                        Some(Err(error)) => view! { {error_view(error)} }.into_any(),
+                        None => view! {
+                            <pre class="diff">{patch.lines().map(|line| {
+                                let class = if line.starts_with('+') && !line.starts_with("+++") {
+                                    "diff-add"
+                                } else if line.starts_with('-') && !line.starts_with("---") {
+                                    "diff-del"
+                                } else if line.starts_with("@@") {
+                                    "diff-hunk"
+                                } else {
+                                    "diff-line"
+                                };
+                                view! { <span class=class>{format!("{line}\n")}</span> }
+                            }).collect_view()}</pre>
+                        }.into_any(),
+                    }
+                }}
+            </DiffViewer>
+        </Panel>
     }
 }
-
 #[component]
 fn LineageTab(instance: String, work_item_id: String) -> impl IntoView {
     let lineage = LocalResource::new(move || {
@@ -1188,7 +1153,7 @@ fn EventsListFiltered(
                                 <div class="event-title">
                                     {href.map(|href| view! { <a href=href>{event.summary.clone().unwrap_or_else(|| event.r#type.clone())}</a> })}
                                     {(!event.summary.is_some()).then(|| view! { <span>{event.r#type.clone()}</span> })}
-                                    <Chip label=event.r#type.clone() tone="neutral"/>
+                                    <span class="event-type">{event.r#type.clone()}</span>
                                 </div>
                                 <div class="tiny faint mono">{event.id.clone()}</div>
                                 <details class="evidence">
@@ -1201,77 +1166,6 @@ fn EventsListFiltered(
                 }).collect_view()
             }}
         </div>
-    }
-}
-
-fn tab_button(tab: RwSignal<Tab>, value: Tab, label: &'static str) -> impl IntoView {
-    let index = tab_index(value);
-    let tab_id = format!("work-tab-{index}");
-    view! {
-        <button
-            class:active=move || tab.get() == value
-            role="tab"
-            id=tab_id
-            aria-selected=move || (tab.get() == value).to_string()
-            aria-controls=TAB_PANEL_ID
-            tabindex=move || if tab.get() == value { "0" } else { "-1" }
-            on:click=move |_| tab.set(value)
-            on:keydown=move |event| {
-                let next = match event.key().as_str() {
-                    "ArrowRight" => Some((index + 1) % TAB_COUNT),
-                    "ArrowLeft" => Some((index + TAB_COUNT - 1) % TAB_COUNT),
-                    "Home" => Some(0),
-                    "End" => Some(TAB_COUNT - 1),
-                    _ => None,
-                };
-                let Some(next) = next else {
-                    return;
-                };
-                event.prevent_default();
-                tab.set(tab_at(next));
-                #[cfg(target_arch = "wasm32")]
-                {
-                    let target = format!("work-tab-{next}");
-                    if let Some(document) = web_sys::window().and_then(|window| window.document()) {
-                        if let Some(element) = document.get_element_by_id(&target) {
-                            use wasm_bindgen::JsCast;
-                            if let Ok(element) = element.dyn_into::<web_sys::HtmlElement>() {
-                                let _ = element.focus();
-                            }
-                        }
-                    }
-                }
-            }
-        >
-            {label}
-        </button>
-    }
-}
-
-fn health_label(health: &str) -> &'static str {
-    match health {
-        "serving" => "Serving",
-        "operational" => "Operational",
-        "release-verified" => "Release verified",
-        "terminal-failure" => "Terminal failure",
-        "blocked" => "Blocked",
-        "waiting-authorization" => "Waiting for authorization",
-        "awaiting-rework" => "Awaiting rework",
-        "executing" => "Executing",
-        "dispatching" => "Dispatching",
-        "awaiting-dispatch" => "Awaiting dispatch",
-        "idle" => "Idle",
-        _ => "Unknown",
-    }
-}
-
-fn health_tone(health: &str) -> &'static str {
-    match health {
-        "serving" | "operational" | "release-verified" => "success",
-        "terminal-failure" | "blocked" => "danger",
-        "waiting-authorization" | "awaiting-rework" => "waiting",
-        "executing" | "dispatching" => "active",
-        _ => "neutral",
     }
 }
 
@@ -1706,7 +1600,7 @@ fn build_merge_authorization(
                             <section class="decision-section">
                                 <h3>"Reviewed revision and verdict"</h3>
                                 <div class="metadata-list">
-                                    <div><dt>"Verdict"</dt><dd><Chip label=review.outcome.to_uppercase() tone=if review.outcome == "accepted" { "success" } else { "danger" }/></dd></div>
+                                    <div><dt>"Verdict"</dt><dd><StatusIndicator label=outcome_label(&review.outcome).to_string() tone=if review.outcome == "accepted" { "success" } else { "danger" } raw=review.outcome.clone()/></dd></div>
                                     <div><dt>"Checks executed"</dt><dd>{mandatory_checks}</dd></div>
                                     <div><dt>"Recorded"</dt><dd title=timestamp(review.recorded_at_utc.as_deref())>{time_ago(review.recorded_at_utc.as_deref())}</dd></div>
                                 </div>
@@ -1728,7 +1622,7 @@ fn build_merge_authorization(
                                                     {review.executions.clone().into_iter().map(|execution| view! {
                                                         <tr>
                                                             <td>{review_kind_label(&execution.kind).to_string()}</td>
-                                                            <td><Chip label=execution.outcome.to_uppercase() tone=if execution.passed { "success" } else { "danger" }/></td>
+                                                            <td><StatusIndicator label=outcome_label(&execution.outcome).to_string() tone=if execution.passed { "success" } else { "danger" } raw=execution.outcome.clone()/></td>
                                                             <td class="tiny mono">{format!("{} · {}", execution.executed_by, execution.executed_version)}</td>
                                                             <td class="tiny">{execution.detail.clone()}</td>
                                                         </tr>

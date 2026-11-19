@@ -9,8 +9,7 @@ use control_plane_domain::{
 
 use crate::api;
 use crate::components::ui::{
-    Chip, DigestLine, EmptyBlock, LoadingBlock, MetricCard, Notice, Panel, error_view, time_ago,
-    timestamp,
+    Chip, EmptyBlock, LoadingBlock, MetricCard, Panel, error_view, time_ago,
 };
 use crate::context::AppContext;
 

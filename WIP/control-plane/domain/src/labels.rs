@@ -206,12 +206,189 @@ pub fn serving_status_tone(status: Option<&str>) -> &'static str {
     }
 }
 
+/// What an operator should believe about one release serving state. This is a statement about
+/// evidence, not advice: it says what the adapter can prove right now.
+pub fn serving_status_explanation(status: Option<&str>) -> &'static str {
+    match status.unwrap_or_default().to_ascii_lowercase().as_str() {
+        "serving" => {
+            "The adapter tracks a running supervised process for this revision. The served URL responds only if the frozen contract passed against that process."
+        }
+        "starting" => {
+            "The supervised process is starting. The adapter publishes the served URL only after the frozen contract passes against the running process."
+        }
+        "stopping" => "The bounded serve window is ending; the process is being stopped by the factory.",
+        "stopped" => {
+            "The last bounded window ended normally. The release and its verification evidence remain recorded."
+        }
+        "expired" => {
+            "The bounded serve window expired. The release and its verification evidence remain recorded."
+        }
+        "failed" | "crashed" => {
+            "The serve attempt failed. The failure detail belongs to the release record; it is not a claim about the merged revision."
+        }
+        "unknown" | "stale" => {
+            "The journal says this revision was serving, but the adapter tracks no supervised process for it. Treat the release as not serving until a new serve window proves a running process."
+        }
+        _ => "No serve record exists for this revision. A merge is not a running application.",
+    }
+}
+
 pub fn review_kind_label(kind: &str) -> &str {    match kind {
         "Validation" => "Validation",
         "RequirementCoverage" => "Requirement coverage",
         "ArchitecturalConformance" => "Architectural conformance",
         "Security" => "Security",
         other => other,
+    }
+}
+
+/// One vocabulary for a recorded outcome, shared by every surface that shows one. A code this
+/// build does not know is returned unchanged: a future factory outcome must stay readable as
+/// itself instead of being renamed, hidden or uppercased by the console.
+pub fn outcome_label(value: &str) -> &str {
+    match value {
+        "passed" => "Passed",
+        "failed" => "Failed",
+        "succeeded" => "Succeeded",
+        "completed" => "Completed",
+        "cancelled" => "Cancelled",
+        "accepted" => "Accepted",
+        "rejected" => "Rejected",
+        "pending" => "Pending",
+        "not-run" => "Not run",
+        "running" => "Running",
+        "starting" => "Starting",
+        "stopping" => "Stopping",
+        "timeout" | "timed-out" => "Timed out",
+        _ => value,
+    }
+}
+
+/// Operator-facing severity. `critical` is a statement about consequence, not decoration.
+pub fn severity_label(value: &str) -> &str {
+    match value {
+        "critical" => "Critical",
+        "warning" => "Warning",
+        "info" => "Info",
+        _ => value,
+    }
+}
+
+/// Derived execution health of one work item. This is the single label set used by the work
+/// header, the queue and any attention row that reports health; it never renames the
+/// authoritative factory state.
+pub fn health_label(health: &str) -> &str {
+    match health {
+        "serving" => "Serving",
+        "operational" => "Operational",
+        "release-verified" => "Release verified",
+        "terminal-failure" => "Terminal failure",
+        "blocked" => "Blocked",
+        "waiting-authorization" => "Waiting for authorization",
+        "awaiting-rework" => "Awaiting rework",
+        "executing" => "Executing",
+        "dispatching" => "Dispatching",
+        "awaiting-dispatch" => "Awaiting dispatch",
+        "idle" => "Idle",
+        other => other,
+    }
+}
+
+pub fn health_tone(health: &str) -> &'static str {
+    match health {
+        "serving" | "operational" | "release-verified" => "success",
+        "terminal-failure" | "blocked" => "danger",
+        "waiting-authorization" | "awaiting-rework" | "awaiting-dispatch" => "waiting",
+        "executing" | "dispatching" => "active",
+        _ => "neutral",
+    }
+}
+
+/// One lifecycle stage's state as the work item shows it. Stage states are derived from the
+/// authoritative state plus evidence, so they are labelled in the same dictionary as everything
+/// else and never uppercased to look like a status code.
+pub fn stage_state_label(state: &str) -> &str {
+    match state {
+        "completed" => "Completed",
+        "active" => "Active",
+        "waiting-authorization" => "Waiting for authorization",
+        "needs-rework" => "Needs rework",
+        "rejected" => "Rejected",
+        "failed" => "Failed",
+        "blocked" => "Blocked",
+        "pending" => "Pending",
+        other => other,
+    }
+}
+
+/// Delivery freshness of the activity projection. A transport problem is never phrased as a
+/// factory failure: only the delivery of new facts is affected, and the last durable facts stay
+/// visible.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Freshness {
+    Live,
+    Reconnecting,
+    Stale,
+    Disconnected,
+}
+
+impl Freshness {
+    pub fn code(self) -> &'static str {
+        match self {
+            Freshness::Live => "live",
+            Freshness::Reconnecting => "reconnecting",
+            Freshness::Stale => "stale",
+            Freshness::Disconnected => "disconnected",
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Freshness::Live => "Live",
+            Freshness::Reconnecting => "Reconnecting",
+            Freshness::Stale => "Stale",
+            Freshness::Disconnected => "Disconnected",
+        }
+    }
+
+    pub fn tone(self) -> &'static str {
+        match self {
+            Freshness::Live => "success",
+            Freshness::Reconnecting => "active",
+            Freshness::Stale => "warn",
+            Freshness::Disconnected => "danger",
+        }
+    }
+
+    pub fn detail(self) -> &'static str {
+        match self {
+            Freshness::Live => "New factory events arrive as they are recorded.",
+            Freshness::Reconnecting => {
+                "The activity stream is reconnecting. Durable facts stay readable; only delivery is delayed."
+            }
+            Freshness::Stale => {
+                "The stream is open but its last update is older than expected. Last durable facts are shown."
+            }
+            Freshness::Disconnected => {
+                "The activity stream is disconnected. Nothing on this page is a factory failure because of it."
+            }
+        }
+    }
+}
+
+/// One decision about transport freshness, used by every surface instead of each page inventing
+/// its own wording for the same connection state.
+pub fn freshness_view(connected: bool, stale: bool, gateway_error: Option<&str>) -> Freshness {
+    if connected && !stale {
+        return Freshness::Live;
+    }
+    if connected {
+        return Freshness::Stale;
+    }
+    match gateway_error {
+        Some(message) if message.to_ascii_lowercase().contains("reconnect") => Freshness::Reconnecting,
+        Some(_) => Freshness::Disconnected,
+        None => Freshness::Reconnecting,
     }
 }
 
@@ -342,5 +519,55 @@ mod tests {
         assert_eq!(serving_view(&serving(false, "stopped")).code, "stopped");
         assert_eq!(serving_view(&serving(false, "expired")).code, "expired");
         assert_eq!(serving_view(&serving(false, "")).code, "not-served");
+    }
+
+    #[test]
+    fn unknown_outcomes_are_preserved_instead_of_uppercased_or_hidden() {
+        assert_eq!(outcome_label("passed"), "Passed");
+        assert_eq!(outcome_label("accepted"), "Accepted");
+        assert_eq!(outcome_label("quarantined"), "quarantined");
+        assert_eq!(severity_label("critical"), "Critical");
+        assert_eq!(severity_label("urgent"), "urgent");
+    }
+
+    #[test]
+    fn health_labels_cover_every_derived_health_state_the_adapter_publishes() {
+        for health in [
+            "serving",
+            "operational",
+            "release-verified",
+            "terminal-failure",
+            "blocked",
+            "waiting-authorization",
+            "awaiting-rework",
+            "executing",
+            "dispatching",
+            "awaiting-dispatch",
+            "idle",
+        ] {
+            assert_ne!(health_label(health), health, "{health} needs an operator label");
+        }
+        assert_eq!(health_label("serving"), "Serving");
+        assert_eq!(health_tone("serving"), "success");
+        assert_eq!(health_tone("terminal-failure"), "danger");
+        assert_eq!(health_tone("made-up"), "neutral");
+    }
+
+    #[test]
+    fn transport_freshness_never_becomes_a_factory_failure() {
+        assert_eq!(freshness_view(true, false, None), Freshness::Live);
+        assert_eq!(freshness_view(true, true, None), Freshness::Stale);
+        assert_eq!(
+            freshness_view(false, true, Some("The activity stream is reconnecting.")),
+            Freshness::Reconnecting
+        );
+        assert_eq!(
+            freshness_view(false, true, Some("Permission denied for the stream.")),
+            Freshness::Disconnected
+        );
+        assert_eq!(freshness_view(false, true, None), Freshness::Reconnecting);
+        assert_eq!(Freshness::Live.tone(), "success");
+        assert_eq!(Freshness::Disconnected.tone(), "danger");
+        assert_ne!(Freshness::Stale.label(), "Failed");
     }
 }

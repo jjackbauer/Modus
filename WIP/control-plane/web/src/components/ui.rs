@@ -84,15 +84,11 @@ pub fn Notice(kind: &'static str, children: Children) -> impl IntoView {
     view! { <div class=format!("banner banner-{kind}")>{children()}</div> }
 }
 
+/// Kept as a thin alias so existing call sites converge on one empty-state implementation instead
+/// of a second visual variant.
 #[component]
 pub fn EmptyBlock(title: &'static str, detail: &'static str) -> impl IntoView {
-    view! {
-        <div class="empty-state">
-            <div class="empty-mark" aria-hidden="true">"∅"</div>
-            <h2>{title}</h2>
-            <p>{detail}</p>
-        </div>
-    }
+    view! { <crate::components::feedback::EmptyState title=title detail=detail/> }
 }
 
 #[component]
@@ -152,6 +148,26 @@ pub fn tone_for_role(role: &str) -> &'static str {
     }
 }
 
+/// Copies a value an operator may need to quote, and reports success on the button itself. The
+/// clipboard API is unavailable outside a secure context, so the failure is silent here by design:
+/// the value stays selectable either way.
+pub fn copy_text(value: &str, copied: RwSignal<bool>) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        if let Some(window) = web_sys::window() {
+            let promise = window.navigator().clipboard().write_text(value);
+            leptos::task::spawn_local(async move {
+                let _ = wasm_bindgen_futures::JsFuture::from(promise).await;
+                copied.set(true);
+            });
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = (value, copied);
+    }
+}
+
 /// A digest an operator is about to bind a decision to: always shown in full, wrap-safe, and
 /// copyable in one action. Truncating this value is a safety defect, not a density choice.
 #[component]
@@ -176,22 +192,7 @@ pub fn DigestCopy(label: String, value: Option<String>) -> impl IntoView {
                             aria-label=copy_label.clone()
                             on:click=move |_| {
                                 let value = value.clone();
-                                #[cfg(target_arch = "wasm32")]
-                                {
-                                    if let Some(window) = web_sys::window() {
-                                        let promise =
-                                            window.navigator().clipboard().write_text(&value);
-                                        leptos::task::spawn_local(async move {
-                                            let _ =
-                                                wasm_bindgen_futures::JsFuture::from(promise).await;
-                                            copied.set(true);
-                                        });
-                                    }
-                                }
-                                #[cfg(not(target_arch = "wasm32"))]
-                                {
-                                    let _ = (&value, copied);
-                                }
+                                copy_text(&value, copied);
                             }
                         >
                             <span aria-live="polite">

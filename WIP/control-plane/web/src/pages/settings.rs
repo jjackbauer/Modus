@@ -6,7 +6,7 @@ use control_plane_domain::{AuditEntry, UserSummary, short_digest};
 
 use crate::api;
 use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, Notice, Panel, PanelActions, error_view, time_ago,
+    Chip, EmptyBlock, LoadingBlock, Panel, PanelActions, error_view, time_ago,
 };
 use crate::context::AppContext;
 

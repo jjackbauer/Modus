@@ -5,7 +5,7 @@ use control_plane_domain::{Pipeline, format_duration_seconds, short_digest, stat
 
 use crate::api;
 use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, MetricCard, Notice, Panel, error_view,
+    Chip, LoadingBlock, MetricCard, Notice, error_view,
 };
 use crate::context::AppContext;
 

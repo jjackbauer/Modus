@@ -1,11 +1,11 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
 
-use control_plane_domain::{format_relative, short_digest};
+use control_plane_domain::format_relative;
 
 use crate::api;
 use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, MetricCard, Notice, Panel, error_view,
+    Chip, LoadingBlock, MetricCard, Notice, error_view,
 };
 use crate::context::AppContext;
 

@@ -137,5 +137,33 @@ Consequences:
 - Labels and tones: `control-plane/domain/src/labels.rs`.
 - Serving reconciliation: `control-plane/domain/src/labels.rs::serving_view` plus
   `Wip.Factory.ControlApi/Services/ServeManager.cs::GetServing`.
+
+## 9. One rendering rule for every label (C-04)
+
+`labels.rs` is the only place a status becomes words. Pages and components render what it returns;
+no page uppercases a status, substitutes a synonym, or invents a new human status.
+
+| Function | Covers | Example |
+|---|---|---|
+| `state_label` / `state_tone` | the 16 authoritative factory states | `InReview` → "In review" |
+| `indicator_label` / `indicator_tone` | derived attention markers | `waiting-merge-approval` → "Waiting for merge approval" |
+| `health_label` / `health_tone` | derived execution health | `release-verified` → "Release verified" |
+| `stage_state_label` + `stage_tone` | lifecycle stage states | `waiting-authorization` → "Waiting for authorization" |
+| `outcome_label` | recorded outcomes (review, check, attempt, session, dispatch job) | `accepted` → "Accepted" |
+| `severity_label` / `severity_tone` | attention severity | `critical` → "Critical" |
+| `serving_view` / `serving_status_label` | reconciled serving state | journal `serving` with no tracked process → "Not currently serving" |
+| `serving_status_explanation` | what an operator should believe about a serving state | one sentence per code |
+| `freshness_view` | transport delivery freshness | live / reconnecting / stale / disconnected |
+| `role_label` | session role | `admin` → "Administrator" |
+
+Rules:
+
+- An unknown raw code is returned unchanged. It is displayed as itself, never title-cased into a new
+  human status and never hidden.
+- Raw codes remain available as the `title` of a status indicator for traceability.
+- The adjective "failed" belongs to a verification or a serve attempt; it is never used for a
+  transport disconnect.
+- Status is text plus a restrained mark. Colour never carries the only copy of the meaning.
+
 - Attention identities: `Wip.Factory.ControlApi/ReadModels/ReadModelWorkDetail.cs::BuildAttention`
   and `control-plane/server/src/overview.rs::canonical_attention`.

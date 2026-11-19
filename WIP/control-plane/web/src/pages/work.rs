@@ -5,14 +5,16 @@ use leptos_router::hooks::{use_navigate, use_params_map};
 use serde::{Deserialize, Serialize};
 
 use control_plane_domain::{
-    Page, Preview, RequirementDraft, SubmitRequest, WorkItemSummary, format_relative,
+    Page, Preview, RequirementDraft, SubmitRequest, WorkItemSummary,
     indicator_label, indicator_tone, render_markdown, short_digest, state_label, state_tone,
 };
 
 use crate::api;
-use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, Notice, Panel, PanelActions, error_view, time_ago,
-};
+use crate::components::feedback::EmptyState;
+use crate::components::layout::FilterBar;
+use crate::components::status::{EntityIdentity, StatusIndicator};
+use crate::components::table::{Column, DataTable, Sort, SortDirection, TableState};
+use crate::components::ui::{EmptyBlock, LoadingBlock, error_view, time_ago};
 use crate::context::AppContext;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -69,6 +71,21 @@ pub fn WorkQueuePage() -> impl IntoView {
     let refresh = context.refresh;
     let filters_active = Signal::derive(move || {
         !search.get().trim().is_empty() || !state.get().is_empty() || !indicator.get().is_empty()
+    });
+    let clear_filters = Callback::new(move |_| {
+        search.set(String::new());
+        state.set(String::new());
+        indicator.set(String::new());
+    });
+    // A header click reuses the adapter's own orderings. There is no client-side resort: the
+    // visible ordering is always one the adapter can produce.
+    let on_sort = Callback::new(move |key: &'static str| {
+        let next = match key {
+            "title" => "title",
+            "state" => "state",
+            _ => "updated-desc",
+        };
+        sort.set(next.to_string());
     });
 
     #[cfg(target_arch = "wasm32")]
@@ -183,8 +200,9 @@ pub fn WorkQueuePage() -> impl IntoView {
                 <WorkIntakeForm instance=instance.get() on_created=on_created/>
             })}
 
-            <div class="queue-toolbar">
-                <div class="toolbar-row">
+            <FilterBar
+                label="Work queue filters".to_string()
+                leading=view! {
                     <div class="field search">
                         <label class="field-label" for="queue-search">"Search work items"</label>
                         <input
@@ -196,67 +214,50 @@ pub fn WorkQueuePage() -> impl IntoView {
                             on:input=move |event| search.set(event_target_value(&event))
                         />
                     </div>
-                    <button
-                        class="btn queue-filter-toggle"
-                        type="button"
-                        aria-expanded=move || filters_open.get().to_string()
-                        aria-controls="queue-filters"
-                        on:click=move |_| filters_open.update(|value| *value = !*value)
-                    >
-                        {move || if filters_open.get() { "Hide filters" } else { "Filters" }}
-                    </button>
-                    <div
-                        class="toolbar-fields"
-                        id="queue-filters"
-                        class:open=move || filters_open.get()
-                    >
-                        <div class="field">
-                            <label class="field-label" for="queue-state">"Factory state"</label>
-                            <select class="select" id="queue-state" on:change=move |event| state.set(event_target_value(&event))>
-                                <option value="">"All factory states"</option>
-                                {known_states().into_iter().map(|state| view! { <option value=state>{state_label(state)}</option> }).collect_view()}
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label class="field-label" for="queue-indicator">"Attention"</label>
-                            <select class="select" id="queue-indicator" on:change=move |event| indicator.set(event_target_value(&event))>
-                                <option value="">"All indicators"</option>
-                                <option value="waiting-contract-approval">"Waiting for contract approval"</option>
-                                <option value="waiting-merge-approval">"Waiting for merge approval"</option>
-                                <option value="active-implementation">"Active implementation"</option>
-                                <option value="running-verification">"Running verification"</option>
-                                <option value="needs-rework">"Needs rework"</option>
-                                <option value="blocked">"Blocked"</option>
-                                <option value="terminal-failure">"Terminal failure"</option>
-                                <option value="released">"Released"</option>
-                            </select>
-                        </div>
-                        <div class="field">
-                            <label class="field-label" for="queue-sort">"Sort"</label>
-                            <select class="select" id="queue-sort" on:change=move |event| sort.set(event_target_value(&event))>
-                                <option value="updated-desc">"Recently updated"</option>
-                                <option value="created-desc">"Newest first"</option>
-                                <option value="created-asc">"Oldest first"</option>
-                                <option value="state">"Factory state"</option>
-                                <option value="title">"Title"</option>
-                            </select>
-                        </div>
+                }.into_any()
+                fields=view! {
+                    <div class="field">
+                        <label class="field-label" for="queue-state">"Factory state"</label>
+                        <select
+                            class="select"
+                            id="queue-state"
+                            on:change=move |event| state.set(event_target_value(&event))
+                        >
+                            <option value="">"All factory states"</option>
+                            {known_states().into_iter().map(|value| view! {
+                                <option value=value selected=move || state.get() == value>{state_label(value)}</option>
+                            }).collect_view()}
+                        </select>
                     </div>
-                    <div class="toolbar-actions">
-                        <button
-                            class="btn btn-quiet"
-                            type="button"
-                            disabled=move || !filters_active.get()
-                            title=move || if filters_active.get() { "Clear search, state and attention filters" } else { "No filters are applied" }
-                            on:click=move |_| {
-                                search.set(String::new());
-                                state.set(String::new());
-                                indicator.set(String::new());
-                            }
-                        >"Clear filters"</button>
+                    <div class="field">
+                        <label class="field-label" for="queue-indicator">"Attention"</label>
+                        <select
+                            class="select"
+                            id="queue-indicator"
+                            on:change=move |event| indicator.set(event_target_value(&event))
+                        >
+                            <option value="">"All attention indicators"</option>
+                            {ATTENTION_INDICATORS.into_iter().map(|value| view! {
+                                <option value=value selected=move || indicator.get() == value>{indicator_label(Some(value))}</option>
+                            }).collect_view()}
+                        </select>
                     </div>
-                </div>
-                <div class="toolbar-secondary">
+                    <div class="field">
+                        <label class="field-label" for="queue-sort">"Sort"</label>
+                        <select
+                            class="select"
+                            id="queue-sort"
+                            on:change=move |event| sort.set(event_target_value(&event))
+                        >
+                            {SORT_OPTIONS.into_iter().map(|(value, label)| view! {
+                                <option value=value selected=move || sort.get() == value>{label}</option>
+                            }).collect_view()}
+                        </select>
+                    </div>
+                }.into_any()
+                active=filters_active
+                on_clear=clear_filters
+                secondary=Some(view! {
                     <div class="segmented" role="group" aria-label="Work queue view">
                         <button class:active=move || view.get() == QueueView::Table aria-pressed=move || (view.get() == QueueView::Table).to_string() on:click=move |_| view.set(QueueView::Table)>"Table"</button>
                         <button class:active=move || view.get() == QueueView::Kanban aria-pressed=move || (view.get() == QueueView::Kanban).to_string() on:click=move |_| view.set(QueueView::Kanban)>"Board"</button>
@@ -275,11 +276,10 @@ pub fn WorkQueuePage() -> impl IntoView {
                         </select>
                         <input class="input" aria-label="Name this view" placeholder="Name this view" prop:value=move || saved_name.get() on:input=move |event| saved_name.set(event_target_value(&event))/>
                         <button class="btn btn-sm" on:click=move |_| reload_saved()>"Save view"</button>
-                        <span class="tiny faint">"Stored in this browser, never as factory state."</span>
+                        <span class="tiny faint">"Stored in this browser. Rename and delete are not implemented yet."</span>
                     </div>
-                </div>
-            </div>
-
+                }.into_any())
+            />
             <Suspense fallback=move || view! { <LoadingBlock label="Loading durable work items…"/> }>
                 {move || match work.get().flatten() {
                     None => view! { <LoadingBlock label="Loading durable work items…"/> }.into_any(),
@@ -287,7 +287,16 @@ pub fn WorkQueuePage() -> impl IntoView {
                     Some(Ok(page)) => view! {
                         <QueueSummary page=page.clone()/>
                         {match view.get() {
-                            QueueView::Table => view! { <WorkTable page=page.clone() instance=instance/> }.into_any(),
+                            QueueView::Table => view! {
+                                <WorkTable
+                                    page=page.clone()
+                                    instance=instance
+                                    sort=sort
+                                    on_sort=on_sort
+                                    filters_active=filters_active
+                                    on_clear=clear_filters
+                                />
+                            }.into_any(),
                             QueueView::Kanban => view! { <WorkKanban page=page.clone() instance=instance/> }.into_any(),
                             QueueView::Prioritized => view! { <WorkPriority page=page.clone() instance=instance/> }.into_any(),
                         }}
@@ -298,6 +307,64 @@ pub fn WorkQueuePage() -> impl IntoView {
     }
 }
 
+/// Attention indicators an operator can filter by. These are derived markers, not factory states.
+const ATTENTION_INDICATORS: [&str; 9] = [
+    "waiting-contract-approval",
+    "waiting-merge-approval",
+    "active-implementation",
+    "running-verification",
+    "needs-rework",
+    "blocked",
+    "terminal-failure",
+    "released",
+    "released-unverified",
+];
+
+/// The orderings the adapter can actually produce, named in operator words.
+const SORT_OPTIONS: [(&str, &str); 5] = [
+    ("updated-desc", "Recently updated first"),
+    ("created-desc", "Newest requirement first"),
+    ("created-asc", "Oldest requirement first"),
+    ("state", "Factory state A to Z"),
+    ("title", "Title A to Z"),
+];
+
+/// What the selected ordering means, in words, next to the table it orders.
+fn sort_definition(sort: &str) -> &'static str {
+    match sort {
+        "created-desc" => {
+            "Ordered by requirement creation time, newest first. Updated time is not the key."
+        }
+        "created-asc" => {
+            "Ordered by requirement creation time, oldest first. Updated time is not the key."
+        }
+        "state" => {
+            "Ordered by factory state A to Z, then by most recently updated first inside a state."
+        }
+        "title" => "Ordered by title A to Z, ignoring case.",
+        _ => "Ordered by most recently updated first, using the recorded ISO timestamps.",
+    }
+}
+
+/// Maps the adapter ordering onto the column whose values it actually sorts by, so `aria-sort`
+/// never claims an ordering the table is not showing.
+fn table_sort(sort: &str) -> Option<Sort> {
+    match sort {
+        "title" => Some(Sort {
+            key: "title",
+            direction: SortDirection::Ascending,
+        }),
+        "state" => Some(Sort {
+            key: "state",
+            direction: SortDirection::Ascending,
+        }),
+        "updated-desc" => Some(Sort {
+            key: "updated",
+            direction: SortDirection::Descending,
+        }),
+        _ => None,
+    }
+}
 fn known_states() -> [&'static str; 16] {
     [
         "Proposed",
@@ -372,104 +439,155 @@ fn QueueSummary(page: Page<WorkItemSummary>) -> impl IntoView {
 }
 
 #[component]
-fn WorkTable(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl IntoView {
-    if page.items.is_empty() {
-        return view! {
-            <EmptyBlock title="No work matches these filters" detail="Clear filters, or submit a requirement from the intake form."/>
-        }
-        .into_any();
-    }
-
+fn WorkTable(
+    page: Page<WorkItemSummary>,
+    instance: Signal<String>,
+    #[prop(into)] sort: Signal<String>,
+    on_sort: Callback<&'static str>,
+    filters_active: Signal<bool>,
+    on_clear: Callback<()>,
+) -> impl IntoView {
     let items = page.items;
+    let row_count = items.len();
+    let state = if row_count == 0 {
+        TableState::Empty
+    } else {
+        TableState::Populated
+    };
+    let current_sort = sort.get_untracked();
+    let sort_state = table_sort(&current_sort);
+    let caption = format!("Work items. {}", sort_definition(&current_sort));
+    let mobile = items.clone();
     view! {
-        <div class="table-wrap queue-table-wrap">
-            <table class="data">
-                <thead>
-                    <tr>
-                        <th>"Work item"</th>
-                        <th>"State"</th>
-                        <th>"Derived indicator"</th>
-                        <th>"Priority"</th>
-                        <th>"Events"</th>
-                        <th>"Updated"</th>
-                        <th>"Last failure"</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.clone().into_iter().map(|item| {
-                        let href = format!("/i/{}/work/{}", instance.get(), item.work_item_id);
-                        let title = item.title.clone();
-                        let work_item_id = item.work_item_id.clone();
-                        let state = item.state.clone();
-                        let state_label = state_label(&state).to_string();
-                        let state_tone = state_tone(&state);
-                        let indicator = item.derived_indicator.clone();
-                        let indicator_label = indicator_label(indicator.as_deref()).to_string();
-                        let indicator_tone = indicator_tone(indicator.as_deref());
-                        let priority = item.planning.priority.clone().unwrap_or_else(|| "—".to_string());
-                        let event_count = item.event_count;
-                        let updated = item.updated_at_utc.clone();
-                        let updated_title = timestamp(updated.as_deref());
-                        let updated_text = time_ago(updated.as_deref());
-                        let last_failure = item.last_failure.clone().unwrap_or_else(|| "—".to_string());
-                        view! {
-                            <tr>
-                                <td>
-                                    <a href=href><strong>{title}</strong></a>
-                                    <div class="tiny faint mono">{work_item_id}</div>
-                                </td>
-                                <td><Chip label=state_label tone=state_tone/></td>
-                                <td><Chip label=indicator_label tone=indicator_tone/></td>
-                                <td>{priority}</td>
-                                <td class="num">{event_count}</td>
-                                <td title=updated_title>{updated_text}</td>
-                                <td class="tiny">{last_failure}</td>
-                            </tr>
-                        }
-                    }).collect_view()}
-                </tbody>
-            </table>
+        <div class="queue-table-wrap">
+            <DataTable
+                caption=caption
+                columns=vec![
+                    Column::sortable("Work item", "title"),
+                    Column::sortable("State", "state"),
+                    Column::text("Attention"),
+                    Column::text("Priority"),
+                    Column::text("Next step"),
+                    Column::sortable("Updated", "updated"),
+                    Column::numeric("Events", None),
+                    Column::text("Last failure"),
+                ]
+                rows=row_count
+                state=state
+                sort=sort_state
+                on_sort=Some(on_sort)
+                empty=Some(view! {
+                    <EmptyState
+                        title="No work matches these filters"
+                        detail="Nothing is hidden: the count is zero for the current search, state and attention filters."
+                        action=Some(view! {
+                            <button
+                                class="btn btn-sm"
+                                type="button"
+                                disabled=move || !filters_active.get()
+                                on:click=move |_| on_clear.run(())
+                            >"Clear filters"</button>
+                        }.into_any())
+                    />
+                }.into_any())
+            >
+                {items.into_iter().map(|item| {
+                    let href = format!("/i/{}/work/{}", instance.get(), item.work_item_id);
+                    let title = item.title.clone();
+                    let work_item_id = item.work_item_id.clone();
+                    let state = item.state.clone();
+                    let state_text = state_label(&state).to_string();
+                    let state_tone_value = state_tone(&state);
+                    let indicator = item.derived_indicator.clone();
+                    let indicator_text = indicator_label(indicator.as_deref()).to_string();
+                    let indicator_tone_value = indicator_tone(indicator.as_deref());
+                    let show_indicator = indicator.is_some() && indicator_text != state_text;
+                    let priority = item.planning.priority.clone().unwrap_or_else(|| "Not declared".to_string());
+                    let event_count = item.event_count;
+                    let updated = item.updated_at_utc.clone();
+                    let updated_title = timestamp(updated.as_deref());
+                    let updated_text = time_ago(updated.as_deref());
+                    let last_failure = item.last_failure.clone().unwrap_or_else(|| "—".to_string());
+                    let next_step = next_step_label(&item);
+                    let href_for_next = href.clone();
+                    view! {
+                        <tr>
+                            <td>
+                                <a href=href><strong>{title}</strong></a>
+                                <EntityIdentity label="Work item" value=work_item_id/>
+                            </td>
+                            <td><StatusIndicator label=state_text.clone() tone=state_tone_value raw=state.clone()/></td>
+                            <td>
+                                {if show_indicator {
+                                    view! {
+                                        <StatusIndicator
+                                            label=indicator_text.clone()
+                                            tone=indicator_tone_value
+                                            raw=indicator.clone().unwrap_or_default()
+                                        />
+                                    }.into_any()
+                                } else {
+                                    view! { <span class="faint small">"None recorded"</span> }.into_any()
+                                }}
+                            </td>
+                            <td>{priority}</td>
+                            <td>
+                                <a
+                                    class="queue-next"
+                                    href=href_for_next
+                                    title="Opens the work item, where the governed action is available"
+                                >
+                                    {next_step}" →"
+                                </a>
+                            </td>
+                            <td title=updated_title>{updated_text}</td>
+                            <td class="numeric">{event_count}</td>
+                            <td class="tiny">{last_failure}</td>
+                        </tr>
+                    }
+                }).collect_view()}
+            </DataTable>
         </div>
-        <div class="queue-mobile-list" aria-label="Work items">
-            {items.into_iter().map(|item| {
-                let href = format!("/i/{}/work/{}", instance.get(), item.work_item_id);
-                let state_text = state_label(&item.state).to_string();
-                let indicator_text = item
-                    .derived_indicator
-                    .as_ref()
-                    .map(|value| indicator_label(Some(value)).to_string())
-                    .filter(|text| *text != state_text);
-                let priority = item
-                    .planning
-                    .priority
-                    .clone()
-                    .unwrap_or_else(|| "No priority".to_string());
-                let updated = time_ago(item.updated_at_utc.as_deref());
-                let last_failure = item
-                    .last_failure
-                    .clone()
-                    .filter(|failure| failure != "—");
-                let next_step = next_step_label(&item);
-                view! {
-                    <a class="queue-mobile-card" href=href>
-                        <span class="queue-mobile-title">{item.title.clone()}</span>
-                        <span class="queue-mobile-id mono">{item.work_item_id.clone()}</span>
-                        <span class="queue-mobile-facts">
-                            <span>{state_text}</span>
-                            {indicator_text.map(|text| view! { <span class="queue-mobile-attention">{text}</span> })}
-                            <span>{priority}</span>
-                            <span>{format!("{} events · {}", item.event_count, updated)}</span>
-                        </span>
-                        {last_failure.map(|failure| view! { <span class="queue-mobile-failure mono">{failure}</span> })}
-                        <span class="queue-mobile-next">{next_step}" →"</span>
-                    </a>
-                }
-            }).collect_view()}
-        </div>
+        {(!mobile.is_empty()).then(|| view! {
+            <div class="queue-mobile-list" aria-label="Work items">
+                {mobile.into_iter().map(|item| {
+                    let href = format!("/i/{}/work/{}", instance.get(), item.work_item_id);
+                    let state_text = state_label(&item.state).to_string();
+                    let indicator_text = item
+                        .derived_indicator
+                        .as_ref()
+                        .map(|value| indicator_label(Some(value)).to_string())
+                        .filter(|text| *text != state_text);
+                    let priority = item
+                        .planning
+                        .priority
+                        .clone()
+                        .unwrap_or_else(|| "No priority".to_string());
+                    let updated = time_ago(item.updated_at_utc.as_deref());
+                    let last_failure = item
+                        .last_failure
+                        .clone()
+                        .filter(|failure| failure != "—");
+                    let next_step = next_step_label(&item);
+                    view! {
+                        <a class="queue-mobile-card" href=href>
+                            <span class="queue-mobile-title">{item.title.clone()}</span>
+                            <span class="queue-mobile-id mono">{item.work_item_id.clone()}</span>
+                            <span class="queue-mobile-facts">
+                                <span>{state_text}</span>
+                                {indicator_text.map(|text| view! { <span class="queue-mobile-attention">{text}</span> })}
+                                <span>{priority}</span>
+                                <span>{format!("{} events · {}", item.event_count, updated)}</span>
+                            </span>
+                            {last_failure.map(|failure| view! { <span class="queue-mobile-failure mono">{failure}</span> })}
+                            <span class="queue-mobile-next">{next_step}" →"</span>
+                        </a>
+                    }
+                }).collect_view()}
+            </div>
+        })}
     }
-    .into_any()
 }
-
 #[component]
 fn WorkKanban(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl IntoView {
     let columns: [(&'static str, &[&'static str]); 7] = [
@@ -510,7 +628,7 @@ fn WorkKanban(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl Int
                                     <a class="kanban-card" href=href>
                                         <div class="row-between">
                                             <span class="tiny mono faint">{work_item_id}</span>
-                                            <Chip label=state_label tone=state_tone/>
+                                            <StatusIndicator label=state_label tone=state_tone/>
                                         </div>
                                         <strong>{title}</strong>
                                         <div class="tiny faint">{indicator}</div>
@@ -571,7 +689,7 @@ fn WorkPriority(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl I
                             <div class="priority-main">
                                 <div class="row-between">
                                     <strong>{title}</strong>
-                                    <Chip label=state_label tone=state_tone/>
+                                    <StatusIndicator label=state_label tone=state_tone/>
                                 </div>
                                 <div class="tiny faint">
                                     {priority}
@@ -898,4 +1016,69 @@ fn timestamp(value: Option<&str>) -> String {
                 .to_string()
         })
         .unwrap_or_else(|_| value.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_adapter_ordering_has_a_written_definition() {
+        for (value, _) in SORT_OPTIONS {
+            let definition = sort_definition(value);
+            assert!(
+                definition.len() > 20,
+                "ordering {value} needs a sentence an operator can read"
+            );
+            assert!(
+                definition.contains("Ordered") || definition.contains("ordered"),
+                "ordering {value} must state what it orders by"
+            );
+        }
+        assert_ne!(sort_definition("created-asc"), sort_definition("created-desc"));
+        assert!(sort_definition("state").contains("state"));
+    }
+
+    #[test]
+    fn aria_sort_names_only_the_columns_the_ordering_uses() {
+        assert_eq!(table_sort("updated-desc").map(|sort| sort.key), Some("updated"));
+        assert_eq!(table_sort("title").map(|sort| sort.key), Some("title"));
+        assert_eq!(table_sort("state").map(|sort| sort.key), Some("state"));
+        assert_eq!(
+            table_sort("created-asc"),
+            None,
+            "a creation ordering must not claim the Updated column is sorted"
+        );
+        assert_eq!(table_sort("created-desc"), None);
+    }
+
+    #[test]
+    fn the_next_step_never_promises_a_state_the_factory_did_not_reach() {
+        let mut item = WorkItemSummary {
+            work_item_id: "WORK-test".to_string(),
+            state: "ReadyForDelivery".to_string(),
+            version: 1,
+            title: "T".to_string(),
+            repository: "r".to_string(),
+            requirement_digest: "d".to_string(),
+            proposal_digest: None,
+            frozen_contract_digest: None,
+            review_digest: None,
+            last_failure: None,
+            event_count: 0,
+            created_at_utc: None,
+            updated_at_utc: None,
+            awaiting_contract_approval: false,
+            awaiting_merge_approval: true,
+            derived_indicator: None,
+            planning: control_plane_domain::Planning::default(),
+        };
+        assert_eq!(next_step_label(&item), "Authorize merge");
+        item.awaiting_merge_approval = false;
+        item.awaiting_contract_approval = true;
+        assert_eq!(next_step_label(&item), "Freeze or reject the contract");
+        item.awaiting_contract_approval = false;
+        item.state = "Failed".to_string();
+        assert_eq!(next_step_label(&item), "Inspect evidence");
+    }
 }
