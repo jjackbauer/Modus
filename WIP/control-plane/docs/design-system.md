@@ -439,3 +439,158 @@ fixture, both themes. Raw JSON: `.evidence/pr3/pr3-verify.json`, `.evidence/pr3/
   to Settings (D-04) remain open.
 - No real screen-reader run and no 200% zoom/text-spacing pass yet (VG-03), so the plan is not
   complete and no gate below VG-07 is claimed.
+## 14. PR 3 completion — queue, work detail, intake and the first end-to-end journey
+
+This section records the increment after §13: the rest of B-02, item 6 on Work detail and
+Intake, and the first real end-to-end factory journey (item 7). Nothing here is a stylesheet
+pass: every item below changed behaviour and was measured in the running application. `C-01`
+is still not complete because `Timeline` is not built; the validation, confirmation and evidence
+primitives are now wired into real forms and dialogs.
+
+### 14.1 Queue B-02 closed
+
+- **URL is the addressable state.** `view`, `q`, `state`, `attention` and `sort` are parsed from
+  the query before the controls render, serialised back with `navigate(..., replace: true)`, and
+  mirrored back into the controls on Back/Forward. Unknown states, attention codes and orderings
+  are dropped instead of being forwarded to the adapter.
+- **Saved views** support save, rename, delete and an active indicator that compares every
+  filter, not only the name; a modified view says “has unsaved changes”. Named views remain in
+  `localStorage`; the URL carries the filters. `Clear filters` sits in the always-visible toolbar
+  row, so it is still reachable when the filter fields are collapsed at 390px.
+- **Board**: seven fixed 280px columns inside a labelled, focusable scroll region with
+  Earlier/Later arrows, a visible scrollbar and a hint. Empty columns are 83px tall versus 209px
+  for populated columns, so an empty stage is not a blank well. At 320px the region scrolls
+  internally with 0 document overflow.
+- **Priority**: the definition is displayed next to the list. Order is actionable urgency from
+  authoritative flags (decision waiting → stopped → executing → quiet), then declared planning
+  priority, then update time. The view states that it is computed in the browser and that the
+  Table is where the adapter orderings live. Table and cards now render `Normal`/`Normal priority`
+  instead of the raw planning value.
+- Measured: `.evidence/pr3/queue-verify.json`; screenshots
+  `.evidence/pr3/shots/queue-{board,priority}-{1440,320}-dark.png`, `queue-390-{dark,light}.png`,
+  `queue-1440-{dark,light}.png`.
+
+### 14.2 Work detail item 6
+
+- **One entry point per decision.** Approve contract, reject contract and authorize merge live
+  once, in the header action row. The contract panel keeps the evidence and links to that row;
+  the old “Merge authorization” panel is gone. `What the factory allows next` is explicitly the
+  factory's informational transition list, not a second action surface.
+- **Serve is owned by the release page.** Work detail no longer opens a serve dialog or calls
+  start/stop. It reports the serving state and deep-links to the release page, which owns the
+  mutation and its evidence; only a proven, live window shows a preview link.
+- **One attention line** replaces the attention cards: count, severity and titles, with a link to
+  the action row when a decision is waiting.
+- **Evidence hierarchy.** The Evidence tab starts with `EvidenceSummary` (verdict → checks →
+  exact identity → raw evidence). The merge dialog renders the same summary, the exact review
+  digest with copy, and `Confirmation` with the typed digest. The contract and reject dialogs use
+  `EvidenceSummary` for the declared scenarios plus `Confirmation`. Server-side digest
+  revalidation and failure retention are unchanged.
+- **Contract scenarios** are a definition list in the panel and in the dialog. At 320px the
+  lifecycle scenario is 270px wide and the dialog scenario item 290px; paths wrap in two lines
+  instead of a character-per-column table, with no horizontal scroll inside the dialog.
+- Measured: `.evidence/pr3/work-detail-verify.json`; screenshots
+  `after-work-detail-1440-dark.png`, `after-work-evidence-1440-dark.png`,
+  `after-merge-dialog-{1440,320}-dark.png`, `after-contract-dialog-320-dark.png`,
+  `after-work-detail-320-{dark,light}.png`.
+
+### 14.3 Intake item 6
+
+- Every field has a persistent `label for`, a required marker, an id, and (when it has a problem)
+  a `ValidationMessage` referenced by `aria-describedby` and `aria-invalid`.
+- One `InlineValidation` summary links to the field for every local or parser problem. Local and
+  parser errors about the same field are deduplicated, so the count is problems, not repetitions.
+  Parser codes are mapped to human messages with field context; the raw codes stay in
+  `Technical details`. The summary receives focus after a rejected parse or a blocked submit.
+- **Drafts** are stored in this browser as the same typed `RequirementDraft` the submit path
+  builds. Reload and navigation restore them; a privacy note states the storage and scope, and
+  `Clear draft` removes both fields and the stored copy. A successful submit removes the draft.
+- The **exact generated document** is shown with its factory digest and bound to submission by
+  `Confirmation`. Editing after validation marks the parser verdict stale, hides its errors as
+  non-current, and disables submission until the new bytes are validated.
+- Measured: `.evidence/pr3/intake-verify.json`; screenshots
+  `after-intake-1440-dark.png`, `after-intake-320-{dark,light}.png`. The 1440 form uses the full
+  width; at 320 the panel header stacks and the banner wraps, with 0 document overflow.
+
+### 14.4 Serve truth and the served URL
+
+- The adapter's live `Serving` projection set `active=true` for the whole serve window but wrote
+  the served URL only when the window ended, so no preview link could be shown while the process
+  was alive.
+- The control-plane server now enriches both work detail and release detail from the durable
+  `factory.release.observed.v1` event, but only when that event belongs to the current window
+  (`event.timeUtc >= serving.recordedAtUtc`). A `ReleaseObserved` record from an earlier window is
+  never reused. Unit-tested in `server/src/api.rs`.
+- The end-to-end run proved the live URL responded `HTTP 200` with
+  `Wip.Factory deterministic demo target` while the job was `running`, and both the release page
+  and work detail offered the same preview link.
+
+### 14.5 Item 7 end-to-end journey (measured)
+
+One real work item, `WORK-b3a440a4`, was created from the intake UI with keyboard activation, and
+taken through every gate by the rendered controls. Requirement digest
+`sha256:b12276ab…83e4ab`; review digest `sha256:f3686758…5bb070`; merged revision
+`c8a5ed98b7b3…`. Evidence: `.evidence/pr3/e2e-verify.json`, timeline in the same file.
+
+| Step | Measured result |
+|---|---|
+| Intake | parser accepted; generated digest matched the created work item (`digestMatchesPreview: true`); submit was enabled only after the Confirmation assertion and keyboard Enter |
+| Dispatch before contract | state `Proposed`; the factory paused with `awaitingContractApproval: true` |
+| Contract approval | dialog showed `EvidenceSummary` “Proposal ready for a freezing decision”, 1 scenario, full requirement text; keyboard Space + Enter froze it; `contractFrozen: true` |
+| Independent review | one dispatch reached `ReadyForDelivery`; accepted review with 4 passed checks and digest `sha256:f3686758…` |
+| Merge authorization | dialog showed 4 checks, 5 identity rows, exact digest; keyboard checkbox + typed digest + Enter; `confirmDisabled` went true → false only when the digest matched |
+| Merge execution | one governed dispatch cycle claimed the recorded authorization; state `Released`, `release.verified: true`, scenario `AC-1=pass`, `releaseRecorded: true` |
+| Supervised serve | start through the release dialog with a 300s window; state `running`, URL `http://127.0.0.1:64808/`, process `115144`; HTTP probe `200`, body “Wip.Factory deterministic demo target”; release header “Serving” with “Open verified preview”; work detail “Serving” + same preview link and no serve button |
+| Stop serve | keyboard through the release dialog; `active: false`, status `stopped` |
+| Final truth | state `OperationallyValidated`; requirement binding true; merge digest bound to the review digest; release verified; serving stopped; independent acceptance not claimed |
+| Errors | 0 page errors, 0 console errors |
+
+Responsive measurement on the created work detail and release at 320/390/768/1024/1280/1440/1920:
+0 document overflow, every action button within the viewport, 6 tabs at every width. Keyboard
+checks: ArrowRight changed the selected tab to “Agent activity” with focus; queue search typed by
+keyboard updated the URL and rows; Enter on Clear filters removed the query; the 390px drawer
+opened with Enter, closed with Escape and returned focus to `nav-toggle`.
+
+Screenshots: `e2e-intake-validated-1440-dark.png`, `e2e-submitted-1440-dark.png`,
+`e2e-before-contract-dialog-1440-dark.png`, `e2e-contract-approved-1440-dark.png`,
+`e2e-before-merge-1440-dark.png`, `e2e-released-1440-dark.png`,
+`e2e-release-before-serve-1440-dark.png`, `e2e-serving-active-release-1440-dark.png`,
+`e2e-work-detail-serving-1440-dark.png`, `e2e-serving-stopped-release-1440-dark.png`,
+`e2e-work-detail-{320,390,1440,1920}-dark.png`, `e2e-release-{320,390,1440,1920}-dark.png`,
+`e2e-work-detail-{1440,390}-light.png`, `e2e-release-1440-light.png`.
+
+### 14.6 Support checks (partial VG evidence, not a gate pass)
+
+`.evidence/pr3/vg-checks.json` measured overview, queue, work detail and release detail:
+
+- 4 routes × 7 widths: 0 document overflow, 0 clipped action buttons, 0 visible text below 12px.
+- WCAG text spacing (1.5 line height, 0.12em letter spacing, 0.16em word spacing, 2em paragraph
+  spacing) at 320 and 1440: 0 overflow on overview, queue and work detail.
+- Emulated 200% zoom (720 CSS px at 1440 device width): 0 overflow; body text remains 15px and
+  dense metadata 13px.
+- Accessibility tree on work detail: 1 tablist, 6 tabs, 9 headings, 5 buttons.
+
+**Not done:** a real NVDA/Narrator pass, a physical 200% browser-zoom run, the full VG-06 state
+matrix, the VG-08 large-data fixture and the VG-09 human visual review. No VG gate is claimed
+complete. The automated accessibility tree is not a substitute for a screen reader.
+
+### 14.7 Still open after this increment
+
+- **C-01**: `Timeline` is still not built, so C-01 remains open. `InlineValidation`,
+  `Confirmation`, `EvidenceSummary` and `ValidationMessage` are now used by intake and the
+  decision dialogs; the earlier “built but unwired” gap for those primitives is closed.
+- **C-03 document titles**: every route still reports the shell title `Wip.Factory Control
+  Plane` (measured in `vg-checks.json`). Per-route titles with exact IDs in breadcrumbs remain
+  open.
+- **Merge authorization execution**: the adapter records the authorization as an event, but the
+  merge and post-merge verification run on the next dispatch cycle. The header keeps offering
+  `Authorize merge` until the state changes, so an operator can see the same authorization
+  offered again; the E2E explicitly ran one dispatch after authorization. A derived
+  “authorization recorded; dispatch to execute” state is still open.
+- Release detail still uses `Chip` for its state/verified/serving labels and its own
+  `ServeConfirm` markup (not the shared `Confirmation`); PR 4.
+- Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
+  review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
+  in-page back link remain open.
+- VG-01 is not complete as a gate (no real 200% zoom/NVDA run); VG-06, VG-08 and VG-09 are open.
+  The plan is not complete and must not be marked so.
