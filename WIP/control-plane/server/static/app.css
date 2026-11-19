@@ -87,13 +87,13 @@
   --border-strong: #b7c2d0;
   --text-primary: #16202c;
   --text-secondary: #455366;
-  --text-tertiary: #68778b;
+  --text-tertiary: #5b6879;
   --text-faint: #5f6b7a;
-  --accent: #1f6feb;
-  --accent-strong: #1558c0;
+  --accent: #1a63d6;
+  --accent-strong: #124aa8;
   --accent-muted: #dbeafe;
   --accent-contrast: #ffffff;
-  --success: #1a7f4b;
+  --success: #116638;
   --success-muted: #dff5e9;
   --warn: #9a6a00;
   --warn-muted: #fff1cc;
@@ -625,11 +625,11 @@ hr {
   border-radius: 999px;
   border: 1px solid var(--border-default);
   background: var(--neutral-muted);
-  color: var(--text-secondary);
-  font-size: var(--text-2xs);
+  color: var(--text-primary);
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  text-transform: none;
   white-space: nowrap;
 }
 
@@ -672,7 +672,7 @@ hr {
 .chip-neutral {
   border-color: var(--border-default);
   background: var(--neutral-muted);
-  color: var(--text-tertiary);
+  color: var(--text-primary);
 }
 
 .status {
@@ -4245,7 +4245,7 @@ td .entity-identity-label {
 }
 
 td .entity-identity .btn {
-  opacity: 0.75;
+  opacity: 1;
 }
 
 td .entity-identity .btn:hover,

@@ -1564,9 +1564,9 @@ fn build_contract_authorization(
                     None => view! { <p class="small form-error">"The adapter did not return the requirement this proposal was derived from. Approval stays blocked until the proposal contents can be shown."</p> }.into_any(),
                     Some(requirement) => view! {
                         <div class="stack">
-                            <div class="metadata-list">
+                            <dl class="metadata-list">
                                 <div><dt>"Title"</dt><dd>{requirement.title.clone()}</dd></div>
-                            </div>
+                            </dl>
                             <div>
                                 <div class="label">"Requirement text"</div>
                                 <pre class="requirement-text">{requirement.text.clone()}</pre>
