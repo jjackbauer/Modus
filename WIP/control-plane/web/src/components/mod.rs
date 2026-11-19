@@ -1,3 +1,4 @@
+pub mod modal;
 pub mod planning;
 pub mod shell;
 pub mod ui;

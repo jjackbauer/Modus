@@ -152,9 +152,61 @@ pub fn tone_for_role(role: &str) -> &'static str {
     }
 }
 
+/// A digest an operator is about to bind a decision to: always shown in full, wrap-safe, and
+/// copyable in one action. Truncating this value is a safety defect, not a density choice.
 #[component]
-pub fn MiniBar(label: String, value: f64, max: f64, display: String) -> impl IntoView {
-    let percent = if max <= 0.0 {
+pub fn DigestCopy(label: String, value: Option<String>) -> impl IntoView {
+    let usable = value.filter(|value| !value.is_empty());
+    let display = usable
+        .clone()
+        .unwrap_or_else(|| "Not recorded".to_string());
+    let copy_label = format!("Copy {label} to clipboard");
+    let copied = RwSignal::new(false);
+
+    view! {
+        <div class="digest-copy">
+            <div class="label">{label}</div>
+            <div class="digest-copy-row">
+                <code class="mono digest-copy-value">{display}</code>
+                {usable.map(|value| {
+                    view! {
+                        <button
+                            class="btn btn-quiet btn-sm"
+                            type="button"
+                            aria-label=copy_label.clone()
+                            on:click=move |_| {
+                                let value = value.clone();
+                                #[cfg(target_arch = "wasm32")]
+                                {
+                                    if let Some(window) = web_sys::window() {
+                                        let promise =
+                                            window.navigator().clipboard().write_text(&value);
+                                        leptos::task::spawn_local(async move {
+                                            let _ =
+                                                wasm_bindgen_futures::JsFuture::from(promise).await;
+                                            copied.set(true);
+                                        });
+                                    }
+                                }
+                                #[cfg(not(target_arch = "wasm32"))]
+                                {
+                                    let _ = (&value, copied);
+                                }
+                            }
+                        >
+                            <span aria-live="polite">
+                                {move || if copied.get() { "Copied" } else { "Copy" }}
+                            </span>
+                        </button>
+                    }
+                })}
+            </div>
+        </div>
+    }
+}
+
+#[component]
+pub fn MiniBar(label: String, value: f64, max: f64, display: String) -> impl IntoView {    let percent = if max <= 0.0 {
         0.0
     } else {
         (value / max * 100.0).clamp(0.0, 100.0)

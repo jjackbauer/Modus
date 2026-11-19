@@ -32,6 +32,7 @@ web-sys = { version = "0.3", optional = true, features = [
     "Window", "Document", "Element", "HtmlElement", "Storage", "Location",
     "EventSource", "MessageEvent", "Event", "Navigator", "Clipboard",
     "HtmlInputElement", "HtmlTextAreaElement", "HtmlSelectElement", "EventTarget",
+    "KeyboardEvent", "NodeList", "Node", "DomRect",
 ] }
 js-sys = { version = "0.3", optional = true }
 gloo-net = { version = "0.6", features = ["http", "json"] }

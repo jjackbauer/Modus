@@ -1,7 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
 
 use control_plane_domain::{
-    AgentSummary, Attention, EventStreamEnvelope, Overview, TokenSummary, WorkItemSummary,
+    AgentSummary, ApprovalItem, Attention, EventStreamEnvelope, Overview, TokenSummary,
+    WorkItemDetail, WorkItemSummary,
 };
 use control_plane_factory_client::{ClientError, FactoryClient};
 
@@ -64,26 +65,6 @@ pub async fn build(client: &FactoryClient) -> Overview {
         *work_counts.entry(item.state.clone()).or_insert(0) += 1;
     }
 
-    let mut attention = Vec::new();
-    if let Ok(inbox) = &approvals {
-        for item in &inbox.items {
-            attention.push(Attention {
-                id: item.id.clone(),
-                severity: "warning".to_string(),
-                title: format!("Approval required: {}", item.title),
-                what_happened: item.summary.clone(),
-                why_it_matters: "The factory will not advance this work item until the governed authorization is recorded."
-                    .to_string(),
-                safe_action: "Inspect the exact digest and binding conditions, then approve or reject through the approvals inbox."
-                    .to_string(),
-                consequence: item.effect_of_approval.join("; "),
-                work_item_id: (!item.work_item_id.is_empty()).then(|| item.work_item_id.clone()),
-                action: Some(item.approve_action.clone()),
-                endpoint: Some(item.endpoint.clone()),
-            });
-        }
-    }
-
     // Only fetch details for items that can carry operator attention. This bounds the work of the
     // landing page while still explaining why each item is stuck.
     let flagged: Vec<&WorkItemSummary> = work_items
@@ -113,23 +94,13 @@ pub async fn build(client: &FactoryClient) -> Overview {
         }
     }
 
-    for detail in &details {
-        for item in &detail.attention {
-            if !attention.iter().any(|existing| existing.id == item.id) {
-                attention.push(item.clone());
-            }
-        }
-    }
-
-    let severity_rank = |severity: &str| match severity {
-        "critical" => 0,
-        "warning" => 1,
-        "info" => 2,
-        _ => 3,
-    };
-    attention.sort_by_key(|item| severity_rank(&item.severity));
-    let seen: BTreeSet<String> = attention.iter().map(|item| item.id.clone()).collect();
-    attention.retain(|item| seen.contains(&item.id));
+    let attention = canonical_attention(
+        approvals
+            .as_ref()
+            .map(|inbox| inbox.items.as_slice())
+            .unwrap_or(&[]),
+        &details,
+    );
 
     let token_measured = agents
         .as_ref()
@@ -206,6 +177,103 @@ pub async fn build(client: &FactoryClient) -> Overview {
     }
 }
 
+/// Stable identity of one operator action. Two projections that describe the same pending
+/// authorization must collapse into one inbox item, so the key is the governed
+/// (work item, action) pair rather than a projection-specific id.
+fn attention_key(work_item_id: Option<&str>, action: Option<&str>, id: &str) -> String {
+    match (work_item_id, action) {
+        (Some(work_item_id), Some(action)) if !work_item_id.is_empty() && !action.is_empty() => {
+            format!("{work_item_id}|{action}")
+        }
+        _ => format!("id|{id}"),
+    }
+}
+
+fn severity_rank(severity: &str) -> u8 {
+    match severity {
+        "critical" => 0,
+        "warning" => 1,
+        "info" => 2,
+        _ => 3,
+    }
+}
+
+fn merge_attention_items(items: impl Iterator<Item = Attention>) -> Vec<Attention> {
+    let mut merged: BTreeMap<String, Attention> = BTreeMap::new();
+    for item in items {
+        let key = attention_key(item.work_item_id.as_deref(), item.action.as_deref(), &item.id);
+        match merged.get_mut(&key) {
+            None => {
+                merged.insert(key, item);
+            }
+            Some(existing) => {
+                // Keep the fuller explanation from the work-detail projection and the governed
+                // endpoint from the approvals inbox: one row with both facts.
+                let id = existing.id.clone();
+                let endpoint = existing.endpoint.clone().or_else(|| item.endpoint.clone());
+                let action = existing.action.clone().or_else(|| item.action.clone());
+                let work_item_id = existing
+                    .work_item_id
+                    .clone()
+                    .or_else(|| item.work_item_id.clone());
+                let severity = if severity_rank(&item.severity) < severity_rank(&existing.severity) {
+                    item.severity.clone()
+                } else {
+                    existing.severity.clone()
+                };
+                *existing = Attention {
+                    id,
+                    severity,
+                    title: item.title,
+                    what_happened: item.what_happened,
+                    why_it_matters: item.why_it_matters,
+                    safe_action: item.safe_action,
+                    consequence: item.consequence,
+                    work_item_id,
+                    action,
+                    endpoint,
+                };
+            }
+        }
+    }
+
+    let mut attention: Vec<Attention> = merged.into_values().collect();
+    attention.sort_by(|left, right| {
+        severity_rank(&left.severity)
+            .cmp(&severity_rank(&right.severity))
+            .then_with(|| left.work_item_id.cmp(&right.work_item_id))
+            .then_with(|| left.title.cmp(&right.title))
+    });
+    attention
+}
+
+fn approval_attention(item: &ApprovalItem) -> Attention {
+    Attention {
+        id: item.id.clone(),
+        severity: "warning".to_string(),
+        title: format!("Approval required: {}", item.title),
+        what_happened: item.summary.clone(),
+        why_it_matters: "The factory will not advance this work item until the governed authorization is recorded."
+            .to_string(),
+        safe_action: "Inspect the exact digest and binding conditions, then approve or reject through the approvals inbox."
+            .to_string(),
+        consequence: item.effect_of_approval.join("; "),
+        work_item_id: (!item.work_item_id.is_empty()).then(|| item.work_item_id.clone()),
+        action: Some(item.approve_action.clone()),
+        endpoint: Some(item.endpoint.clone()),
+    }
+}
+
+/// One actionable row per pending operator decision, across both adapter projections.
+pub fn canonical_attention(approvals: &[ApprovalItem], details: &[WorkItemDetail]) -> Vec<Attention> {
+    merge_attention_items(
+        approvals
+            .iter()
+            .map(approval_attention)
+            .chain(details.iter().flat_map(|detail| detail.attention.iter().cloned())),
+    )
+}
+
 /// Maps a client failure to a status an operator can act on without revealing the adapter token.
 pub fn client_error_status(error: &ClientError) -> (u16, String, String) {
     match error {
@@ -236,5 +304,126 @@ pub fn client_error_status(error: &ClientError) -> (u16, String, String) {
             "factory-not-configured".to_string(),
             format!("The factory adapter is not configured correctly: {message}"),
         ),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn attention(
+        id: &str,
+        work_item_id: &str,
+        action: &str,
+        severity: &str,
+        title: &str,
+    ) -> Attention {
+        Attention {
+            id: id.to_string(),
+            severity: severity.to_string(),
+            title: title.to_string(),
+            what_happened: String::new(),
+            why_it_matters: String::new(),
+            safe_action: String::new(),
+            consequence: String::new(),
+            work_item_id: (!work_item_id.is_empty()).then(|| work_item_id.to_string()),
+            action: (!action.is_empty()).then(|| action.to_string()),
+            endpoint: None,
+        }
+    }
+
+    #[test]
+    fn one_pending_merge_produces_one_attention_item() {
+        let inbox = attention(
+            "merge-WORK-1-abc",
+            "WORK-1",
+            "approve-merge",
+            "warning",
+            "Approval required: Merge",
+        );
+        let detail = attention(
+            "attention-WORK-1-merge",
+            "WORK-1",
+            "approve-merge",
+            "warning",
+            "Merge authorization required",
+        );
+
+        let merged = merge_attention_items([inbox, detail].into_iter());
+
+        assert_eq!(merged.len(), 1);
+        assert_eq!(merged[0].title, "Merge authorization required");
+        assert_eq!(merged[0].action.as_deref(), Some("approve-merge"));
+    }
+
+    #[test]
+    fn distinct_actions_and_unkeyed_items_are_not_collapsed() {
+        let contract = attention(
+            "attention-WORK-1-contract",
+            "WORK-1",
+            "approve-contract",
+            "warning",
+            "Contract approval required",
+        );
+        let merge = attention(
+            "attention-WORK-1-merge",
+            "WORK-1",
+            "approve-merge",
+            "warning",
+            "Merge authorization required",
+        );
+        let template = attention(
+            "template-tpl@1",
+            "",
+            "approve-template",
+            "info",
+            "Template policy approval",
+        );
+
+        let merged = merge_attention_items([contract, merge, template].into_iter());
+
+        assert_eq!(merged.len(), 3);
+    }
+
+    #[test]
+    fn the_governed_endpoint_survives_the_collapse() {
+        let mut inbox = attention(
+            "merge-WORK-1-abc",
+            "WORK-1",
+            "approve-merge",
+            "warning",
+            "Approval required: Merge",
+        );
+        inbox.endpoint =
+            Some("/api/instances/{instance}/work-items/WORK-1/merge-approvals".to_string());
+        let detail = attention(
+            "attention-WORK-1-merge",
+            "WORK-1",
+            "approve-merge",
+            "critical",
+            "Merge authorization required",
+        );
+
+        let merged = merge_attention_items([inbox, detail].into_iter());
+
+        assert_eq!(merged.len(), 1);
+        assert!(merged[0].endpoint.is_some());
+        assert_eq!(merged[0].severity, "critical");
+    }
+
+    #[test]
+    fn duplicate_ids_from_one_projection_are_collapsed_too() {
+        let first = attention(
+            "attention-WORK-2-failed",
+            "WORK-2",
+            "inspect-events",
+            "critical",
+            "Terminal failure",
+        );
+        let second = first.clone();
+
+        let merged = merge_attention_items([first, second].into_iter());
+
+        assert_eq!(merged.len(), 1);
     }
 }

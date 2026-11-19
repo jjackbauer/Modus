@@ -2,14 +2,23 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_params_map;
 
-use control_plane_domain::{short_digest, short_sha};
+use control_plane_domain::{
+    Serving, ServingView, serving_view, short_digest, short_sha, state_label, state_tone,
+};
 
 use crate::api;
+use crate::components::modal::Modal;
 use crate::components::ui::{
     Chip, DigestLine, EmptyBlock, InfoRow, LoadingBlock, Notice, Panel, error_view, time_ago,
     timestamp,
 };
 use crate::context::AppContext;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ServeIntent {
+    Start,
+    Stop,
+}
 
 #[component]
 pub fn ReleaseDetailPage() -> impl IntoView {
@@ -18,6 +27,7 @@ pub fn ReleaseDetailPage() -> impl IntoView {
     let instance = Signal::derive(move || params.get().get("instance").unwrap_or_default());
     let work_item_id = Signal::derive(move || params.get().get("work_item_id").unwrap_or_default());
     let refresh = context.refresh;
+    let confirm = RwSignal::new(None::<ServeIntent>);
 
     let release = LocalResource::new(move || {
         let instance = instance.get();
@@ -44,45 +54,6 @@ pub fn ReleaseDetailPage() -> impl IntoView {
         }
     });
 
-    let start_serve = {
-        let context = context;
-        let instance = instance;
-        let work_item_id = work_item_id;
-        move |_| {
-            let instance = instance.get();
-            let work_item_id = work_item_id.get();
-            let csrf = context.csrf.get();
-            spawn_local(async move {
-                match api::start_serve(&instance, &csrf, &work_item_id, 60).await {
-                    Ok(_) => {
-                        context.notify_success("Supervised serve window accepted. The preview appears when the factory proves a reachable process.");
-                        context.touch();
-                    }
-                    Err(error) => context.notify_error(error),
-                }
-            });
-        }
-    };
-    let stop_serve = {
-        let context = context;
-        let instance = instance;
-        let work_item_id = work_item_id;
-        move |_| {
-            let instance = instance.get();
-            let work_item_id = work_item_id.get();
-            let csrf = context.csrf.get();
-            spawn_local(async move {
-                match api::stop_serve(&instance, &csrf, &work_item_id).await {
-                    Ok(_) => {
-                        context.notify_success("Serve cancellation requested.");
-                        context.touch();
-                    }
-                    Err(error) => context.notify_error(error),
-                }
-            });
-        }
-    };
-
     view! {
         <section class="page">
             <div class="row wrap">
@@ -92,36 +63,72 @@ pub fn ReleaseDetailPage() -> impl IntoView {
             <Suspense fallback=move || view! { <LoadingBlock label="Loading release identity and evidence…"/> }>
                 {move || match release.get().flatten() {
                     None => view! { <LoadingBlock label="Loading release identity and evidence…"/> }.into_any(),
-                    Some(Err(error)) => view! {
+                    Some(Err(error)) => {
                         if error.code == "release-not-available" {
                             view! { <EmptyBlock title="No release yet" detail="This work item has no accepted review or recorded release. Inspect its lifecycle to see what remains."/> }.into_any()
                         } else {
                             view! { {error_view(error)} }.into_any()
                         }
-                    }.into_any(),
+                    }
                     Some(Ok(release)) => {
-                        let title = detail.get().flatten().and_then(|result| result.ok()).map(|detail| detail.summary.title).unwrap_or_else(|| release.work_item_id.clone());
+                        let work = detail.get().flatten().and_then(|result| result.ok());
+                        let title = work
+                            .as_ref()
+                            .map(|detail| detail.summary.title.clone())
+                            .unwrap_or_else(|| release.work_item_id.clone());
+                        let state = work
+                            .as_ref()
+                            .map(|detail| detail.summary.state.clone())
+                            .unwrap_or_default();
                         let verification = release.verification.clone();
                         let serving = release.serving.clone();
+                        let view_model = serving_view(&serving);
                         let active = serving.active;
-                        let verified = verification.as_ref().map(|verification| verification.verified).unwrap_or(false);
-                        let start_serve = start_serve.clone();
-                        let stop_serve = stop_serve.clone();
+                        let verified = verification
+                            .as_ref()
+                            .map(|verification| verification.verified)
+                            .unwrap_or(false);
+                        let serving_for_dialog = serving.clone();
+                        let instance_value = instance.get();
+                        let work_item_value = work_item_id.get();
+
                         view! {
                             <header class="page-header">
                                 <div>
                                     <h1 class="page-title">{title}</h1>
                                     <div class="row wrap">
-                                        <Chip label=format!("STATE {}", release.work_item_id) tone="neutral"/>
-                                        <Chip label=if verified { "VERIFIED RELEASE".to_string() } else { "UNVERIFIED".to_string() } tone=if verified { "success" } else { "danger" }/>
-                                        <Chip label=if active { "SERVING".to_string() } else { "NOT SERVING".to_string() } tone=if active { "success" } else { "neutral" }/>
+                                        <Chip label=state_label(&state).to_string() tone=state_tone(&state)/>
+                                        <Chip
+                                            label=if verified { "Release verified".to_string() } else { "Not verified".to_string() }
+                                            tone=if verified { "success" } else { "waiting" }
+                                        />
+                                        <Chip label=view_model.label.to_string() tone=view_model.tone/>
+                                        <span class="tiny faint mono">{release.work_item_id.clone()}</span>
                                     </div>
                                 </div>
                                 <div class="page-actions">
                                     {if active {
-                                        view! { <button class="btn btn-danger" disabled=move || !context.can_write() on:click=stop_serve.clone()>"Stop serve"</button> }.into_any()
+                                        view! {
+                                            <button
+                                                class="btn btn-danger"
+                                                type="button"
+                                                disabled=move || !context.can_write()
+                                                on:click=move |_| confirm.set(Some(ServeIntent::Stop))
+                                            >
+                                                "Stop serve"
+                                            </button>
+                                        }.into_any()
                                     } else {
-                                        view! { <button class="btn btn-primary" disabled=move || !context.can_write() on:click=start_serve.clone()>"Start 60s serve"</button> }.into_any()
+                                        view! {
+                                            <button
+                                                class="btn btn-primary"
+                                                type="button"
+                                                disabled=move || !context.can_write()
+                                                on:click=move |_| confirm.set(Some(ServeIntent::Start))
+                                            >
+                                                "Start supervised serve"
+                                            </button>
+                                        }.into_any()
                                     }}
                                 </div>
                             </header>
@@ -196,7 +203,11 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                                 <div class="stack">
                                     <Panel title="Supervised process".to_string()>
                                         <div class="stack">
-                                            <div class="row-between"><span class="muted">"Status"</span><Chip label=serving.status.clone().unwrap_or_else(|| "not-served".to_string()).to_uppercase() tone=if active { "success" } else { "neutral" }/></div>
+                                            <div class="row-between">
+                                                <span class="muted">"Status"</span>
+                                                <Chip label=view_model.label.to_string() tone=view_model.tone/>
+                                            </div>
+                                            {view_model.detail.clone().map(|detail| view! { <Notice kind="warning">{detail}</Notice> })}
                                             <InfoRow label="Process".to_string()>{serving.process_id.map(|id| id.to_string()).unwrap_or_else(|| "—".to_string())}</InfoRow>
                                             <InfoRow label="Restarts".to_string()>{serving.restart_count.unwrap_or_default().to_string()}</InfoRow>
                                             <InfoRow label="Last probe".to_string()>{serving.recorded_at_utc.map(|time| time_ago(Some(&time.to_rfc3339()))).unwrap_or_else(|| "None".to_string())}</InfoRow>
@@ -205,7 +216,7 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                                                 <a class="btn btn-primary" href=url target="_blank" rel="noopener noreferrer">"Open verified preview"</a>
                                             }))}
                                             {(!active).then(|| view! {
-                                                <Notice kind="accent">"No preview link is shown because no reachable verified serve window is active."</Notice>
+                                                <Notice kind="accent">"No preview link is shown because no reachable verified serve window is active. A historical journal record is not a running process."</Notice>
                                             })}
                                         </div>
                                     </Panel>
@@ -215,15 +226,174 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                                             <li>"Merge authorization is bound to the exact review digest."</li>
                                             <li>"Post-merge verification is bound to the merged revision, base and contract."</li>
                                             <li>"Independent acceptance is evaluator-owned and is never inferred here."</li>
-                                            <li>"Restart, stop and rollback remain subject to factory ownership and compensation policy."</li>
+                                            <li>"Start and stop are governed mutations on the factory-owned process; both go through the same confirmation."</li>
                                         </ul>
                                     </Panel>
                                 </div>
                             </div>
+
+                            {move || confirm.get().map(|intent| view! {
+                                <ServeConfirm
+                                    intent=intent
+                                    serving=serving_for_dialog.clone()
+                                    instance=instance_value.clone()
+                                    work_item_id=work_item_value.clone()
+                                    on_close=Callback::new(move |_| confirm.set(None))
+                                />
+                            })}
                         }.into_any()
                     }
                 }}
             </Suspense>
         </section>
+    }
+}
+
+/// The same governed confirmation the work detail uses: the operator sees what the factory will do
+/// and the process it owns before the mutation is sent. Nothing is optimistic.
+#[component]
+fn ServeConfirm(
+    intent: ServeIntent,
+    serving: Serving,
+    instance: String,
+    work_item_id: String,
+    on_close: Callback<()>,
+) -> impl IntoView {
+    let context = AppContext::provide();
+    let busy = RwSignal::new(false);
+    let error = RwSignal::new(None::<String>);
+    let duration = RwSignal::new(60i32);
+
+    let close = Callback::new(move |_| {
+        if busy.get() {
+            return;
+        }
+        on_close.run(());
+    });
+
+    let submit = Callback::new(move |_| {
+        if busy.get() {
+            return;
+        }
+        let instance = instance.clone();
+        let work_item_id = work_item_id.clone();
+        let csrf = context.csrf.get();
+        let seconds = duration.get();
+        busy.set(true);
+        error.set(None);
+        spawn_local(async move {
+            let result = match intent {
+                ServeIntent::Start => {
+                    api::start_serve(&instance, &csrf, &work_item_id, seconds).await
+                }
+                ServeIntent::Stop => api::stop_serve(&instance, &csrf, &work_item_id).await,
+            };
+            busy.set(false);
+            match result {
+                Ok(_) => {
+                    context.notify_success(match intent {
+                        ServeIntent::Start => {
+                            "Supervised serve window accepted. The preview appears only after the factory proves a reachable process."
+                        }
+                        ServeIntent::Stop => "Serve cancellation requested.",
+                    });
+                    on_close.run(());
+                    context.touch();
+                }
+                Err(failure) => error.set(Some(format!("{} ({})", failure.message, failure.code))),
+            }
+        });
+    });
+
+    let title = match intent {
+        ServeIntent::Start => "Start supervised serve",
+        ServeIntent::Stop => "Stop supervised serve",
+    };
+    let description = match intent {
+        ServeIntent::Start => {
+            "The factory materialises the exact released revision and supervises the process for a bounded window."
+        }
+        ServeIntent::Stop => "The factory stops the process it owns. The release evidence stays recorded.",
+    };
+    let confirm_label = match intent {
+        ServeIntent::Start => "Start supervised serve",
+        ServeIntent::Stop => "Stop the serve window",
+    };
+    let can_submit = Signal::derive(move || match intent {
+        ServeIntent::Start => (10..=300).contains(&duration.get()),
+        ServeIntent::Stop => true,
+    });
+    let process = serving.process_id.unwrap_or_default();
+    let url = serving.url.clone();
+    let active = serving.active;
+    let view_model: ServingView = serving_view(&serving);
+
+    let footer = view! {
+        <button class="btn" type="button" disabled=move || busy.get() on:click=move |_| close.run(())>
+            "Cancel"
+        </button>
+        <button
+            class="btn btn-primary"
+            type="button"
+            disabled=move || busy.get() || !can_submit.get()
+            on:click=move |_| submit.run(())
+        >
+            {move || if busy.get() { "Submitting…".to_string() } else { confirm_label.to_string() }}
+        </button>
+    }.into_any();
+
+    view! {
+        <Modal
+            title=title.to_string()
+            description=Some(description.to_string())
+            on_close=close
+            dismissible=true
+            footer=footer
+        >
+            <div class="stack decision">
+                {move || error.get().map(|message| view! {
+                    <Notice kind="danger">
+                        <strong>"The factory refused or could not complete this command. "</strong>
+                        <span>{message}</span>
+                    </Notice>
+                })}
+                {match intent {
+                    ServeIntent::Start => view! {
+                        <div class="stack">
+                            <p class="small muted">
+                                "The factory proves process identity, runs the frozen contract against the running process and publishes the URL only after it passes."
+                            </p>
+                            <label class="field">"Serve window (seconds, 10-300)"
+                                <input
+                                    class="input"
+                                    type="number"
+                                    min="10"
+                                    max="300"
+                                    prop:value=move || duration.get().to_string()
+                                    on:input=move |event| duration.set(event_target_value(&event).parse().unwrap_or(60))
+                                />
+                            </label>
+                            <ul class="decision-list">
+                                <li>"The window ends automatically; the factory owns the process lifecycle."</li>
+                                <li>"A serve window never implies independent acceptance."</li>
+                            </ul>
+                        </div>
+                    }.into_any(),
+                    ServeIntent::Stop => view! {
+                        <div class="stack">
+                            <Notice kind="warning">
+                                <strong>"The published preview stops responding immediately. "</strong>
+                                <span>"Release verification and serving history remain recorded."</span>
+                            </Notice>
+                            <dl class="metadata-list">
+                                <div><dt>"Current status"</dt><dd>{view_model.label}</dd></div>
+                                <div><dt>"Tracked process"</dt><dd class="mono">{if active && process > 0 { process.to_string() } else { "no process tracked by this adapter".to_string() }}</dd></div>
+                                {url.map(|url| view! { <div><dt>"Published URL"</dt><dd class="mono wrap">{url}</dd></div> })}
+                            </dl>
+                        </div>
+                    }.into_any(),
+                }}
+            </div>
+        </Modal>
     }
 }

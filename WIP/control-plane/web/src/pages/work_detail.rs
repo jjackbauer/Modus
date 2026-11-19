@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
-use leptos_router::hooks::use_params_map;
+use leptos_router::hooks::{use_location, use_params_map};
 
 use control_plane_domain::{
     AgentSession, Attempt, Attention, Contract, Diff, EventStreamEnvelope, FactoryEvent, Lineage,
@@ -10,8 +10,9 @@ use control_plane_domain::{
 };
 
 use crate::api;
+use crate::components::modal::Modal;
 use crate::components::ui::{
-    Chip, DigestLine, EmptyBlock, InfoRow, LoadingBlock, MetricCard, Notice, Panel, PanelActions,
+    Chip, DigestCopy, DigestLine, EmptyBlock, InfoRow, LoadingBlock, MetricCard, Notice, Panel, PanelActions,
     error_view, time_ago, timestamp,
 };
 use crate::context::AppContext;
@@ -26,12 +27,41 @@ enum Tab {
     Events,
 }
 
+fn tab_index(tab: Tab) -> usize {
+    match tab {
+        Tab::Lifecycle => 0,
+        Tab::Agent => 1,
+        Tab::Evidence => 2,
+        Tab::Source => 3,
+        Tab::Lineage => 4,
+        Tab::Events => 5,
+    }
+}
+
+const TAB_COUNT: usize = 6;
+
+fn tab_at(index: usize) -> Tab {
+    match index % TAB_COUNT {
+        0 => Tab::Lifecycle,
+        1 => Tab::Agent,
+        2 => Tab::Evidence,
+        3 => Tab::Source,
+        4 => Tab::Lineage,
+        _ => Tab::Events,
+    }
+}
+
+/// One panel is reused for every tab, so `aria-controls` always resolves and the roving tabindex
+/// follows the selected tab.
+const TAB_PANEL_ID: &str = "work-tab-panel";
+
 #[derive(Debug, Clone)]
 enum Dialog {
     ApproveContract { digest: String },
     RejectContract { digest: String },
     ApproveMerge { digest: String },
     Serve { duration: i32 },
+    StopServe,
 }
 
 #[component]
@@ -43,6 +73,9 @@ pub fn WorkDetailPage() -> impl IntoView {
     let tab = RwSignal::new(Tab::Lifecycle);
     let dialog = RwSignal::new(None::<Dialog>);
     let refresh = context.refresh;
+    let location = use_location();
+    let requested =
+        Signal::derive(move || location.query.get().get("authorize").unwrap_or_default());
 
     let detail = LocalResource::new(move || {
         let instance = instance.get();
@@ -68,11 +101,11 @@ pub fn WorkDetailPage() -> impl IntoView {
                         instance=instance
                         tab=tab
                         dialog=dialog
+                        requested=requested
                     />
                 }.into_any(),
             }}
         </Suspense>
-        <ActionDialog dialog=dialog instance=instance work_item_id=work_item_id/>
     }
 }
 
@@ -82,6 +115,7 @@ fn WorkDetailBody(
     instance: Signal<String>,
     tab: RwSignal<Tab>,
     dialog: RwSignal<Option<Dialog>>,
+    requested: Signal<String>,
 ) -> impl IntoView {
     let context = AppContext::provide();
     let summary = data.summary.clone();
@@ -100,10 +134,10 @@ fn WorkDetailBody(
     let release = data.release.clone();
     let serving = data.serving.clone();
     let reviews = data.reviews.clone();
+    let requirement = data.requirement.clone();
     let sessions_active = data.dispatch_active && state == "InImplementation";
 
     let instance_value = instance.get();
-    let detail_url = format!("/i/{instance_value}/work/{work_item_id}");
 
     let dispatch = {
         let instance = instance;
@@ -125,24 +159,11 @@ fn WorkDetailBody(
         }
     };
 
-    let stop_serve = Callback::new({
-        let instance = instance;
-        let context = context;
-        let work_item_id = work_item_id.clone();
-        move |_| {
-            let instance = instance.get();
-            let csrf = context.csrf.get();
-            let work_item_id = work_item_id.clone();
-            spawn_local(async move {
-                match api::stop_serve(&instance, &csrf, &work_item_id).await {
-                    Ok(_) => {
-                        context.notify_success("Serve cancellation requested.");
-                        context.touch();
-                    }
-                    Err(error) => context.notify_error(error),
-                }
-            });
-        }
+    // Stopping a serve window is a governed mutation, so it goes through the same confirmation
+    // dialog as starting one instead of firing on the first click.
+    let open_stop_serve = Callback::new({
+        let dialog = dialog;
+        move |_| dialog.set(Some(Dialog::StopServe))
     });
 
     let open_contract = Callback::new({
@@ -167,6 +188,7 @@ fn WorkDetailBody(
         let dialog = dialog;
         let digest = reviews
             .iter()
+            .rev()
             .find(|review| review.outcome == "accepted")
             .and_then(|review| review.review_digest.clone())
             .unwrap_or_default();
@@ -185,6 +207,31 @@ fn WorkDetailBody(
         .find(|review| review.outcome == "accepted")
         .cloned();
     let can_merge = state == "ReadyForDelivery" && latest_accepted_review.is_some();
+    let merge_digest = summary
+        .review_digest
+        .clone()
+        .or_else(|| {
+            latest_accepted_review
+                .as_ref()
+                .and_then(|review| review.review_digest.clone())
+        })
+        .unwrap_or_default();
+
+    // `?authorize=merge` deep-links the Quality inbox to this one authorization surface.
+    let deep_link_opened = RwSignal::new(false);
+    let merge_digest_for_effect = merge_digest.clone();
+    Effect::new(move |_| {
+        if deep_link_opened.get() || !can_merge || requested.get() != "merge" {
+            return;
+        }
+        if merge_digest_for_effect.is_empty() {
+            return;
+        }
+        dialog.set(Some(Dialog::ApproveMerge {
+            digest: merge_digest_for_effect.clone(),
+        }));
+        deep_link_opened.set(true);
+    });
     let can_serve = matches!(state.as_str(), "Released" | "OperationallyValidated");
     let can_dispatch = matches!(
         state.as_str(),
@@ -207,6 +254,12 @@ fn WorkDetailBody(
     let indicator_tone_value = indicator_tone(indicator.as_deref());
     let show_indicator = indicator.is_some() && indicator_text != state_label(&state);
 
+    // The tab body renders inside a `move` closure that takes ownership of everything it
+    // references. Dedicated clones keep the decision dialog bound to the same authoritative
+    // objects without weakening either view.
+    let tab_work_item_id = work_item_id.clone();
+    let tab_contract = contract.clone();
+    let tab_serving = serving.clone();
     view! {
         <section class="page">
             <div class="work-header">
@@ -237,7 +290,7 @@ fn WorkDetailBody(
                     })}
                     {can_serve.then(|| {
                         if serving.active {
-                            view! { <button class="btn btn-danger" disabled=move || !context.can_write() on:click=move |event| stop_serve.run(event)>"Stop serve"</button> }.into_any()
+                            view! { <button class="btn btn-danger" disabled=move || !context.can_write() on:click=move |event| open_stop_serve.run(event)>"Stop serve"</button> }.into_any()
                         } else {
                             view! { <button class="btn" disabled=move || !context.can_write() on:click=move |event| open_serve.run(event)>"Start serve"</button> }.into_any()
                         }
@@ -268,7 +321,7 @@ fn WorkDetailBody(
                 </Notice>
             })}
 
-            <div class="tabs" role="tablist">
+            <div class="tabs" role="tablist" aria-label="Work item views">
                 {tab_button(tab, Tab::Lifecycle, "Lifecycle")}
                 {tab_button(tab, Tab::Agent, "Agent activity")}
                 {tab_button(tab, Tab::Evidence, "Evidence")}
@@ -277,19 +330,27 @@ fn WorkDetailBody(
                 {tab_button(tab, Tab::Events, "Events")}
             </div>
 
+            <div
+                class="tab-panel"
+                role="tabpanel"
+                id=TAB_PANEL_ID
+                aria-labelledby=move || format!("work-tab-{}", tab_index(tab.get()))
+                tabindex="0"
+            >
+
             {move || match tab.get() {
                 Tab::Lifecycle => view! {
                     <LifecycleTab
                         data=data.clone()
-                        contract=contract.clone()
+                        contract=tab_contract.clone()
                         on_approve=open_contract.clone()
                         on_reject=open_reject.clone()
                         on_merge=open_merge.clone()
                         can_merge=can_merge
                         can_serve=can_serve
-                        serving=serving.clone()
+                        serving=tab_serving.clone()
                         on_serve=open_serve.clone()
-                        on_stop_serve=stop_serve.clone()
+                        on_stop_serve=open_stop_serve.clone()
                         next_actions=next_actions.clone()
                         is_terminal=is_terminal
                     />
@@ -297,7 +358,7 @@ fn WorkDetailBody(
                 Tab::Agent => view! {
                     <AgentTab
                         instance=instance.get()
-                        work_item_id=work_item_id.clone()
+                        work_item_id=tab_work_item_id.clone()
                         dispatch_active=sessions_active
                         attempts=data.attempts.clone()
                     />
@@ -306,17 +367,31 @@ fn WorkDetailBody(
                     <EvidenceTab data=data.clone()/>
                 }.into_any(),
                 Tab::Source => view! {
-                    <SourceTab instance=instance.get() work_item_id=work_item_id.clone()/>
+                    <SourceTab instance=instance.get() work_item_id=tab_work_item_id.clone()/>
                 }.into_any(),
                 Tab::Lineage => view! {
-                    <LineageTab instance=instance.get() work_item_id=work_item_id.clone()/>
+                    <LineageTab instance=instance.get() work_item_id=tab_work_item_id.clone()/>
                 }.into_any(),
                 Tab::Events => view! {
                     <EventsTab events=data.events.clone() instance=instance.get()/>
                 }.into_any(),
             }}
 
-            <div class="tiny faint mono">{detail_url}</div>
+            </div>
+
+            <ActionDialog
+                dialog=dialog
+                instance=instance
+                work_item_id=Signal::derive({
+                    let id = work_item_id.clone();
+                    move || id.clone()
+                })
+                work_title=summary.title.clone()
+                contract=contract.clone()
+                requirement=requirement.clone()
+                accepted_review=latest_accepted_review.clone()
+                serving=serving.clone()
+            />
         </section>
     }
 }
@@ -760,7 +835,7 @@ fn AgentTab(
                     {move || match sessions.get().flatten() {
                         None => view! { <LoadingBlock label="Loading durable session traces…"/> }.into_any(),
                         Some(Err(error)) => view! { {error_view(error)} }.into_any(),
-                        Some(Ok(sessions)) => view! {
+                        Some(Ok(sessions)) => {
                             if sessions.is_empty() {
                                 view! { <EmptyBlock title="No model session trace" detail="This run has no durable model session trace. The implementation attempt journal above is still authoritative for execution outcome; deterministic runs do not fabricate model tokens or tool activity."/> }.into_any()
                             } else {
@@ -770,7 +845,7 @@ fn AgentTab(
                                     </div>
                                 }.into_any()
                             }
-                        }.into_any(),
+                        }
                     }}
                 </Suspense>
             </Panel>
@@ -936,13 +1011,13 @@ fn SourceTab(instance: String, work_item_id: String) -> impl IntoView {
         <Suspense fallback=move || view! { <LoadingBlock label="Loading reviewed source evidence…"/> }>
             {move || match diff.get().flatten() {
                 None => view! { <LoadingBlock label="Loading reviewed source evidence…"/> }.into_any(),
-                Some(Err(error)) => view! {
+                Some(Err(error)) => {
                     if error.code == "diff-not-available" {
                         view! { <EmptyBlock title="No reviewed revision yet" detail="The diff becomes available after an implementation attempt produces a committed head revision."/> }.into_any()
                     } else {
                         view! { {error_view(error)} }.into_any()
                     }
-                }.into_any(),
+                }
                 Some(Ok(diff)) => view! {
                     <DiffView
                         instance=instance.clone()
@@ -1133,8 +1208,46 @@ fn EventsListFiltered(
 }
 
 fn tab_button(tab: RwSignal<Tab>, value: Tab, label: &'static str) -> impl IntoView {
+    let index = tab_index(value);
+    let tab_id = format!("work-tab-{index}");
     view! {
-        <button class:active=move || tab.get() == value role="tab" on:click=move |_| tab.set(value)>{label}</button>
+        <button
+            class:active=move || tab.get() == value
+            role="tab"
+            id=tab_id
+            aria-selected=move || (tab.get() == value).to_string()
+            aria-controls=TAB_PANEL_ID
+            tabindex=move || if tab.get() == value { "0" } else { "-1" }
+            on:click=move |_| tab.set(value)
+            on:keydown=move |event| {
+                let next = match event.key().as_str() {
+                    "ArrowRight" => Some((index + 1) % TAB_COUNT),
+                    "ArrowLeft" => Some((index + TAB_COUNT - 1) % TAB_COUNT),
+                    "Home" => Some(0),
+                    "End" => Some(TAB_COUNT - 1),
+                    _ => None,
+                };
+                let Some(next) = next else {
+                    return;
+                };
+                event.prevent_default();
+                tab.set(tab_at(next));
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let target = format!("work-tab-{next}");
+                    if let Some(document) = web_sys::window().and_then(|window| window.document()) {
+                        if let Some(element) = document.get_element_by_id(&target) {
+                            use wasm_bindgen::JsCast;
+                            if let Ok(element) = element.dyn_into::<web_sys::HtmlElement>() {
+                                let _ = element.focus();
+                            }
+                        }
+                    }
+                }
+            }
+        >
+            {label}
+        </button>
     }
 }
 
@@ -1170,28 +1283,49 @@ fn ActionDialog(
     dialog: RwSignal<Option<Dialog>>,
     instance: Signal<String>,
     work_item_id: Signal<String>,
+    work_title: String,
+    contract: Contract,
+    requirement: Option<control_plane_domain::Requirement>,
+    accepted_review: Option<ReviewHistory>,
+    serving: control_plane_domain::Serving,
 ) -> impl IntoView {
     let context = AppContext::provide();
     let busy = RwSignal::new(false);
-    let confirmation = RwSignal::new(String::new());
+    let error = RwSignal::new(None::<String>);
+    let confirmed = RwSignal::new(false);
+    let typed = RwSignal::new(String::new());
     let reason = RwSignal::new(String::new());
     let duration = RwSignal::new(60i32);
-    let confirmed = RwSignal::new(false);
 
-    let close = move |_| dialog.set(None);
+    // Closing is refused while a governed mutation is in flight: the dialog must not disappear
+    // before the factory answers, and a user's typed evidence must not be discarded silently.
+    let close = Callback::new(move |_| {
+        if busy.get() {
+            return;
+        }
+        dialog.set(None);
+        error.set(None);
+        confirmed.set(false);
+        typed.set(String::new());
+        reason.set(String::new());
+    });
 
-    let submit = move |_| {
+    let submit = Callback::new(move |_| {
+        if busy.get() {
+            return;
+        }
         let Some(current) = dialog.get() else {
             return;
         };
         let instance = instance.get();
         let work_item_id = work_item_id.get();
         let csrf = context.csrf.get();
-        busy.set(true);
         let confirmed_value = confirmed.get();
-        let confirmation_value = confirmation.get();
+        let typed_value = typed.get();
         let reason_value = reason.get();
         let duration_value = duration.get();
+        busy.set(true);
+        error.set(None);
         spawn_local(async move {
             let result = match current {
                 Dialog::ApproveContract { digest } => {
@@ -1227,7 +1361,7 @@ fn ActionDialog(
                         &work_item_id,
                         &control_plane_domain::MergeApprovalRequest {
                             review_digest: digest,
-                            confirmation: confirmation_value,
+                            confirmation: typed_value,
                         },
                         &api::new_idempotency_key(),
                     )
@@ -1236,91 +1370,428 @@ fn ActionDialog(
                 Dialog::Serve { .. } => {
                     api::start_serve(&instance, &csrf, &work_item_id, duration_value).await
                 }
+                Dialog::StopServe => api::stop_serve(&instance, &csrf, &work_item_id).await,
             };
 
             busy.set(false);
             match result {
                 Ok(_) => {
-                    context.notify_success("Command accepted by the factory adapter.");
+                    context.notify_success(
+                        "Command accepted by the factory adapter. The factory owns the next lifecycle step.",
+                    );
                     dialog.set(None);
+                    error.set(None);
+                    confirmed.set(false);
+                    typed.set(String::new());
+                    reason.set(String::new());
                     context.touch();
                 }
-                Err(error) => context.notify_error(error),
+                Err(failure) => {
+                    // Keep the dialog, its evidence and the user's typed digest; explain the failure.
+                    error.set(Some(format!(
+                        "{} ({})",
+                        failure.message,
+                        if failure.code.is_empty() {
+                            "no code".to_string()
+                        } else {
+                            failure.code.clone()
+                        }
+                    )));
+                }
             }
         });
+    });
+
+    let failure_notice = move || {
+        error.get().map(|message| {
+            view! {
+                <Notice kind="danger">
+                    <strong>"The factory refused or could not complete this decision. "</strong>
+                    <span>{message}</span>
+                </Notice>
+            }
+        })
     };
 
     view! {
         {move || dialog.get().map(|current| {
-            let (title, body, can_submit) = match &current {
-                Dialog::ApproveContract { digest } => (
-                    "Approve exact contract proposal".to_string(),
-                    view! {
-                        <div class="stack">
-                            <p class="small muted">"Approval freezes the exact proposal digest below. The factory will refuse any later approval for a different digest."</p>
-                            <DigestLine label="Proposal digest".to_string() value=Some(digest.clone())/>
-                            <label class="check"><input type="checkbox" prop:checked=move || confirmed.get() on:change=move |event| confirmed.set(event_target_checked(&event))/><span>"I inspected the proposal, scenarios and unresolved questions."</span></label>
-                        </div>
-                    }.into_any(),
-                    confirmed.get(),
-                ),
-                Dialog::RejectContract { digest } => (
-                    "Reject contract proposal".to_string(),
-                    view! {
-                        <div class="stack">
-                            <DigestLine label="Proposal digest".to_string() value=Some(digest.clone())/>
-                            <label class="field">"Reason"
-                                <textarea class="textarea small-area" prop:value=move || reason.get() on:input=move |event| reason.set(event_target_value(&event))></textarea>
+            let (title, description, body, can_submit, confirm_label) = match &current {
+                Dialog::ApproveContract { digest } => {
+                    let executable = contract.executable;
+                    let proposal_digest = digest.clone();
+                    let requirement_digest = contract.requirement_digest.clone();
+                    let scenarios = contract.scenarios.clone();
+                    let unresolved = contract.unresolved_questions.clone();
+                    let requirement = requirement.clone();
+                    let title = format!("Approve contract proposal for {work_title}");
+                    build_contract_authorization(
+                        &title,
+                        executable,
+                        requirement,
+                        scenarios,
+                        unresolved,
+                        proposal_digest,
+                        requirement_digest,
+                        confirmed,
+                        can_submit_contract(executable, confirmed),
+                    )
+                }
+                Dialog::ApproveMerge { digest } => {
+                    let expected = digest.clone();
+                    let review = accepted_review.clone();
+                    let title = format!("Authorize merge for {work_title}");
+                    build_merge_authorization(
+                        &title,
+                        review,
+                        expected.clone(),
+                        typed,
+                        Signal::derive({
+                            let expected = expected.clone();
+                            move || typed.get().trim() == expected.trim()
+                        }),
+                    )
+                }
+                Dialog::RejectContract { digest } => {
+                    let proposal_digest = digest.clone();
+                    let title = format!("Reject contract proposal for {work_title}");
+                    let body = view! {
+                        <div class="stack decision">
+                            {failure_notice.clone()}
+                            <Notice kind="warning">
+                                <strong>"A rejection is durable. "</strong>
+                                <span>"The factory records it against this exact proposal digest and refuses a later approval of the same digest. To proceed, submit a revised requirement."</span>
+                            </Notice>
+                            <DigestCopy label="Proposal digest being rejected".to_string() value=Some(proposal_digest.clone())/>
+                            <label class="field">"Reason (optional)"
+                                <textarea
+                                    class="textarea"
+                                    rows="3"
+                                    prop:value=move || reason.get()
+                                    on:input=move |event| reason.set(event_target_value(&event))
+                                ></textarea>
                             </label>
-                            <p class="tiny faint">"A rejection is durable and prevents approval of this same proposal digest."</p>
                         </div>
-                    }.into_any(),
-                    true,
-                ),
-                Dialog::ApproveMerge { digest } => (
-                    "Authorize merge".to_string(),
-                    view! {
-                        <div class="stack">
-                            <p class="small muted">"This authorizes the factory to merge the reviewed head and run post-merge verification. It does not certify independent acceptance."</p>
-                            <DigestLine label="Review digest".to_string() value=Some(digest.clone())/>
-                            <label class="field">"Type the exact review digest to confirm"
-                                <input class="input mono" prop:value=move || confirmation.get() on:input=move |event| confirmation.set(event_target_value(&event))/>
+                    }.into_any();
+                    (
+                        title,
+                        Some("This records a durable rejection against the exact digest below.".to_string()),
+                        body,
+                        Signal::derive(|| true),
+                        "Record rejection",
+                    )
+                }
+                Dialog::Serve { .. } => {
+                    let title = format!("Start supervised serve for {work_title}");
+                    let body = view! {
+                        <div class="stack decision">
+                            {failure_notice.clone()}
+                            <p class="small muted">
+                                "The factory materialises the exact released revision, proves process identity, runs the frozen contract and then supervises the process for the bounded window below. A serve window never implies independent acceptance."
+                            </p>
+                            <label class="field">"Serve window (seconds, 10-300)"
+                                <input
+                                    class="input"
+                                    type="number"
+                                    min="10"
+                                    max="300"
+                                    prop:value=move || duration.get().to_string()
+                                    on:input=move |event| duration.set(event_target_value(&event).parse().unwrap_or(60))
+                                />
                             </label>
-                            <div class="tiny faint">"The adapter independently refuses a mismatch."</div>
+                            <ul class="decision-list">
+                                <li>"The served URL is published only after the frozen contract passes against the running process."</li>
+                                <li>"The window ends automatically; the factory owns the process lifecycle."</li>
+                            </ul>
                         </div>
-                    }.into_any(),
-                    confirmation.get().trim() == digest.trim(),
-                ),
-                Dialog::Serve { duration: initial } => (
-                    "Start supervised serve window".to_string(),
-                    view! {
-                        <div class="stack">
-                            <label class="field">"Duration seconds"
-                                <input class="input" type="number" min="10" max="300" prop:value=move || duration.get().to_string() on:input=move |event| duration.set(event_target_value(&event).parse().unwrap_or(60))/>
-                            </label>
-                            <p class="tiny faint">"The factory materialises the exact released revision, proves process identity, runs the frozen contract and then supervises the process for the bounded window."</p>
+                    }.into_any();
+                    (
+                        title,
+                        Some("Starting a serve window is a governed mutation.".to_string()),
+                        body,
+                        Signal::derive(move || (10..=300).contains(&duration.get())),
+                        "Start supervised serve",
+                    )
+                }
+                Dialog::StopServe => {
+                    let active = serving.active;
+                    let process_id = serving.process_id.unwrap_or_default();
+                    let url = serving.url.clone();
+                    let title = format!("Stop supervised serve for {work_title}");
+                    let body = view! {
+                        <div class="stack decision">
+                            {failure_notice.clone()}
+                            <Notice kind="warning">
+                                <strong>"This asks the factory to stop the process it owns. "</strong>
+                                <span>"The published preview stops responding immediately. The release and its verification evidence remain recorded."</span>
+                            </Notice>
+                            <dl class="metadata-list">
+                                <div><dt>"Tracked process"</dt><dd class="mono">{if active && process_id > 0 { process_id.to_string() } else { "no process tracked by this adapter".to_string() }}</dd></div>
+                                {url.map(|url| view! { <div><dt>"Published URL"</dt><dd class="mono wrap">{url}</dd></div> })}
+                            </dl>
                         </div>
-                    }.into_any(),
-                    duration.get() >= 10,
-                ),
+                    }.into_any();
+                    (
+                        title,
+                        Some("Stopping is a governed mutation on the factory-owned process.".to_string()),
+                        body,
+                        Signal::derive(|| true),
+                        "Stop the serve window",
+                    )
+                }
             };
+
+            let footer = view! {
+                <button class="btn" type="button" disabled=move || busy.get() on:click=move |_| close.run(())>
+                    "Cancel"
+                </button>
+                <button
+                    class="btn btn-primary"
+                    type="button"
+                    disabled=move || busy.get() || !can_submit.get()
+                    on:click=move |_| submit.run(())
+                >
+                    {move || if busy.get() { "Submitting…".to_string() } else { confirm_label.to_string() }}
+                </button>
+            }.into_any();
+
             view! {
-                <div class="dialog-backdrop" role="dialog" aria-modal="true" aria-label=title.clone()>
-                    <div class="dialog">
-                        <div class="dialog-head">
-                            <h2>{title.clone()}</h2>
-                            <button class="btn btn-quiet" on:click=close.clone()>"Close"</button>
-                        </div>
-                        <div class="dialog-body">{body}</div>
-                        <div class="dialog-foot">
-                            <button class="btn" on:click=close.clone()>"Cancel"</button>
-                            <button class="btn btn-primary" disabled=move || busy.get() || !can_submit on:click=submit.clone()>
-                                {move || if busy.get() { "Submitting…" } else { "Confirm" }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <Modal
+                    title=title
+                    description=description
+                    on_close=close
+                    dismissible=true
+                    wide=true
+                    footer=footer
+                >
+                    {body}
+                </Modal>
             }
         })}
     }
+}
+
+fn can_submit_contract(executable: bool, confirmed: RwSignal<bool>) -> Signal<bool> {
+    Signal::derive(move || executable && confirmed.get())
+}
+
+fn build_contract_authorization(
+    title: &str,
+    executable: bool,
+    requirement: Option<control_plane_domain::Requirement>,
+    scenarios: Vec<control_plane_domain::ContractScenario>,
+    unresolved: Vec<String>,
+    proposal_digest: String,
+    requirement_digest: Option<String>,
+    confirmed: RwSignal<bool>,
+    can_submit: Signal<bool>,
+) -> (String, Option<String>, AnyView, Signal<bool>, &'static str) {
+    let scenario_count = scenarios.len();
+    let body = view! {
+        <div class="stack decision">
+            {(!executable).then(|| view! {
+                <Notice kind="danger">
+                    <strong>"This proposal cannot be approved. "</strong>
+                    <span>"It has no executable HTTP scenarios, so requirement coverage and post-merge verification cannot run. The approval action is disabled; submit a revised requirement with an explicit acceptance contract."</span>
+                </Notice>
+            })}
+            <section class="decision-section">
+                <h3>"What you are freezing"</h3>
+                {match requirement {
+                    None => view! { <p class="small form-error">"The adapter did not return the requirement this proposal was derived from. Approval stays blocked until the proposal contents can be shown."</p> }.into_any(),
+                    Some(requirement) => view! {
+                        <div class="stack">
+                            <div class="metadata-list">
+                                <div><dt>"Supported class"</dt><dd class="mono">{requirement.supported_class.clone()}</dd></div>
+                                <div><dt>"Title"</dt><dd>{requirement.title.clone()}</dd></div>
+                            </div>
+                            <div>
+                                <div class="label">"Requirement text"</div>
+                                <pre class="requirement-text">{requirement.text.clone()}</pre>
+                            </div>
+                            {(!requirement.expectations.is_empty()).then(|| view! {
+                                <div>
+                                    <div class="label">"Acceptance expectations"</div>
+                                    <ul class="decision-list">
+                                        {requirement.expectations.clone().into_iter().map(|expectation| view! { <li>{expectation}</li> }).collect_view()}
+                                    </ul>
+                                </div>
+                            })}
+                        </div>
+                    }.into_any(),
+                }}
+            </section>
+            <section class="decision-section">
+                <h3>{format!("Executable scenarios ({scenario_count})")}</h3>
+                {if scenarios.is_empty() {
+                    view! { <p class="small form-error">"No executable scenario is bound to this proposal."</p> }.into_any()
+                } else {
+                    view! {
+                        <div class="table-wrap">
+                            <table class="data compact">
+                                <thead><tr><th>"ID"</th><th>"Kind"</th><th>"Path"</th><th>"Expectation"</th></tr></thead>
+                                <tbody>
+                                    {scenarios.into_iter().map(|scenario| view! {
+                                        <tr>
+                                            <td class="mono tiny">{scenario.id}</td>
+                                            <td class="tiny">{scenario.kind}</td>
+                                            <td class="mono tiny wrap">{scenario.path}</td>
+                                            <td class="tiny">{scenario.expectation}</td>
+                                        </tr>
+                                    }).collect_view()}
+                                </tbody>
+                            </table>
+                        </div>
+                    }.into_any()
+                }}
+            </section>
+            <section class="decision-section">
+                <h3>"Unresolved questions"</h3>
+                {if unresolved.is_empty() {
+                    view! { <p class="small muted">"The adapter recorded no unresolved question for this proposal."</p> }.into_any()
+                } else {
+                    view! {
+                        <ul class="decision-list warning-list">
+                            {unresolved.into_iter().map(|question| view! { <li>{question}</li> }).collect_view()}
+                        </ul>
+                    }.into_any()
+                }}
+            </section>
+            <section class="decision-section">
+                <h3>"Effect and resulting state"</h3>
+                <ul class="decision-list">
+                    <li>"The contract becomes immutable evidence bound to the digest below; the factory refuses any later approval for a different digest."</li>
+                    <li>"The work item becomes eligible for dispatch. Approval alone does not advance the factory state, start implementation, merge or serve."</li>
+                    <li>"Independent acceptance is evaluator-owned and is never implied by this approval."</li>
+                </ul>
+            </section>
+            <DigestCopy label="Exact proposal digest being approved".to_string() value=Some(proposal_digest.clone())/>
+            <DigestCopy label="Requirement digest".to_string() value=requirement_digest/>
+            <label class="check">
+                <input
+                    type="checkbox"
+                    prop:checked=move || confirmed.get()
+                    on:change=move |event| confirmed.set(event_target_checked(&event))
+                />
+                <span>"I reviewed the requirement text, executable scenarios, unresolved questions and effect shown above, and I am freezing this exact digest."</span>
+            </label>
+        </div>
+    }.into_any();
+
+    (
+        title.to_string(),
+        Some("Every fact below belongs to the proposal this digest identifies.".to_string()),
+        body,
+        can_submit,
+        "Freeze this exact contract",
+    )
+}
+
+fn build_merge_authorization(
+    title: &str,
+    review: Option<ReviewHistory>,
+    expected_digest: String,
+    typed: RwSignal<String>,
+    can_submit: Signal<bool>,
+) -> (String, Option<String>, AnyView, Signal<bool>, &'static str) {
+    let body = view! {
+        <div class="stack decision">
+            {match review {
+                None => view! {
+                    <Notice kind="danger">
+                        <strong>"No accepted review evidence is loaded. "</strong>
+                        <span>"The merge cannot be authorized from this screen until the accepted review, its four checks and its exact digest are available."</span>
+                    </Notice>
+                }.into_any(),
+                Some(review) => {
+                    let mandatory_checks = review.executions.len();
+                    view! {
+                        <div class="stack">
+                            <section class="decision-section">
+                                <h3>"Reviewed revision and verdict"</h3>
+                                <div class="metadata-list">
+                                    <div><dt>"Verdict"</dt><dd><Chip label=review.outcome.to_uppercase() tone=if review.outcome == "accepted" { "success" } else { "danger" }/></dd></div>
+                                    <div><dt>"Checks executed"</dt><dd>{mandatory_checks}</dd></div>
+                                    <div><dt>"Recorded"</dt><dd title=timestamp(review.recorded_at_utc.as_deref())>{time_ago(review.recorded_at_utc.as_deref())}</dd></div>
+                                </div>
+                                <DigestCopy label="Reviewed head revision".to_string() value=review.head_sha.clone()/>
+                                <DigestCopy label="Reviewed base revision".to_string() value=review.base_sha.clone()/>
+                                <DigestCopy label="Contract digest at review".to_string() value=review.contract_digest.clone()/>
+                                <DigestCopy label="Evidence digest bound to the verdict".to_string() value=review.evidence_digest.clone()/>
+                            </section>
+                            <section class="decision-section">
+                                <h3>"Mandatory checks"</h3>
+                                {if review.executions.is_empty() {
+                                    view! { <p class="small form-error">"The accepted verdict carries no check executions. This is not sufficient evidence to authorize a merge."</p> }.into_any()
+                                } else {
+                                    view! {
+                                        <div class="table-wrap">
+                                            <table class="data compact">
+                                                <thead><tr><th>"Check"</th><th>"Outcome"</th><th>"Executed by"</th><th>"Detail"</th></tr></thead>
+                                                <tbody>
+                                                    {review.executions.clone().into_iter().map(|execution| view! {
+                                                        <tr>
+                                                            <td>{review_kind_label(&execution.kind).to_string()}</td>
+                                                            <td><Chip label=execution.outcome.to_uppercase() tone=if execution.passed { "success" } else { "danger" }/></td>
+                                                            <td class="tiny mono">{format!("{} · {}", execution.executed_by, execution.executed_version)}</td>
+                                                            <td class="tiny">{execution.detail.clone()}</td>
+                                                        </tr>
+                                                    }).collect_view()}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }.into_any()
+                                }}
+                            </section>
+                            {review.checks_summary.clone().map(|summary| view! {
+                                <section class="decision-section">
+                                    <h3>"Recorded check summary"</h3>
+                                    <p class="small mono wrap">{summary}</p>
+                                </section>
+                            })}
+                            {review.reason.clone().map(|reason| view! {
+                                <section class="decision-section">
+                                    <h3>"Reviewer note"</h3>
+                                    <p class="small muted">{reason}</p>
+                                </section>
+                            })}
+                        </div>
+                    }.into_any()
+                }
+            }}
+            <section class="decision-section">
+                <h3>"Binding conditions"</h3>
+                <ul class="decision-list">
+                    <li>"The adapter revalidates this exact review digest and its evidence before it merges; any change is refused with a typed conflict."</li>
+                    <li>"The merge binds the reviewed head, its base and the contract digest shown above."</li>
+                    <li>"Post-merge verification runs on the merged revision afterwards; a merge alone never proves the tree works."</li>
+                </ul>
+            </section>
+            <section class="decision-section">
+                <h3>"Consequence of authorization"</h3>
+                <ul class="decision-list">
+                    <li>"The factory merges the reviewed head into the target branch and records the merge."</li>
+                    <li>"It does not certify independent acceptance, and it does not start the application or serve a preview."</li>
+                </ul>
+            </section>
+            <DigestCopy label="Exact review digest being authorized".to_string() value=Some(expected_digest.clone())/>
+            <label class="field">"Type the exact review digest above to confirm"
+                <input
+                    class="input mono wrap"
+                    autocomplete="off"
+                    spellcheck="false"
+                    prop:value=move || typed.get()
+                    on:input=move |event| typed.set(event_target_value(&event))
+                />
+            </label>
+            <p class="tiny faint">"The confirmation is compared with the digest above on submit, and the adapter refuses a mismatch independently."</p>
+        </div>
+    }.into_any();
+
+    (
+        title.to_string(),
+        Some("This authorizes a merge; it does not certify independent acceptance.".to_string()),
+        body,
+        can_submit,
+        "Authorize merge",
+    )
 }

@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
 
-use control_plane_domain::{short_digest, state_label, state_tone};
+use control_plane_domain::{serving_status_label, serving_status_tone, short_digest, state_label, state_tone};
 
 use crate::api;
 use crate::components::ui::{Chip, EmptyBlock, LoadingBlock, Panel, error_view};
@@ -69,7 +69,7 @@ pub fn ReleasesPage() -> impl IntoView {
                                                     let work_id = release.work_item_id.clone();
                                                     let verified = release.verified;
                                                     let serving = release.serving_status.clone();
-                                                    let serving_tone = if serving == "serving" { "success" } else if serving == "failed" { "danger" } else { "neutral" };
+                                                    let serving_tone = serving_status_tone(Some(serving.as_str()));
                                                     let merged = short_digest(release.merged_sha.as_deref());
                                                     let merged_at = release.merged_at_utc.as_deref().map(|value| crate::components::ui::timestamp(Some(value))).unwrap_or_else(|| "—".to_string());
                                                     view! {
@@ -80,7 +80,7 @@ pub fn ReleasesPage() -> impl IntoView {
                                                             <td><Chip label=if verified { "VERIFIED".to_string() } else { "NOT VERIFIED".to_string() } tone=if verified { "success" } else { "waiting" }/></td>
                                                             <td>
                                                                 <div class="row">
-                                                                    <Chip label=serving.to_uppercase() tone=serving_tone/>
+                                                                    <Chip label=serving_status_label(Some(serving.as_str())).to_string() tone=serving_tone/>
                                                                     {release.serving_url.map(|url| view! { <a class="tiny" href=url target="_blank" rel="noopener noreferrer">"open"</a> })}
                                                                 </div>
                                                             </td>

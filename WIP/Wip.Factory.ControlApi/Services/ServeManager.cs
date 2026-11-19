@@ -174,13 +174,51 @@ public sealed class ServeManager
         }
 
         var active = job is { State: "starting" or "running" };
+
+        // The journal is historical evidence, not process liveness. If this adapter holds no
+        // tracked run, a live-looking journal row may predate an adapter restart. Reporting it as
+        // "serving" would claim a running application nobody can verify, so reconcile it here,
+        // once, for every reader (release list, release detail, work detail, overview).
+        string? status;
+        string? detail;
+        if (job is not null)
+        {
+            status = job.State switch
+            {
+                "running" => "serving",
+                "starting" => "starting",
+                "stopping" => "stopping",
+                "completed" or "stopped" => "stopped",
+                "failed" => "failed",
+                _ => job.State,
+            };
+            detail = job.Error ?? latest?.Detail;
+        }
+        else
+        {
+            var journalStatus = latest?.Status;
+            if (journalStatus is "serving" or "running" or "starting")
+            {
+                status = "unknown";
+                detail = "The last serve journal record reports '" + journalStatus + "' at "
+                    + (latest is null ? "an unrecorded time" : latest.RecordedAtUtc.ToString("O"))
+                    + ", but this adapter tracks no supervised process (it has restarted since that record). "
+                    + "Treat the release as not serving until a new serve window proves a running process.";
+            }
+            else
+            {
+                status = journalStatus;
+                detail = latest?.Detail;
+            }
+        }
+
         return new ServingDto(
             latest?.WorkItemId ?? workItemId,
             latest?.MergedSha ?? mergedSha,
-            latest?.Status ?? job?.State,
+            status,
             latest?.ProcessId ?? job?.ProcessId ?? 0,
             latest?.RestartCount ?? job?.Restarts ?? 0,
-            latest?.Detail,
+            detail,
             latest?.RecordedAtUtc,
             active,
             active ? job?.Url ?? latest?.ServedUrl : null,

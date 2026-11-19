@@ -2437,3 +2437,166 @@ pre.diff {
     max-width: none;
   }
 }
+/* ---------------------------------------------------------------- decisions, digests, dialogs */
+
+/* One decision dialog is wider than a form dialog: it shows the object being authorized. */
+.dialog-wide {
+  width: min(980px, 100%);
+}
+
+.dialog-heading {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dialog-description {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* A digest bound to a decision is always shown in full, wraps instead of truncating, and is
+   selectable as one value. */
+.digest-copy {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.digest-copy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.digest-copy-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-raised);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  user-select: all;
+}
+
+.decision-section {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.decision-section h3 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 620;
+  letter-spacing: 0;
+}
+
+.decision-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 3px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.warning-list li {
+  color: var(--warn);
+}
+
+.metadata-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.metadata-list > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 24ch) 1fr;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.metadata-list dt {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.metadata-list dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.requirement-text {
+  margin: 0;
+  padding: var(--space-3);
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tab-panel {
+  display: block;
+  min-width: 0;
+  padding-top: var(--space-2);
+}
+
+.tab-panel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+.row.wrap {
+  flex-wrap: wrap;
+}
+
+.mono.wrap {
+  overflow-wrap: anywhere;
+}
+
+.table-wrap table.compact th,
+.table-wrap table.compact td {
+  padding: 4px 8px;
+  vertical-align: top;
+}
+
+/* A disabled control must look unavailable, not merely faint: the accent fill is reserved for a
+   command an operator can actually issue. */
+.btn:disabled,
+.btn:disabled:hover {
+  opacity: 1;
+  cursor: not-allowed;
+  background: var(--bg-panel);
+  color: var(--text-tertiary);
+  border-color: var(--border-subtle);
+}
+
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  background: var(--bg-panel-raised);
+  color: var(--text-tertiary);
+  border-color: var(--border-default);
+}
+
+.btn-danger:disabled,
+.btn-danger:disabled:hover {
+  color: var(--text-tertiary);
+  border-color: var(--border-subtle);
+  background: var(--bg-panel);
+}

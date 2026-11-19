@@ -6,7 +6,7 @@ use control_plane_domain::{ApprovalItem, WorkReview, short_digest};
 
 use crate::api;
 use crate::components::ui::{
-    Chip, DigestLine, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago,
+    Chip, DigestCopy, DigestLine, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago,
 };
 use crate::context::AppContext;
 
@@ -112,6 +112,10 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
     let digest = item.digest.clone();
     let work_item_id = item.work_item_id.clone();
     let kind = item.kind.clone();
+    let authorize_href = format!(
+        "/i/{instance}/work/{work_item_id}{}",
+        if kind == "merge" { "?authorize=merge" } else { "" }
+    );
     let template_identity = item
         .source_revision
         .clone()
@@ -220,7 +224,7 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
         let instance = instance.clone();
         let digest = digest.clone();
         let work_item_id = work_item_id.clone();
-        move |_| {
+        move |_: leptos::ev::MouseEvent| {
             let instance = instance.clone();
             let csrf = context.csrf.get();
             let digest = digest.clone();
@@ -263,7 +267,7 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
                 <span class="tiny faint">{time_ago(item.created_at_utc.as_deref())}</span>
             </div>
             <p class="small muted">{item.summary}</p>
-            <DigestLine label="Exact object digest".to_string() value=Some(item.digest.clone())/>
+            <DigestCopy label="Exact object digest".to_string() value=Some(item.digest.clone())/>
             {item.source_revision.clone().map(|revision| view! { <DigestLine label="Source revision".to_string() value=Some(revision)/> })}
             <div class="approval-details">
                 <div>
@@ -279,39 +283,27 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
                 <Notice kind="danger"><strong>"Stale authorization. "</strong><span>{item.stale_reason.clone().unwrap_or_else(|| "The object changed since this approval was prepared.".to_string())}</span></Notice>
             })}
             {(!stale).then(move || view! {
-                {move || match kind.as_str() {
-                    "merge" => view! {
-                        <div class="stack">
-                            <label class="field">"Type the exact review digest to acknowledge what you are authorizing"
-                                <input class="input mono" prop:value=move || typed.get() on:input=move |event| typed.set(event_target_value(&event))/>
-                            </label>
-                            <div class="row">
-                                <button class="btn btn-primary" disabled=move || busy.get() on:click=approve.clone()>"Authorize merge"</button>
+                <div class="stack">
+                    {if kind == "template" {
+                        view! {
+                            <div class="stack">
+                                <label class="check"><input type="checkbox" prop:checked=move || confirmed.get() on:change=move |event| confirmed.set(event_target_checked(&event))/><span>"I inspected the immutable template manifest digest and its parameter schema."</span></label>
+                                <div class="row">
+                                    <button class="btn btn-primary" disabled=move || busy.get() on:click=approve.clone()>"Approve template policy"</button>
+                                </div>
                             </div>
-                        </div>
-                    }.into_any(),
-                    "contract" => view! {
-                        <div class="stack">
-                            <label class="check"><input type="checkbox" prop:checked=move || confirmed.get() on:change=move |event| confirmed.set(event_target_checked(&event))/><span>"I inspected the proposal, scenarios and unresolved questions."</span></label>
-                            <label class="field">"Optional rejection reason"
-                                <input class="input" prop:value=move || reason.get() on:input=move |event| reason.set(event_target_value(&event))/>
-                            </label>
-                            <div class="row">
-                                <button class="btn btn-primary" disabled=move || busy.get() on:click=approve.clone()>"Approve exact contract digest"</button>
-                                <button class="btn btn-danger" disabled=move || busy.get() on:click=reject.clone()>"Reject proposal"</button>
+                        }.into_any()
+                    } else {
+                        view! {
+                            <div class="stack">
+                                <p class="small muted">
+                                    "Contract and merge authorization happen on the work item, where the exact object, its evidence, the binding conditions and the consequence are shown together. This inbox never asks you to confirm a digest it has not displayed in full."
+                                </p>
+                                <a class="btn" href=authorize_href.clone()>"Review and authorize on the work item"</a>
                             </div>
-                        </div>
-                    }.into_any(),
-                    "template" => view! {
-                        <div class="stack">
-                            <label class="check"><input type="checkbox" prop:checked=move || confirmed.get() on:change=move |event| confirmed.set(event_target_checked(&event))/><span>"I inspected the immutable template manifest digest and its parameter schema."</span></label>
-                            <div class="row">
-                                <button class="btn btn-primary" disabled=move || busy.get() on:click=approve.clone()>"Approve template policy"</button>
-                            </div>
-                        </div>
-                    }.into_any(),
-                    _ => view! { <div class="tiny faint">"No approval control is available for this kind."</div> }.into_any(),
-                }}
+                        }.into_any()
+                    }}
+                </div>
             })}
         </article>
     }
