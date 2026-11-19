@@ -11,7 +11,7 @@ use control_plane_domain::{
 
 use crate::api;
 use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, MetricCard, Notice, Panel, PanelActions, error_view, time_ago,
+    Chip, EmptyBlock, LoadingBlock, Notice, Panel, PanelActions, error_view, time_ago,
 };
 use crate::context::AppContext;
 
@@ -63,9 +63,13 @@ pub fn WorkQueuePage() -> impl IntoView {
     let search = RwSignal::new(String::new());
     let sort = RwSignal::new("updated-desc".to_string());
     let show_intake = RwSignal::new(false);
+    let filters_open = RwSignal::new(false);
     let saved = RwSignal::new(Vec::<SavedView>::new());
     let saved_name = RwSignal::new(String::new());
     let refresh = context.refresh;
+    let filters_active = Signal::derive(move || {
+        !search.get().trim().is_empty() || !state.get().is_empty() || !indicator.get().is_empty()
+    });
 
     #[cfg(target_arch = "wasm32")]
     {
@@ -180,52 +184,99 @@ pub fn WorkQueuePage() -> impl IntoView {
             })}
 
             <div class="queue-toolbar">
-                <div class="segmented" role="group" aria-label="Work queue view">
-                    <button class:active=move || view.get() == QueueView::Table on:click=move |_| view.set(QueueView::Table)>"Table"</button>
-                    <button class:active=move || view.get() == QueueView::Kanban on:click=move |_| view.set(QueueView::Kanban)>"Kanban"</button>
-                    <button class:active=move || view.get() == QueueView::Prioritized on:click=move |_| view.set(QueueView::Prioritized)>"Priority"</button>
+                <div class="toolbar-row">
+                    <div class="field search">
+                        <label class="field-label" for="queue-search">"Search work items"</label>
+                        <input
+                            class="input queue-search"
+                            id="queue-search"
+                            type="search"
+                            placeholder="ID, title or digest"
+                            prop:value=move || search.get()
+                            on:input=move |event| search.set(event_target_value(&event))
+                        />
+                    </div>
+                    <button
+                        class="btn queue-filter-toggle"
+                        type="button"
+                        aria-expanded=move || filters_open.get().to_string()
+                        aria-controls="queue-filters"
+                        on:click=move |_| filters_open.update(|value| *value = !*value)
+                    >
+                        {move || if filters_open.get() { "Hide filters" } else { "Filters" }}
+                    </button>
+                    <div
+                        class="toolbar-fields"
+                        id="queue-filters"
+                        class:open=move || filters_open.get()
+                    >
+                        <div class="field">
+                            <label class="field-label" for="queue-state">"Factory state"</label>
+                            <select class="select" id="queue-state" on:change=move |event| state.set(event_target_value(&event))>
+                                <option value="">"All factory states"</option>
+                                {known_states().into_iter().map(|state| view! { <option value=state>{state_label(state)}</option> }).collect_view()}
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="queue-indicator">"Attention"</label>
+                            <select class="select" id="queue-indicator" on:change=move |event| indicator.set(event_target_value(&event))>
+                                <option value="">"All indicators"</option>
+                                <option value="waiting-contract-approval">"Waiting for contract approval"</option>
+                                <option value="waiting-merge-approval">"Waiting for merge approval"</option>
+                                <option value="active-implementation">"Active implementation"</option>
+                                <option value="running-verification">"Running verification"</option>
+                                <option value="needs-rework">"Needs rework"</option>
+                                <option value="blocked">"Blocked"</option>
+                                <option value="terminal-failure">"Terminal failure"</option>
+                                <option value="released">"Released"</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="queue-sort">"Sort"</label>
+                            <select class="select" id="queue-sort" on:change=move |event| sort.set(event_target_value(&event))>
+                                <option value="updated-desc">"Recently updated"</option>
+                                <option value="created-desc">"Newest first"</option>
+                                <option value="created-asc">"Oldest first"</option>
+                                <option value="state">"Factory state"</option>
+                                <option value="title">"Title"</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button
+                            class="btn btn-quiet"
+                            type="button"
+                            disabled=move || !filters_active.get()
+                            title=move || if filters_active.get() { "Clear search, state and attention filters" } else { "No filters are applied" }
+                            on:click=move |_| {
+                                search.set(String::new());
+                                state.set(String::new());
+                                indicator.set(String::new());
+                            }
+                        >"Clear filters"</button>
+                    </div>
                 </div>
-                <input
-                    class="input queue-search"
-                    type="search"
-                    placeholder="Search id, title or digest"
-                    prop:value=move || search.get()
-                    on:input=move |event| search.set(event_target_value(&event))
-                />
-                <select class="select" aria-label="Filter by factory state" on:change=move |event| state.set(event_target_value(&event))>
-                    <option value="">"All factory states"</option>
-                    {known_states().into_iter().map(|state| view! { <option value=state>{state_label(state)}</option> }).collect_view()}
-                </select>
-                <select class="select" aria-label="Filter by derived indicator" on:change=move |event| indicator.set(event_target_value(&event))>
-                    <option value="">"All indicators"</option>
-                    <option value="waiting-contract-approval">"Waiting for contract approval"</option>
-                    <option value="waiting-merge-approval">"Waiting for merge approval"</option>
-                    <option value="active-implementation">"Active implementation"</option>
-                    <option value="running-verification">"Running verification"</option>
-                    <option value="needs-rework">"Needs rework"</option>
-                    <option value="blocked">"Blocked"</option>
-                    <option value="terminal-failure">"Terminal failure"</option>
-                    <option value="released">"Released"</option>
-                </select>
-                <select class="select" aria-label="Sort work items" on:change=move |event| sort.set(event_target_value(&event))>
-                    <option value="updated-desc">"Recently updated"</option>
-                    <option value="created-desc">"Newest first"</option>
-                    <option value="created-asc">"Oldest first"</option>
-                    <option value="state">"Factory state"</option>
-                    <option value="title">"Title"</option>
-                </select>
-                <div class="saved-views">
-                    <select class="select" aria-label="Saved views" on:change=move |event| {
-                        let name = event_target_value(&event);
-                        if let Some(view) = saved.get().into_iter().find(|view| view.name == name) {
-                            apply_view(view);
-                        }
-                    }>
-                        <option value="">"Saved views"</option>
-                        {move || saved.get().into_iter().map(|view| { let name = view.name.clone(); { let value_name = name.clone(); view! { <option value=value_name>{name}</option> } } }).collect_view()}
-                    </select>
-                    <input class="input" placeholder="Name this view" prop:value=move || saved_name.get() on:input=move |event| saved_name.set(event_target_value(&event))/>
-                    <button class="btn btn-sm" on:click=move |_| reload_saved()>"Save"</button>
+                <div class="toolbar-secondary">
+                    <div class="segmented" role="group" aria-label="Work queue view">
+                        <button class:active=move || view.get() == QueueView::Table aria-pressed=move || (view.get() == QueueView::Table).to_string() on:click=move |_| view.set(QueueView::Table)>"Table"</button>
+                        <button class:active=move || view.get() == QueueView::Kanban aria-pressed=move || (view.get() == QueueView::Kanban).to_string() on:click=move |_| view.set(QueueView::Kanban)>"Board"</button>
+                        <button class:active=move || view.get() == QueueView::Prioritized aria-pressed=move || (view.get() == QueueView::Prioritized).to_string() on:click=move |_| view.set(QueueView::Prioritized)>"Priority"</button>
+                    </div>
+                    <div class="saved-views">
+                        <label class="field-label" for="queue-saved-view">"Saved view"</label>
+                        <select class="select" id="queue-saved-view" aria-label="Saved views" on:change=move |event| {
+                            let name = event_target_value(&event);
+                            if let Some(view) = saved.get().into_iter().find(|view| view.name == name) {
+                                apply_view(view);
+                            }
+                        }>
+                            <option value="">"No saved view"</option>
+                            {move || saved.get().into_iter().map(|view| { let name = view.name.clone(); { let value_name = name.clone(); view! { <option value=value_name>{name}</option> } } }).collect_view()}
+                        </select>
+                        <input class="input" aria-label="Name this view" placeholder="Name this view" prop:value=move || saved_name.get() on:input=move |event| saved_name.set(event_target_value(&event))/>
+                        <button class="btn btn-sm" on:click=move |_| reload_saved()>"Save view"</button>
+                        <span class="tiny faint">"Stored in this browser, never as factory state."</span>
+                    </div>
                 </div>
             </div>
 
@@ -268,6 +319,25 @@ fn known_states() -> [&'static str; 16] {
     ]
 }
 
+/// Advisory next step for a row. It is derived from the factory's authoritative flags and state;
+/// it never replaces the governed action on the work item itself.
+fn next_step_label(item: &WorkItemSummary) -> &'static str {
+    if item.awaiting_contract_approval {
+        return "Freeze or reject the contract";
+    }
+    if item.awaiting_merge_approval {
+        return "Authorize merge";
+    }
+    match item.state.as_str() {
+        "ReadyForImplementation" => "Start dispatch",
+        "NeedsRework" => "Dispatch a rework attempt",
+        "Released" | "OperationallyValidated" => "Start supervised serve",
+        "InImplementation" | "InReview" | "DeliveryValidation" => "Monitor execution",
+        "Blocked" | "Failed" | "Cancelled" | "Closed" => "Inspect evidence",
+        _ => "Inspect evidence",
+    }
+}
+
 #[component]
 fn QueueSummary(page: Page<WorkItemSummary>) -> impl IntoView {
     let awaiting = page
@@ -286,12 +356,18 @@ fn QueueSummary(page: Page<WorkItemSummary>) -> impl IntoView {
         .filter(|item| matches!(item.state.as_str(), "InImplementation" | "InReview"))
         .count();
     view! {
-        <div class="metric-grid">
-            <MetricCard label="Shown".to_string() value=page.items.len().to_string() unit=None basis=None tone="" measured=true/>
-            <MetricCard label="Awaiting authorization".to_string() value=awaiting.to_string() unit=None basis=None tone="waiting" measured=true/>
-            <MetricCard label="Active execution".to_string() value=active.to_string() unit=None basis=None tone="active" measured=true/>
-            <MetricCard label="Terminal failures".to_string() value=failed.to_string() unit=None basis=None tone="danger" measured=true/>
+        <div class="queue-summary" aria-label="Queue summary">
+            <span><strong>{page.items.len()}</strong> " shown"</span>
+            <span><strong>{awaiting}</strong> " awaiting authorization"</span>
+            <span><strong>{active}</strong> " active execution"</span>
+            <span><strong>{failed}</strong> " terminal failures"</span>
         </div>
+        <details class="definitions">
+            <summary>"How these counts are defined"</summary>
+            <p class="small muted">
+                "Shown counts the rows after filters. Awaiting authorization counts rows with a contract or merge approval pending. Active execution counts In implementation and In review. Terminal failures counts the factory state Failed only; a failed verification on an In-review item is an attention indicator, not a terminal failure. Overview uses the adapter's failed_work_items definition, so the two counts can differ; each label names its source."
+            </p>
+        </details>
     }
 }
 
@@ -304,8 +380,9 @@ fn WorkTable(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl Into
         .into_any();
     }
 
+    let items = page.items;
     view! {
-        <div class="table-wrap">
+        <div class="table-wrap queue-table-wrap">
             <table class="data">
                 <thead>
                     <tr>
@@ -319,7 +396,7 @@ fn WorkTable(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl Into
                     </tr>
                 </thead>
                 <tbody>
-                    {page.items.into_iter().map(|item| {
+                    {items.clone().into_iter().map(|item| {
                         let href = format!("/i/{}/work/{}", instance.get(), item.work_item_id);
                         let title = item.title.clone();
                         let work_item_id = item.work_item_id.clone();
@@ -352,6 +429,42 @@ fn WorkTable(page: Page<WorkItemSummary>, instance: Signal<String>) -> impl Into
                     }).collect_view()}
                 </tbody>
             </table>
+        </div>
+        <div class="queue-mobile-list" aria-label="Work items">
+            {items.into_iter().map(|item| {
+                let href = format!("/i/{}/work/{}", instance.get(), item.work_item_id);
+                let state_text = state_label(&item.state).to_string();
+                let indicator_text = item
+                    .derived_indicator
+                    .as_ref()
+                    .map(|value| indicator_label(Some(value)).to_string())
+                    .filter(|text| *text != state_text);
+                let priority = item
+                    .planning
+                    .priority
+                    .clone()
+                    .unwrap_or_else(|| "No priority".to_string());
+                let updated = time_ago(item.updated_at_utc.as_deref());
+                let last_failure = item
+                    .last_failure
+                    .clone()
+                    .filter(|failure| failure != "—");
+                let next_step = next_step_label(&item);
+                view! {
+                    <a class="queue-mobile-card" href=href>
+                        <span class="queue-mobile-title">{item.title.clone()}</span>
+                        <span class="queue-mobile-id mono">{item.work_item_id.clone()}</span>
+                        <span class="queue-mobile-facts">
+                            <span>{state_text}</span>
+                            {indicator_text.map(|text| view! { <span class="queue-mobile-attention">{text}</span> })}
+                            <span>{priority}</span>
+                            <span>{format!("{} events · {}", item.event_count, updated)}</span>
+                        </span>
+                        {last_failure.map(|failure| view! { <span class="queue-mobile-failure mono">{failure}</span> })}
+                        <span class="queue-mobile-next">{next_step}" →"</span>
+                    </a>
+                }
+            }).collect_view()}
         </div>
     }
     .into_any()

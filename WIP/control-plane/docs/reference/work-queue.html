@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Work queue · Wip.Factory Control Plane — design reference</title>
+<meta name="description" content="PR 0 reference design for the Wip.Factory Control Plane work queue, built from the 19 November 2026 captured data. Static mockup; no factory mutation is performed.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%234da3ff'/%3E%3Ctext x='16' y='22' font-family='Segoe UI' font-size='13' font-weight='700' text-anchor='middle' fill='%23060f19'%3EWF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="reference.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
+  <aside class="rail" id="primary-nav" aria-label="Primary navigation">
+    <a class="brand" href="overview.html">
+      <span class="brand-mark" aria-hidden="true">WF</span>
+      <span class="brand-text"><strong>Wip.Factory</strong><small>Control Plane</small></span>
+    </a>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Operations</div>
+        <a class="nav-link" href="overview.html">Overview</a>
+        <a class="nav-link" href="work-queue.html" aria-current="page">Work queue</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Quality &amp; approvals</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Agents</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Artifacts &amp; releases</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Analysis</div>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Production pipeline</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Performance</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Improvement</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Settings &amp; audit</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Documentation</a>
+      </div>
+    </nav>
+    <div class="rail-footer">
+      <div class="connection" role="status"><span class="dot success" aria-hidden="true"></span><span>Live activity · last event 8 min ago</span></div>
+      <div class="instance"><span class="instance-name">local</span><span class="instance-id">factory-06ad075d1d9c</span></div>
+      <div class="account"><span>Administrator</span><span class="hint">admin</span></div>
+      <button class="button quiet small" type="button" title="Reference mockup — no session is changed">Sign out</button>
+    </div>
+  </aside>
+  <div class="backdrop" data-nav-close hidden></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-button" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="overview.html">local</a><span class="sep" aria-hidden="true">/</span><a href="work-queue.html">Work queue</a></nav>
+      <div class="top-actions">
+        <span class="instance-chip">local · factory healthy</span>
+        <button class="button quiet" type="button" data-theme-toggle aria-label="Switch to light theme" aria-pressed="false">Light theme</button>
+      </div>
+    </header>
+    <main class="content" id="main">
+      <div class="page">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Work queue</h1>
+            <p class="page-lede">Describe work, submit it to the factory, and see the authoritative state rather than a local task board.</p>
+          </div>
+          <div class="actions">
+            <button class="button" type="button" title="Reference mockup — data is a static 15:59 UTC capture">Refresh</button>
+            <button class="button primary" type="button" title="Reference mockup — intake is specified in interaction-inventory.md (J3)">New work item</button>
+          </div>
+        </div>
+
+        <form class="queue-toolbar" role="search" aria-label="Filter work items" onsubmit="return false">
+          <div class="toolbar-row">
+            <div class="field search">
+              <label for="queue-search">Search work items</label>
+              <input class="input" id="queue-search" type="search" placeholder="ID, title or digest" autocomplete="off">
+            </div>
+            <button class="button filter-toggle" type="button" data-filter-toggle aria-expanded="false" aria-controls="queue-filters">Filters</button>
+            <div class="toolbar-fields" id="queue-filters">
+              <div class="field">
+                <label for="queue-state">Factory state</label>
+                <select class="select" id="queue-state">
+                  <option>All factory states</option>
+                  <option>Ready for delivery (1)</option>
+                  <option>Operationally validated (2)</option>
+                  <option>In review (1)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="queue-attention">Attention</label>
+                <select class="select" id="queue-attention">
+                  <option>All indicators</option>
+                  <option>Waiting for merge approval (1)</option>
+                  <option>Verification failed (1)</option>
+                  <option>No additional attention (2)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="queue-sort">Sort</label>
+                <select class="select" id="queue-sort">
+                  <option>Recently updated</option>
+                  <option>Newest first</option>
+                  <option>Oldest first</option>
+                  <option>Factory state</option>
+                  <option>Title</option>
+                </select>
+              </div>
+            </div>
+            <div class="toolbar-actions">
+              <button class="button quiet" type="button" disabled title="No filter is applied">Clear filters</button>
+              <button class="button" type="button" title="Reference mockup — saved views are specified in B-02">Save view</button>
+            </div>
+          </div>
+          <div class="toolbar-secondary">
+            <div class="segmented" role="group" aria-label="Queue view" data-view-switch>
+              <button type="button" data-view="table" aria-pressed="true">Table</button>
+              <button type="button" data-view="board" aria-pressed="false">Board</button>
+              <button type="button" data-view="priority" aria-pressed="false">Priority</button>
+            </div>
+            <div class="saved-views">
+              <label for="saved-view">Saved view</label>
+              <select class="select" id="saved-view"><option>No saved view</option></select>
+              <span class="muted">Stored in this browser, never as factory state.</span>
+            </div>
+          </div>
+        </form>
+
+        <div class="queue-summary" aria-label="Queue summary">
+          <span><strong>4</strong> shown</span>
+          <span><strong>1</strong> awaiting authorization</span>
+          <span><strong>1</strong> active execution</span>
+          <span><strong>0</strong> terminal failures</span>
+          <span class="muted">Sort: recently updated, newest first</span>
+        </div>
+        <p class="section-note" id="view-note">Table view shown. Board and Priority reuse this toolbar and the same filtered rows.</p>
+        <details class="disclosure">
+          <summary>How these counts are defined</summary>
+          <div class="disclosure-body">
+            <p class="section-note"><strong>Shown</strong> counts the rows on this page after filters. <strong>Awaiting authorization</strong> counts rows with a contract or merge approval pending. <strong>Active execution</strong> counts In implementation and In review. <strong>Terminal failures</strong> counts the factory state Failed only; a failed verification on an In-review item is an attention indicator, not a terminal failure. Overview's “Blocked or failed” uses the adapter's failed_work_items definition and can differ; each count must name its source (A-05, IA-03).</p>
+          </div>
+        </details>        <div class="table-frame queue-table">
+          <div class="table-hint">This table scrolls horizontally when the viewport is narrower than its minimum width. Use Shift+wheel or the scrollbar; the row link stays reachable.</div>
+          <div class="table-scroll" role="region" aria-label="Work items table, scrolls horizontally" tabindex="0">
+            <table class="data">
+              <caption>4 work items · authoritative factory state and the one next step each row supports</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Work item</th>
+                  <th scope="col">Factory state</th>
+                  <th scope="col">Attention</th>
+                  <th scope="col">Priority</th>
+                  <th scope="col">Updated</th>
+                  <th scope="col">Next step</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="record">
+                      <a class="record-title" href="work-detail.html#merge-authorization">UX review governed approval flow</a>
+                      <span class="id">WORK-18b96b98</span>
+                      <span class="muted">9 events</span>
+                    </div>
+                  </td>
+                  <td><span class="status"><span class="dot" aria-hidden="true"></span>Ready for delivery</span></td>
+                  <td><span class="status warning"><span class="dot warning" aria-hidden="true"></span>Waiting for merge approval</span></td>
+                  <td>Normal</td>
+                  <td class="nowrap"><time datetime="2026-11-19T15:50:09Z" title="2026-11-19 15:50:09 UTC">8 min ago</time></td>
+                  <td><a class="next-step primary" href="work-detail.html#merge-authorization">Authorize merge</a></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="record">
+                      <a class="record-title" href="work-detail.html">Control-plane final verification endpoint</a>
+                      <span class="id">WORK-cea4804b</span>
+                      <span class="muted">15 events</span>
+                    </div>
+                  </td>
+                  <td><span class="status"><span class="dot" aria-hidden="true"></span>Operationally validated</span></td>
+                  <td><span class="muted">None</span></td>
+                  <td>Normal</td>
+                  <td class="nowrap"><time datetime="2026-11-19T14:01:57Z" title="2026-11-19 14:01:57 UTC">1 h ago</time></td>
+                  <td><span class="next-step">Start supervised serve</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="record">
+                      <a class="record-title" href="work-detail.html">Control-plane smoke endpoint with explicit contract</a>
+                      <span class="id">WORK-8f16de10</span>
+                      <span class="muted">15 events</span>
+                    </div>
+                  </td>
+                  <td><span class="status"><span class="dot" aria-hidden="true"></span>Operationally validated</span></td>
+                  <td><span class="muted">None</span></td>
+                  <td>High</td>
+                  <td class="nowrap"><time datetime="2026-11-19T13:28:09Z" title="2026-11-19 13:28:09 UTC">2 h ago</time></td>
+                  <td><span class="next-step">Start supervised serve</span></td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="record">
+                      <a class="record-title" href="work-detail.html">Control-plane smoke endpoint</a>
+                      <span class="id">WORK-d42d6410</span>
+                      <span class="muted">9 events</span>
+                    </div>
+                  </td>
+                  <td><span class="status"><span class="dot" aria-hidden="true"></span>In review</span></td>
+                  <td><span class="status critical"><span class="dot critical" aria-hidden="true"></span>Verification failed</span><div class="id id-faint">contract-not-executable</div></td>
+                  <td>Normal</td>
+                  <td class="nowrap"><time datetime="2026-11-19T13:19:12Z" title="2026-11-19 13:19:12 UTC">2 h ago</time></td>
+                  <td><span class="next-step">Inspect contract evidence</span><div class="muted">No legal factory transition</div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="work-list-mobile" aria-label="Work items">
+          <a class="work-card" href="work-detail.html#merge-authorization">
+            <div class="work-card-head"><span class="work-card-title">UX review governed approval flow</span><span class="status warning"><span class="dot warning" aria-hidden="true"></span>Action</span></div>
+            <span class="id">WORK-18b96b98</span>
+            <div class="work-card-meta"><span>Ready for delivery</span><span>Waiting for merge approval</span><span>Normal</span><span>8 min ago</span></div>
+            <span class="card-cta">Authorize merge →</span>
+          </a>
+          <a class="work-card" href="work-detail.html">
+            <div class="work-card-head"><span class="work-card-title">Control-plane final verification endpoint</span></div>
+            <span class="id">WORK-cea4804b</span>
+            <div class="work-card-meta"><span>Operationally validated</span><span>Normal</span><span>1 h ago</span></div>
+            <span class="card-cta">Start supervised serve →</span>
+          </a>
+          <a class="work-card" href="work-detail.html">
+            <div class="work-card-head"><span class="work-card-title">Control-plane smoke endpoint with explicit contract</span></div>
+            <span class="id">WORK-8f16de10</span>
+            <div class="work-card-meta"><span>Operationally validated</span><span>High priority</span><span>2 h ago</span></div>
+            <span class="card-cta">Start supervised serve →</span>
+          </a>
+          <a class="work-card" href="work-detail.html">
+            <div class="work-card-head"><span class="work-card-title">Control-plane smoke endpoint</span><span class="status critical"><span class="dot critical" aria-hidden="true"></span>Attention</span></div>
+            <span class="id">WORK-d42d6410</span>
+            <div class="work-card-meta"><span>In review</span><span>Verification failed</span><span>Normal</span><span>2 h ago</span></div>
+            <span class="card-cta">Inspect contract evidence →</span>
+          </a>
+        </div>
+
+        <p class="section-note">On mobile the table is replaced by purpose-built cards: full ID, title, state, attention, last change and one safe next step. Nothing is clipped and no column is hidden behind horizontal hunting. Intake preview, empty and no-match states are specified in J2/J3 of <span class="mono">interaction-inventory.md</span>.</p>
+      </div>
+    </main>
+  </div>
+</div><section class="reference-notes" id="reference-notes" aria-labelledby="notes-title">
+  <h2 id="notes-title">Design reference — decisions and traceability</h2>
+  <p class="meta">Static PR 0 mockup, not a deployed screen. Real content from the 19 November 2026 15:59 UTC capture (<span class="mono">ux-review/captures/api/work-items.json</span> and the work queue capture). Event counts, priorities, states and timestamps are the captured values; no work item, metric or next action is invented. The Next step column is a presentation of the adapter's legal transition, not a second source of authority. Measured at 1440×1000 and 390×844 in both themes with headless Chrome; no horizontal document overflow.</p>
+  <table>
+    <thead><tr><th scope="col">Decision in this mockup</th><th scope="col">Requirement</th><th scope="col">Why it is this way</th></tr></thead>
+    <tbody>
+      <tr><td>Two-row toolbar with visible labels on every field</td><td>B-02, VG-02</td><td>The former toolbar relied on placeholders and a screen-reader-only label. Labels stay visible at every width, so the control's meaning does not vanish when a value is filled.</td></tr>
+      <tr><td>Search first; filters and saved views on the second row</td><td>B-02</td><td>A compact 1–2 row toolbar; the search field keeps the widest flexible column while filters stay one Tab away.</td></tr>
+      <tr><td>Narrow screens get a Filters button, not squeezed selects</td><td>B-01, B-02</td><td>At ≤700px the fields collapse behind an `aria-expanded` toggle while Search stays visible and full width.</td></tr>
+      <tr><td>Clear filters is present and states why it is unavailable</td><td>B-02</td><td>No filter is applied in this capture, so the control is disabled with a reason. With any active filter it becomes enabled.</td></tr>
+      <tr><td>Saved views are browser-local presentation state</td><td>B-02, IA-03</td><td>A saved view never widens authority. The target implementation also restores search, filters and sort through the URL; this mockup shows the control only.</td></tr>
+      <tr><td>Full work ID on one line, never truncated</td><td>DS-02, VG-02</td><td>DS-02 forbids arbitrary truncation of decision identifiers. The implementation pairs this with `EntityIdentity` copy; the ID remains selectable in the mockup.</td></tr>
+      <tr><td>State and attention are separate columns with different words</td><td>DS-03, C-04</td><td>“Operationally validated” is not repeated as a second badge. “Verification failed” appears only where it differs from the authoritative state.</td></tr>
+      <tr><td>Counts sit next to the rows and name their definition</td><td>A-05, IA-03</td><td>“Terminal failures” is explained as state Failed, distinct from the adapter's “Blocked or failed” overview count. The disclosure prevents two numbers from silently disagreeing.</td></tr>
+      <tr><td>Mobile uses cards, not a clipped desktop table</td><td>B-02, VG-01</td><td>Cards carry the full ID, title, state, attention, last change and one next step. The desktop table remains available at wider container widths.</td></tr>
+      <tr><td>Table scroll is a labelled region with a visible hint</td><td>B-04, VG-01</td><td>Headers stay readable and the scroll region is keyboard focusable. The hint appears when the table can overflow.</td></tr>
+      <tr><td>Sort definition is displayed in words</td><td>B-02</td><td>“Recently updated, newest first” is visible next to the summary. The Priority view must display its declared-priority + urgency definition when implemented.</td></tr>
+      <tr><td>No KPI tile grid; no status chip for neutral values</td><td>DS-03, DS-01</td><td>Four counts as a summary line, not six identical cards. Neutral values (“None”) are text, not a coloured badge.</td></tr>
+      <tr><td>15px body, 13px metadata; 12px only in notes</td><td>DS-02, VG-02</td><td>Table cells and timestamps are 13px, not 10/11px. The table header is a label, not action-critical text.</td></tr>
+    </tbody>
+  </table>
+</section>
+<script src="reference.js"></script>
+</body>
+</html>

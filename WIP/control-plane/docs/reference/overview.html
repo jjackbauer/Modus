@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factory overview · Wip.Factory Control Plane — design reference</title>
+<meta name="description" content="PR 0 reference design for the Wip.Factory Control Plane overview, built from the 19 November 2026 captured data. Static mockup; no factory mutation is performed.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%234da3ff'/%3E%3Ctext x='16' y='22' font-family='Segoe UI' font-size='13' font-weight='700' text-anchor='middle' fill='%23060f19'%3EWF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="reference.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
+  <aside class="rail" id="primary-nav" aria-label="Primary navigation">
+    <a class="brand" href="overview.html">
+      <span class="brand-mark" aria-hidden="true">WF</span>
+      <span class="brand-text"><strong>Wip.Factory</strong><small>Control Plane</small></span>
+    </a>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Operations</div>
+        <a class="nav-link" href="overview.html" aria-current="page">Overview</a>
+        <a class="nav-link" href="work-queue.html">Work queue</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Quality &amp; approvals</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Agents</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Artifacts &amp; releases</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Analysis</div>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Production pipeline</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Performance</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Improvement</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Settings &amp; audit</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Documentation</a>
+      </div>
+    </nav>
+    <div class="rail-footer">
+      <div class="connection" role="status"><span class="dot success" aria-hidden="true"></span><span>Live activity · last event 8 min ago</span></div>
+      <div class="instance"><span class="instance-name">local</span><span class="instance-id">factory-06ad075d1d9c</span></div>
+      <div class="account"><span>Administrator</span><span class="hint">admin</span></div>
+      <button class="button quiet small" type="button" title="Reference mockup — no session is changed">Sign out</button>
+    </div>
+  </aside>
+  <div class="backdrop" data-nav-close hidden></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-button" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="overview.html">local</a><span class="sep" aria-hidden="true">/</span><span aria-current="page">Overview</span></nav>
+      <div class="top-actions">
+        <span class="instance-chip">local · factory healthy</span>
+        <button class="button quiet" type="button" data-theme-toggle aria-label="Switch to light theme" aria-pressed="false">Light theme</button>
+      </div>
+    </header>
+    <main class="content" id="main">
+      <div class="page">
+        <div class="page-head">
+          <div>
+            <h1 class="page-title">Factory overview</h1>
+            <p class="page-lede">What the factory is doing now, what is waiting for a human, and which evidence supports each claim.</p>
+          </div>
+          <div class="actions">
+            <button class="button" type="button" title="Reference mockup — data is a static 15:59 UTC capture">Refresh</button>
+            <button class="button primary" type="button" title="Reference mockup — no dispatch cycle is started">Start dispatch cycle</button>
+          </div>
+        </div>
+
+        <div class="strip" aria-label="Factory state at a glance">
+          <span class="strip-item"><span class="strip-key">Factory</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Healthy</span></span>
+          <span class="strip-item"><span class="strip-key">Work items</span><span class="strip-value">4</span></span>
+          <span class="strip-item"><span class="strip-key">Durable events</span><span class="strip-value">48</span></span>
+          <span class="strip-item"><span class="strip-key">Last event</span><span class="strip-value">8 min ago</span></span>
+          <span class="strip-item"><span class="strip-key">Dispatch</span><span class="strip-value">Idle</span></span>
+          <span class="strip-item"><span class="strip-key">Checked</span><span class="strip-value" title="2026-11-19 15:59:14 UTC">15:59 UTC</span></span>
+        </div>        <div class="columns">
+          <div class="main-column">
+            <section class="section" aria-labelledby="decisions-title">
+              <div class="section-head">
+                <h2 class="section-title" id="decisions-title">Decisions waiting</h2>
+                <span class="section-count">2 open · one per work item and action</span>
+              </div>
+              <p class="section-note">Both rows are operator decisions, not status badges. The duplicate merge description that the approvals inbox also produces is merged here (A-05); distinct actions on one item stay distinct.</p>
+              <div class="decision-list">
+                <article class="decision critical">
+                  <div class="decision-head">
+                    <span class="severity critical">Critical</span>
+                    <h3 class="decision-title">Frozen contract is not executable</h3>
+                    <span class="decision-where"><a href="work-detail.html" title="Reference mockup: the failure item is WORK-d42d6410">WORK-d42d6410</a> · Control-plane smoke endpoint</span>
+                  </div>
+                  <dl class="decision-facts">
+                    <dt>What happened</dt><dd>A contract was frozen for WORK-d42d6410 without executable HTTP scenarios.</dd>
+                    <dt>Why it matters</dt><dd>Requirement coverage and post-merge verification cannot run a non-executable oracle, so further dispatch will fail.</dd>
+                    <dt>Safe action</dt><dd>Inspect the frozen contract evidence and submit a revised requirement with an explicit acceptance contract.</dd>
+                    <dt>Consequence</dt><dd>A new requirement revision creates a new work item; the frozen oracle on this item remains immutable evidence.</dd>
+                  </dl>
+                  <div class="decision-foot">
+                    <a class="link-action" href="work-detail.html">Inspect contract evidence</a>
+                    <span class="muted">Read-only · no factory transition offered</span>
+                  </div>
+                </article>
+
+                <article class="decision warning">
+                  <div class="decision-head">
+                    <span class="severity warning">Warning</span>
+                    <h3 class="decision-title">Merge authorization required</h3>
+                    <span class="decision-where"><a href="work-detail.html#merge-authorization">WORK-18b96b98</a> · UX review governed approval flow</span>
+                  </div>
+                  <dl class="decision-facts">
+                    <dt>What happened</dt><dd>Independent review accepted revision <span class="id">7ae703df7d6203b32fc8129a52f06448be63b5a8</span>.</dd>
+                    <dt>Why it matters</dt><dd>The factory will not merge without a separate human authorization bound to this exact review and evidence digest.</dd>
+                    <dt>Safe action</dt><dd>Read the four mandatory checks and diff, then type the exact review digest on the work item.</dd>
+                    <dt>Consequence</dt><dd>Merges the reviewed head into <span class="mono">main</span> and runs post-merge verification. It does not certify independent acceptance.</dd>
+                  </dl>
+                  <div class="decision-foot">
+                    <a class="link-action" href="work-detail.html#merge-authorization">Review and authorize merge</a>
+                    <span class="muted">Human authorization · exact digest</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="section" aria-labelledby="stages-title">
+              <div class="section-head">
+                <h2 class="section-title" id="stages-title">Where the work is</h2>
+                <span class="section-count">4 work items</span>
+              </div>
+              <div class="stage-line" role="list" aria-label="Work items by factory stage">
+                <div class="stage-cell" role="listitem"><span class="stage-name">Intake</span><span class="stage-count">0</span></div>
+                <div class="stage-cell" role="listitem"><span class="stage-name">Implementation</span><span class="stage-count">0</span></div>
+                <div class="stage-cell" role="listitem"><span class="stage-name">Review</span><span class="stage-count">1</span></div>
+                <div class="stage-cell" role="listitem"><span class="stage-name">Delivery</span><span class="stage-count">1</span></div>
+                <div class="stage-cell" role="listitem"><span class="stage-name">Release</span><span class="stage-count">0</span></div>
+                <div class="stage-cell" role="listitem"><span class="stage-name">Released</span><span class="stage-count">2</span></div>
+                <div class="stage-cell attention" role="listitem"><span class="stage-name">Attention</span><span class="stage-count">1</span></div>
+              </div>
+              <p class="section-note">Counts are authoritative factory work states grouped into pipeline stages. The pipeline route explains queueing and derived durations; no forecast is inferred. <a href="#" title="Not part of the three-page reference set">Open pipeline</a></p>
+            </section>
+
+            <section class="section" aria-labelledby="serving-title">
+              <div class="section-head">
+                <h2 class="section-title" id="serving-title">Serving now</h2>
+                <span class="section-count">0 serving · 0 starting · 0 stopping</span>
+              </div>
+              <div class="table-frame serving-table">
+                <div class="table-scroll">
+                  <table class="data">
+                    <caption>Serving state reconciled from the adapter's tracked process, not from the last journal row (A-04).</caption>
+                    <thead><tr><th scope="col">State</th><th scope="col">Releases</th><th scope="col">What the operator should believe</th></tr></thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="status warning"><span class="dot warning" aria-hidden="true"></span>Not currently serving</span></td>
+                        <td><a href="work-detail.html">Control-plane final verification endpoint</a><div class="id id-faint">WORK-cea4804b</div></td>
+                        <td>The journal says <span class="mono">serving</span>, but this adapter tracks no supervised process. Treat it as not serving until a new serve window proves a running process.</td>
+                      </tr>
+                      <tr>
+                        <td><span class="status"><span class="dot" aria-hidden="true"></span>Stopped</span></td>
+                        <td>Control-plane smoke endpoint with explicit contract<div class="id id-faint">WORK-8f16de10</div></td>
+                        <td>The last bounded window ended normally. The release evidence remains recorded.</td>
+                      </tr>
+                      <tr>
+                        <td><span class="status"><span class="dot" aria-hidden="true"></span>Not served</span></td>
+                        <td>UX review governed approval flow<div class="id id-faint">WORK-18b96b98</div></td>
+                        <td>No serve record exists for this revision. A merge is not a running application.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="serving-list" aria-label="Serving state by release">
+                <div class="serving-item">
+                  <div class="serving-item-head"><span class="status warning"><span class="dot warning" aria-hidden="true"></span>Not currently serving</span><span class="id">WORK-cea4804b</span></div>
+                  <a href="work-detail.html">Control-plane final verification endpoint</a>
+                  <p class="serving-detail">The journal says serving, but this adapter tracks no supervised process. Treat it as not serving until a new serve window proves a running process.</p>
+                </div>
+                <div class="serving-item">
+                  <div class="serving-item-head"><span class="status"><span class="dot" aria-hidden="true"></span>Stopped</span><span class="id">WORK-8f16de10</span></div>
+                  <span>Control-plane smoke endpoint with explicit contract</span>
+                  <p class="serving-detail">The last bounded window ended normally. The release evidence remains recorded.</p>
+                </div>
+                <div class="serving-item">
+                  <div class="serving-item-head"><span class="status"><span class="dot" aria-hidden="true"></span>Not served</span><span class="id">WORK-18b96b98</span></div>
+                  <span>UX review governed approval flow</span>
+                  <p class="serving-detail">No serve record exists for this revision. A merge is not a running application.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" aria-labelledby="activity-title">
+              <div class="section-head">
+                <h2 class="section-title" id="activity-title">Recent durable activity</h2>
+                <span class="section-count">6 of 48 events · live</span>
+              </div>
+              <div class="activity">
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:09Z" title="2026-11-19 15:50:09 UTC">8 min ago</time><div class="activity-main"><span class="activity-summary">Four mandatory review checks accepted at <span class="id">7ae703df7d62…b5a8</span>.</span><span class="activity-type">factory.review.accepted.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:06Z" title="2026-11-19 15:50:06 UTC">8 min ago</time><div class="activity-main"><span class="activity-summary">Implementation produced 1 changed file.</span><span class="activity-type">factory.implementation.completed.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:04Z" title="2026-11-19 15:50:04 UTC">8 min ago</time><div class="activity-main"><span class="activity-summary">Implementation attempt requested by the dispatcher.</span><span class="activity-type">factory.implementation.requested.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:03Z" title="2026-11-19 15:50:03 UTC">8 min ago</time><div class="activity-main"><span class="activity-summary">Architecture refinement passed deterministic checks.</span><span class="activity-type">factory.architecture.aligned.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:03Z" title="2026-11-19 15:50:03 UTC">8 min ago</time><div class="activity-main"><span class="activity-summary">Requirement aligned and contract bound.</span><span class="activity-type">factory.requirement.aligned.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:02Z" title="2026-11-19 15:50:02 UTC">8 min ago</time><div class="activity-main"><span class="activity-summary">Contract frozen at <span class="id">sha256:42c0aec5…e2c9</span>.</span><span class="activity-type">factory.contract.approved.v1</span></div></div>
+              </div>
+              <p class="section-note">Every row is a durable factory event. The event type is technical detail, not the heading; the timestamp is relative with the exact UTC value on reveal.</p>
+            </section>
+          </div>
+
+          <aside class="side-column" aria-label="Operational context">
+            <section class="aside-block" aria-labelledby="pending-title">
+              <h2 class="aside-title" id="pending-title">Pending authorizations <span>1</span></h2>
+              <div class="release-row">
+                <div class="row-between"><span class="release-title">Merge · UX review governed approval flow</span><span class="muted nowrap">8 min</span></div>
+                <div class="release-meta">sha256:0734b476…fb43</div>
+                <a class="link-action" href="work-detail.html#merge-authorization">Review and authorize</a>
+              </div>
+              <p class="bind-hint">Contract and template decisions are not pending in this capture. The inbox never asks for a digest it has not displayed in full.</p>
+            </section>
+
+            <section class="aside-block" aria-labelledby="dispatch-title">
+              <h2 class="aside-title" id="dispatch-title">Dispatch <span class="muted">completed</span></h2>
+              <dl class="kv">
+                <dt>Job</dt><dd class="id">dispatch-1627be1c5c774233988a37fc2c2b8a0f</dd>
+                <dt>Claimed</dt><dd class="strong">7</dd>
+                <dt>Dispatched</dt><dd class="strong">6</dd>
+                <dt>Blocked</dt><dd>0</dd>
+                <dt>Failed</dt><dd>0</dd>
+              </dl>
+              <p class="bind-hint">The dispatcher owns execution claims. Opening or refreshing this page does not start agent work.</p>
+            </section>
+
+            <section class="aside-block" aria-labelledby="capacity-title">
+              <h2 class="aside-title" id="capacity-title">Execution capacity</h2>
+              <dl class="kv">
+                <dt>Runner</dt><dd class="id">deterministic-demo</dd>
+                <dt>Execution enabled</dt><dd class="strong">Yes</dd>
+                <dt>Agent sessions</dt><dd>0</dd>
+                <dt>Implementation attempts</dt><dd>4</dd>
+              </dl>
+              <p class="bind-hint">Deterministic demo runner: real worktree, build and commit work. It is not a model and not independent acceptance. Token usage is not measured for these sessions, so it is not shown as zero.</p>
+            </section>
+
+            <section class="aside-block" aria-labelledby="releases-title">
+              <h2 class="aside-title" id="releases-title">Recent releases <span>3</span></h2>
+              <div class="release-row">
+                <div class="row-between"><a class="release-title" href="work-detail.html">Control-plane final verification endpoint</a></div>
+                <div class="release-meta">WORK-cea4804b · 9798890c14be…29c8</div>
+                <span class="status warning"><span class="dot warning" aria-hidden="true"></span>Not currently serving</span>
+              </div>
+              <div class="release-row">
+                <div class="row-between"><span class="release-title">Control-plane smoke endpoint with explicit contract</span></div>
+                <div class="release-meta">WORK-8f16de10 · e4b847080c68…a6a6</div>
+                <span class="status"><span class="dot" aria-hidden="true"></span>Stopped</span>
+              </div>
+              <div class="release-row">
+                <div class="row-between"><span class="release-title">UX review governed approval flow</span></div>
+                <div class="release-meta">WORK-18b96b98 · not merged</div>
+                <span class="status"><span class="dot" aria-hidden="true"></span>Not served</span>
+              </div>
+              <a class="link-action" href="#" title="Not part of the three-page reference set">Open releases</a>
+            </section>
+
+            <section class="aside-block" aria-labelledby="freshness-title">
+              <h2 class="aside-title" id="freshness-title">Freshness</h2>
+              <dl class="kv">
+                <dt>Last successful sync</dt><dd class="strong" title="2026-11-19 15:59:14 UTC">15:59 UTC</dd>
+                <dt>Event stream</dt><dd><span class="status success"><span class="dot success" aria-hidden="true"></span>Live</span></dd>
+                <dt>Projection</dt><dd>Complete</dd>
+              </dl>
+              <p class="bind-hint">A transport disconnect would read “Reconnecting” or “Disconnected” here and never as a factory failure.</p>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+</div><section class="reference-notes" id="reference-notes" aria-labelledby="notes-title">
+  <h2 id="notes-title">Design reference — decisions and traceability</h2>
+  <p class="meta">Static PR 0 mockup, not a deployed screen. Real content from the 19 November 2026 15:59 UTC capture of the local demo instance (<span class="mono">ux-review/captures/api/overview.json</span> and the adapter factory log for WORK-18b96b98). The merge attention row is deduplicated per A-05 and the serving rows use the reconciled serving view per A-04. No metric, agent, token count or acceptance state is invented. At 390px the navigation becomes a drawer; the page is measured with headless Chrome at 1440×1000 and 390×844 in both themes.</p>
+  <table>
+    <thead><tr><th scope="col">Decision in this mockup</th><th scope="col">Requirement</th><th scope="col">Why it is this way</th></tr></thead>
+    <tbody>
+      <tr><td>Task-grouped navigation: Operations, Analysis, Administration</td><td>IA-02</td><td>Nine first-class routes keep their URLs; grouping lowers scanning cost without deleting routes. Documentation stays in Administration.</td></tr>
+      <tr><td>Mobile drawer with Menu button, backdrop, Escape and focus return</td><td>B-01, VG-01, VG-03</td><td>Replaces the horizontal scroller that clipped links. The drawer closes on route selection and restores focus to the invoking button.</td></tr>
+      <tr><td>One health strip instead of six KPI tiles</td><td>DS-03, D-06</td><td>Counts stay next to the list they explain. Four of the six former tiles repeated facts already visible in attention, approvals and releases.</td></tr>
+      <tr><td>Two attention rows, not three</td><td>A-05, IA-03</td><td>Identity is (work item, action). The approvals inbox and the work-detail projection describe the same merge decision, so they merge into one row.</td></tr>
+      <tr><td>“Not currently serving” for a journal row that says serving</td><td>A-04, VG-04</td><td>The adapter tracks no process for WORK-cea4804b after restart. The journal is historical evidence, not liveness; the same label must appear on every surface.</td></tr>
+      <tr><td>Status is text plus a restrained dot; no status chip</td><td>DS-01, C-04, VG-02</td><td>Colour is never the only signal and the label reads correctly in greyscale. Success, warning and danger are used only for their meaning.</td></tr>
+      <tr><td>15px body, 13px metadata, 12px only in annotations</td><td>DS-02, VG-02</td><td>The 10/11px tokens are gone. Monospace is reserved for IDs, digests, paths and timestamps where precision matters.</td></tr>
+      <tr><td>Exact decisions and evidence on one surface</td><td>IA-01, A-03</td><td>Each row answers what happened, why it matters, the safe action and the consequence before offering a link to the decision object.</td></tr>
+      <tr><td>Freshness is explicit; transport is not factory failure</td><td>IA-03, C-03</td><td>Last event, checked time and stream state are visible. A disconnect would change only the transport label.</td></tr>
+      <tr><td>Unmeasured telemetry is not shown as zero</td><td>VG-04, plan §11</td><td>Token usage has no durable provider evidence in this capture, so it is omitted here and labelled “Not measured” only where telemetry belongs (Analytics, Agents).</td></tr>
+      <tr><td>Accent marks action, active nav, links and focus only</td><td>DS-01</td><td>The brand gradient, glow rings and decorative dots are removed. A border marks a group boundary, not every text block.</td></tr>
+      <tr><td>Breadcrumb carries the instance and exact route</td><td>IA-04, C-03</td><td>The document title names the route and the breadcrumb keeps the instance identity visible before any mutation.</td></tr>
+    </tbody>
+  </table>
+</section>
+<script src="reference.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WORK-18b96b98 · UX review governed approval flow — design reference</title>
+<meta name="description" content="PR 0 reference design for the Wip.Factory Control Plane work detail and decision-grade merge authorization, built from the 19 November 2026 captured data. Static mockup; no factory mutation is performed.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%234da3ff'/%3E%3Ctext x='16' y='22' font-family='Segoe UI' font-size='13' font-weight='700' text-anchor='middle' fill='%23060f19'%3EWF%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="reference.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<div class="app">
+  <aside class="rail" id="primary-nav" aria-label="Primary navigation">
+    <a class="brand" href="overview.html">
+      <span class="brand-mark" aria-hidden="true">WF</span>
+      <span class="brand-text"><strong>Wip.Factory</strong><small>Control Plane</small></span>
+    </a>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Operations</div>
+        <a class="nav-link" href="overview.html">Overview</a>
+        <a class="nav-link" href="work-queue.html" aria-current="page">Work queue</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Quality &amp; approvals</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Agents</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Artifacts &amp; releases</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Analysis</div>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Production pipeline</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Performance</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Improvement</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Administration</div>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Settings &amp; audit</a>
+        <a class="nav-link" href="#" title="Not part of the three-page reference set">Documentation</a>
+      </div>
+    </nav>
+    <div class="rail-footer">
+      <div class="connection" role="status"><span class="dot success" aria-hidden="true"></span><span>Live activity · last event 8 min ago</span></div>
+      <div class="instance"><span class="instance-name">local</span><span class="instance-id">factory-06ad075d1d9c</span></div>
+      <div class="account"><span>Administrator</span><span class="hint">admin</span></div>
+      <button class="button quiet small" type="button" title="Reference mockup — no session is changed">Sign out</button>
+    </div>
+  </aside>
+  <div class="backdrop" data-nav-close hidden></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="menu-button" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="overview.html">local</a><span class="sep" aria-hidden="true">/</span><a href="work-queue.html">Work queue</a><span class="sep" aria-hidden="true">/</span><span aria-current="page">WORK-18b96b98</span></nav>
+      <div class="top-actions">
+        <span class="instance-chip">local · factory healthy</span>
+        <button class="button quiet" type="button" data-theme-toggle aria-label="Switch to light theme" aria-pressed="false">Light theme</button>
+      </div>
+    </header>
+    <main class="content" id="main">
+      <div class="page">
+        <div class="work-head">
+          <div class="work-head-main">
+            <div class="work-id-line">
+              <span class="id">WORK-18b96b98</span>
+              <span>Version 9</span>
+              <span>Updated <time datetime="2026-11-19T15:50:09Z" title="2026-11-19 15:50:09 UTC">8 min ago</time></span>
+            </div>
+            <h1 class="work-title">UX review governed approval flow</h1>
+            <div class="work-state-line">
+              <span class="work-state">Ready for delivery</span>
+              <span class="derived">Waiting for merge approval</span>
+              <span>One authorization outstanding</span>
+            </div>
+            <div class="work-provenance">
+              <span>Repository <span class="id">F:\dev\det-home1\WIP\control-plane-data\smoke2\target</span></span>
+              <span>Requirement <span class="id">sha256:e133239f…b1b48b</span></span>
+              <span>Frozen contract <span class="id">sha256:42c0aec5…e2c9</span></span>
+              <span>Review digest <span class="id">sha256:0734b476…fb43</span></span>
+            </div>
+          </div>
+          <div class="actions">
+            <a class="button primary" href="#merge-authorization">Authorize merge</a>
+            <a class="button" href="#decision-evidence">Review evidence</a>
+            <button class="button quiet" type="button" title="Reference mockup — data is a static 15:59 UTC capture">Refresh</button>
+          </div>
+        </div>
+
+        <div class="next-action">
+          <p><strong>Next legal action: Authorize merge.</strong> The factory will not merge this reviewed head until an operator authorizes the exact review digest. No other transition is offered from this state.</p>
+          <span class="status warning"><span class="dot warning" aria-hidden="true"></span>Operator role required</span>
+        </div>        <div class="work-grid">
+          <div class="main-column">
+            <section class="decision-panel" id="merge-authorization" aria-labelledby="merge-title">
+              <div class="decision-panel-head">
+                <div>
+                  <h2 class="decision-panel-title" id="merge-title">Authorize merge</h2>
+                  <p class="decision-panel-lede">This authorizes the factory to merge <span class="id">7ae703df7d62</span> into <span class="id">main</span>, bound to the review and evidence below. It does not certify independent acceptance.</p>
+                </div>
+                <span class="status warning"><span class="dot warning" aria-hidden="true"></span>Decision required</span>
+              </div>
+
+              <div class="decision-columns stacked">
+                <section aria-labelledby="revision-title">
+                  <h3 class="subhead" id="revision-title">Reviewed revision and verdict</h3>
+                  <dl class="kv">
+                    <dt>Reviewed head</dt>
+                    <dd><div class="digest-row"><code class="digest-value">7ae703df7d6203b32fc8129a52f06448be63b5a8</code><button class="copy-button" type="button" data-copy="7ae703df7d6203b32fc8129a52f06448be63b5a8" aria-label="Copy reviewed head revision">Copy</button></div></dd>
+                    <dt>Base revision</dt>
+                    <dd><div class="digest-row"><code class="digest-value">9798890c14be2db6b4f57d48d88be3fc55d229c8</code><button class="copy-button" type="button" data-copy="9798890c14be2db6b4f57d48d88be3fc55d229c8" aria-label="Copy base revision">Copy</button></div></dd>
+                    <dt>Source revision</dt>
+                    <dd><span class="id">7ae703df7d6203b32fc8129a52f06448be63b5a8</span></dd>
+                    <dt>Target branch</dt>
+                    <dd><span class="id">main</span></dd>
+                    <dt>Review verdict</dt>
+                    <dd><span class="status success"><span class="dot success" aria-hidden="true"></span>Accepted</span> · <span class="id">factory-review-checks@3</span></dd>
+                    <dt>Frozen contract</dt>
+                    <dd><div class="digest-row"><code class="digest-value">sha256:42c0aec5fb14c89cd902106266055e9e268e644d314d0e09eea1219005d3e2c9</code><button class="copy-button" type="button" data-copy="sha256:42c0aec5fb14c89cd902106266055e9e268e644d314d0e09eea1219005d3e2c9" aria-label="Copy frozen contract digest">Copy</button></div></dd>
+                    <dt>Changed files</dt>
+                    <dd>1 file · diff digest <span class="id">sha256:0e71e50f…1bff</span></dd>
+                  </dl>
+                </section>
+
+                <section aria-labelledby="checks-title">
+                  <h3 class="subhead" id="checks-title">Mandatory checks</h3>
+                  <table class="check-table">
+                    <caption class="muted" style="text-align:left; padding-bottom:6px;">All four checks passed on the reviewed head. Each digest is full and copyable.</caption>
+                    <thead><tr><th scope="col">Check and evidence digest</th><th scope="col">Result</th></tr></thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="check-name">Validation — build + regressions</div>
+                          <div class="check-detail">build=passed · regressions=not-applicable</div>
+                          <div class="digest-row"><code class="digest-value">sha256:aa818eba0dde14aa6f55f747a9abb01cfb49dc6f140e0cb15103b230bb81dacb</code><button class="copy-button" type="button" data-copy="sha256:aa818eba0dde14aa6f55f747a9abb01cfb49dc6f140e0cb15103b230bb81dacb" aria-label="Copy validation evidence digest">Copy</button></div>
+                        </td>
+                        <td><span class="status success"><span class="dot success" aria-hidden="true"></span>Passed</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="check-name">Requirement coverage — HTTP scenarios</div>
+                          <div class="check-detail">AC-1 = pass · candidate pid 109996</div>
+                          <div class="digest-row"><code class="digest-value">sha256:d3482815d7370194f3b9128d89ba652b6dae85cf663c7d81b52973116f7fac24</code><button class="copy-button" type="button" data-copy="sha256:d3482815d7370194f3b9128d89ba652b6dae85cf663c7d81b52973116f7fac24" aria-label="Copy requirement coverage evidence digest">Copy</button></div>
+                        </td>
+                        <td><span class="status success"><span class="dot success" aria-hidden="true"></span>Passed</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="check-name">Architectural conformance — supported class</div>
+                          <div class="check-detail">single repository · project layout supported · framework net10</div>
+                          <div class="digest-row"><code class="digest-value">sha256:7d306679669d9d4730e0e7734f89b83d0800dc00c62863b4a204bb396f31f189</code><button class="copy-button" type="button" data-copy="sha256:7d306679669d9d4730e0e7734f89b83d0800dc00c62863b4a204bb396f31f189" aria-label="Copy architecture evidence digest">Copy</button></div>
+                        </td>
+                        <td><span class="status success"><span class="dot success" aria-hidden="true"></span>Passed</span></td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="check-name">Security — alpha policy</div>
+                          <div class="check-detail">no reparse escape · no executable payload · no secret material</div>
+                          <div class="digest-row"><code class="digest-value">sha256:63850db4e39e179f57a460fa40cada64ef85e26348de2a1f17e2dddb47a058d3</code><button class="copy-button" type="button" data-copy="sha256:63850db4e39e179f57a460fa40cada64ef85e26348de2a1f17e2dddb47a058d3" aria-label="Copy security evidence digest">Copy</button></div>
+                        </td>
+                        <td><span class="status success"><span class="dot success" aria-hidden="true"></span>Passed</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </section>
+              </div>
+
+              <div class="decision-columns">
+                <section aria-labelledby="conditions-title">
+                  <h3 class="subhead" id="conditions-title">Binding conditions</h3>
+                  <ul class="bullets">
+                    <li>The merge binds the reviewed head, its base and the frozen contract digest shown above.</li>
+                    <li>The adapter revalidates the exact review digest and its evidence before merging; any change is refused with a typed conflict.</li>
+                    <li>A merge is not verification and not independent acceptance.</li>
+                  </ul>
+                </section>
+                <section aria-labelledby="consequence-title">
+                  <h3 class="subhead" id="consequence-title">Consequence of authorization</h3>
+                  <ul class="bullets">
+                    <li>The factory merges the reviewed head into <span class="id">main</span> and records the merge.</li>
+                    <li>Post-merge build, regression and contract verification run on the merged revision.</li>
+                    <li>It does not start the application, serve a preview, or certify independent acceptance.</li>
+                  </ul>
+                </section>
+              </div>
+
+              <div class="bind-box">
+                <div class="bind-label">Exact review digest being authorized</div>
+                <div class="digest-row"><code class="digest-value">sha256:0734b47637473fa8f99ff1bb9b67087656090d770098812e4d06cbd53ef7fb43</code><button class="copy-button" type="button" data-copy="sha256:0734b47637473fa8f99ff1bb9b67087656090d770098812e4d06cbd53ef7fb43" aria-label="Copy exact review digest">Copy</button></div>
+                <label class="bind-label" for="confirm-review-digest">Type the exact review digest to confirm</label>
+                <div class="bind-row">
+                  <input class="input" id="confirm-review-digest" type="text" autocomplete="off" spellcheck="false" aria-describedby="digest-reason" placeholder="sha256:…">
+                  <button class="button primary" id="authorize-merge" type="button" data-expected="sha256:0734b47637473fa8f99ff1bb9b67087656090d770098812e4d06cbd53ef7fb43" aria-disabled="true" disabled>Authorize merge</button>
+                </div>
+                <p class="bind-hint" id="digest-reason" role="status">The authorization stays disabled until the typed value matches the exact review digest above.</p>
+                <p class="bind-hint">This static reference does not submit. In the application the adapter independently compares the confirmation and refuses a mismatch.</p>
+              </div>
+            </section>
+
+            <details class="disclosure" open>
+              <summary>Frozen acceptance contract · Executable HTTP</summary>
+              <div class="disclosure-body">
+                <dl class="kv">
+                  <dt>Supported class</dt><dd class="id">aspnetcore-http-net10</dd>
+                  <dt>Proposal digest</dt><dd><div class="digest-row"><code class="digest-value">sha256:42c0aec5fb14c89cd902106266055e9e268e644d314d0e09eea1219005d3e2c9</code><button class="copy-button" type="button" data-copy="sha256:42c0aec5fb14c89cd902106266055e9e268e644d314d0e09eea1219005d3e2c9" aria-label="Copy proposal digest">Copy</button></div></dd>
+                  <dt>Frozen digest</dt><dd><div class="digest-row"><code class="digest-value">sha256:42c0aec5fb14c89cd902106266055e9e268e644d314d0e09eea1219005d3e2c9</code><button class="copy-button" type="button" data-copy="sha256:42c0aec5fb14c89cd902106266055e9e268e644d314d0e09eea1219005d3e2c9" aria-label="Copy frozen contract digest">Copy</button></div></dd>
+                  <dt>Requirement digest</dt><dd><div class="digest-row"><code class="digest-value">sha256:e133239f5b1676e33685c02bb3a35a5b6182186c4a4d432a6a7c1d09efb1b48b</code><button class="copy-button" type="button" data-copy="sha256:e133239f5b1676e33685c02bb3a35a5b6182186c4a4d432a6a7c1d09efb1b48b" aria-label="Copy requirement digest">Copy</button></div></dd>
+                  <dt>Frozen</dt><dd>19 Nov 2026 · 15:50 UTC · by ricar</dd>
+                </dl>
+                <div class="requirement-excerpt">
+                  <strong>Requirement</strong>
+                  <p>Create a health endpoint for reviewing the governed approval and merge dialogs.</p>
+                  <p>Expose <span class="id">GET /health</span>. Acceptance expectation: returns HTTP 200 with status ok.</p>
+                </div>
+                <table class="check-table">
+                  <caption class="muted" style="text-align:left; padding-bottom:6px;">Executable scenarios bound to the frozen contract</caption>
+                  <thead><tr><th scope="col">Scenario</th><th scope="col">Kind</th><th scope="col">Expectation</th></tr></thead>
+                  <tbody>
+                    <tr><td class="id">AC-1</td><td>pending-http-form</td><td><span class="id">GET /health</span> returns HTTP 200 with status ok.</td></tr>
+                  </tbody>
+                </table>
+                <p class="bind-hint">This contract is already frozen; the contract decision (A-02) is recorded in the lifecycle below. The approval dialog displays this same object before freezing it.</p>
+              </div>
+            </details>            <section class="section" aria-labelledby="lifecycle-title">
+              <div class="section-head">
+                <h2 class="section-title" id="lifecycle-title">Lifecycle</h2>
+                <span class="section-count">7 stages · 6 completed · 1 pending</span>
+              </div>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot success" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Work intake</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Completed</span><span class="timeline-meta">2 s · operator</span></div>
+                    <div class="timeline-detail">Requirement parsed into the supported class and observable expectations. <time datetime="2026-11-19T15:49:57Z" title="2026-11-19 15:49:57 UTC">15:49 UTC</time></div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot success" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Contract proposal</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Completed</span><span class="timeline-meta">2 s · ricar</span></div>
+                    <div class="timeline-detail">Frozen at <span class="id">sha256:42c0aec5…e2c9</span> after the decision dialog displayed the exact object. <time datetime="2026-11-19T15:50:02Z" title="2026-11-19 15:50:02 UTC">15:50 UTC</time></div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot success" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Requirement alignment</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Completed</span><span class="timeline-meta">2 s · deterministic stage handler</span></div>
+                    <div class="timeline-detail">Requirement aligned to the frozen contract.</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot success" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Architecture refinement</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Completed</span><span class="timeline-meta">&lt;1 s · factory-architecture-inspector</span></div>
+                    <div class="timeline-detail">Deterministic architecture checks passed.</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot success" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Implementation</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Completed</span><span class="timeline-meta">3 s · session-impl-work-18b96b98</span></div>
+                    <div class="timeline-detail">1 file changed · head <span class="id">7ae703df7d62</span>.</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot success" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Independent review</span><span class="status success"><span class="dot success" aria-hidden="true"></span>Completed</span><span class="timeline-meta">3 s · factory-review-checks@3</span></div>
+                    <div class="timeline-detail">All four mandatory checks passed on the reviewed head.</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker"><span class="dot warning" aria-hidden="true"></span></div>
+                  <div class="timeline-body">
+                    <div class="timeline-head"><span class="timeline-name">Merge authorization</span><span class="status warning"><span class="dot warning" aria-hidden="true"></span>Pending</span><span class="timeline-meta">waiting 8 min · operator</span></div>
+                    <div class="timeline-detail">This decision. No merge, release or serve record exists yet.</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section" id="decision-evidence" aria-labelledby="evidence-title">
+              <div class="section-head">
+                <h2 class="section-title" id="evidence-title">Evidence behind this decision</h2>
+                <span class="section-count">review, diff and event records</span>
+              </div>
+              <dl class="kv">
+                <dt>Review evidence digest</dt>
+                <dd><div class="digest-row"><code class="digest-value">sha256:59f6d34dcbbbe3c8c9d9dec825203591b3cee15ebf688dfb2b5fa1b333b2cbd0</code><button class="copy-button" type="button" data-copy="sha256:59f6d34dcbbbe3c8c9d9dec825203591b3cee15ebf688dfb2b5fa1b333b2cbd0" aria-label="Copy review evidence digest">Copy</button></div></dd>
+                <dt>Diff digest</dt>
+                <dd><div class="digest-row"><code class="digest-value">sha256:0e71e50fe2e4633ea1ed51cada6b1301a18d8452a588fe753dd4a6e7279f1bff</code><button class="copy-button" type="button" data-copy="sha256:0e71e50fe2e4633ea1ed51cada6b1301a18d8452a588fe753dd4a6e7279f1bff" aria-label="Copy diff digest">Copy</button></div></dd>
+                <dt>Changed files</dt><dd>1</dd>
+                <dt>Events</dt><dd>9 durable events on this work item</dd>
+              </dl>
+              <div class="evidence-index" aria-label="Evidence index">
+                <a href="#merge-authorization"><span>Review matrix and mandatory checks</span><span class="count">4 checks · accepted</span></a>
+                <a href="#decision-evidence"><span>Source and diff</span><span class="count">1 file · diff digest</span></a>
+                <a href="#decision-evidence"><span>Execution lineage</span><span class="count">available</span></a>
+                <a href="#decision-evidence"><span>Durable events</span><span class="count">9 events</span></a>
+                <a href="#decision-evidence"><span>Agent activity</span><span class="count">0 sessions · 1 attempt</span></a>
+              </div>
+              <p class="section-note">Evidence is grouped by the claim it supports, not by API object. Disclosures and this index replace a tab strip that clipped its last tab at 390px (B-05). Each link below opens the same record set that the implementation renders as a tab.</p>
+            </section>
+          </div>
+
+          <aside class="side-column" aria-label="Decision context">
+            <section class="aside-block" aria-labelledby="auth-title">
+              <h2 class="aside-title" id="auth-title">Authorization contract</h2>
+              <dl class="kv">
+                <dt>Role</dt><dd class="strong">Operator</dd>
+                <dt>Server check</dt><dd>Revalidates digest and evidence on submit</dd>
+                <dt>Stale evidence</dt><dd><span class="status success"><span class="dot success" aria-hidden="true"></span>None</span></dd>
+                <dt>Acceptance</dt><dd>Not implied by this authorization</dd>
+              </dl>
+            </section>
+
+            <section class="aside-block" aria-labelledby="versions-title">
+              <h2 class="aside-title" id="versions-title">Versions bound</h2>
+              <dl class="kv">
+                <dt>Mandatory policy</dt><dd class="id">policy://factory/mandatory@1</dd>
+                <dt>Guidelines</dt><dd class="id">guidelines/system@1</dd>
+                <dt>Profile</dt><dd class="id">profile/implementations-analyst@1</dd>
+                <dt>Runner</dt><dd class="id">factory-runner@1</dd>
+                <dt>Review checks</dt><dd class="id">factory-review-checks@3</dd>
+                <dt>Architecture</dt><dd class="id">policy://factory/review/architecture@3</dd>
+                <dt>Security</dt><dd class="id">security://factory/alpha-policy@1</dd>
+              </dl>
+            </section>
+
+            <section class="aside-block" aria-labelledby="changed-title">
+              <h2 class="aside-title" id="changed-title">What changed</h2>
+              <div class="activity">
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:09Z" title="2026-11-19 15:50:09 UTC">8 min</time><div class="activity-main"><span class="activity-summary">Review accepted on head 7ae703df7d62.</span><span class="activity-type">factory.review.accepted.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:06Z" title="2026-11-19 15:50:06 UTC">8 min</time><div class="activity-main"><span class="activity-summary">Implementation produced 1 changed file.</span><span class="activity-type">factory.implementation.completed.v1</span></div></div>
+                <div class="activity-item"><time class="activity-time" datetime="2026-11-19T15:50:02Z" title="2026-11-19 15:50:02 UTC">8 min</time><div class="activity-main"><span class="activity-summary">Contract frozen by ricar.</span><span class="activity-type">factory.contract.approved.v1</span></div></div>
+              </div>
+            </section>
+
+            <section class="aside-block" aria-labelledby="planning-title">
+              <h2 class="aside-title" id="planning-title">Planning metadata</h2>
+              <dl class="kv">
+                <dt>Priority</dt><dd>Normal</dd>
+                <dt>Deadline</dt><dd class="muted">Not set</dd>
+                <dt>Tags</dt><dd class="muted">None</dd>
+                <dt>Links</dt><dd class="muted">None</dd>
+              </dl>
+              <p class="bind-hint">Planning metadata is recorded by the control plane and never becomes factory scheduling or execution authority.</p>
+            </section>
+
+            <section class="aside-block" aria-labelledby="fresh-title">
+              <h2 class="aside-title" id="fresh-title">Freshness</h2>
+              <dl class="kv">
+                <dt>Last successful update</dt><dd class="strong" title="2026-11-19 15:59:14 UTC">15:59 UTC</dd>
+                <dt>Event stream</dt><dd><span class="status success"><span class="dot success" aria-hidden="true"></span>Live</span></dd>
+                <dt>Projection</dt><dd>Current</dd>
+              </dl>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+</div><section class="reference-notes" id="reference-notes" aria-labelledby="notes-title">
+  <h2 id="notes-title">Design reference — decisions and traceability</h2>
+  <p class="meta">Static PR 0 mockup, not a deployed screen. Real object: WORK-18b96b98, version 9, captured 19 November 2026 15:59 UTC. Head, base, digests, check evidence, actors, timestamps and policy versions come from the adapter's review event in the factory log; the requirements and scenarios come from the frozen contract. No evidence, metric or acceptance is invented. The typed-digest field and button are live in this document only to demonstrate the disabled-until-exact behavior; nothing is submitted.</p>
+  <table>
+    <thead><tr><th scope="col">Decision in this mockup</th><th scope="col">Requirement</th><th scope="col">Why it is this way</th></tr></thead>
+    <tbody>
+      <tr><td>One authoritative state, one derived indicator, no chips</td><td>B-05, DS-03, status glossary §1</td><td>“Ready for delivery” is the state; “Waiting for merge approval” is the derived indicator. The former header's health, dispatch-active and contract-frozen chips repeated facts already owned by their panels.</td></tr>
+      <tr><td>Next legal action and its consequence are visible before evidence</td><td>IA-01, IA-04</td><td>The operator can answer “what can I do” without scanning the whole page. The action is the only legal transition offered from this state.</td></tr>
+      <tr><td>Reviewed head, base, source revision, target and verdict in the decision</td><td>A-03</td><td>The dialog must display the reviewed base/head and the accepted verdict. This panel is the same body the accessible dialog renders.</td></tr>
+      <tr><td>Four mandatory checks with full evidence digests and copy</td><td>A-03, DS-02</td><td>Each digest is complete, wrap-safe and copyable. Truncating a digest an operator is binding is a safety defect, not a density choice.</td></tr>
+      <tr><td>Binding conditions and the exact consequence, including what it does not do</td><td>A-03, VG-04</td><td>“Merges the head” and “does not certify acceptance / does not serve” are both stated. A merge is never presented as verification.</td></tr>
+      <tr><td>Full 71-character review digest plus typed confirmation</td><td>A-03, C-02</td><td>The value is displayed in full, then typed. The button stays disabled until the exact value matches and the adapter revalidates independently.</td></tr>
+      <tr><td>Stale or changed evidence cannot confirm</td><td>A-03, VG-04</td><td>The panel records that the adapter refuses a changed review with a typed conflict. The reference shows “Stale evidence: None” because the head matches.</td></tr>
+      <tr><td>Quality deep-links here; one authorization surface</td><td>A-03, D-01</td><td>The approvals inbox links to this panel instead of duplicating the object in a second, weaker confirmation. One pending merge remains one decision.</td></tr>
+      <tr><td>Frozen contract object with class, digest and executable scenario</td><td>A-02</td><td>Contract approval already happened; the immutable object remains inspectable with the same identity the dialog displayed before freezing.</td></tr>
+      <tr><td>Lifecycle shows a pending authorization, not a completed one</td><td>IA-01, A-04</td><td>Six completed stages and one pending stage. No merge, release or serve record is implied. Every row has an actor, duration and exact UTC time on reveal.</td></tr>
+      <tr><td>Evidence is grouped by the claim it supports, with an index instead of a clipped tab strip</td><td>B-05, C-01</td><td>Review checks, contract, lifecycle, diff/lineage/events are progressive disclosures. At ≤1100px the layout is one column; nothing scrolls sideways.</td></tr>
+      <tr><td>One column at narrow widths; the decision stays first</td><td>B-01, VG-01</td><td>The decision panel precedes context on mobile. No horizontal document overflow at 390px; long digests wrap at safe boundaries.</td></tr>
+      <tr><td>Version and policy identities are secondary mono metadata</td><td>DS-02, IA-04</td><td>Mono is reserved for IDs, digests, paths and policy versions. Prose and status labels use the UI face at 13–15px.</td></tr>
+      <tr><td>Acceptance boundary is explicit</td><td>plan §11, VG-04</td><td>This screen never infers evaluator-owned acceptance from local checks. The authorization says exactly what it authorizes.</td></tr>
+    </tbody>
+  </table>
+</section>
+<script src="reference.js"></script>
+</body>
+</html>

@@ -137,8 +137,6 @@ fn WorkDetailBody(
     let requirement = data.requirement.clone();
     let sessions_active = data.dispatch_active && state == "InImplementation";
 
-    let instance_value = instance.get();
-
     let dispatch = {
         let instance = instance;
         let context = context;
@@ -253,6 +251,7 @@ fn WorkDetailBody(
     let indicator_text = indicator_label(indicator.as_deref()).to_string();
     let indicator_tone_value = indicator_tone(indicator.as_deref());
     let show_indicator = indicator.is_some() && indicator_text != state_label(&state);
+    let state_text = state_label(&state).to_string();
 
     // The tab body renders inside a `move` closure that takes ownership of everything it
     // references. Dedicated clones keep the decision dialog bound to the same authoritative
@@ -264,18 +263,16 @@ fn WorkDetailBody(
         <section class="page">
             <div class="work-header">
                 <div class="work-title-block">
-                    <div class="row wrap">
-                        <a class="tiny" href=format!("/i/{instance_value}/work")>"← Work queue"</a>
-                        <span class="tiny faint mono">{work_item_id.clone()}</span>
+                    <div class="work-id-line">
+                        <span class="mono">{work_item_id.clone()}</span>
                         <span class="tiny faint">"v"{version}</span>
+                        <span class="tiny faint">"Updated "{time_ago(summary.updated_at_utc.as_deref())}</span>
                     </div>
                     <h1 class="page-title">{title}</h1>
-                    <div class="row wrap">
-                        <Chip label=state_label(&state).to_string() tone=state_tone(&state)/>
-                        {show_indicator.then(|| view! { <Chip label=indicator_text.clone() tone=indicator_tone_value/> })}
-                        <Chip label=health_label(&health).to_string() tone=health_tone(&health)/>
-                        {data.dispatch_active.then(|| view! { <Chip label="DISPATCH ACTIVE".to_string() tone="active"/> })}
-                        {contract.is_frozen.then(|| view! { <Chip label="CONTRACT FROZEN".to_string() tone="success"/> })}
+                    <div class="work-state-line">
+                        <span class="work-state">{state_text}</span>
+                        {show_indicator.then(|| view! { <span class="work-derived">{indicator_text.clone()}</span> })}
+                        <span class="tiny faint">"Health: "{health_label(&health)}</span>
                     </div>
                 </div>
                 <div class="work-actions">

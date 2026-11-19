@@ -1,4 +1,5 @@
 control-plane-data/
 control-plane/target/
+control-plane/control-plane-target/
 control-plane/server/static/pkg/
 control-plane/*.log

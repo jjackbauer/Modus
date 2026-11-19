@@ -36,13 +36,17 @@ variants. Status and interactive colours are consumed only through these aliases
 
 ### Contrast gate (measured with WCAG 2.1 relative luminance)
 
-| Pair | Current | Verdict | Target |
-|---|---:|---|---:|
-| `--text-faint` #5b6878 on `--bg-panel` #11161f (dark) | **3.19:1** | fails 4.5:1 | replace with #9aa8ba → **7.50:1** |
-| `--text-faint` #5b6878 on `--bg-canvas` #090c11 (dark) | **3.45:1** | fails | #9aa8ba → **8.10:1** |
-| `--text-tertiary` #79889b on `--bg-panel` (dark) | **5.01:1** | passes | keep |
-| light `--text-faint` #8996a8 on #ffffff | **3.00:1** | fails | replace with #5f6b7a → **5.43:1** |
-| light `--text-faint` #8996a8 on #f5f7fa | **2.80:1** | fails | #5f6b7a → **5.06:1** |
+| Pair | Before | After (PR 2) | Verdict |
+|---|---:|---:|---|
+| `--text-faint` on `--bg-panel` #11161f (dark) | **3.19:1** | **7.50:1** (#9aa8ba) | passes 4.5:1 |
+| `--text-faint` on `--bg-canvas` #090c11 (dark) | **3.45:1** | **8.10:1** (#9aa8ba) | passes |
+| `--text-tertiary` #79889b on `--bg-panel` (dark) | **5.01:1** | **5.01:1** | passes, unchanged |
+| light `--text-faint` on #ffffff | **3.00:1** | **5.43:1** (#5f6b7a) | passes |
+| light `--text-faint` on #f5f7fa | **2.80:1** | **5.06:1** (#5f6b7a) | passes |
+| light `--text-tertiary` #68778b on #ffffff | 4.57:1 | **4.57:1** | passes, unchanged |
+
+Measured with the WCAG 2.1 relative-luminance formula (`Get-Luminance` in the PR 2 evidence log). The
+"After" values are the token values now in `server/static/app.css` (§12).
 
 Rules:
 
@@ -54,17 +58,18 @@ Rules:
 
 ## 3. Typography
 
-Current tokens are 10/11/12/13px and a 13px body, which is below the operator bar. Target scale:
+Current tokens are 10/11/12/13px and a 13px body, which is below the operator bar. PR 2 implements
+the target scale in `server/static/app.css`:
 
-| Role | Size / line-height | Weight | Current token |
+| Role | Size / line-height | Weight | Token (implemented) |
 |---|---|---|---|
-| Page title | 24px / 1.25 | 650 | `--text-xl` (22px) → raise to 24px |
-| Section title | 18px / 1.3 | 620 | `--text-lg` (17px) |
-| Record title | 16px / 1.35 | 600 | `--text-md` (14px) → 16px |
-| Body / form text | 15px / 1.55 | 400 | `--text-base` (13px) → 15px |
-| Operator metadata | 13px / 1.45 | 450 | `--text-sm` (12px) → 13px |
-| Secondary annotation | 12px / 1.4 | 400 | `--text-xs` (11px) → 12px floor |
-| Prohibited | 10px (`--text-2xs`) | — | remove for user-facing data |
+| Page title | 24px / 1.25 | 650 | `--text-xl` = 24px |
+| Section title | 18px / 1.3 | 620 | `--text-lg` = 18px |
+| Record title | 16px / 1.35 | 600 | `--text-md` = 16px |
+| Body / form text | 15px / 1.55 | 400 | `--text-base` = 15px |
+| Operator metadata | 13px / 1.45 | 450 | `--text-sm` = 13px |
+| Secondary annotation | 12px / 1.4 | 400 | `--text-xs` = `--text-2xs` = 12px |
+| Prohibited | 10px/11px | — | removed for user-facing data |
 
 Rules:
 
@@ -193,3 +198,103 @@ decimals; no "0" where a value is unmeasured ("Not measured"); errors name the a
 | C-03 | §8 |
 | C-04 | §5, §9, `status-glossary.md` |
 | VG-02 | §2, §3, §10 |
+
+## 12. PR 2 foundation — implementation record
+
+This section records what the code now does, so later PRs do not re-litigate the foundation.
+
+### 12.1 Type and colour (implemented)
+
+- `--text-2xs` and `--text-xs` are both **12px**; `--text-sm` **13px**; `--text-base` **15px**;
+  `--text-md` **16px**; `--text-lg` **18px**; `--text-xl` **24px**; `--text-2xl` **30px**.
+- `--text-faint` is **#9aa8ba** (dark) and **#5f6b7a** (light); measured 7.50/8.10 and 5.43/5.06
+  against the panel and canvas surfaces (§2).
+- Table headers no longer use all-caps; navigation group labels, form labels, status text, timestamps
+  and table cells are 13px. 12px remains only for chips, table headers and true annotations.
+- `--sidebar-width` is 248px; `--topbar-height` is 52px.
+- The brand mark is a flat accent square; the glow rings on connection dots are removed.
+
+### 12.2 Shell and navigation (implemented)
+
+- Three task groups in the rail: **Operations** (Overview, Work queue, Quality & approvals, Agents,
+  Artifacts & releases), **Analysis** (Production pipeline, Performance, Improvement) and
+  **Administration** (Settings & audit, Documentation).
+- Every route keeps its URL. Active links carry `aria-current="page"` and detail routes keep their
+  parent section active.
+- At ≤1024px the rail becomes an off-canvas drawer: a Menu button with `aria-expanded` /
+  `aria-controls`, a Close button, a backdrop, Escape to dismiss, a Tab trap, focus entering the
+  drawer on open and returning to the Menu button on close. Body scroll is locked while open. The
+  closed drawer is `visibility: hidden`, so its links are not in the tab order.
+- The topbar shows breadcrumbs with the exact work ID, instance identity/health and the theme
+  control. The theme control names the theme it will switch to.
+- The sidebar footer shows the event-stream freshness ("Live activity · last event …"), the
+  instance identity and adapter health, the account and sign out.
+- Per-page Refresh buttons remain in this increment; consolidating them into one shell refresh with
+  a last-successful-update timestamp is deferred (D-07) until the shared `FreshnessIndicator`
+  component exists.
+
+### 12.3 Queue toolbar (implemented)
+
+- Two rows on desktop: search + state/attention/sort filters + Clear filters; then the view switch
+  and saved views.
+- At ≤760px the search field stays full width and the filters collapse behind a Filters button with
+  `aria-expanded` and `aria-controls`; no squeezed select controls.
+- Clear filters is visible, disabled with a stated reason when nothing is active, and clears search,
+  state and attention (sort is not a filter).
+- At ≤860px the table is replaced by purpose-built cards: full ID, title, authoritative state,
+  derived attention, priority, event count/updated time, last failure and one advisory next step.
+  The card's next step is derived from the same authoritative flags; it is not a second action
+  surface.
+- The four KPI tiles on the queue were replaced by a labelled summary line; the definitions are
+  available in a disclosure. Saved-view rename/delete and URL persistence remain open (B-02).
+
+### 12.4 Responsive containment (implemented)
+
+- Every grid/flex container that holds a scrollable table now has `min-width: 0`, so table wrapping
+  and inner scrolling work instead of widening the document.
+- Long identifiers and digests wrap at safe boundaries (`overflow-wrap: anywhere`) instead of
+  forcing horizontal page scroll.
+- `docs/reference/` holds the three PR 0 mockups and `verification.json` (1440×1000 and 390×844,
+  both themes, no console errors or document overflow).
+
+### 12.5 Measured PR 2 gate
+
+Headless Chrome against the rebuilt release server (port 3101), 16 routes: `overview`,
+`work queue`, `work detail` (merge and contract items), `work 404`, `quality`, `releases`,
+`release detail`, `pipeline`, `agents`, `agent detail`, `analytics`, `improvement`, `settings`,
+`docs` and `route 404`.
+
+| Gate | Result |
+|---|---|
+| Widths × themes × routes | 7 × 2 × 16 = **224 measurements** |
+| Document horizontal overflow at 320/390/768/1024/1280/1440/1920, both themes | **0** |
+| Visible text below 12px | **0** (body 15px; metadata 13px) |
+| Unexpected console errors | **0** (11 logs are the deliberate 404 fixture routes) |
+| Page errors | **0** |
+| Drawer (390px) | opens with focus inside, Tab trap wraps, Escape closes and restores focus, body scroll locked, `aria-expanded` correct |
+| Desktop rail | Tab from the last sidebar control leaves the sidebar; the drawer trap does not run when the rail is permanent |
+| Queue filters (390px) | fields hidden until Filters, `aria-expanded` correct, Clear filters enables only with an active filter and resets it |
+| Work tabs | ArrowRight selects the next tab and moves focus |
+| Contract dialog | focus enters, labelled/described, Escape closes and restores focus; **background inert = false** (open gap: portal) |
+| After screenshots | 37 files in `.evidence/pr2/shots/`; JSON `.evidence/pr2/pr2-gates.json` |
+
+### 12.6 Still open after this increment
+
+- `DataTable`, `Tabs` as a standalone primitive, `FilterBar`, `EmptyState` actions,
+  `FreshnessIndicator`, `EvidenceSummary`, `DiffViewer` are not yet shared components (C-01 partial).
+- Modal background is not inert; the dialog still renders inside `.app-frame`. A portal is required
+  before the background can be inerted safely (C-02).
+- Settings is still one long page; the 390px document overflow is addressed by containment, but the
+  section subnavigation and the audit-table layout are PR 5 work (B-04).
+- Quality still approves template policies inline; the recorded decision is to move that to
+  Settings → Approved templates (interaction-inventory D-04).
+- The Board and Priority queue views still scroll horizontally at narrow widths without a stage
+  selector or labelled scroll affordance (B-02). Saved views still lack rename/delete and URL state.
+- Several surfaces still pass explicit uppercase strings into `Chip` (stage status, review verdict,
+  approval kind, role, serving status), so the label reads in capitals even though the CSS no longer
+  transforms it. This is C-04 copy/status governance, not a token defect.
+- Overview, Quality, Pipeline and Agents still use KPI/`MetricCard` grids; only the queue summary was
+  replaced in this increment (D-06).
+- The mobile work-detail tab strip still scrolls horizontally with no menu/segmented alternative
+  (B-05); the reference mockup replaces it with an evidence index.
+- No real screen-reader run, and no 200% zoom / text-spacing pass yet (VG-02, VG-03).
