@@ -837,3 +837,28 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
   unclaimed and are the only unmet acceptance criterion.
 - **Confidence**: High
 - **Related**: EVD-097, OQ-001, DELIVERY.md
+## OBS-056 — Round cap reached; the goal is NOT complete
+
+- **Source**: final verification at 30/30
+- **Fact**: 168 test cases pass across four suites (arch 5, core 21, agents 69, host 73) with a clean build; the branch
+  is in sync with `origin/feature/wip-factory-alpha` at `75ec101`. Six of eight PA gates are demonstrated by recorded
+  real runs; PA-06 is met for all externally changeable bindings; five application shapes have reached
+  `OperationallyValidated`. **PA-01 and PA-02 were never attempted**, because they require requirements authored
+  outside the implementer and none were supplied.
+- **Implications**: The alpha is delivered and demonstrated; acceptance is unclaimed. This is not a completed objective
+  and must not be reported as one. The gap is a single external dependency, now documented in four places
+  (`DELIVERY.md`, `state.md`, this journal, the goal's blocked reason).
+- **Confidence**: High
+- **Related**: OQ-001, DEC-025, DELIVERY.md
+
+## DEC-026 — Closing the run without claiming completion
+
+- **Decision**: At the round cap, the goal is left **blocked**, not completed. The harness stops here.
+- **Owner**: agent
+- **Status**: approved
+- **Rationale**: The objective names PA-01..PA-08. Seven are demonstrated or met; two are untouched. A completion claim
+  would require me to relabel `known-input/` as blind — the one manoeuvre every gate in this harness exists to prevent,
+  and the exact failure the previous alpha was criticised for.
+- **Alternatives considered**: marking complete on six demonstrated gates (rejected — the objective is explicit);
+  writing PA-01/02 myself and calling it acceptance (rejected — already refused once when the user directed it, and the
+  directory is named `known-input/` precisely so this cannot be re-litigated later).
