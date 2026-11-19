@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control Plane Documentation</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <main class="content">
+    <h1>Wip.Factory Control Plane</h1>
+    <p class="page-subtitle">Local-first operator application for the existing Wip.Factory execution engine.</p>
+    <section class="panel"><div class="panel-body">
+      <h2>Start locally</h2>
+      <pre class="requirement-draft">pwsh -File tools/start-control-plane.ps1</pre>
+      <p>The script builds the .NET control adapter and the Rust server, starts a demo target repository and adapter, and serves this UI on <code>http://127.0.0.1:3000</code>.</p>
+      <h2>Security</h2>
+      <ul>
+        <li>The adapter binds loopback by default and requires a bearer service token.</li>
+        <li>Operator sessions are HttpOnly cookies with server-side CSRF validation.</li>
+        <li>Roles are enforced by the Rust server and independently by the adapter.</li>
+        <li>Core dumps and logs must be handled as operator-sensitive evidence.</li>
+      </ul>
+      <h2>Configuration</h2>
+      <p>Configuration is documented in <code>README.control-plane.md</code> and <code>control-plane/README.md</code>.</p>
+    </div></section>
+  </main>
+</body>
+</html>

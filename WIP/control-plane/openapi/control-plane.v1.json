@@ -1,0 +1,117 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Wip.Factory Control Adapter",
+    "version": "1.0.0",
+    "description": "Versioned, loopback-first JSON adapter used by the Rust control plane. Every mutation delegates to the existing Wip.Factory runtime. The adapter never exposes factory journals or CLI text. The Rust server asserts role and actor headers for attribution, then the adapter re-applies authorization."
+  },
+  "servers": [ { "url": "http://127.0.0.1:5099", "description": "Local adapter" } ],
+  "security": [ { "serviceToken": [], "role": [], "actor": [] } ],
+  "tags": [
+    { "name": "Read" }, { "name": "Work" }, { "name": "Operations" },
+    { "name": "Governance" }, { "name": "Stream" }
+  ],
+  "paths": {
+    "/v1/live": {
+      "get": { "tags": ["Read"], "summary": "Liveness without credentials", "security": [], "responses": { "200": { "description": "Process alive" } } }
+    },
+    "/v1/health": {
+      "get": { "tags": ["Read"], "summary": "Factory store and dispatch health", "responses": {
+        "200": { "description": "Health", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } } },
+        "401": { "$ref": "#/components/responses/Unauthorized" } } }
+    },
+    "/v1/meta": { "get": { "tags": ["Read"], "summary": "Adapter and factory versions", "responses": { "200": { "description": "Version metadata" } } } },
+    "/v1/factory": { "get": { "tags": ["Read"], "summary": "Bound factory identity and capabilities", "responses": { "200": { "description": "Factory" } } } },
+    "/v1/settings": { "get": { "tags": ["Read"], "summary": "Read-only settings, secrets redacted", "responses": { "200": { "description": "Settings" } } } },
+    "/v1/work-items": {
+      "get": {
+        "tags": ["Read"], "summary": "Bounded work queue",
+        "parameters": [ { "$ref": "#/components/parameters/limit" }, { "$ref": "#/components/parameters/offset" }, { "name": "state", "in": "query", "schema": { "type": "string" } }, { "name": "indicator", "in": "query", "schema": { "type": "string" } }, { "name": "q", "in": "query", "schema": { "type": "string" } }, { "name": "sort", "in": "query", "schema": { "type": "string" } } ],
+        "responses": { "200": { "description": "Work page" }, "401": { "$ref": "#/components/responses/Unauthorized" } }
+      },
+      "post": {
+        "tags": ["Work"], "summary": "Submit a requirement; idempotent and deduplicated by requirement digest",
+        "parameters": [ { "$ref": "#/components/parameters/idempotencyKey" } ],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SubmitRequest" } } } },
+        "responses": { "201": { "description": "Created" }, "200": { "description": "Duplicate requirement returned" }, "409": { "$ref": "#/components/responses/Conflict" }, "422": { "$ref": "#/components/responses/Validation" } }
+      }
+    },
+    "/v1/requirement/preview": {
+      "post": { "tags": ["Work"], "summary": "Validate with the factory parser without persisting", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["requirement"], "properties": { "requirement": { "type": "string" } } } } } }, "responses": { "200": { "description": "Parsed, digest, warnings" }, "422": { "$ref": "#/components/responses/Validation" } } }
+    },
+    "/v1/work-items/{workItemId}": {
+      "get": { "tags": ["Read"], "summary": "Work detail, stages, contract, review, release and bounded events", "parameters": [ { "$ref": "#/components/parameters/workItemId" } ], "responses": { "200": { "description": "Detail", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WorkItemDetail" } } } }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/v1/work-items/{workItemId}/contract": {
+      "get": { "tags": ["Read"], "summary": "Proposal and frozen contract digest", "parameters": [ { "$ref": "#/components/parameters/workItemId" } ], "responses": { "200": { "description": "Contract", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Contract" } } } } } }
+    },
+    "/v1/work-items/{workItemId}/contract/approve": {
+      "post": { "tags": ["Operations"], "summary": "Freeze the exact executable proposal digest", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "$ref": "#/components/parameters/idempotencyKey" } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["proposalDigest", "confirmed"], "properties": { "proposalDigest": { "type": "string" }, "confirmed": { "type": "boolean" } } } } } }, "responses": { "200": { "description": "Frozen" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/v1/work-items/{workItemId}/contract/reject": {
+      "post": { "tags": ["Operations"], "summary": "Reject a proposal with a required reason", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "$ref": "#/components/parameters/idempotencyKey" } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["proposalDigest", "reason"], "properties": { "proposalDigest": { "type": "string" }, "reason": { "type": "string", "minLength": 4 } } } } } }, "responses": { "200": { "description": "Rejected" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/v1/work-items/{workItemId}/planning": {
+      "post": { "tags": ["Work"], "summary": "Update control-plane planning metadata with expected version", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "$ref": "#/components/parameters/idempotencyKey" } ], "responses": { "200": { "description": "Updated; authoritative false" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/v1/work-items/{workItemId}/merge-approvals": {
+      "post": { "tags": ["Operations"], "summary": "Authorize merge for the exact accepted review digest", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "$ref": "#/components/parameters/idempotencyKey" } ], "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["reviewDigest", "confirmation"], "properties": { "reviewDigest": { "type": "string" }, "confirmation": { "type": "string" } } } } } }, "responses": { "200": { "description": "Authorized" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/v1/dispatch": {
+      "get": { "tags": ["Operations"], "summary": "Current dispatch state and recent jobs", "responses": { "200": { "description": "Status", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DispatchStatus" } } } } } },
+      "post": { "tags": ["Operations"], "summary": "Start one factory dispatch cycle", "parameters": [ { "$ref": "#/components/parameters/idempotencyKey" } ], "responses": { "202": { "description": "Queued or started" }, "409": { "$ref": "#/components/responses/Conflict" } } }
+    },
+    "/v1/dispatch/{jobId}": { "get": { "tags": ["Operations"], "summary": "Dispatch job", "parameters": [ { "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } } ], "responses": { "200": { "description": "Job" }, "404": { "$ref": "#/components/responses/NotFound" } } } },
+    "/v1/work-items/{workItemId}/serve": {
+      "get": { "tags": ["Operations"], "summary": "Supervised serve status", "parameters": [ { "$ref": "#/components/parameters/workItemId" } ], "responses": { "200": { "description": "Serving" } } },
+      "post": { "tags": ["Operations"], "summary": "Start a bounded serve of the verified merged revision", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "$ref": "#/components/parameters/idempotencyKey" } ], "responses": { "200": { "description": "Serving and verified URL" }, "409": { "$ref": "#/components/responses/Conflict" } } },
+      "delete": { "tags": ["Operations"], "summary": "Stop the factory-owned serve process", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "$ref": "#/components/parameters/idempotencyKey" } ], "responses": { "200": { "description": "Stopped" } } }
+    },
+    "/v1/work-items/{workItemId}/events": {
+      "get": { "tags": ["Read"], "summary": "Durable events after an exclusive sequence cursor", "parameters": [ { "$ref": "#/components/parameters/workItemId" }, { "name": "after", "in": "query", "schema": { "type": "integer", "default": -1 } }, { "$ref": "#/components/parameters/limit" } ], "responses": { "200": { "description": "Page" } } }
+    },
+    "/v1/events/stream": {
+      "get": { "tags": ["Stream"], "summary": "Resumable SSE with Last-Event-ID, heartbeat and explicit resync", "parameters": [ { "name": "Last-Event-ID", "in": "header", "schema": { "type": "integer" } }, { "name": "after", "in": "query", "schema": { "type": "integer", "default": -1 } } ], "responses": { "200": { "description": "text/event-stream", "content": { "text/event-stream": { "schema": { "type": "string" } } } } } }
+    },
+    "/v1/approvals": { "get": { "tags": ["Read"], "summary": "Contract, merge and template approval inbox", "responses": { "200": { "description": "Inbox" } } } },
+    "/v1/releases": { "get": { "tags": ["Read"], "summary": "Verified releases", "responses": { "200": { "description": "Releases" } } } },
+    "/v1/releases/{workItemId}": { "get": { "tags": ["Read"], "summary": "Release and serving evidence", "parameters": [ { "$ref": "#/components/parameters/workItemId" } ], "responses": { "200": { "description": "Release" }, "404": { "$ref": "#/components/responses/NotFound" } } } },
+    "/v1/templates": {
+      "get": { "tags": ["Governance"], "summary": "Template registry", "responses": { "200": { "description": "Templates" } } },
+      "post": { "tags": ["Governance"], "summary": "Register a manifest as pending exact-digest approval", "parameters": [ { "$ref": "#/components/parameters/idempotencyKey" } ], "responses": { "201": { "description": "Registered" }, "422": { "$ref": "#/components/responses/Validation" } } }
+    },
+    "/v1/templates/{templateId}/{version}/approve": { "post": { "tags": ["Governance"], "summary": "Approve exact template manifest digest", "parameters": [ { "name": "templateId", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "version", "in": "path", "required": true, "schema": { "type": "integer" } }, { "$ref": "#/components/parameters/idempotencyKey" } ], "responses": { "200": { "description": "Approved" }, "409": { "$ref": "#/components/responses/Conflict" } } } },
+    "/v1/agents": { "get": { "tags": ["Governance"], "summary": "Agent definitions and active profiles", "responses": { "200": { "description": "Agents" } } } },
+    "/v1/agents/{definitionId}": { "get": { "tags": ["Governance"], "summary": "Definition, immutable profiles, sessions and adaptation events", "parameters": [ { "name": "definitionId", "in": "path", "required": true, "schema": { "type": "string" } } ], "responses": { "200": { "description": "Agent detail" }, "404": { "$ref": "#/components/responses/NotFound" } } } },
+    "/v1/analytics": { "get": { "tags": ["Governance"], "summary": "Measured metrics with not-measured states and definitions", "parameters": [ { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } }, { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } } ], "responses": { "200": { "description": "Analytics" } } } },
+    "/v1/pipeline": { "get": { "tags": ["Governance"], "summary": "Live or reconstructed pipeline board and queue metrics", "parameters": [ { "name": "at", "in": "query", "schema": { "type": "string", "format": "date-time" } } ], "responses": { "200": { "description": "Pipeline" } } } },
+    "/v1/audit": { "get": { "tags": ["Governance"], "summary": "Adapter operation audit", "responses": { "200": { "description": "Audit page" } } } }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceToken": { "type": "http", "scheme": "bearer", "description": "Service token, never sent to the browser" },
+      "role": { "type": "apiKey", "in": "header", "name": "X-Control-Plane-Role", "description": "viewer, operator or admin; independently enforced by the adapter" },
+      "actor": { "type": "apiKey", "in": "header", "name": "X-Control-Plane-Actor", "description": "Percent-encoded operator identity used for audit" }
+    },
+    "parameters": {
+      "workItemId": { "name": "workItemId", "in": "path", "required": true, "schema": { "type": "string" } },
+      "limit": { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 200, "default": 50 } },
+      "offset": { "name": "offset", "in": "query", "schema": { "type": "integer", "minimum": 0, "default": 0 } },
+      "idempotencyKey": { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string", "minLength": 8, "maxLength": 200 } }
+    },
+    "responses": {
+      "Unauthorized": { "description": "Missing/invalid service credential", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "No such factory object", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Conflict": { "description": "Stale digest/version or factory refusal", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Validation": { "description": "Invalid request or requirement", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "Error": { "type": "object", "required": ["error"], "properties": { "error": { "type": "object", "required": ["category", "code", "message", "retryable"], "properties": { "category": { "type": "string" }, "code": { "type": "string" }, "message": { "type": "string" }, "retryable": { "type": "boolean" }, "correlationId": { "type": ["string", "null"] } } } } },
+      "Health": { "type": "object", "required": ["healthy", "storeReadable", "factoryInstanceId", "workItemCount", "eventCount", "latestEventSequence", "dispatchRunning", "implementationRunner", "tornRecordCount", "checkedAtUtc"], "properties": { "healthy": { "type": "boolean" }, "storeReadable": { "type": "boolean" }, "factoryInstanceId": { "type": "string" }, "workItemCount": { "type": "integer" }, "eventCount": { "type": "integer" }, "latestEventSequence": { "type": "integer" }, "dispatchRunning": { "type": "boolean" }, "implementationRunner": { "type": "string" }, "tornRecordCount": { "type": "integer" }, "checkedAtUtc": { "type": "string", "format": "date-time" }, "detail": { "type": ["string", "null"] } } },
+      "SubmitRequest": { "type": "object", "required": ["requirement", "explicitlyConfirmed"], "properties": { "requirement": { "type": "string" }, "acceptanceContractJson": { "type": ["string", "null"] }, "planning": { "type": ["object", "null"] }, "explicitlyConfirmed": { "type": "boolean" } } },
+      "Contract": { "type": "object", "properties": { "proposalDigest": { "type": ["string", "null"] }, "frozenDigest": { "type": ["string", "null"] }, "isFrozen": { "type": "boolean" }, "executable": { "type": "boolean" }, "awaitingApproval": { "type": "boolean" }, "unresolvedQuestions": { "type": "array", "items": { "type": "string" } } } },
+      "WorkItemDetail": { "type": "object", "properties": { "summary": { "type": "object" }, "stages": { "type": "array", "items": { "type": "object" } }, "contract": { "$ref": "#/components/schemas/Contract" }, "reviews": { "type": "array", "items": { "type": "object" } }, "release": { "type": ["object", "null"] }, "serving": { "type": "object" }, "events": { "type": "array", "items": { "type": "object" } }, "eventTotal": { "type": "integer" }, "nextActions": { "type": "array", "items": { "type": "object" } }, "attention": { "type": "array", "items": { "type": "object" } } } },
+      "DispatchStatus": { "type": "object", "properties": { "running": { "type": "boolean" }, "jobId": { "type": ["string", "null"] }, "recent": { "type": "array", "items": { "type": "object" } } } }
+    }
+  }
+}

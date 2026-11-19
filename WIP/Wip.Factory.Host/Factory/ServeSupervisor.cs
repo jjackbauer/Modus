@@ -16,6 +16,35 @@ public sealed record ServeOutcome(
         => new(false, error, 0, null, "failed", 0, mergedSha);
 }
 
+/// <summary>Lifecycle phases of one supervised serve window (v0.4 IMP-007).</summary>
+public enum ServePhase
+{
+    Preparing = 1,
+    Building = 2,
+    Starting = 3,
+
+    /// <summary>The process is identified and its socket is accepting connections; health is not yet proven.</summary>
+    Listening = 4,
+
+    /// <summary>Identity, listening socket and the frozen contract have all been proven.</summary>
+    Ready = 5,
+    Restarted = 6,
+    Stopped = 7,
+    Failed = 8
+}
+
+/// <summary>
+/// One progress observation published while serving. <see cref="ServePhase.Listening"/> carries the URL/PID/served
+/// SHA as soon as they exist; <see cref="ServePhase.Ready"/> is only published after the frozen contract passes.
+/// </summary>
+public sealed record ServeProgress(
+    ServePhase Phase,
+    string? Url,
+    int ProcessId,
+    string MergedSha,
+    string Detail,
+    DateTimeOffset AtUtc);
+
 /// <summary>One durable supervision observation (v0.4 FAC-P1-02.5).</summary>
 public sealed record ServeStatusRecord(
     string WorkItemId,
@@ -24,7 +53,8 @@ public sealed record ServeStatusRecord(
     int ProcessId,
     int RestartCount,
     string Detail,
-    DateTimeOffset RecordedAtUtc);
+    DateTimeOffset RecordedAtUtc,
+    string? ServedUrl = null);
 
 /// <summary>Append-only liveness/observation evidence for one supervised release.</summary>
 public sealed class ServeStatusJournal
@@ -41,7 +71,7 @@ public sealed class ServeStatusJournal
 
     public string Path => _journal.Path;
 
-    public void Append(string workItemId, string mergedSha, string status, int processId, int restartCount, string detail)
+    public void Append(string workItemId, string mergedSha, string status, int processId, int restartCount, string detail, string? servedUrl = null)
     {
         using var lease = CrossProcessFileLock
             .AcquireAsync(_lockPath, TimeSpan.FromSeconds(15))
@@ -50,7 +80,7 @@ public sealed class ServeStatusJournal
             .GetResult();
 
         _journal.Append(new ServeStatusRecord(
-            workItemId, mergedSha, status, processId, restartCount, detail, DateTimeOffset.UtcNow));
+            workItemId, mergedSha, status, processId, restartCount, detail, DateTimeOffset.UtcNow, servedUrl));
     }
 
     public IReadOnlyList<ServeStatusRecord> ReadAll()

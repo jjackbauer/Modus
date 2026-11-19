@@ -201,6 +201,14 @@ public interface IAgentProfileRegistry
         AgentProfileVersion version,
         CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Every published immutable version for a definition, ordered by profile id and version. Read-only: this is
+    /// the operator-visible history of what may be activated, not a mutation surface.
+    /// </summary>
+    ValueTask<IReadOnlyList<AgentProfile>> ListAsync(
+        AgentDefinitionId definitionId,
+        CancellationToken cancellationToken = default);
+
     /// <summary>The version selected by the promotion pointer, or null when nothing is promoted.</summary>
     ValueTask<AgentProfile?> ResolveActiveAsync(
         AgentDefinitionId definitionId,

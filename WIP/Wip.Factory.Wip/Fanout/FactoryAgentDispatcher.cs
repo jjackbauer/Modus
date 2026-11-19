@@ -30,10 +30,21 @@ public sealed record FactoryAgentResult(
     string? FailureCategory,
     int InputTokens,
     int OutputTokens,
-    IReadOnlyList<string> OutputArtifactRefs)
+    IReadOnlyList<string> OutputArtifactRefs,
+    IReadOnlyList<FactoryToolInvocation>? ToolInvocations = null)
 {
     public bool Succeeded => Completed;
 }
+
+/// <summary>
+/// One tool call observed inside an agent session, retained for operator evidence. Arguments and results are raw
+/// here; the telemetry writer sanitizes and bounds them before they can become durable evidence.
+/// </summary>
+public sealed record FactoryToolInvocation(
+    string ToolName,
+    string Arguments,
+    string? Result,
+    bool IsError);
 
 /// <summary>
 /// The only seam through which the factory executes an agent. The production implementation delegates
@@ -194,7 +205,40 @@ public sealed class FactoryAgentDispatcher
             result.Succeeded ? null : result.Status.ToString(),
             inputTokens,
             outputTokens,
-            []);
+            [],
+            Invocations(result.Steps));
+    }
+
+    /// <summary>
+    /// Pairs each model tool call with the result the runtime received. This is evidence, not control flow: an
+    /// unpaired call is retained with a null result rather than being dropped.
+    /// </summary>
+    private static IReadOnlyList<FactoryToolInvocation> Invocations(IReadOnlyList<AgentStep> steps)
+    {
+        var results = steps
+            .SelectMany(static step => step.ToolResults)
+            .GroupBy(static result => result.ToolCallId, StringComparer.Ordinal)
+            .ToDictionary(static group => group.Key, static group => group.Last(), StringComparer.Ordinal);
+
+        var invocations = new List<FactoryToolInvocation>();
+        foreach (var step in steps)
+        {
+            foreach (var call in step.AssistantMessage.ToolCalls)
+            {
+                results.TryGetValue(call.Id, out var toolResult);
+                var arguments = call.Arguments.ValueKind == System.Text.Json.JsonValueKind.Undefined
+                    ? string.Empty
+                    : call.Arguments.GetRawText();
+
+                invocations.Add(new FactoryToolInvocation(
+                    call.Name,
+                    arguments,
+                    toolResult?.Content,
+                    toolResult?.IsError ?? false));
+            }
+        }
+
+        return invocations;
     }
 
     private static string ShortName(AgentDefinitionId definitionId)

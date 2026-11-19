@@ -1,0 +1,42 @@
+[package]
+name = "control-plane-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[features]
+default = ["ssr"]
+hydrate = [
+    "leptos/hydrate",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:web-sys",
+    "dep:js-sys",
+    "dep:gloo-timers",
+    "dep:console_error_panic_hook",
+]
+ssr = ["leptos/ssr", "leptos_router/ssr"]
+
+[dependencies]
+control-plane-domain.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+leptos.workspace = true
+leptos_router.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+wasm-bindgen = { workspace = true, optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+web-sys = { version = "0.3", optional = true, features = [
+    "Window", "Document", "Element", "HtmlElement", "Storage", "Location",
+    "EventSource", "MessageEvent", "Event", "Navigator", "Clipboard",
+    "HtmlInputElement", "HtmlTextAreaElement", "HtmlSelectElement", "EventTarget",
+] }
+js-sys = { version = "0.3", optional = true }
+gloo-net = { version = "0.6", features = ["http", "json"] }
+percent-encoding.workspace = true
+gloo-timers = { version = "0.3", optional = true, features = ["futures"] }
+console_error_panic_hook = { version = "0.1", optional = true }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }

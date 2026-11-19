@@ -117,6 +117,49 @@ public sealed class LocalAgentProfileRegistry : IAgentProfileRegistry
         }
     }
 
+    public async ValueTask<IReadOnlyList<AgentProfile>> ListAsync(
+        AgentDefinitionId definitionId,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var definitionDirectory = Path.Combine(_profilesRoot, definitionId.Value);
+            if (!Directory.Exists(definitionDirectory))
+            {
+                return [];
+            }
+
+            var profiles = new List<AgentProfile>();
+            foreach (var profileDirectory in Directory.EnumerateDirectories(definitionDirectory))
+            {
+                foreach (var path in Directory.EnumerateFiles(profileDirectory, "*.json"))
+                {
+                    if (!int.TryParse(Path.GetFileNameWithoutExtension(path), out _))
+                    {
+                        continue;
+                    }
+
+                    var profile = await ReadAsync(path, cancellationToken).ConfigureAwait(false);
+                    if (profile is not null
+                        && string.Equals(profile.DefinitionId.Value, definitionId.Value, StringComparison.Ordinal))
+                    {
+                        profiles.Add(profile);
+                    }
+                }
+            }
+
+            return profiles
+                .OrderBy(static profile => profile.AgentProfileId.Value, StringComparer.Ordinal)
+                .ThenBy(static profile => profile.Version.Value)
+                .ToArray();
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     public async ValueTask<AgentProfile?> ResolveActiveAsync(
         AgentDefinitionId definitionId,
         CancellationToken cancellationToken = default)

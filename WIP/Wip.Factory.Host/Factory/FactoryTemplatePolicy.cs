@@ -20,6 +20,14 @@ public sealed record TemplateManifest(
 public sealed record TemplateParameter(string Type, IReadOnlyList<string>? Allowed);
 
 /// <summary>Outcome of a policy evaluation. Only a full match may auto-approve a contract.</summary>
+/// <summary>Read-only inventory entry for one registered template version, including approval state.</summary>
+public sealed record TemplateListItem(
+    TemplateManifest Manifest,
+    bool Approved,
+    bool Revoked,
+    string? ApprovalMarkerJson,
+    string? Error);
+
 public sealed record TemplateDecision(
     bool Approved,
     string? Reason,
@@ -215,6 +223,36 @@ public sealed class FactoryTemplateRegistry
         }
 
         _errors[key] = Revoked + ":" + templateId + "@" + templateVersion;
+    }
+
+    /// <summary>
+    /// Read-only inventory of every registered version, including unapproved and revoked bodies. The adapter needs
+    /// to show an operator what exists before it asks them to approve a digest.
+    /// </summary>
+    public IReadOnlyList<TemplateListItem> List()
+    {
+        using var lease = FactoryMutationLock.Acquire(_controlRoot);
+        Reload();
+
+        return _templates
+            .OrderBy(static entry => entry.Key, StringComparer.Ordinal)
+            .Select(entry =>
+            {
+                var (id, version) = entry.Value.Manifest.TemplateId.Length == 0
+                    ? ("", 0)
+                    : (entry.Value.Manifest.TemplateId, entry.Value.Manifest.TemplateVersion);
+
+                _errors.TryGetValue(entry.Key, out var error);
+                var revoked = File.Exists(RevokedPath(id, version));
+                var marker = MarkerPath(id, version);
+                return new TemplateListItem(
+                    entry.Value.Manifest,
+                    entry.Value.Approved && !revoked,
+                    revoked,
+                    File.Exists(marker) ? File.ReadAllText(marker) : null,
+                    error);
+            })
+            .ToArray();
     }
 
     /// <summary>Looks up an approved template and re-verifies its digest against its stored body and approval marker.</summary>

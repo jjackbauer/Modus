@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Wip.Factory.ControlApi</RootNamespace>
+    <AssemblyName>Wip.Factory.ControlApi</AssemblyName>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Wip.Factory.Host\Wip.Factory.Host.csproj" />
+    <ProjectReference Include="..\Wip.Factory.Telemetry\Wip.Factory.Telemetry.csproj" />
+  </ItemGroup>
+</Project>

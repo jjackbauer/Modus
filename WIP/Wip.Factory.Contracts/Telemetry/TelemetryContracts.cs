@@ -4,6 +4,14 @@ using Wip.Factory.Contracts.Profiles;
 
 namespace Wip.Factory.Contracts.Telemetry;
 
+/// <summary>One sanitized tool invocation retained as session evidence. Raw arguments are never stored here.</summary>
+public sealed record AgentToolInvocation(
+    string ToolName,
+    string ArgumentsDigest,
+    string ArgumentsExcerpt,
+    bool Failed,
+    string ResultExcerpt);
+
 /// <summary>One sanitized cross-session trace (F-I.1). Raw tool arguments are never stored here.</summary>
 public sealed record AgentSessionTrace(
     SessionId SessionId,
@@ -17,7 +25,8 @@ public sealed record AgentSessionTrace(
     string? FailureCategory,
     IReadOnlyList<string> ToolNames,
     string Summary,
-    DateTimeOffset RecordedAtUtc);
+    DateTimeOffset RecordedAtUtc,
+    IReadOnlyList<AgentToolInvocation>? ToolInvocations = null);
 
 /// <summary>A normalized failure cluster for cross-session analysis (F-I.2).</summary>
 public sealed record FailureCluster(string Category, int Occurrences, IReadOnlyList<SessionId> Sessions);

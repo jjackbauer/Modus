@@ -11,6 +11,8 @@ using Wip.Factory.Adaptation;
 using Wip.Factory.Agents.Core.Tools;
 using Wip.Factory.Contracts.Identifiers;
 using Wip.Factory.Contracts.Profiles;
+using Wip.Factory.Contracts.Telemetry;
+using Wip.Factory.Telemetry;
 using Wip.Factory.Wip.Fanout;
 using Wip.Factory.Wip.Isolation;
 using Wip.Factory.Wip.Workspaces;
@@ -47,12 +49,14 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
     private readonly FactoryControlRoot _root;
     private readonly Uri _baseUrl;
     private readonly string _apiKey;
+    private readonly LocalAgentSessionTraceStore _traces;
 
     public RealModelImplementationRunner(FactoryControlRoot root, Uri baseUrl, string apiKey)
     {
         _root = root ?? throw new ArgumentNullException(nameof(root));
         _baseUrl = baseUrl ?? throw new ArgumentNullException(nameof(baseUrl));
         _apiKey = apiKey ?? throw new ArgumentException("An API key is required.", nameof(apiKey));
+        _traces = new LocalAgentSessionTraceStore(Path.Combine(root.Root, "telemetry"));
     }
 
     public async ValueTask<ImplementationOutcome> RunAsync(
@@ -280,8 +284,11 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
 
         if (!dispatch.Completed)
         {
+            await TryRecordTraceAsync(request, sessionId, dispatch, cancellationToken).ConfigureAwait(false);
             return ImplementationOutcome.Failed("implementation-agent-failed:" + dispatch.FailureCategory);
         }
+
+        await TryRecordTraceAsync(request, sessionId, dispatch, cancellationToken).ConfigureAwait(false);
 
         // Attribution: the worktree, not the model's prose, decides whether anything changed.
         var status = await GitAsync(worktree, cancellationToken, "status", "--porcelain").ConfigureAwait(false);
@@ -337,8 +344,70 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
         return ImplementationOutcome.Ok(baseSha, headSha, changed, diffDigest, worktree);
     }
 
-    private static string BuildPrompt(ImplementationRequest request)
+    /// <summary>
+    /// Persists the sanitized evidence of one agent session. Telemetry is secondary: a trace write failure must not
+    /// turn a completed implementation into an error, but it is also never replaced by invented activity.
+    /// </summary>
+    private async ValueTask TryRecordTraceAsync(
+        ImplementationRequest request,
+        SessionId sessionId,
+        FactoryAgentResult dispatch,
+        CancellationToken cancellationToken)
     {
+        try
+        {
+            var redactor = new global::Wip.Factory.Wip.Isolation.SecretRedactor();
+            var toolNames = (dispatch.ToolInvocations ?? [])
+                .Select(static invocation => invocation.ToolName)
+                .Where(static name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(static name => name, StringComparer.Ordinal)
+                .ToArray();
+
+            var invocations = (dispatch.ToolInvocations ?? [])
+                .Select(invocation =>
+                {
+                    var arguments = invocation.Arguments ?? string.Empty;
+                    var result = invocation.Result ?? string.Empty;
+                    return new AgentToolInvocation(
+                        invocation.ToolName,
+                        FactoryStageDispatchHandler.Digest(arguments),
+                        Bound(redactor.Redact(arguments, out _), 600),
+                        invocation.IsError,
+                        Bound(redactor.Redact(result, out _), 600));
+                })
+                .ToArray();
+
+            var summary = $"{dispatch.ToolInvocations?.Count ?? 0} tool invocation(s), "
+                          + (dispatch.InputTokens + dispatch.OutputTokens) + " token(s), result="
+                          + (dispatch.Completed ? "completed" : dispatch.FailureCategory ?? "failed");
+            var trace = new AgentSessionTrace(
+                sessionId,
+                new WorkItemId(request.WorkItemId),
+                new AgentDefinitionId("factory.implementations-analyst"),
+                dispatch.AgentProfileVersion,
+                new ModelId(string.IsNullOrWhiteSpace(dispatch.ModelId) ? "unknown" : dispatch.ModelId),
+                dispatch.InputTokens,
+                dispatch.OutputTokens,
+                dispatch.Completed ? "completed" : "failed",
+                dispatch.FailureCategory,
+                toolNames,
+                Bound(redactor.Redact(summary, out _), 2000),
+                DateTimeOffset.UtcNow,
+                invocations);
+
+            await _traces.AppendAsync(trace, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Evidence is best-effort at this seam; the attempt journal remains the durable stage record.
+        }
+    }
+
+    private static string Bound(string value, int max)
+        => value.Length <= max ? value : value[..max] + "â€¦";
+
+    private static string BuildPrompt(ImplementationRequest request)    {
         var expectations = string.Join('\n', request.Expectations.Select(static (e, i) => "- AC-" + (i + 1) + ": " + e));
 
         var prompt = "Implement this requirement in the current repository, which is already checked out in your worktree.\n\n"

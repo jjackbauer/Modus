@@ -1,0 +1,13 @@
+{
+  "name": "control-plane-browser-evidence",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Headless Chrome evidence scripts for the Rust control plane",
+  "scripts": {
+    "tour": "node tour.cjs",
+    "lifecycle": "node lifecycle-ui.cjs"
+  },
+  "dependencies": {
+    "playwright-core": "^1.56.0"
+  }
+}
