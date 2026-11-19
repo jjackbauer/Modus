@@ -622,7 +622,7 @@ last durable facts" within 0.8s, keeps the durable rows, and returns to live act
 browser reconnects; a nonexistent work item shows 404 `work-item-not-found` with no retry action and
 the exact ID in the breadcrumb; a viewer role sees disabled merge and dispatch controls and receives
 403 `forbidden` from the merge endpoint. Non-executable contract and stale intake drafts are covered
-above. Not every major panel has every state exercised, so VG-06 is not claimed complete.
+above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A client-side abort of the already server-rendered detail does not produce a detail error, and a failed background refetch is currently retained silently, so an inline stale/refresh-failure banner remains open. Not every major panel has every state exercised, so VG-06 is not claimed complete.
 
 **VG-07 technical.** `cargo test --workspace` suites were green; the web crate has 24 tests and the
 server 13. The hydrate wasm check and release server/wasm builds succeeded, and the browser checks
@@ -681,7 +681,7 @@ open.
   in-page back link remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast review; VG-04 has digest-mismatch and repeat-authorization refusals but not a changed-review stale case
   merge authorization; VG-05 has no approved regression baseline; VG-06 did not exercise every
-  panel and state combination; VG-08 reached 104 work items but only 144 events and no long
+  panel and state combination, and a failed background detail refetch is silent; VG-08 reached 104 work items but only 144 events and no long
   diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom
   is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan is not
   complete and must not be marked so.
