@@ -1,6 +1,6 @@
 {
-    "generatedAtUtc":  "2026-11-19T10:07:48.8988635Z",
-    "sourceRevision":  "cac2922a3b9e7f7f33769cf2bdb679ac8c8a78df",
+    "generatedAtUtc":  "2026-11-19T10:09:00.5165494Z",
+    "sourceRevision":  "e29df4d2be41ef53dc3b5d71226c8f1565b8c48c",
     "suites":  [
                    {
                        "suite":  "factory-core",
