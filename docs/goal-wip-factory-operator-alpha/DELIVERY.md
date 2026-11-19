@@ -5,7 +5,7 @@
 `v0.4-independent-acceptance-result.md`.
 
 Baseline: `feature/wip-factory-alpha` at `e142bb43fb2faed6884f85387833186eac06457d` plus the v0.4 remediation
-changes. Code revision: `baa3bfc` (worktree-retry remediation); measured evidence: `d1563d5`.
+changes. Code revision: `b31a446` (worktree-retry + architecture-conformance fixes); measured evidence: `548ee6a`.
 Spec: `harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md`; remediation requirements: v0.4 (this record).
 The superseded v0.3 narrative is preserved in git history, not restated here with stale numbers.
 
@@ -25,13 +25,13 @@ Source: `v0.4-test-report.md`, `gate-report.json`, `named-test-coverage.json`.
 | Gate | Status | Basis |
 |---|---|---|
 | Build | **pass** | `dotnet build` 0 errors |
-| Factory suites | **pass** | 278 cases, 0 failures across core (21), agents (69), host (169), workspace-git (14), architecture (5) |
+| Factory suites | **pass** | 280 cases, 0 failures across core (21), agents (69), host (171), workspace-git (14), architecture (5) |
 | Named v0.3 tests | **61 / 80 exact** | plus 18 equivalent-but-renamed; 1 missing (blind PA-02, not-run); 0 name-only placeholders |
 | FAC-P0-01 release integrity | **implemented + tested** | crash-after-merge resumes verification; no release on a ledger shortcut |
 | FAC-P0-02 four review checks | **implemented + tested** | validation/coverage/architecture/security each with executed, digest-bound evidence |
 | FAC-P0-03 immutable templates | **implemented + tested** | re-registration conflict, marker/body mismatch, revocation persistence, traversal refusal |
 | FAC-P0-04 acceptance harness | **implemented + tested** | evaluator owns expected scenarios and frozen contract; missing/duplicate/uninspected evidence fails |
-| FAC-P0-05 blind PA-01/PA-02 | **failed — new pair required** | PA-01 failed on worktree retry idempotency (fixed in `baa3bfc`); PA-02 passed 7/7 in both phases; pair exit 2; spent tasks cannot be reused |
+| FAC-P0-05 blind PA-01/PA-02 | **failed — new pair required** | blind attempt failed PA-01; after fixes, both tasks pass in a non-blind rerun (8/8 and 7/7 both phases); spent tasks cannot be relabelled |
 | FAC-P1-01..08 | **implemented with named exceptions** | see `v0.4-closure-map.md`; secret redaction and its security-policy check are implemented |
 | v0.3 PA-03–PA-08 | **mechanics exercised; PA-02 passed** | independent PA-02 passed all 7 scenarios in both phases; PA-01 failed before review; prior known-input A also passed 4/4 |
 

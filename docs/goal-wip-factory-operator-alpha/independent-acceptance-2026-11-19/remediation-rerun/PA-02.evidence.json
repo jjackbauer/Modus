@@ -1,0 +1,134 @@
+{
+    "gate":  "PA-02",
+    "hostDigest":  "sha256:03c642350dc50ebadb242e5a8f526343db1cecc4b279e24a68368de0927f6650",
+    "configDigest":  "sha256:3afdf0bec8bb5565a329cd47c8787ba56a42e253e8194ca3da7574972f113bb7",
+    "requirementDigest":  "sha256:051a56c287d838715b3fd72dbc7ce87ede0bcd08a5d14ca592cc089d76385c1d",
+    "contractDigest":  "sha256:a92fc5be2a3436ba631506f489ffc2d9f2dd5c1c076f284f5c118d11735f4f45",
+    "modelEvidenceKind":  "live",
+    "modelProvider":  "deepseek",
+    "knownInput":  true,
+    "blind":  false,
+    "preMerge":  [
+                     {
+                         "id":  "AC-1",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-2",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-3",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-4",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-5",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-6",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     },
+                     {
+                         "id":  "AC-7",
+                         "phase":  "pre-merge",
+                         "passed":  true,
+                         "detail":  null
+                     }
+                 ],
+    "postMerge":  [
+                      {
+                          "id":  "AC-1",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-2",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-3",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-4",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-5",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-6",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      },
+                      {
+                          "id":  "AC-7",
+                          "phase":  "post-merge",
+                          "passed":  true,
+                          "detail":  null
+                      }
+                  ],
+    "released":  true,
+    "mergedSha":  "311ad95c404b93526fd99274f139fadaea5c0be4",
+    "targetHeadSha":  "311ad95c404b93526fd99274f139fadaea5c0be4",
+    "operationallyValidated":  true,
+    "recordedAtUtc":  "2026-11-19T11:31:45.6145250Z",
+    "commands":  [
+                     {
+                         "command":  "requirement submit",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (proposal)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "contract approve",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (implementation+review)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "approve (merge)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (merge+verify)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "serve",
+                         "exit":  0
+                     }
+                 ]
+}

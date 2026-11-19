@@ -1,0 +1,6 @@
+{
+    "gate":  "PA-01",
+    "exit":  0,
+    "output":  "acceptance: pass",
+    "verdict":  "pass"
+}
