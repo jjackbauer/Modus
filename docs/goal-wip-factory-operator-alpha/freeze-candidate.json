@@ -1,0 +1,13 @@
+{
+    "codeRevision":  "53350402b8f8f3422dbd5c457e13b42a27c36f2c",
+    "measuredCodeRevision":  "e29df4d2be41ef53dc3b5d71226c8f1565b8c48c",
+    "hostBinary":  "WIP/Wip.Factory.Host/bin/Debug/net10.0/Wip.Factory.Host.dll",
+    "hostDigest":  "sha256:b921c4c1f84d4c94b9fadd77e3ecde3a09e7c3d01bf3fdef04cfea6d838a9990",
+    "configDigest":  "sha256:3afdf0bec8bb5565a329cd47c8787ba56a42e253e8194ca3da7574972f113bb7",
+    "configInputs":  [
+                         "WIP/Wip.Factory.Host/Wip.Factory.Host.csproj",
+                         "WIP/Wip.Factory.Host/Program.cs"
+                     ],
+    "generatedAtUtc":  "2026-11-19T10:09:52.6796363Z",
+    "note":  "Candidate freeze measured by the implementer. The independent evaluator must re-measure before revealing either blind requirement; a rebuild changes the digest."
+}

@@ -34,8 +34,26 @@ $project = Join-Path $repoRoot 'WIP/Wip.Factory.Host'
 
 function Invoke-Factory {
     param([string[]]$Arguments)
-    $output = & dotnet run --project $project --no-build -- @Arguments 2>&1
-    [pscustomobject]@{ Output = ($output | Out-String); Exit = $LASTEXITCODE }
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & dotnet run --project $project --no-build -- @Arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+    [pscustomobject]@{ Output = ($output | Out-String); Exit = $exitCode }
+}
+
+function Invoke-Git {
+    param([string[]]$Arguments)
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        return ((& git @Arguments 2>&1 | Out-String).Trim())
+    } finally {
+        $ErrorActionPreference = $previous
+    }
 }
 
 function Get-Events {
@@ -50,7 +68,9 @@ function Get-Events {
 function Get-Sha256Hex {
     param([string]$Text)
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($Text)
-    return ([System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($bytes))).ToLowerInvariant()
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try { $hash = $sha.ComputeHash($bytes) } finally { $sha.Dispose() }
+    return (-join ($hash | ForEach-Object { $_.ToString('x2') }))
 }
 
 function Write-JsonFile {
@@ -100,7 +120,7 @@ $manifestPath = Join-Path $OutRoot ($Gate + '.evidence.json')
 $verdictPath = Join-Path $OutRoot ($Gate + '.verdict.json')
 
 New-Item -ItemType Directory -Force -Path $repository, $workRoot | Out-Null
-& git -C $repository init -b main --quiet 2>&1 | Out-Null
+Invoke-Git @('-C', $repository, 'init', '-b', 'main', '--quiet') | Out-Null
 
 # 1. Freeze the host binary and its effective configuration digest.
 $hostAssembly = Join-Path $project 'bin/Debug/net10.0/Wip.Factory.Host.dll'
@@ -201,7 +221,7 @@ if (-not $released) { Complete-Run 'not-released' }
 $evidence.released = $true
 $evidence.mergedSha = $released.Data.mergedSha
 $evidence.postMerge = ConvertFrom-ScenarioSummary -Summary $released.Data.postMergeScenarios -Phase 'post-merge'
-$evidence.targetHeadSha = (& git -C $repository rev-parse HEAD).Trim()
+$evidence.targetHeadSha = Invoke-Git @('-C', $repository, 'rev-parse', 'HEAD')
 
 # 6. Serve: supervised identity proof over the pinned release.
 $serve = Invoke-Factory @('factory', 'serve', '--work-item', $workItem, '--repo', $repository, '--control-root', $control, '--duration-seconds', $ServeSeconds)
