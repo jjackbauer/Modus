@@ -82,6 +82,75 @@ public sealed class WipWorkspaceProviderGit
         var worktreePath = Path.Combine(worktreeRoot, request.SessionId.Value);
         Directory.CreateDirectory(Path.GetDirectoryName(worktreePath) ?? request.RepositoryPath);
 
+        // A retry of the same session must reuse its worktree rather than fail on the branch it already created.
+        // The first attempt may have left uncommitted implementation work that the retry is expected to repair.
+        if (Directory.Exists(worktreePath))
+        {
+            var currentBranch = await RunGitAsync(
+                worktreePath,
+                allowFailure: true,
+                cancellationToken,
+                "rev-parse",
+                "--abbrev-ref",
+                "HEAD");
+
+            if (currentBranch.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Existing path '{worktreePath}' is not a usable Git worktree. {currentBranch.FormatForError()}");
+            }
+
+            if (!string.Equals(currentBranch.StdOut, sessionBranch, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"Existing worktree '{worktreePath}' is on branch '{currentBranch.StdOut}', not the session branch '{sessionBranch}'.");
+            }
+
+            return new WorkspaceSession(
+                request.SessionId,
+                request.RepositoryPath,
+                worktreePath,
+                sessionBranch,
+                request.TargetBranch,
+                targetCommitAtCreation);
+        }
+
+        // A previous attempt may have created the session branch but removed or lost its worktree. Attaching the
+        // existing branch is idempotent; creating it again with -b is not.
+        var existingBranch = await RunGitAsync(
+            request.RepositoryPath,
+            allowFailure: true,
+            cancellationToken,
+            "rev-parse",
+            "--verify",
+            "refs/heads/" + sessionBranch);
+
+        if (existingBranch.ExitCode == 0)
+        {
+            var attach = await RunGitAsync(
+                request.RepositoryPath,
+                allowFailure: true,
+                cancellationToken,
+                "worktree",
+                "add",
+                worktreePath,
+                sessionBranch);
+
+            if (attach.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to attach existing session branch for session '{request.SessionId.Value}'. {attach.FormatForError()}");
+            }
+
+            return new WorkspaceSession(
+                request.SessionId,
+                request.RepositoryPath,
+                worktreePath,
+                sessionBranch,
+                request.TargetBranch,
+                targetCommitAtCreation);
+        }
+
         var worktreeAdd = await RunGitAsync(
             request.RepositoryPath,
             allowFailure: true,

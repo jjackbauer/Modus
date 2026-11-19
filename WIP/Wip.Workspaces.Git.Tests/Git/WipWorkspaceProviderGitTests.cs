@@ -36,6 +36,48 @@ public sealed class WipWorkspaceProviderGitTests
     }
 
     [Fact]
+    public async Task CreateAsync_GivenExistingWorktreeForSameSession_ReusesItWithoutFailing()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+        var request = new CreateWorkspaceRequest(
+            RepositoryPath: fixture.RepositoryPath,
+            SessionId: new SessionId("session-reuse"),
+            TargetBranch: "main");
+
+        var first = await provider.CreateAsync(request, CancellationToken.None);
+        await File.WriteAllTextAsync(Path.Combine(first.WorktreePath, "draft.txt"), "draft", CancellationToken.None);
+
+        var second = await provider.CreateAsync(request, CancellationToken.None);
+
+        Assert.Equal(Path.GetFullPath(first.WorktreePath), Path.GetFullPath(second.WorktreePath));
+        Assert.Equal(first.SessionBranch, second.SessionBranch);
+        Assert.True(File.Exists(Path.Combine(second.WorktreePath, "draft.txt")));
+    }
+
+    [Fact]
+    public async Task CreateAsync_GivenExistingSessionBranchWithoutWorktree_AttachesExistingBranch()
+    {
+        await using var fixture = await TempGitRepository.CreateAsync();
+        var provider = new WipWorkspaceProviderGit();
+        var request = new CreateWorkspaceRequest(
+            RepositoryPath: fixture.RepositoryPath,
+            SessionId: new SessionId("session-attach"),
+            TargetBranch: "main");
+
+        var first = await provider.CreateAsync(request, CancellationToken.None);
+        await fixture.RunGitAsync("-C", fixture.RepositoryPath, "worktree", "remove", "--force", first.WorktreePath);
+        Assert.False(Directory.Exists(first.WorktreePath));
+
+        var second = await provider.CreateAsync(request, CancellationToken.None);
+        var branches = await fixture.RunGitAsync("branch", "--list", second.SessionBranch);
+
+        Assert.True(Directory.Exists(second.WorktreePath));
+        Assert.Equal(first.SessionBranch, second.SessionBranch);
+        Assert.Contains(second.SessionBranch, branches.StdOut, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ComputeDiffHashAsync_GivenEquivalentChangesWithLineEndingNoise_ReturnsStableNormalizedHash()
     {
         await using var fixture = await TempGitRepository.CreateAsync();

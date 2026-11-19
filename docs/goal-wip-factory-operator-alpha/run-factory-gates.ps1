@@ -18,10 +18,11 @@ if ([string]::IsNullOrWhiteSpace($Out)) { $Out = Join-Path $PSScriptRoot 'gate-r
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 
 $suites = @(
-    [ordered]@{ suite = 'factory-core';    project = 'WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj' },
-    [ordered]@{ suite = 'factory-agents';  project = 'WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj' },
-    [ordered]@{ suite = 'factory-host';    project = 'WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj' },
-    [ordered]@{ suite = 'architecture';    project = 'tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj' }
+    [ordered]@{ suite = 'factory-core';      project = 'WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj' },
+    [ordered]@{ suite = 'factory-agents';    project = 'WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj' },
+    [ordered]@{ suite = 'factory-host';      project = 'WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj' },
+    [ordered]@{ suite = 'workspace-git';     project = 'WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj' },
+    [ordered]@{ suite = 'architecture';      project = 'tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj' }
 )
 
 $measurements = @()
