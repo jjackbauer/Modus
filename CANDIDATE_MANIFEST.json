@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "factory/candidate-manifest@1",
+  "status": "ENGINEERING_COMPLETE",
+  "sourceRevision": "1d1e5128120fae2865e112615173c351e5fd8fa9",
+  "branch": "feature/wip-factory-alpha",
+  "sourceTreeDigest": "sha256:365223ed003420de2ad6e5a0025a3fe17a055518a53879ede73c57b875a2500e",
+  "dependencyIdentity": "dotnet@10.0.103;Wip.slnx=sha256:1a30c134c8fd125b169d2ad36c2ebd83fdd4ebeeb036f8c9aab8c0ab716fa3db;Directory.Build.props=sha256:5c00a0f25ec2e6acd0fae54b776b35b0407834d9e688adb1714d4658b3790591;host-assets=sha256:57c8b67a0dc2f031df77255f5e74209ba01f3a186fa19238bf0d4ccefcb7d5bf",
+  "configuration": [
+    {
+      "path": "WIP/Wip.Factory.Host/Wip.Factory.Host.csproj",
+      "digest": "sha256:6843ab1bec99585fa56cfe72c00db2d0aa3fa159e5f118dd7d1f9a47e7f470bf",
+      "bytes": 2249
+    },
+    {
+      "path": "WIP/Wip.Factory.Host/Program.cs",
+      "digest": "sha256:b963b3804fe129702d6eb1e1ea40b8787c82286e2ccc40fcca9bd066d4e4efa6",
+      "bytes": 3079
+    },
+    {
+      "path": "WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs",
+      "digest": "sha256:0bd6aadc5c727ff40840300fcd058c98ee2c7de965ac3d641e97e9734aa48fe0",
+      "bytes": 49009
+    },
+    {
+      "path": "WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs",
+      "digest": "sha256:68907b2db91414aab0340ed7b356117b89a2786269e90345ca5dc78994433ed3",
+      "bytes": 21687
+    },
+    {
+      "path": "WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs",
+      "digest": "sha256:caea83a60c346ce80b0a8c895b688d82c0a33ea40ecdc9d2c1836c5db3aa4b81",
+      "bytes": 40045
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "WIP/Wip.Factory.Host/bin/Debug/net10.0/Wip.Factory.Host.dll",
+      "digest": "sha256:4f4f283a671ff2a7eab280f79f2247936bbab45643a9366e6647032f98443022",
+      "bytes": 570880
+    },
+    {
+      "path": "ENGINEERING_TEST_RESULTS.json",
+      "digest": "sha256:35307edc483dd4e1dce85b6bf30ffcadbb0771104a02ef17b6a4e2f1b02b1318",
+      "bytes": 10194
+    },
+    {
+      "path": "IMPLEMENTATION_REPORT.md",
+      "digest": "sha256:a82629df5fe95e4e059accda3cca0b222381e6ef4373931f54c865129111c9bd",
+      "bytes": 10199
+    },
+    {
+      "path": "KNOWN_LIMITATIONS.md",
+      "digest": "sha256:b07fbd76929277b0f5987562fc4f6f6ac0af6260be39c3d7c3e826601f76cd47",
+      "bytes": 3886
+    },
+    {
+      "path": "REQUIREMENT_TRACEABILITY.json",
+      "digest": "sha256:f3eb9ae31ff4553d355347962c1d5916a5e0fc7b474b2d6ac98eb79b0c51cca1",
+      "bytes": 20079
+    },
+    {
+      "path": "docs/goal-wip-factory-operator-alpha/engineering/DSH_EFFICIENCY_EVIDENCE.json",
+      "digest": "sha256:4a038cc3a786052d42699b893c9594285fdb5c3dc39fe661045270bfbc52402d",
+      "bytes": 8467
+    }
+  ],
+  "buildInstructions": [
+    "dotnet build Wip.slnx -c Debug",
+    "powershell -NoProfile -ExecutionPolicy Bypass -File docs/goal-wip-factory-operator-alpha/engineering/run-engineering-gates.ps1"
+  ],
+  "engineeringGates": [
+    {
+      "id": "build",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "evidence/build.log",
+      "detail": "dotnet build Wip.slnx -c Debug; errors=0 warnings=157",
+      "passed": true
+    },
+    {
+      "id": "tests",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "ENGINEERING_TEST_RESULTS.json",
+      "detail": "executed=339 passed=339 failed=0 skipped=0",
+      "passed": true
+    },
+    {
+      "id": "adversarial-tests",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "evidence/factory-host.trx",
+      "detail": "all required adversarial tests executed and passed",
+      "passed": true
+    },
+    {
+      "id": "worktree-recovery",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "evidence/workspace-git.trx",
+      "detail": "all required recovery/concurrency tests executed and passed",
+      "passed": true
+    },
+    {
+      "id": "documentation",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "IMPLEMENTATION_REPORT.md,KNOWN_LIMITATIONS.md,REQUIREMENT_TRACEABILITY.json",
+      "detail": "measured behavior and known limitations are recorded",
+      "passed": true
+    },
+    {
+      "id": "traceability",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "REQUIREMENT_TRACEABILITY.json",
+      "detail": "every in-scope requirement maps to implemented evidence or an explicit unresolved status",
+      "passed": true
+    },
+    {
+      "id": "dsh-efficiency",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "docs/goal-wip-factory-operator-alpha/engineering/DSH_EFFICIENCY_EVIDENCE.json",
+      "detail": "DSH-scoped instrumentation, loop detection and reproducible baseline evidence",
+      "passed": true
+    },
+    {
+      "id": "source-clean",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "git status --porcelain -- WIP tests harness",
+      "detail": "implementation paths are committed",
+      "passed": true
+    },
+    {
+      "id": "reproducible-build",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "CANDIDATE_MANIFEST.json",
+      "detail": "source revision and build digest are recorded in the candidate manifest",
+      "passed": true
+    }
+  ],
+  "engineeringRecordDigest": "sha256:aef215db0dc88fd9defc240ddafedcd199252d338a817c3c4000f6b505900db7",
+  "generatedAtUtc": "2026-11-19T12:30:54.0423441\u002B00:00",
+  "evidenceDigest": "sha256:d4b79e044a12211427f03da2219bf41f1776063edf5e75fe922a8122eb2a36e9"
+}

@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "factory/engineering-delivery@1",
+  "status": "ENGINEERING_COMPLETE",
+  "codeRevision": "1d1e5128120fae2865e112615173c351e5fd8fa9",
+  "branch": "feature/wip-factory-alpha",
+  "generatedAtUtc": "2026-11-19T12:30:54.0423441\u002B00:00",
+  "buildStatus": "pass",
+  "buildCommand": "dotnet build Wip.slnx -c Debug",
+  "buildErrors": 0,
+  "buildWarnings": 157,
+  "buildDigest": "sha256:03db3c789bd409b97bcb920c424ca209b4639c42b1babde7df52c2ff24ff80da",
+  "testSuites": [
+    {
+      "suite": "factory-core",
+      "project": "WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj",
+      "executed": 21,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 0,
+      "command": "dotnet test WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj --no-build -c Debug --logger trx;LogFileName=factory-core.trx",
+      "trxDigest": "sha256:74775244f7ac1d20bbeb3dc9b3c7ed385534cb9271fc52e92592afbca7b0a22a",
+      "notExecuted": 0
+    },
+    {
+      "suite": "factory-agents",
+      "project": "WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj",
+      "executed": 69,
+      "passed": 69,
+      "failed": 0,
+      "skipped": 0,
+      "command": "dotnet test WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj --no-build -c Debug --logger trx;LogFileName=factory-agents.trx",
+      "trxDigest": "sha256:4ffeb51f234d1026ba1ec860b01ef5b6d78ddffcfab696778a2cf239b4295eb4",
+      "notExecuted": 0
+    },
+    {
+      "suite": "factory-host",
+      "project": "WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj",
+      "executed": 216,
+      "passed": 216,
+      "failed": 0,
+      "skipped": 0,
+      "command": "dotnet test WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj --no-build -c Debug --logger trx;LogFileName=factory-host.trx",
+      "trxDigest": "sha256:ea0d67ed9c94c7d0f0f0799d00e418cba5991611910d4b47067ed1cf5d5fe472",
+      "notExecuted": 0
+    },
+    {
+      "suite": "workspace-git",
+      "project": "WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj",
+      "executed": 28,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0,
+      "command": "dotnet test WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj --no-build -c Debug --logger trx;LogFileName=workspace-git.trx",
+      "trxDigest": "sha256:7771a0c40432cda83a822ffdf1f58e1c6c09d90e839b5855527280b406307fbd",
+      "notExecuted": 0
+    },
+    {
+      "suite": "architecture",
+      "project": "tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj",
+      "executed": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "command": "dotnet test tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj --no-build -c Debug --logger trx;LogFileName=architecture.trx",
+      "trxDigest": "sha256:8945d41c06232d41cf8d39392033edb9aaa3636600cee25524bd322596d0032a",
+      "notExecuted": 0
+    }
+  ],
+  "engineeringGates": [
+    {
+      "id": "build",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "evidence/build.log",
+      "detail": "dotnet build Wip.slnx -c Debug; errors=0 warnings=157",
+      "passed": true
+    },
+    {
+      "id": "tests",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "ENGINEERING_TEST_RESULTS.json",
+      "detail": "executed=339 passed=339 failed=0 skipped=0",
+      "passed": true
+    },
+    {
+      "id": "adversarial-tests",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "evidence/factory-host.trx",
+      "detail": "all required adversarial tests executed and passed",
+      "passed": true
+    },
+    {
+      "id": "worktree-recovery",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "evidence/workspace-git.trx",
+      "detail": "all required recovery/concurrency tests executed and passed",
+      "passed": true
+    },
+    {
+      "id": "documentation",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "IMPLEMENTATION_REPORT.md,KNOWN_LIMITATIONS.md,REQUIREMENT_TRACEABILITY.json",
+      "detail": "measured behavior and known limitations are recorded",
+      "passed": true
+    },
+    {
+      "id": "traceability",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "REQUIREMENT_TRACEABILITY.json",
+      "detail": "every in-scope requirement maps to implemented evidence or an explicit unresolved status",
+      "passed": true
+    },
+    {
+      "id": "dsh-efficiency",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "docs/goal-wip-factory-operator-alpha/engineering/DSH_EFFICIENCY_EVIDENCE.json",
+      "detail": "DSH-scoped instrumentation, loop detection and reproducible baseline evidence",
+      "passed": true
+    },
+    {
+      "id": "source-clean",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "git status --porcelain -- WIP tests harness",
+      "detail": "implementation paths are committed",
+      "passed": true
+    },
+    {
+      "id": "reproducible-build",
+      "status": "pass",
+      "mandatory": true,
+      "evidence": "CANDIDATE_MANIFEST.json",
+      "detail": "source revision and build digest are recorded in the candidate manifest",
+      "passed": true
+    }
+  ],
+  "historicalAcceptance": {
+    "label": "2026-11-19 independent acceptance (historical)",
+    "evaluatedAtUtc": "2026-11-19T11:13:22.4613496Z",
+    "codeRevision": "e29df4d",
+    "hostDigest": "sha256:b921c4c1f84d4c94b9fadd77e3ecde3a09e7c3d01bf3fdef04cfea6d838a9990",
+    "pa01": "fail",
+    "pa02": "pass",
+    "pair": "fail",
+    "evidenceDigest": "sha256:384902ecc8da3af10455e106e41059f010aca403beee27a274164f61c2c2f456",
+    "note": "PA-01 failed and PA-02 passed on the original independent attempt; the pair is not accepted. This historical record is preserved, not re-adjudicated.",
+    "pairFailed": true
+  },
+  "acceptanceStatus": "HISTORICAL_FAILURE_PRESERVED",
+  "knownLimitations": [
+    "**Independent acceptance is historical and failed.** The 2026-11-19 independent attempt recorded PA-01 \u0060fail\u0060, PA-02 \u0060pass\u0060, and pair \u0060fail\u0060. That outcome is preserved verbatim in \u0060ENGINEERING_TEST_RESULTS.json\u0060 and is not re-adjudicated by this engineering milestone. The current candidate is **NOT_ACCEPTED**.",
+    "**Engineering completion is not acceptance.** \u0060ENGINEERING_COMPLETE\u0060 means the mandatory engineering gates in this repository passed. It does not mean the product was independently accepted, is production ready, or that any spent acceptance task may be reused.",
+    "**No new blind acceptance was performed.** The task explicitly excludes independent product acceptance. The known-input and remediation artifacts under \u0060docs/goal-wip-factory-operator-alpha/\u0060 remain historical evidence, not new certification.",
+    "**DSH bounded projection is a diagnostic, not an equivalence claim.** The session-budget instrument reports a 4,745-byte per-turn projection against an 11,638,913-character transcript (99.96% smaller). That projection preserves turn facts and seq locators, not the full conversational context; it is a working-state reconstruction aid, not proof that the same session would have completed with 1,187 tokens.",
+    "**DSH evidence lives in a separate checkout.** The harness changes are committed at \u0060C:\\Users\\ricar\\deepseek-harness\u0060 commit \u0060ef7cb1377d\u0060 on \u0060feature/dsh-engineering-instrumentation\u0060. Its pre-commit hook could not run in this environment (\u0060msys\u0060 process-creation failure); typecheck (\u0060tsc -b tsconfig.host.json\u0060, exit 0) and the named Vitest suites were run directly.",
+    "**Partial or mismatched worktrees are preserved, not auto-salvaged.** A directory that exists but is not a registered Git worktree is refused with \u0060worktree-partial\u0060 and left untouched; a worktree on another branch is refused with \u0060worktree-mismatch\u0060. This preserves uncommitted work but requires an operator (or a later explicit repair) to resolve the layout.",
+    "**Orphan-branch recovery infers one baseline.** When a session branch exists but no durable state does, the original target is reconstructed as the merge-base with the target branch and recorded with \u0060BaselineSource=inferred-merge-base\u0060. A rebase performed before any state existed cannot be distinguished from legitimate work in that narrow path; once state exists, \u0060worktree-history-rewritten\u0060 refuses a rewritten head.",
+    "**Architecture conformance is intentionally closed.** It classifies SDK-style projects from structural MSBuild facts (SDK identity, \u0060OutputType\u0060, test-provider package references, \u0060IsTestProject\u0060, ASP.NET Core framework references, entry-point evidence). Central \u0060Directory.Build.props\u0060 target frameworks are supported; classification properties hidden in a conditional/explicit import, \u0060Directory.Build.props\u0060 override, or \u0060Directory.Build.targets\u0060 are refused as ambiguous rather than interpreted.",
+    "**Crash injection during the Git merge syscall is not covered.** The existing deterministic in-process crash tests cover crash-after-merge and post-merge re-verification; an OS kill during the merge system call itself remains untested.",
+    "**Process identity proof is Windows-only.** Other platforms report \u0060unsupported-platform\u0060 rather than guessing.",
+    "**Review architecture/security checks are narrow by design.** They enforce the supported single-repository ASP.NET Core .NET 10 shape and a static alpha security policy; they are not a general vulnerability scanner.",
+    "**The candidate manifest binds a clean source revision.** Generated evidence files are committed after the code commit they describe; the manifest records the code revision and the digests of the evidence artifacts, not a circular evidence-commit hash."
+  ],
+  "evidenceDigest": "sha256:aef215db0dc88fd9defc240ddafedcd199252d338a817c3c4000f6b505900db7",
+  "totalExecuted": 339,
+  "totalPassed": 339,
+  "totalFailed": 0,
+  "totalSkipped": 0
+}

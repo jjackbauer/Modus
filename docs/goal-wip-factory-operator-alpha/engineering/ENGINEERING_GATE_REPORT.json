@@ -1,0 +1,148 @@
+{
+    "schemaVersion":  "factory/engineering-gate-report@1",
+    "generatedAtUtc":  "2026-11-19T12:30:54.0423441+00:00",
+    "sourceRevision":  "1d1e5128120fae2865e112615173c351e5fd8fa9",
+    "branch":  "feature/wip-factory-alpha",
+    "build":  {
+                  "status":  "pass",
+                  "command":  "dotnet build Wip.slnx -c Debug",
+                  "errors":  0,
+                  "warnings":  157,
+                  "digest":  "sha256:03db3c789bd409b97bcb920c424ca209b4639c42b1babde7df52c2ff24ff80da"
+              },
+    "testSuites":  [
+                       {
+                           "suite":  "factory-core",
+                           "project":  "WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj",
+                           "executed":  21,
+                           "passed":  21,
+                           "failed":  0,
+                           "skipped":  0,
+                           "command":  "dotnet test WIP/Wip.Factory.Core.Tests/Wip.Factory.Core.Tests.csproj --no-build -c Debug --logger trx;LogFileName=factory-core.trx",
+                           "trxDigest":  "sha256:74775244f7ac1d20bbeb3dc9b3c7ed385534cb9271fc52e92592afbca7b0a22a"
+                       },
+                       {
+                           "suite":  "factory-agents",
+                           "project":  "WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj",
+                           "executed":  69,
+                           "passed":  69,
+                           "failed":  0,
+                           "skipped":  0,
+                           "command":  "dotnet test WIP/Wip.Factory.Agents.Tests/Wip.Factory.Agents.Tests.csproj --no-build -c Debug --logger trx;LogFileName=factory-agents.trx",
+                           "trxDigest":  "sha256:4ffeb51f234d1026ba1ec860b01ef5b6d78ddffcfab696778a2cf239b4295eb4"
+                       },
+                       {
+                           "suite":  "factory-host",
+                           "project":  "WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj",
+                           "executed":  216,
+                           "passed":  216,
+                           "failed":  0,
+                           "skipped":  0,
+                           "command":  "dotnet test WIP/Wip.Factory.Host.Tests/Wip.Factory.Host.Tests.csproj --no-build -c Debug --logger trx;LogFileName=factory-host.trx",
+                           "trxDigest":  "sha256:ea0d67ed9c94c7d0f0f0799d00e418cba5991611910d4b47067ed1cf5d5fe472"
+                       },
+                       {
+                           "suite":  "workspace-git",
+                           "project":  "WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj",
+                           "executed":  28,
+                           "passed":  28,
+                           "failed":  0,
+                           "skipped":  0,
+                           "command":  "dotnet test WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj --no-build -c Debug --logger trx;LogFileName=workspace-git.trx",
+                           "trxDigest":  "sha256:7771a0c40432cda83a822ffdf1f58e1c6c09d90e839b5855527280b406307fbd"
+                       },
+                       {
+                           "suite":  "architecture",
+                           "project":  "tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj",
+                           "executed":  5,
+                           "passed":  5,
+                           "failed":  0,
+                           "skipped":  0,
+                           "command":  "dotnet test tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj --no-build -c Debug --logger trx;LogFileName=architecture.trx",
+                           "trxDigest":  "sha256:8945d41c06232d41cf8d39392033edb9aaa3636600cee25524bd322596d0032a"
+                       }
+                   ],
+    "totals":  {
+                   "executed":  339,
+                   "passed":  339,
+                   "failed":  0,
+                   "skipped":  0
+               },
+    "gates":  [
+                  {
+                      "id":  "build",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "evidence/build.log",
+                      "detail":  "dotnet build Wip.slnx -c Debug; errors=0 warnings=157"
+                  },
+                  {
+                      "id":  "tests",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "ENGINEERING_TEST_RESULTS.json",
+                      "detail":  "executed=339 passed=339 failed=0 skipped=0"
+                  },
+                  {
+                      "id":  "adversarial-tests",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "evidence/factory-host.trx",
+                      "detail":  "all required adversarial tests executed and passed"
+                  },
+                  {
+                      "id":  "worktree-recovery",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "evidence/workspace-git.trx",
+                      "detail":  "all required recovery/concurrency tests executed and passed"
+                  },
+                  {
+                      "id":  "documentation",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "IMPLEMENTATION_REPORT.md,KNOWN_LIMITATIONS.md,REQUIREMENT_TRACEABILITY.json",
+                      "detail":  "measured behavior and known limitations are recorded"
+                  },
+                  {
+                      "id":  "traceability",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "REQUIREMENT_TRACEABILITY.json",
+                      "detail":  "every in-scope requirement maps to implemented evidence or an explicit unresolved status"
+                  },
+                  {
+                      "id":  "dsh-efficiency",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "docs/goal-wip-factory-operator-alpha/engineering/DSH_EFFICIENCY_EVIDENCE.json",
+                      "detail":  "DSH-scoped instrumentation, loop detection and reproducible baseline evidence"
+                  },
+                  {
+                      "id":  "source-clean",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "git status --porcelain -- WIP tests harness",
+                      "detail":  "implementation paths are committed"
+                  },
+                  {
+                      "id":  "reproducible-build",
+                      "status":  "pass",
+                      "mandatory":  true,
+                      "evidence":  "CANDIDATE_MANIFEST.json",
+                      "detail":  "source revision and build digest are recorded in the candidate manifest"
+                  }
+              ],
+    "missingAdversarialTests":  [
+
+                                ],
+    "missingRecoveryTests":  [
+
+                             ],
+    "dshEvidence":  "F:\\dev\\Modus-candidate-3cb0e107\\docs\\goal-wip-factory-operator-alpha\\engineering\\DSH_EFFICIENCY_EVIDENCE.json",
+    "acceptance":  {
+                       "status":  "HISTORICAL_FAILURE_PRESERVED",
+                       "currentCandidateAccepted":  false,
+                       "note":  "Independent acceptance is not a gate in this engineering record."
+                   }
+}
