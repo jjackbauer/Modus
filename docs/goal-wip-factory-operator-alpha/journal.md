@@ -773,3 +773,32 @@ Append-only. Verified facts only; agent claims enter after the orchestrator re-c
 - **Rationale**: Continuing to add tests or infrastructure would move numbers that are explicitly not the acceptance
   criterion, and one such attempt already produced a false coverage count (OBS-049). Reporting the state accurately is
   more useful than a ninth round of adjacent work.
+## OBS-051 — Two further application shapes pass, as KNOWN-INPUT runs
+
+- **Source**: `run-acceptance.ps1` against host commit `b69260e`; manifests in `known-input/A-manifest.json` and
+  `known-input/B-manifest.json`
+- **Fact**: Two applications unlike the previous three were delivered end to end by the unchanged binary.
+  (A) a **temperature conversion API** — pure computation, query parameters, an invalid-unit 400: all four scenarios
+  passed pre- and post-merge, `Released`, recorded `mergedSha == git rev-parse HEAD`, served on
+  `http://127.0.0.1:55158/` (pid 49868), 121 s. (B) a **text statistics API** — computed aggregates and a 422
+  validation rule, no state at all: all four passed, `Released`, `OperationallyValidated`, 71 s, pid 24176.
+- **Implications**: Five distinct application shapes now reach `OperationallyValidated` through one binary. The
+  refusal to depend on CRUD is holding: these two are computed/validated, one with no state whatsoever.
+- **Why this is NOT PA-01/PA-02**: I authored both requirements and both contracts. The delegated author could not
+  write files (that session was read-only), and the user directed me to write them. Per v0.3 §1.1 these are
+  **known-input fixtures**, not blind acceptance. The gate remains unclaimed and the directory is named
+  `known-input/` rather than `blind/` so the record cannot be misread later.
+- **Confidence**: High
+- **Related**: EVD-090..092, OQ-001
+
+## OBS-052 — The turnkey harness works and keeps content out of its own output
+
+- **Source**: `docs/goal-wip-factory-operator-alpha/run-acceptance.ps1`
+- **Fact**: The script drives submit → proposal → approval → implementation/review → merge authorisation → merge →
+  post-merge verification → serve, and emits a §1.2-style manifest. It reads the proposal digest from the durable log
+  rather than `contract show`, so it never prints the requirement or scenario text; every field it emits is a digest,
+  a state, a SHA, a process identity or a scenario verdict. Its verdict is mechanical: `Released` + merged == target
+  head + no failing scenario pre- or post-merge + `OperationallyValidated`, else `fail`.
+- **Implications**: Supplying the real blind pair now costs two file paths and one command per requirement.
+- **Confidence**: High
+- **Related**: EVD-093

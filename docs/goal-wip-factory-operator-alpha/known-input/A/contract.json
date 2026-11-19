@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "supportedClass": "aspnetcore-http-net10",
+  "scenarios": [
+    { "id": "AC-1", "method": "GET", "path": "/convert?from=c&to=f&value=100",
+      "expect": { "status": 200, "jsonSubset": { "value": 212, "unit": "f" } } },
+    { "id": "AC-2", "method": "GET", "path": "/convert?from=f&to=c&value=32",
+      "expect": { "status": 200, "jsonSubset": { "value": 0, "unit": "c" } } },
+    { "id": "AC-3", "method": "GET", "path": "/convert?from=c&to=c&value=25",
+      "expect": { "status": 200, "jsonSubset": { "value": 25, "unit": "c" } } },
+    { "id": "AC-4", "method": "GET", "path": "/convert?from=kelvin&to=c&value=300",
+      "expect": { "status": 400 } }
+  ]
+}

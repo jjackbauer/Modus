@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "supportedClass": "aspnetcore-http-net10",
+  "scenarios": [
+    { "id": "AC-1", "method": "POST", "path": "/analyze",
+      "request": { "json": { "text": "one two three" } },
+      "expect": { "status": 200, "jsonSubset": { "words": 3, "characters": 13, "longest": "three" } } },
+    { "id": "AC-2", "method": "POST", "path": "/analyze",
+      "request": { "json": { "text": "a" } },
+      "expect": { "status": 200, "jsonSubset": { "words": 1, "characters": 1, "longest": "a" } } },
+    { "id": "AC-3", "method": "POST", "path": "/analyze",
+      "request": { "json": { "text": "aa b" } },
+      "expect": { "status": 200, "jsonSubset": { "longest": "aa" } } },
+    { "id": "AC-4", "method": "POST", "path": "/analyze",
+      "request": { "json": { "text": "" } },
+      "expect": { "status": 422 } }
+  ]
+}

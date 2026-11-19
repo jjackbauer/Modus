@@ -1,0 +1,29 @@
+﻿{
+    "gate":  "KNOWN-A",
+    "hostCommit":  "b69260e9e5d344eadc8953af1471154260d2e7aa",
+    "startedAtUtc":  "2026-11-19T00:02:32.4090599Z",
+    "requirementDigest":  "sha256:0a432c4e2d45f360f5e227dd259a2f97ad58ff7e12f1f3a6c2cced0dd6b66dfb",
+    "contractDigest":  "sha256:9c6fbc7e1629c8a3afe0d975f040e8693241f40d0cb203cfbbe0a397abaf0f46",
+    "reviewDigest":  "sha256:2757d4e42df89b6a593d849c51ebbbec1ed621953b6d3f854eb20a3d2d7a6175",
+    "workItemId":  "WORK-a3c18e81",
+    "states":  {
+                   "proposed":  "Proposed",
+                   "reviewed":  "ReadyForDelivery",
+                   "released":  "Released",
+                   "operational":  "OperationallyValidated"
+               },
+    "headSha":  "76a35b75a6cd7a4ad77ffc8084f220d64e343dc9",
+    "mergedSha":  "0a491873cc934055e92a3282a4280fc9cdca49e2",
+    "targetHeadSha":  "0a491873cc934055e92a3282a4280fc9cdca49e2",
+    "scenarios":  "AC-1=pass,AC-2=pass,AC-3=pass,AC-4=pass",
+    "served":  "http://127.0.0.1:55158/",
+    "processId":  "49868",
+    "timingsSeconds":  {
+                           "implementationAndReview":  103,
+                           "mergeAndPostMerge":  6,
+                           "total":  121
+                       },
+    "verdict":  "pass",
+    "failureCategory":  null,
+    "scenariosPostMerge":  "AC-1=pass,AC-2=pass,AC-3=pass,AC-4=pass"
+}
