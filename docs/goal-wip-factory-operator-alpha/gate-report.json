@@ -1,6 +1,6 @@
 {
-    "generatedAtUtc":  "2026-11-19T10:09:00.5165494Z",
-    "sourceRevision":  "e29df4d2be41ef53dc3b5d71226c8f1565b8c48c",
+    "generatedAtUtc":  "2026-11-19T11:18:23.8288328Z",
+    "sourceRevision":  "baa3bfc11450c754f48cc6e7aa60b70b72723bc9",
     "suites":  [
                    {
                        "suite":  "factory-core",
@@ -24,6 +24,13 @@
                        "failedCases":  0
                    },
                    {
+                       "suite":  "workspace-git",
+                       "project":  "WIP/Wip.Workspaces.Git.Tests/Wip.Workspaces.Git.Tests.csproj",
+                       "exitCode":  0,
+                       "passedCases":  14,
+                       "failedCases":  0
+                   },
+                   {
                        "suite":  "architecture",
                        "project":  "tests/Wip.Architecture.Tests/Wip.Architecture.Tests.csproj",
                        "exitCode":  0,
@@ -32,9 +39,9 @@
                    }
                ],
     "totals":  {
-                   "passedCases":  264,
+                   "passedCases":  278,
                    "failedCases":  0,
-                   "suiteCount":  4
+                   "suiteCount":  5
                },
     "namedCoverage":  {
                           "named":  80,
