@@ -14,9 +14,9 @@ use serde_json::json;
 
 use control_plane_domain::{
     AuditEntry, ChangePasswordRequest, ContractApproveRequest, ContractRejectRequest,
-    CreateUserRequest, DispatchRequest, MergeApprovalRequest, Page, PlanningUpdateRequest,
-    PreviewRequest, ProfileDraftRequest, RegisterInstanceRequest, ResetPasswordRequest,
-    ServeRequest, SubmitRequest, UpdateUserRequest,
+    CreateUserRequest, DispatchRequest, FactoryEvent, MergeApprovalRequest, Page,
+    PlanningUpdateRequest, PreviewRequest, ProfileDraftRequest, RegisterInstanceRequest,
+    ResetPasswordRequest, ServeRequest, Serving, SubmitRequest, UpdateUserRequest,
 };
 use control_plane_factory_client::{ClientError, FactoryClient};
 
@@ -626,7 +626,61 @@ async fn work_item(
     let client = state
         .client(&path.instance, &user, correlation(&headers))
         .await?;
-    Ok(Json(client.work_item(&path.work_item_id).await?))
+    let mut detail = client.work_item(&path.work_item_id).await?;
+    apply_served_url(&mut detail.serving, &detail.events);
+    Ok(Json(detail))
+}
+
+/// The adapter's live Serving projection records the served URL only when the serve window
+/// finishes, while the factory writes it to the durable `factory.release.observed.v1` event as
+/// soon as the frozen contract passes against the running process. Read that event so a live
+/// serve can be opened during its window. The event must belong to the current window: a
+/// `ReleaseObserved` record from an earlier window is not evidence for this one.
+fn served_url_from_events(
+    events: &[FactoryEvent],
+    serving: &Serving,
+) -> Option<(String, Option<i32>)> {
+    if !serving.active {
+        return None;
+    }
+    let started = serving.recorded_at_utc;
+    events
+        .iter()
+        .rev()
+        .find(|event| event.r#type == "factory.release.observed.v1")
+        .filter(|event| match started {
+            Some(started) => event.time_utc >= started,
+            None => true,
+        })
+        .and_then(|event| {
+            let url = event.data.get("servedUrl")?.trim();
+            if url.is_empty() {
+                return None;
+            }
+            let process_id = event
+                .data
+                .get("processId")
+                .and_then(|value| value.trim().parse::<i32>().ok());
+            Some((url.to_string(), process_id))
+        })
+}
+
+fn apply_served_url(serving: &mut Serving, events: &[FactoryEvent]) {
+    if serving
+        .url
+        .as_deref()
+        .is_some_and(|url| !url.trim().is_empty())
+    {
+        return;
+    }
+    if let Some((url, process_id)) = served_url_from_events(events, serving) {
+        serving.url = Some(url);
+        if serving.process_id.unwrap_or(0) <= 0 {
+            if let Some(process_id) = process_id.filter(|value| *value > 0) {
+                serving.process_id = Some(process_id);
+            }
+        }
+    }
 }
 
 async fn work_events(
@@ -791,7 +845,23 @@ async fn release(
     let client = state
         .client(&path.instance, &user, correlation(&headers))
         .await?;
-    Ok(Json(client.release(&path.work_item_id).await?))
+    let mut release = client.release(&path.work_item_id).await?;
+    if release.serving.active
+        && release
+            .serving
+            .url
+            .as_deref()
+            .map(|url| url.trim().is_empty())
+            .unwrap_or(true)
+    {
+        // The release projection carries no event list, so ask for the same durable events the
+        // work detail uses. A failed event read only means no preview link; it does not fail the
+        // release page or invent a URL.
+        if let Ok(events) = client.work_events(&path.work_item_id, 0, 500).await {
+            apply_served_url(&mut release.serving, &events.items);
+        }
+    }
+    Ok(Json(release))
 }
 
 async fn templates(
@@ -1840,4 +1910,100 @@ fn audit_failure(
         idempotency_key: context.idempotency_key.clone(),
         remote_address: Some(context.remote.clone()),
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::{DateTime, Duration, Utc};
+
+    fn serving_at(started: DateTime<Utc>) -> Serving {
+        Serving {
+            work_item_id: Some("WORK-1".to_string()),
+            merged_sha: Some("1c6ed186ef921234ed50c99f9bed503eed5577f1".to_string()),
+            status: Some("serving".to_string()),
+            process_id: Some(0),
+            restart_count: Some(0),
+            detail: None,
+            recorded_at_utc: Some(started),
+            active: true,
+            url: None,
+            job_id: Some("serve-1".to_string()),
+            supervised_until_utc: None,
+        }
+    }
+
+    fn observed(at: DateTime<Utc>, url: &str, process_id: &str) -> FactoryEvent {
+        FactoryEvent {
+            sequence: 1,
+            id: "event-1".to_string(),
+            r#type: "factory.release.observed.v1".to_string(),
+            source: "factory-serve-supervisor".to_string(),
+            subject: "WORK-1".to_string(),
+            time_utc: at,
+            correlation_id: None,
+            causation_id: None,
+            work_item_id: Some("WORK-1".to_string()),
+            stage: Some("serving".to_string()),
+            agent_definition_id: None,
+            session_id: None,
+            attempt_id: None,
+            operation_id: None,
+            summary: None,
+            data: [
+                ("servedUrl".to_string(), url.to_string()),
+                ("processId".to_string(), process_id.to_string()),
+            ]
+            .into_iter()
+            .collect(),
+        }
+    }
+
+    #[test]
+    fn a_live_observation_publishes_the_served_url_and_process() {
+        let now = Utc::now();
+        let mut serving = serving_at(now - Duration::seconds(30));
+        let events = vec![observed(
+            now - Duration::seconds(10),
+            "http://127.0.0.1:4310/",
+            "1234",
+        )];
+        apply_served_url(&mut serving, &events);
+        assert_eq!(serving.url.as_deref(), Some("http://127.0.0.1:4310/"));
+        assert_eq!(serving.process_id, Some(1234));
+    }
+
+    #[test]
+    fn an_observation_from_an_earlier_window_is_not_reused() {
+        let now = Utc::now();
+        let mut serving = serving_at(now - Duration::seconds(10));
+        let events = vec![observed(
+            now - Duration::seconds(120),
+            "http://127.0.0.1:4310/",
+            "1234",
+        )];
+        apply_served_url(&mut serving, &events);
+        assert_eq!(serving.url, None);
+        assert_eq!(serving.process_id, Some(0));
+    }
+
+    #[test]
+    fn a_stopped_window_keeps_no_preview_url() {
+        let now = Utc::now();
+        let mut serving = serving_at(now - Duration::seconds(30));
+        serving.active = false;
+        let events = vec![observed(now, "http://127.0.0.1:4310/", "1234")];
+        apply_served_url(&mut serving, &events);
+        assert_eq!(serving.url, None);
+    }
+
+    #[test]
+    fn an_existing_url_is_not_overwritten() {
+        let now = Utc::now();
+        let mut serving = serving_at(now - Duration::seconds(30));
+        serving.url = Some("http://127.0.0.1:9999/".to_string());
+        let events = vec![observed(now, "http://127.0.0.1:4310/", "1234")];
+        apply_served_url(&mut serving, &events);
+        assert_eq!(serving.url.as_deref(), Some("http://127.0.0.1:9999/"));
+    }
 }
