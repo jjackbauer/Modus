@@ -294,6 +294,10 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | VG-07 technical | Rust/wasm/browser green; .NET suite not re-run because no adapter source changed | `cargo-test-workspace.txt`, E2E JSON |
 | VG-08 large data | Partial: 104 work items, 144 events, 1.33s projection, 0 overflow at 1440/390; below the 1000-event leg and no long diff/session fixtures | `vg08-large.json` |
 | VG-09 design coherence | Open: no human visual review | — |
+**C-01 primitives:** all named primitives exist; `Timeline` is now a semantic ordered list and is
+wired into work-detail attempts/events, overview activity, agent sessions/adaptations and
+improvement events. `InlineValidation`, `Confirmation` and `EvidenceSummary` are live in intake and
+the decision dialogs. `ErrorBoundary` and `ActionToolbar` are available but not used on every route.
 ## 8. Decisions recorded by this inventory
 
 1. **Template policy approval moves to Settings.** Registration and approval are the same object's

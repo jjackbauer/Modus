@@ -644,7 +644,12 @@ open.
   focuses the new route's `h1` after the data-driven heading renders, keeps retrying briefly while
   a reactive refresh can replace the node, and stops the moment the operator focuses a control or a
   dialog is open. Verified on direct loads of queue/work/release and on SPA queue→detail.
-- **Refresh failures.** A background refetch that fails used to replace a full queue or work
+- **Timeline semantics (C-01).** Timelines were `div` grids. They are now a shared ordered-list
+  primitive: `<ol aria-label>` with `<li class="event">` entries, a time column whose `title`
+  carries the exact UTC instant, and a `compact` variant for the overview. Work detail's
+  implementation attempts and event log were measured at 1440 and 320: 1 and 15 entries, computed
+  `list-style: none`, zero margin/padding, 0 horizontal overflow; axe remains clean across all 17
+  runs (`timeline-check.json`).- **Refresh failures.** A background refetch that fails used to replace a full queue or work
   item with the error screen. Both now keep the last successful projection and show the typed
   failure with a Retry refresh action; the banner clears when the retry succeeds. Verified with
   aborted work-items and work-item requests (`refresh-banner.json`). Overview and release detail
@@ -661,11 +666,15 @@ open.
   offline. The shell now listens to the browser's offline/online events, sets an explicit offline
   state, closes the stream so buffered heartbeats cannot claim live, and reopens it on reconnect.
   Transient read failures gained a safe "Reload this page" retry.
-### 14.7 Still open after this increment
+### 14.7 Status and remaining gaps
 
-- **C-01**: `Timeline` is still not built, so C-01 remains open. `InlineValidation`,
-  `Confirmation`, `EvidenceSummary` and `ValidationMessage` are now used by intake and the
-  decision dialogs; the earlier “built but unwired” gap for those primitives is closed.
+- **C-01 primitives — closed.** All named primitives now exist. `Timeline` is built and wired as
+  an ordered `ol` with a required accessible name (fallback "Timeline"), `li.event` rows with a
+  time column and exact UTC title, and a `compact` variant; unit tests cover the label fallback.
+  It formats work-detail attempts and events, overview durable activity, agent sessions and
+  adaptations, and improvement events. `InlineValidation`, `Confirmation`, `EvidenceSummary` and
+  `ValidationMessage` are live in intake and the decision dialogs. `ErrorBoundary` and
+  `ActionToolbar` remain available but are not used on every route.
 - **C-03 document titles — closed.** Measured in `titles-check.json`: "Factory overview · Wip.Factory
   Control Plane", "Work queue · Wip.Factory Control Plane", "{work title} · WORK-… · Wip.Factory
   Control Plane", and "Release · {work title} · WORK-… · Wip.Factory Control Plane". The title is
