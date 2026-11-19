@@ -52,7 +52,7 @@ pub fn AppShell(children: Children) -> impl IntoView {
             if location.pathname.get().is_empty() {
                 return;
             }
-            focus_main_heading(40);
+            focus_main_heading(100);
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -555,6 +555,10 @@ fn focus_main_heading(remaining: u32) {
             return;
         }
         if let Some(heading) = document.query_selector("main h1").ok().flatten() {
+            let desired_title = document_title(&heading);
+            if document.title() != desired_title {
+                let _ = document.set_title(&desired_title);
+            }
             let already_focused = active
                 .as_ref()
                 .map(|element| element.is_same_node(Some(&heading)))
@@ -575,6 +579,55 @@ fn focus_main_heading(remaining: u32) {
     }
     #[cfg(not(target_arch = "wasm32"))]
     let _ = remaining;
+}
+
+/// The document title is the page heading plus the exact record identity in the URL, so a tab,
+/// bookmark or screen-reader window list names the object rather than only the application. The
+/// route section disambiguates a release detail from the work item it belongs to.
+#[cfg(target_arch = "wasm32")]
+fn document_title(heading: &web_sys::Element) -> String {
+    let base = heading.text_content().unwrap_or_default().trim().to_string();
+    let path = web_sys::window()
+        .and_then(|window| window.location().pathname().ok())
+        .unwrap_or_default();
+    let segments: Vec<&str> = path.split('/').filter(|segment| !segment.is_empty()).collect();
+    let last = segments.last().copied().unwrap_or_default();
+    let parent = segments
+        .get(segments.len().saturating_sub(2))
+        .copied()
+        .unwrap_or_default();
+    let static_routes = [
+        "overview",
+        "work",
+        "pipeline",
+        "agents",
+        "quality",
+        "releases",
+        "analytics",
+        "improvement",
+        "settings",
+        "docs",
+        "i",
+    ];
+    let identity = if last.is_empty() || static_routes.contains(&last) {
+        None
+    } else {
+        Some(last)
+    };
+    let prefix = match parent {
+        "releases" => "Release · ",
+        "agents" => "Agent · ",
+        _ => "",
+    };
+    let mut title = format!("{prefix}{base}");
+    if let Some(identity) = identity {
+        if !title.contains(identity) {
+            title.push_str(" · ");
+            title.push_str(identity);
+        }
+    }
+    title.push_str(" · Wip.Factory Control Plane");
+    title
 }
 
 fn trap_tab(event: &leptos::ev::KeyboardEvent, container_id: &str) {
