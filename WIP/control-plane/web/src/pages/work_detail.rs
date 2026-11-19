@@ -51,6 +51,11 @@ pub fn WorkDetailPage() -> impl IntoView {
     let work_item_id = Signal::derive(move || params.get().get("work_item_id").unwrap_or_default());
     let tab = RwSignal::new("lifecycle");
     let dialog = RwSignal::new(None::<Dialog>);
+    let dialog_busy = RwSignal::new(false);
+    let dialog_error = RwSignal::new(None::<String>);
+    let dialog_confirmed = RwSignal::new(false);
+    let dialog_typed = RwSignal::new(String::new());
+    let dialog_reason = RwSignal::new(String::new());
     let refresh = context.refresh;
     let refresh_error = RwSignal::new(None::<api::UiError>);
     let last_good = RwSignal::new(None::<(String, WorkItemDetail)>);
@@ -109,6 +114,11 @@ pub fn WorkDetailPage() -> impl IntoView {
                         tab=tab
                         dialog=dialog
                         requested=requested
+                        dialog_busy=dialog_busy
+                        dialog_error=dialog_error
+                        dialog_confirmed=dialog_confirmed
+                        dialog_typed=dialog_typed
+                        dialog_reason=dialog_reason
                     />
                 }.into_any(),
             }}
@@ -123,6 +133,11 @@ fn WorkDetailBody(
     tab: RwSignal<&'static str>,
     dialog: RwSignal<Option<Dialog>>,
     requested: Signal<String>,
+    dialog_busy: RwSignal<bool>,
+    dialog_error: RwSignal<Option<String>>,
+    dialog_confirmed: RwSignal<bool>,
+    dialog_typed: RwSignal<String>,
+    dialog_reason: RwSignal<String>,
 ) -> impl IntoView {
     let context = AppContext::provide();
     let summary = data.summary.clone();
@@ -169,6 +184,11 @@ fn WorkDetailBody(
         let dialog = dialog;
         let digest = contract.proposal_digest.clone().unwrap_or_default();
         move |_| {
+            dialog_confirmed.set(false);
+            dialog_typed.set(String::new());
+            dialog_reason.set(String::new());
+            dialog_error.set(None);
+            dialog_busy.set(false);
             dialog.set(Some(Dialog::ApproveContract {
                 digest: digest.clone(),
             }))
@@ -178,6 +198,11 @@ fn WorkDetailBody(
         let dialog = dialog;
         let digest = contract.proposal_digest.clone().unwrap_or_default();
         move |_| {
+            dialog_confirmed.set(false);
+            dialog_typed.set(String::new());
+            dialog_reason.set(String::new());
+            dialog_error.set(None);
+            dialog_busy.set(false);
             dialog.set(Some(Dialog::RejectContract {
                 digest: digest.clone(),
             }))
@@ -192,6 +217,11 @@ fn WorkDetailBody(
             .and_then(|review| review.review_digest.clone())
             .unwrap_or_default();
         move |_| {
+            dialog_confirmed.set(false);
+            dialog_typed.set(String::new());
+            dialog_reason.set(String::new());
+            dialog_error.set(None);
+            dialog_busy.set(false);
             dialog.set(Some(Dialog::ApproveMerge {
                 digest: digest.clone(),
             }))
@@ -245,6 +275,11 @@ fn WorkDetailBody(
         if merge_digest_for_effect.is_empty() {
             return;
         }
+        dialog_confirmed.set(false);
+        dialog_typed.set(String::new());
+        dialog_reason.set(String::new());
+        dialog_error.set(None);
+        dialog_busy.set(false);
         dialog.set(Some(Dialog::ApproveMerge {
             digest: merge_digest_for_effect.clone(),
         }));
@@ -411,6 +446,11 @@ fn WorkDetailBody(
                 contract=contract.clone()
                 requirement=requirement.clone()
                 accepted_review=latest_accepted_review.clone()
+                busy=dialog_busy
+                error=dialog_error
+                confirmed=dialog_confirmed
+                typed=dialog_typed
+                reason=dialog_reason
             />
         </section>
     }
@@ -1315,13 +1355,13 @@ fn ActionDialog(
     contract: Contract,
     requirement: Option<control_plane_domain::Requirement>,
     accepted_review: Option<ReviewHistory>,
+    busy: RwSignal<bool>,
+    error: RwSignal<Option<String>>,
+    confirmed: RwSignal<bool>,
+    typed: RwSignal<String>,
+    reason: RwSignal<String>,
 ) -> impl IntoView {
     let context = AppContext::provide();
-    let busy = RwSignal::new(false);
-    let error = RwSignal::new(None::<String>);
-    let confirmed = RwSignal::new(false);
-    let typed = RwSignal::new(String::new());
-    let reason = RwSignal::new(String::new());
 
     // Closing is refused while a governed mutation is in flight: the dialog must not disappear
     // before the factory answers, and a user's typed evidence must not be discarded silently.
@@ -1409,15 +1449,12 @@ fn ActionDialog(
                 }
                 Err(failure) => {
                     // Keep the dialog, its evidence and the user's typed digest; explain the failure.
-                    error.set(Some(format!(
-                        "{} ({})",
-                        failure.message,
-                        if failure.code.is_empty() {
-                            "no code".to_string()
-                        } else {
-                            failure.code.clone()
-                        }
-                    )));
+                    let message = if failure.code.is_empty() || failure.message.contains(&failure.code) {
+                        failure.message
+                    } else {
+                        format!("{} ({})", failure.message, failure.code)
+                    };
+                    error.set(Some(message));
                 }
             }
         });
@@ -1469,7 +1506,6 @@ fn ActionDialog(
                     let title = format!("Reject contract proposal for {work_title}");
                     let body = view! {
                         <div class="stack decision">
-                            {failure_notice.clone()}
                             <Notice kind="warning">
                                 <strong>"A rejection is durable. "</strong>
                                 <span>"The factory records it against this exact proposal digest and refuses a later approval of the same digest. To proceed, submit a revised requirement."</span>
@@ -1535,6 +1571,7 @@ fn ActionDialog(
                     wide=true
                     footer=footer
                 >
+                    {failure_notice.clone()}
                     {body}
                 </Modal>
             }
