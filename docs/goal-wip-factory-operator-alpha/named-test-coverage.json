@@ -1,6 +1,6 @@
 {
-  "generatedAtUtc": "2026-11-19T09:59:06.7267158\u002B00:00",
-  "sourceRevision": "292bc2fb9984380cb9974be550a7b5de66de6a59",
+  "generatedAtUtc": "2026-11-19T10:01:24.4488078\u002B00:00",
+  "sourceRevision": "4e6c9ec616de3c8b4eae7ce314c223788227a133",
   "specification": "harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md",
   "semantics": {
     "exact": "a compiled xUnit method with the exact name and at least one assertion",
