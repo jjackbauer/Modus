@@ -46,6 +46,36 @@ impl Connection {
     }
 }
 
+/// Closes the stream while the browser is offline. Buffered heartbeats from the old connection
+/// must not be able to report "live" after the browser has told us there is no network.
+pub fn suspend() {
+    #[cfg(target_arch = "wasm32")]
+    {
+        CURRENT.with(|current| *current.borrow_mut() = String::new());
+        CONNECTION.with(|slot| {
+            if let Some(connection) = slot.borrow_mut().take() {
+                connection.close();
+            }
+        });
+    }
+}
+
+/// Reopens the stream after the browser reports that it is online again. The old EventSource may
+/// still look open to the page while the network was gone, so the previous connection is closed
+/// and the current-instance guard is cleared before reconnecting.
+pub fn reconnect(context: AppContext, instance: &str) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        CURRENT.with(|current| *current.borrow_mut() = String::new());
+        CONNECTION.with(|slot| {
+            if let Some(connection) = slot.borrow_mut().take() {
+                connection.close();
+            }
+        });
+    }
+    connect(context, instance);
+}
+
 /// Opens a resumable SSE connection for the selected instance. Calling it again for the same
 /// instance is a no-op; calling it for another instance closes the previous one first.
 pub fn connect(context: AppContext, instance: &str) {

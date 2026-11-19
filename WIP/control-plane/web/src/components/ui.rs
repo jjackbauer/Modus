@@ -102,13 +102,30 @@ pub fn LoadingBlock(label: &'static str) -> impl IntoView {
 }
 
 pub fn error_view(error: UiError) -> impl IntoView {
+    let retryable = error.retryable;
     view! {
         <div class="error-state" role="alert">
             <strong>"The control plane could not complete this request."</strong>
             <p>{error.message.clone()}</p>
             <div class="tiny mono">{format!("{} · {}", error.status, error.code)}</div>
-            {error.retryable.then(|| view! { <p class="small">"This error may be transient. Retry after checking the factory connection."</p> })}
+            {retryable.then(|| view! {
+                <div class="stack">
+                    <p class="small">"This error may be transient. Check the factory connection, then reload this page."</p>
+                    <button class="btn btn-sm" type="button" on:click=move |_| reload_page()>
+                        "Reload this page"
+                    </button>
+                </div>
+            })}
         </div>
+    }
+}
+
+/// The safest retry for a failed projection is a fresh request for the same route. It does not
+/// replay a mutation or invent state; it re-runs the read that failed.
+fn reload_page() {
+    #[cfg(target_arch = "wasm32")]
+    if let Some(window) = web_sys::window() {
+        let _ = window.location().reload();
     }
 }
 

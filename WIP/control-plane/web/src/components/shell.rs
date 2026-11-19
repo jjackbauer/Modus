@@ -23,6 +23,18 @@ pub fn AppShell(children: Children) -> impl IntoView {
         }
     });
 
+    // The browser's own offline/online state is visible to the user immediately, even when the
+    // EventSource has not noticed the drop yet. Report the distinct stale/reconnecting states and
+    // reopen the stream when the connection returns.
+    #[cfg(target_arch = "wasm32")]
+    {
+        let network_context = context;
+        let network_location = location.clone();
+        Effect::new(move |_| {
+            install_network_listeners(network_context, network_location.clone());
+        });
+    }
+
     // A route change always closes the mobile drawer; the new page owns focus.
     Effect::new(move |_| {
         let _ = location.pathname.get();
@@ -234,9 +246,13 @@ pub fn AppShell(children: Children) -> impl IntoView {
 fn ConnectionIndicator(context: AppContext) -> impl IntoView {
     let connected = context.activity.connected;
     let stale = context.activity.stale;
+    let offline = context.activity.offline;
     let error = context.activity.gateway_error;
     let heartbeat = context.activity.last_heartbeat;
     let label = move || {
+        if offline.get() {
+            return "Offline · showing the last durable facts".to_string();
+        }
         if connected.get() && !stale.get() {
             match heartbeat.get() {
                 Some(value) => format!("Live activity · last event {}", time_ago(Some(value.as_str()))),
@@ -249,7 +265,9 @@ fn ConnectionIndicator(context: AppContext) -> impl IntoView {
         }
     };
     let tone = move || {
-        if connected.get() && !stale.get() {
+        if offline.get() {
+            "dot dot-danger"
+        } else if connected.get() && !stale.get() {
             "dot dot-ok"
         } else if stale.get() {
             "dot dot-danger"
@@ -463,6 +481,50 @@ fn focus_element_after_frame(id: &'static str) {
     {
         let _ = id;
     }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn install_network_listeners(context: AppContext, location: leptos_router::location::Location) {
+    use wasm_bindgen::closure::Closure;
+    use wasm_bindgen::JsCast;
+
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+
+    let offline_context = context;
+    let offline = Closure::<dyn FnMut(web_sys::Event)>::wrap(Box::new(move |_| {
+        offline_context.activity.offline.set(true);
+        offline_context.activity.connected.set(false);
+        offline_context.activity.stale.set(true);
+        offline_context.activity.gateway_error.set(Some(
+            "The browser is offline. Showing the last durable facts; the activity stream will resync when the connection returns."
+                .to_string(),
+        ));
+        activity::suspend();
+    }));
+
+    let online_context = context;
+    let online = Closure::<dyn FnMut(web_sys::Event)>::wrap(Box::new(move |_| {
+        online_context.activity.offline.set(false);
+        online_context.activity.connected.set(false);
+        online_context.activity.stale.set(false);
+        online_context.activity.gateway_error.set(Some(
+            "The browser is back online. Reconnecting the activity stream.".to_string(),
+        ));
+        let pathname = location.pathname.get_untracked();
+        let instance = crate::instance_from_path(&pathname).unwrap_or_default();
+        if !instance.is_empty() {
+            activity::reconnect(online_context, &instance);
+        }
+    }));
+
+    let _ = window.add_event_listener_with_callback("offline", offline.as_ref().unchecked_ref());
+    let _ = window.add_event_listener_with_callback("online", online.as_ref().unchecked_ref());
+    // The shell is mounted once for the lifetime of the document; the listeners must outlive this
+    // function. A document reload drops them with the document.
+    offline.forget();
+    online.forget();
 }
 
 /// Focuses the new route's `h1`. A Suspense-backed route renders its heading once the data

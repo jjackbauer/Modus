@@ -18,6 +18,9 @@ pub struct ActivityState {
     pub events: RwSignal<Vec<EventStreamEnvelope>>,
     pub connected: RwSignal<bool>,
     pub stale: RwSignal<bool>,
+    /// The browser reports itself offline. This is stronger than a transport error: no stream or
+    /// heartbeat can be trusted until the browser reports online again.
+    pub offline: RwSignal<bool>,
     pub last_heartbeat: RwSignal<Option<String>>,
     pub gateway_error: RwSignal<Option<String>>,
 }
@@ -28,6 +31,7 @@ impl ActivityState {
             events: RwSignal::new(Vec::new()),
             connected: RwSignal::new(false),
             stale: RwSignal::new(true),
+            offline: RwSignal::new(false),
             last_heartbeat: RwSignal::new(None),
             gateway_error: RwSignal::new(None),
         }
