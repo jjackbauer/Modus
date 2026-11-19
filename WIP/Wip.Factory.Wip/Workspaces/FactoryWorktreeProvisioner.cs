@@ -10,7 +10,9 @@ public sealed record FactoryWorkspaceLease(
     string WorktreePath,
     string SessionBranch,
     string TargetBranch,
-    string TargetCommitAtCreation);
+    string TargetCommitAtCreation,
+    bool TargetHasAdvanced = false,
+    string BaselineSource = WorkspaceSessionState.ResolvedAtCreate);
 
 /// <summary>
 /// Provisions one Git worktree per modifying session and refuses to hand the same worktree to two
@@ -48,12 +50,15 @@ public sealed class FactoryWorktreeProvisioner
 
         var normalized = Path.GetFullPath(session.WorktreePath);
 
-        if (_worktreeOwners.TryGetValue(normalized, out var owner) && !owner.Equals(sessionId))
+        lock (_worktreeOwners)
         {
-            return (null, $"{WorktreeAlreadyLeasedCategory}:{normalized}:held-by-{owner.Value}");
-        }
+            if (_worktreeOwners.TryGetValue(normalized, out var owner) && !owner.Equals(sessionId))
+            {
+                return (null, $"{WorktreeAlreadyLeasedCategory}:{normalized}:held-by-{owner.Value}");
+            }
 
-        _worktreeOwners[normalized] = sessionId;
+            _worktreeOwners[normalized] = sessionId;
+        }
 
         return (new FactoryWorkspaceLease(
             session.SessionId,
@@ -61,10 +66,20 @@ public sealed class FactoryWorktreeProvisioner
             session.WorktreePath,
             session.SessionBranch,
             session.TargetBranch,
-            session.TargetCommitAtCreation), null);
+            session.TargetCommitAtCreation,
+            session.TargetHasAdvanced,
+            session.BaselineSource), null);
     }
 
     /// <summary>The sessions currently holding a worktree, keyed by normalized path.</summary>
     public IReadOnlyDictionary<string, SessionId> OutstandingLeases
-        => new Dictionary<string, SessionId>(_worktreeOwners, StringComparer.OrdinalIgnoreCase);
+    {
+        get
+        {
+            lock (_worktreeOwners)
+            {
+                return new Dictionary<string, SessionId>(_worktreeOwners, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+    }
 }

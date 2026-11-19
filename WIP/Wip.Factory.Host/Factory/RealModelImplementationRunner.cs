@@ -16,6 +16,7 @@ using Wip.Factory.Wip.Isolation;
 using Wip.Factory.Wip.Workspaces;
 using Wip.Runtime;
 using Wip.Runtime.Runtime;
+using Wip.Workspaces.Git;
 
 namespace Wip.Factory.Host.Factory;
 
@@ -60,13 +61,127 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var sessionId = SessionFor(request.WorkItemId);
+        var journal = new ImplementationAttemptJournal(
+            ImplementationAttemptJournal.PathFor(_root.Root, request.WorkItemId));
+        var startedAt = DateTimeOffset.UtcNow;
+
+        ImplementationOutcome outcome;
+        try
+        {
+            outcome = await RunCoreAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            await TryRecordAsync(
+                journal,
+                request,
+                sessionId,
+                ImplementationAttemptRecord.CancelledOutcome,
+                "implementation-cancelled",
+                "the implementation attempt was cancelled",
+                startedAt,
+                cancellationToken).ConfigureAwait(false);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            var category = "implementation-exception:" + exception.GetType().Name;
+            outcome = ImplementationOutcome.Failed(category, exception.Message);
+            await TryRecordAsync(
+                journal,
+                request,
+                sessionId,
+                ImplementationAttemptRecord.FailedOutcome,
+                category,
+                exception.Message,
+                startedAt,
+                cancellationToken).ConfigureAwait(false);
+            return outcome;
+        }
+
+        await TryRecordAsync(
+            journal,
+            request,
+            sessionId,
+            outcome.Succeeded ? ImplementationAttemptRecord.SucceededOutcome : ImplementationAttemptRecord.FailedOutcome,
+            outcome.FailureCategory,
+            outcome.Detail,
+            startedAt,
+            cancellationToken,
+            outcome).ConfigureAwait(false);
+
+        return outcome;
+    }
+
+    private async ValueTask TryRecordAsync(
+        ImplementationAttemptJournal journal,
+        ImplementationRequest request,
+        SessionId sessionId,
+        string outcome,
+        string? failureCategory,
+        string? detail,
+        DateTimeOffset startedAt,
+        CancellationToken cancellationToken,
+        ImplementationOutcome? result = null)
+    {
+        WorkspaceSessionState? state = null;
+        try
+        {
+            state = await new WipWorkspaceProviderGit()
+                .ReadProvisioningStateAsync(request.RepositoryPath, sessionId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // The attempt record is still useful without the worktree metadata; never replace the primary outcome.
+        }
+
+        try
+        {
+            await journal.AppendAsync(
+                new ImplementationAttemptRecord(
+                    AttemptId: Guid.NewGuid().ToString("N"),
+                    WorkItemId: request.WorkItemId,
+                    AttemptNumber: 0,
+                    SessionId: sessionId.Value,
+                    Outcome: outcome,
+                    FailureCategory: failureCategory,
+                    FailureRole: null,
+                    Detail: detail,
+                    RepositoryPath: request.RepositoryPath,
+                    WorktreePath: result?.WorktreePath ?? state?.WorktreePath,
+                    TargetCommit: state?.OriginalTargetCommit,
+                    BaseSha: result?.BaseSha,
+                    HeadSha: result?.HeadSha,
+                    PreviousAttemptId: null,
+                    StartedAtUtc: startedAt,
+                    FinishedAtUtc: DateTimeOffset.UtcNow),
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            // Durable attempt history must not turn a completed implementation attempt into an unhandled failure.
+        }
+    }
+
+    private static SessionId SessionFor(string workItemId)
+        => new("session-impl-" + workItemId.ToLowerInvariant());
+
+    private async ValueTask<ImplementationOutcome> RunCoreAsync(
+        ImplementationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
         // An empty repository is a legitimate starting point; give it a baseline commit so a
         // worktree can be created, without touching any operator content.
         await EnsureBaselineCommitAsync(request.RepositoryPath, cancellationToken).ConfigureAwait(false);
 
         // D-06: session worktrees live under the control root, never inside the operator repository.
-        var provisioner = new FactoryWorktreeProvisioner(worktreeRoot: Path.Combine(_root.Root, "worktrees"));
-        var sessionId = new SessionId("session-impl-" + request.WorkItemId.ToLowerInvariant());
+        var workspaceProvider = new WipWorkspaceProviderGit();
+        var provisioner = new FactoryWorktreeProvisioner(workspaceProvider, worktreeRoot: Path.Combine(_root.Root, "worktrees"));
+        var sessionId = SessionFor(request.WorkItemId);
         FactoryWorkspaceLease? lease;
         string? reason;
         try
@@ -74,6 +189,10 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
             (lease, reason) = await provisioner
                 .ProvisionAsync(request.RepositoryPath, sessionId, "main", cancellationToken)
                 .ConfigureAwait(false);
+        }
+        catch (WorkspaceProvisioningException exception)
+        {
+            return ImplementationOutcome.Failed("worktree-failed:" + exception.Category, exception.Message);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -180,6 +299,12 @@ public sealed class RealModelImplementationRunner : IImplementationStageRunner
         await GitAsync(worktree, cancellationToken,
             "-c", "user.email=factory@example.test", "-c", "user.name=Factory",
             "commit", "-m", "feat: implement " + request.WorkItemId).ConfigureAwait(false);
+
+        // Record the new head while the provisioning lease is available. Without this, a later rebase of the session
+        // branch would be indistinguishable from legitimate descendant commits.
+        await workspaceProvider
+            .RecordSessionHeadAsync(request.RepositoryPath, sessionId, cancellationToken)
+            .ConfigureAwait(false);
 
         var headSha = (await GitAsync(worktree, cancellationToken, "rev-parse", "HEAD").ConfigureAwait(false)).Trim();
         var diff = await GitAsync(worktree, cancellationToken, "diff", baseSha + ".." + headSha).ConfigureAwait(false);

@@ -1,0 +1,257 @@
+{
+  "schemaVersion": "factory/requirement-traceability@1",
+  "status": "ENGINEERING_COMPLETE",
+  "sourceRevision": "bound by CANDIDATE_MANIFEST.json sourceRevision",
+  "generatedAtUtc": "2026-11-19T12:20:00Z",
+  "scope": "Wip.Factory v0.4 engineering hardening; independent product acceptance excluded",
+  "requirements": [
+    {
+      "id": "ARCH-01",
+      "requirement": "Enforce exactly one ASP.NET Core web application.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs#ArchitectureInspection"],
+      "evidence": ["Architecture_GivenSecondWebApplication_Refuses", "Architecture_GivenWebApplicationPlusTestProject_Allows"],
+      "notes": "The check fails unless the classified web-application count is exactly one."
+    },
+    {
+      "id": "ARCH-02",
+      "requirement": "Classify projects using structural MSBuild semantics, not filenames or arbitrary text matches.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs#ReadProject"],
+      "evidence": ["Architecture_GivenTestsFilenameOnPlainLibrary_Allows", "Architecture_GivenExecutableDisguisedByTestsFilename_Refuses"],
+      "notes": "Classification uses the project SDK, OutputType, IsTestProject, test-provider PackageReference, FrameworkReference and entry-point evidence."
+    },
+    {
+      "id": "ARCH-03",
+      "requirement": "Allow legitimate library and test projects.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs#ReadProject"],
+      "evidence": ["Architecture_GivenLegitimateTestProject_Allows", "Architecture_GivenAspNetCoreLibrary_Allows", "Architecture_GivenWebApplicationLibraryAndTest_Allows", "Architecture_GivenExecutableTestProviderWithoutEntryPoint_Allows"],
+      "notes": "xUnit v3/MSTest executable test projects without a user entry point are accepted; ASP.NET Core libraries are accepted."
+    },
+    {
+      "id": "ARCH-04",
+      "requirement": "Prevent executable projects disguised as tests from bypassing architecture enforcement.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs#ReadProject"],
+      "evidence": ["Architecture_GivenExecutableDisguisedByTestsFilename_Refuses", "Architecture_GivenExecutableTestDeclaration_Refuses", "Architecture_GivenTestProviderProjectUsingWebSdk_Refuses"],
+      "notes": "A *.Tests filename is not a test marker; a test-declared executable with Program.cs/StartupObject is a named disguised-executable refusal."
+    },
+    {
+      "id": "ARCH-05",
+      "requirement": "Reject unsupported, malformed, or ambiguous project layouts.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs#ReadProject", "WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs#InspectInheritedMsbuildFile"],
+      "evidence": ["Architecture_GivenMalformedProject_Refuses", "Architecture_GivenUnknownSdk_Refuses", "Architecture_GivenNonSdkProject_Refuses", "Architecture_GivenConditionalOutputType_Refuses", "Architecture_GivenDirectoryBuildPropsOutputTypeOverride_Refuses", "Architecture_GivenExplicitMsbuildImport_Refuses"],
+      "notes": "Unknown SDKs, non-SDK projects, conditional classification, inherited overrides and explicit imports fail the project-layout-supported check."
+    },
+    {
+      "id": "ARCH-06",
+      "requirement": "Preserve the existing accepted application structure.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host.Tests/FactoryTestWorkspace.cs", "WIP/Wip.Factory.Host.Tests/FactoryBoundaryTests.cs"],
+      "evidence": ["Architecture_GivenWebApplicationPlusTestProject_Allows", "Architecture_GivenWebApplicationLibraryAndTest_Allows"],
+      "notes": "The accepted Web SDK + Program.cs shape and a separate test project still pass."
+    },
+    {
+      "id": "WT-01",
+      "requirement": "Preserve the original target commit across worktree retries.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#CreateAsync", "WIP/Wip.Workspaces.Git/WorkspaceProvisioningState.cs"],
+      "evidence": ["CreateAsync_GivenTargetAdvancedAfterFirstCreate_PreservesOriginalTarget", "CreateAsync_GivenBranchWithoutWorktree_ReattachesAtOriginalBaseline"],
+      "notes": "The original target is persisted in the repository Git directory and reused; TargetHasAdvanced reports the observed drift without rebasing."
+    },
+    {
+      "id": "WT-02",
+      "requirement": "Make worktree provisioning idempotent.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#ProvisionLockedAsync", "WIP/Wip.Workspaces.Git/WorkspaceProvisioningState.cs#WorkspaceProvisioningLease"],
+      "evidence": ["CreateAsync_GivenExistingWorktreeForSameSession_ReusesItWithoutFailing", "CreateAsync_GivenConcurrentRetries_ProducesOneConsistentWorktree", "CreateAsync_GivenRegisteredWorktreeDirectoryRemoved_PrunesAndRecovers"],
+      "notes": "A per-session cross-process lease serializes create/attach; a valid existing worktree is reused."
+    },
+    {
+      "id": "WT-03",
+      "requirement": "Preserve valid uncommitted implementation work.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#ProvisionLockedAsync"],
+      "evidence": ["CreateAsync_GivenRetryWithUncommittedWork_PreservesWorkingTree", "CreateAsync_GivenFailedAttemptThenRecovery_PreservesOriginalFailureSeparately"],
+      "notes": "Retries never reset, clean or rebase the worktree; untracked and modified files survive."
+    },
+    {
+      "id": "WT-04",
+      "requirement": "Persist original failure causes and subsequent retry failures separately.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Workspaces.Git/WorkspaceProvisioningState.cs#WorkspaceProvisioningAttempt", "WIP/Wip.Factory.Host/Factory/ImplementationAttemptJournal.cs", "WIP/Wip.Factory.Host/Factory/RealModelImplementationRunner.cs#RunAsync"],
+      "evidence": ["Journal_GivenOriginalAndRetryFailures_PreservesBothSeparately", "Runner_GivenProvisioningFailure_PersistsOriginalFailureAndRetrySeparately", "CreateAsync_GivenFailedAttemptThenRecovery_PreservesOriginalFailureSeparately"],
+      "notes": "Attempts are append-only; the original failure keeps role=original and later failures role=retry with PreviousAttemptId."
+    },
+    {
+      "id": "WT-05",
+      "requirement": "Handle partial worktrees, orphaned branches, process termination, and concurrent retries.",
+      "status": "implemented-with-limitation",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#ProvisionLockedAsync", "WIP/Wip.Workspaces.Git/WorkspaceProvisioningState.cs#WorkspaceProvisioningLease"],
+      "evidence": ["CreateAsync_GivenUnregisteredDirectoryThatIsNotAWorktree_RefusesAndPreserves", "CreateAsync_GivenOrphanBranchWithoutState_InfersMergeBaseInsteadOfCurrentTarget", "CreateAsync_GivenRegisteredWorktreeDirectoryRemoved_PrunesAndRecovers", "CreateAsync_GivenConcurrentRetries_ProducesOneConsistentWorktree"],
+      "notes": "Missing registrations are pruned/repaired; a partial directory is preserved and refused rather than deleted; the process-death lease is an OS file handle."
+    },
+    {
+      "id": "WT-06",
+      "requirement": "Reject mismatched or corrupted worktrees.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#VerifyWorktreeAsync", "WIP/Wip.Workspaces.Git/WorkspaceProvisioningState.cs#WorkspaceStateStore"],
+      "evidence": ["CreateAsync_GivenWorktreeOnDifferentBranch_RefusesMismatchAndPreservesWorktree", "CreateAsync_GivenCorruptStateFile_RefusesStateCorruptWithoutDeletingWorktree", "CreateAsync_GivenStateFromDifferentWorktreeRoot_RefusesMismatch"],
+      "notes": "Branch, worktree path, repository, session and schema identity are checked; corrupt state fails closed."
+    },
+    {
+      "id": "WT-07",
+      "requirement": "Prevent silent rebasing or baseline substitution when the target branch advances.",
+      "status": "implemented-with-limitation",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#ProvisionLockedAsync", "WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs#RecordSessionHeadAsync"],
+      "evidence": ["CreateAsync_GivenSessionHistoryRewritten_RefusesHistoryRewritten", "CreateAsync_GivenTargetAdvancedAfterFirstCreate_PreservesOriginalTarget"],
+      "notes": "Recorded heads must remain ancestors; an orphan branch without prior state uses an explicitly labelled inferred merge-base."
+    },
+    {
+      "id": "ENG-01",
+      "requirement": "Introduce a consistent, version-bound engineering delivery record.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs#EngineeringDeliveryRecord", "WIP/Wip.Factory.Host/Factory/FactoryCli.cs#EngineeringAsync"],
+      "evidence": ["EngineeringRecord_GivenSameInputs_ProducesStableDigest", "EngineeringRecord_GivenTamperedJson_DigestRefuses"],
+      "notes": "Schema factory/engineering-delivery@1; content-addressed digest; generated only by the product CLI."
+    },
+    {
+      "id": "ENG-02",
+      "requirement": "Distinguish build/test success from independent product acceptance.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs#EngineeringAcceptanceStatus"],
+      "evidence": ["EngineeringRecord_GivenHistoricalFailedAcceptance_KeepsEngineeringCompleteAndAcceptanceSeparate", "EngineeringRecord_GivenAcceptanceStatusAccepted_Refuses", "EngineeringRecord_GivenAcceptanceAsMandatoryEngineeringGate_Refuses"],
+      "notes": "Engineering status is derived from build/tests/gates; acceptance is a separate historical axis and cannot be a mandatory engineering gate."
+    },
+    {
+      "id": "ENG-03",
+      "requirement": "Derive engineering status from executed tests and durable evidence.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs#DeriveStatus", "docs/goal-wip-factory-operator-alpha/engineering/run-engineering-gates.ps1"],
+      "evidence": ["EngineeringRecord_GivenMandatoryGateFailure_DerivesBlocked", "EngineeringRecord_GivenFailedTestButGreenGates_DerivesBlocked"],
+      "notes": "ENGINEERING_COMPLETE requires a passing build, zero failures and every mandatory gate green."
+    },
+    {
+      "id": "ENG-04",
+      "requirement": "Eliminate contradictory implementation metrics across reports.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs#Validate", "docs/goal-wip-factory-operator-alpha/engineering/run-engineering-gates.ps1"],
+      "evidence": ["EngineeringRecord_GivenContradictoryTestTotals_Refuses", "EngineeringRecord_GivenBlockedStatusWhenEverythingPasses_Refuses"],
+      "notes": "Suite counts must partition; blocked/complete must match the facts; the gate report and record are generated from the same measured TRX files."
+    },
+    {
+      "id": "ENG-05",
+      "requirement": "Track actual test counts, revisions, build digests, and known limitations.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs", "CANDIDATE_MANIFEST.json"],
+      "evidence": ["EngineeringRecord_GivenCompleteWithoutKnownLimitations_Refuses", "CandidateManifest_GivenCompleteEngineeringRecord_Validates"],
+      "notes": "Per-suite executed/passed/failed/skipped counts, TRX digests, revision, build digest and limitations are mandatory."
+    },
+    {
+      "id": "ENG-06",
+      "requirement": "Preserve the historical outcome of the original failed independent acceptance.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs#HistoricalAcceptanceRecord", "docs/goal-wip-factory-operator-alpha/independent-acceptance-2026-11-19/"],
+      "evidence": ["EngineeringRecord_GivenHistoricalFailedAcceptance_KeepsEngineeringCompleteAndAcceptanceSeparate"],
+      "notes": "PA-01 fail, PA-02 pass and pair fail are recorded with the evidence digest; the record is historical, not a new verdict."
+    },
+    {
+      "id": "ENG-07",
+      "requirement": "Do not turn historical remediation evidence into a new acceptance verdict; engineering completion must not depend on acceptance certification.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/EngineeringDeliveryRecord.cs#Validate", "docs/goal-wip-factory-operator-alpha/engineering/run-engineering-gates.ps1"],
+      "evidence": ["EngineeringRecord_GivenAcceptanceAsMandatoryEngineeringGate_Refuses", "CandidateManifest_GivenCompleteEngineeringRecord_Validates"],
+      "notes": "Acceptance gate ids are refused as mandatory; ACCEPTED and PRODUCTION_READY are refused statuses."
+    },
+    {
+      "id": "DSH-01",
+      "requirement": "Bound active working-context growth.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/scripts/session-budget.ts", "C:/Users/ricar/deepseek-harness/packages/compaction"],
+      "evidence": ["scripts/session-budget.spec.ts#bounded per-turn projection", "DSH_EFFICIENCY_BASELINE.json"],
+      "notes": "The instrument emits a bounded per-turn working view and a context pack; DSH compaction remains the live enforcement mechanism."
+    },
+    {
+      "id": "DSH-02",
+      "requirement": "Separate historical evidence from active context and reconstruct context from durable state.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/scripts/work-state.ts", "C:/Users/ricar/deepseek-harness/scripts/session-budget.ts"],
+      "evidence": ["scripts/work-state.spec.ts (passed in DSH)", "DSH_CONTEXT_PACK.json"],
+      "notes": "Per-turn facts and seq locators are separated from the full archive; work-state rebuilds effective status from durable stores."
+    },
+    {
+      "id": "DSH-03",
+      "requirement": "Retrieve detailed evidence on demand and preserve provenance across context compression.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/packages/spill", "C:/Users/ricar/deepseek-harness/packages/shell/shell/src/output-view.ts", "C:/Users/ricar/deepseek-harness/scripts/session-budget.ts"],
+      "evidence": ["DSH_EFFICIENCY_BASELINE.json (source SHA-256 and seq locators)"],
+      "notes": "Spill locators/output views hold full detail; the projection records source and projection digests."
+    },
+    {
+      "id": "DSH-04",
+      "requirement": "Instrument token usage, cache utilization, model calls, retries, tool calls, wall time, and cost where available.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/scripts/session-budget.ts", "C:/Users/ricar/deepseek-harness/scripts/session-trace.ts", "C:/Users/ricar/deepseek-harness/packages/goal/acceptance-ledger/src/pricing.ts"],
+      "evidence": ["DSH_EFFICIENCY_BASELINE.json", "scripts/session-budget.spec.ts#reports unknown cost when a response has no complete usage measurement"],
+      "notes": "Absent usage is unknown/null, never zero; cost uses pinned public DeepSeek Flash rates."
+    },
+    {
+      "id": "DSH-05",
+      "requirement": "Detect repetitive or stalled execution loops.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/packages/guard/repeat-tool-reminder", "C:/Users/ricar/deepseek-harness/packages/subagent/subagent/src/delegation-progress.ts", "C:/Users/ricar/deepseek-harness/scripts/session-budget.ts"],
+      "evidence": ["packages/guard/repeat-tool-reminder tests (20 passed)", "scripts/session-budget.spec.ts#detects a repeated tool-call group and a stalled turn"],
+      "notes": "The live guard injects a bounded reminder; the offline instrument reports repeated-call groups and failed-repeat stalled turns."
+    },
+    {
+      "id": "DSH-06",
+      "requirement": "Benchmark against a reproducible baseline.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/scripts/session-budget.ts", "docs/goal-wip-factory-operator-alpha/engineering/DSH_EFFICIENCY_BASELINE.json"],
+      "evidence": ["DSH_EFFICIENCY_BASELINE.json", "DSH_EFFICIENCY_BASELINE.md"],
+      "notes": "The frozen prior-session archive (SHA-256 93d0249a…) reproduces one command: 515 model calls, 586 tool calls, 217,628,655 aggregate tokens, $1.4273."
+    },
+    {
+      "id": "FAULT-01",
+      "requirement": "Multiple web applications are rejected; disguised executables are rejected; valid libraries and tests are allowed.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/FactoryReviewChecks.cs"],
+      "evidence": ["Architecture_GivenSecondWebApplication_Refuses", "Architecture_GivenExecutableDisguisedByTestsFilename_Refuses", "Architecture_GivenLegitimateTestProject_Allows"],
+      "notes": "Executed in the split architecture conformance suite."
+    },
+    {
+      "id": "FAULT-02",
+      "requirement": "Worktree retry preserves its original baseline; concurrent retries produce consistent state; original failure causes survive recovery.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Workspaces.Git/WipWorkspaceProviderGit.cs", "WIP/Wip.Factory.Host/Factory/ImplementationAttemptJournal.cs"],
+      "evidence": ["CreateAsync_GivenTargetAdvancedAfterFirstCreate_PreservesOriginalTarget", "CreateAsync_GivenConcurrentRetries_ProducesOneConsistentWorktree", "Journal_GivenOriginalAndRetryFailures_PreservesBothSeparately"],
+      "notes": "Concurrency is serialized by an in-process gate plus an OS file lease."
+    },
+    {
+      "id": "FAULT-03",
+      "requirement": "Merge recovery and post-merge verification remain correct; stale evidence cannot authorize operations.",
+      "status": "implemented",
+      "implementation": ["WIP/Wip.Factory.Host/Factory/ReleaseVerification.cs", "WIP/Wip.Factory.Host/Factory/FactoryStagePipeline.cs"],
+      "evidence": ["Release_GivenMergeAppliedButPostMergeVerificationAbsent_DoesNotRelease", "Release_GivenCrashAfterMergeBeforeVerification_ReconcilesGitAndReverifies", "Review_GivenEvidenceFromDifferentCommit_RefusesReview", "Approval_GivenEvidenceChangesButSummaryDoesNot_RefusesMerge"],
+      "notes": "These are existing executed v0.4 gates; the engineering gate runner re-runs the host suite and records the TRX digest."
+    },
+    {
+      "id": "FAULT-04",
+      "requirement": "DSH refuses goal completion when required engineering deliverables are missing.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/scripts/engineering-deliverables-gate.ts"],
+      "evidence": ["scripts/engineering-deliverables-gate.spec.ts#blocks goal completion through the real goal service and commits nothing"],
+      "notes": "The check is registered on the real GoalService; missing/empty/malformed/escaping/status-mismatched artifacts yield a blocked completion and no goal/change commit."
+    },
+    {
+      "id": "FAULT-05",
+      "requirement": "Delegation respects agent capabilities.",
+      "status": "implemented",
+      "implementation": ["C:/Users/ricar/deepseek-harness/packages/subagent/tool-subagent/src/index.ts", "C:/Users/ricar/deepseek-harness/packages/subagent/subagent/src/model-selection.ts"],
+      "evidence": ["packages/subagent/tool-subagent/tests/tool-subagent.spec.ts (47 passed)"],
+      "notes": "Mount-time and request-time refusals cover agentOptions, agentPreset, depthLimit, outputSchema and the session model route."
+    }
+  ]
+}

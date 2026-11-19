@@ -16,6 +16,13 @@ public static class FactoryCli
 
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true };
 
+    private static readonly JsonSerializerOptions EngineeringJson = new()
+    {
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     public static async Task<int> ExecuteAsync(string[] args, TextWriter output, TextWriter error)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -34,7 +41,8 @@ public static class FactoryCli
             "serve" => await ServeAsync(rest, output, error).ConfigureAwait(false),
             "template" => await TemplateAsync(rest, output, error).ConfigureAwait(false),
             "acceptance" => await AcceptanceAsync(rest, output, error, json).ConfigureAwait(false),
-            _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status|approve|serve|template|acceptance").ConfigureAwait(false)
+            "engineering" => await EngineeringAsync(rest, output, error).ConfigureAwait(false),
+            _ => await FailAsync(error, Usage, "usage: factory requirement|contract|run|status|approve|serve|template|acceptance|engineering").ConfigureAwait(false)
         };
     }
 
@@ -441,6 +449,56 @@ public static class FactoryCli
         }
 
         return new RealModelImplementationRunner(root, baseUrl, apiKey);
+    }
+
+    /// <summary>
+    /// Version-bound engineering delivery commands. The record and manifest derive their own status, digest and
+    /// validation; this adapter never hand-writes a metric or marks acceptance.
+    /// </summary>
+    private static async Task<int> EngineeringAsync(string[] rest, TextWriter output, TextWriter error)
+    {
+        var action = rest.Length > 0 ? rest[0] : string.Empty;
+        var inputPath = Value(rest, "--input");
+        var outputPath = Value(rest, "--output");
+
+        if (action is not ("record" or "manifest") || inputPath is null || outputPath is null)
+        {
+            return await FailAsync(
+                error,
+                Usage,
+                "usage: factory engineering record|manifest --input <metrics.json> --output <artifact.json>").ConfigureAwait(false);
+        }
+
+        if (!File.Exists(inputPath))
+        {
+            return await FailAsync(error, Refused, "engineering-input-not-found:" + inputPath).ConfigureAwait(false);
+        }
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(inputPath).ConfigureAwait(false);
+
+            if (string.Equals(action, "record", StringComparison.Ordinal))
+            {
+                var input = JsonSerializer.Deserialize<EngineeringRecordInput>(json, EngineeringJson)
+                    ?? throw new InvalidOperationException("engineering-record-invalid:empty input");
+                var record = input.CreateRecord();
+                await File.WriteAllTextAsync(outputPath, record.ToJson()).ConfigureAwait(false);
+                await output.WriteLineAsync(record.Status + " " + record.EvidenceDigest).ConfigureAwait(false);
+                return string.Equals(record.Status, EngineeringStatus.Complete, StringComparison.Ordinal) ? Ok : 3;
+            }
+
+            var manifestInput = JsonSerializer.Deserialize<CandidateManifestInput>(json, EngineeringJson)
+                ?? throw new InvalidOperationException("candidate-manifest-invalid:empty input");
+            var manifest = manifestInput.CreateManifest();
+            await File.WriteAllTextAsync(outputPath, manifest.ToJson()).ConfigureAwait(false);
+            await output.WriteLineAsync(manifest.Status + " " + manifest.EvidenceDigest).ConfigureAwait(false);
+            return string.Equals(manifest.Status, EngineeringStatus.Complete, StringComparison.Ordinal) ? Ok : 3;
+        }
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException or IOException or NotSupportedException)
+        {
+            return await FailAsync(error, Refused, exception.Message).ConfigureAwait(false);
+        }
     }
 
     /// <summary>

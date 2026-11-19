@@ -152,6 +152,15 @@ public sealed class DurableJournal<T>
         {
             var root = document.RootElement;
 
+            // A checksum without its payload is a damaged envelope, not a legacy record that may be reinterpreted.
+            if (root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("checksum", out _)
+                && !root.TryGetProperty("payload", out _))
+            {
+                detail = "missing-payload";
+                return false;
+            }
+
             // New format: a digest envelope around the exact payload bytes.
             if (root.ValueKind == JsonValueKind.Object
                 && root.TryGetProperty("checksum", out var checksum)

@@ -1,0 +1,276 @@
+{
+  "analyzerVersion": "session-budget@1",
+  "source": {
+    "file": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd",
+    "sha256": "93d0249aa9656a57e30226e26c95feec8805fb3712d772f5139608d47d72e14b",
+    "bytes": 3032706
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "fromSeq": 11,
+      "toSeq": 1656,
+      "startedAt": "2026-11-19T09:10:48.341Z",
+      "endedAt": "2026-11-19T09:48:17.879Z",
+      "endReason": "completed",
+      "modelCalls": 223,
+      "toolCalls": 269,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 94,
+        "read": 59,
+        "grep": 9,
+        "job_output": 2,
+        "create_goal": 3,
+        "todo_write": 1,
+        "write": 34,
+        "edit": 66,
+        "present": 1
+      },
+      "usage": {
+        "inputTokens": 200199,
+        "cacheReadTokens": 59098240,
+        "cacheWriteTokens": 0,
+        "outputTokens": 216715,
+        "responses": 223,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 0,
+      "digest": "ddc531926d8052cfe9251ef17fb413699748c01f54149916f220a2aa04b3057d"
+    },
+    {
+      "turn": 2,
+      "fromSeq": 1658,
+      "toSeq": 2367,
+      "startedAt": "2026-11-19T09:48:17.889Z",
+      "endedAt": "2026-11-19T10:02:06.381Z",
+      "endReason": "completed",
+      "modelCalls": 100,
+      "toolCalls": 119,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 32,
+        "subagent": 1,
+        "write": 11,
+        "read": 20,
+        "edit": 40,
+        "grep": 5,
+        "list_agents": 8,
+        "send_message": 1,
+        "interrupt_agent": 1
+      },
+      "usage": {
+        "inputTokens": 33227,
+        "cacheReadTokens": 45265408,
+        "cacheWriteTokens": 0,
+        "outputTokens": 71055,
+        "responses": 100,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 8,
+      "digest": "5a4d1cf0f954840cc0f582a21ad1efa7eb1d3f19da3aa7da368e554bb3640624"
+    },
+    {
+      "turn": 3,
+      "fromSeq": 2369,
+      "toSeq": 2854,
+      "startedAt": "2026-11-19T10:02:06.393Z",
+      "endedAt": "2026-11-19T10:10:49.585Z",
+      "endReason": "completed",
+      "modelCalls": 65,
+      "toolCalls": 71,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 39,
+        "read": 13,
+        "edit": 16,
+        "write": 3
+      },
+      "usage": {
+        "inputTokens": 25409,
+        "cacheReadTokens": 34204288,
+        "cacheWriteTokens": 0,
+        "outputTokens": 33838,
+        "responses": 65,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 0,
+      "digest": "1a6c9e4656eeaf33d4f6553265200d39a20f608225d8f488d0e84bb273788244"
+    },
+    {
+      "turn": 4,
+      "fromSeq": 2856,
+      "toSeq": 2998,
+      "startedAt": "2026-11-19T10:10:49.599Z",
+      "endedAt": "2026-11-19T10:13:26.836Z",
+      "endReason": "completed",
+      "modelCalls": 19,
+      "toolCalls": 18,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 10,
+        "read": 2,
+        "job_output": 1,
+        "write": 1,
+        "edit": 2,
+        "get_goal": 1,
+        "update_goal": 1
+      },
+      "usage": {
+        "inputTokens": 7195,
+        "cacheReadTokens": 10644480,
+        "cacheWriteTokens": 0,
+        "outputTokens": 13625,
+        "responses": 19,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 0,
+      "digest": "b0b28b9d5c9656862845ad4f21d5a2c4d33ac836cd4015e444dbeec0acb3f98e"
+    },
+    {
+      "turn": 5,
+      "fromSeq": 3000,
+      "toSeq": 3457,
+      "startedAt": "2026-11-19T11:10:19.558Z",
+      "endedAt": "2026-11-19T11:19:57.612Z",
+      "endReason": "completed",
+      "modelCalls": 64,
+      "toolCalls": 66,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 31,
+        "read": 19,
+        "update_goal": 2,
+        "job_output": 2,
+        "write": 5,
+        "edit": 7
+      },
+      "usage": {
+        "inputTokens": 36481,
+        "cacheReadTokens": 38809856,
+        "cacheWriteTokens": 0,
+        "outputTokens": 34987,
+        "responses": 64,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 0,
+      "digest": "8e00ad96b2dbc5bcbc2b207539312d305e414bb810da0983a91ba5c210e75015"
+    },
+    {
+      "turn": 6,
+      "fromSeq": 3460,
+      "toSeq": 3754,
+      "startedAt": "2026-11-19T11:21:04.120Z",
+      "endedAt": "2026-11-19T11:33:23.805Z",
+      "endReason": "completed",
+      "modelCalls": 40,
+      "toolCalls": 40,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 24,
+        "job_output": 6,
+        "read": 4,
+        "edit": 4,
+        "write": 2
+      },
+      "usage": {
+        "inputTokens": 20202,
+        "cacheReadTokens": 26204672,
+        "cacheWriteTokens": 0,
+        "outputTokens": 20040,
+        "responses": 40,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 0,
+      "digest": "8f874ee254421ff1e98ddd7cd7e2a08e38e3e01290c5f732ea853558e87d5275"
+    },
+    {
+      "turn": 7,
+      "fromSeq": 3756,
+      "toSeq": 3787,
+      "startedAt": "2026-11-19T11:33:54.894Z",
+      "endedAt": "2026-11-19T11:34:15.269Z",
+      "endReason": "completed",
+      "modelCalls": 4,
+      "toolCalls": 3,
+      "failedToolCalls": 0,
+      "toolNames": {
+        "pwsh": 3
+      },
+      "usage": {
+        "inputTokens": 684,
+        "cacheReadTokens": 2687360,
+        "cacheWriteTokens": 0,
+        "outputTokens": 694,
+        "responses": 4,
+        "missingResponses": 0
+      },
+      "repeatedCalls": 0,
+      "digest": "3e639dcba75a51bb64bbb31c572a96b142d9ba676fa5e7fc03134dc41d8917ed"
+    }
+  ],
+  "onDemand": [
+    {
+      "turn": 1,
+      "fromSeq": 11,
+      "toSeq": 1656,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=11-1656"
+    },
+    {
+      "turn": 2,
+      "fromSeq": 1658,
+      "toSeq": 2367,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=1658-2367"
+    },
+    {
+      "turn": 3,
+      "fromSeq": 2369,
+      "toSeq": 2854,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=2369-2854"
+    },
+    {
+      "turn": 4,
+      "fromSeq": 2856,
+      "toSeq": 2998,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=2856-2998"
+    },
+    {
+      "turn": 5,
+      "fromSeq": 3000,
+      "toSeq": 3457,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=3000-3457"
+    },
+    {
+      "turn": 6,
+      "fromSeq": 3460,
+      "toSeq": 3754,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=3460-3754"
+    },
+    {
+      "turn": 7,
+      "fromSeq": 3756,
+      "toSeq": 3787,
+      "locator": "C:\\Users\\ricar\\.dsh\\sessions\\--F-dev-Modus-WIP--\\session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f\\session.v4.jsonl.zstd#seq=3756-3787"
+    }
+  ],
+  "loops": {
+    "repeatThreshold": 3,
+    "repeatedCallGroups": [
+      {
+        "signature": "5fcd983f6cca517b190ee6638ed262a0ce50254798d97f108b019a4623abf509",
+        "tool": "list_agents",
+        "count": 8,
+        "turns": [
+          2
+        ],
+        "firstSeq": 1758,
+        "lastSeq": 1911,
+        "argumentsPreview": "{}",
+        "failedResults": 0
+      }
+    ],
+    "maxConsecutiveRepeat": 1,
+    "stalledTurns": []
+  },
+  "projectionSha256": "12a584e7134cc488741ea4630233e6bb691277e09b254d1d6645961910730f67"
+}

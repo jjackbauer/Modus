@@ -1,0 +1,162 @@
+{
+  "schemaVersion": "dsh/engineering-efficiency-evidence@1",
+  "status": "pass",
+  "generatedAtUtc": "2026-11-19T12:20:00Z",
+  "harness": {
+    "checkout": "C:\\Users\\ricar\\deepseek-harness",
+    "baseCommit": "ce7073d51254c26cd63b22a60835b8f948deb447",
+    "instrumentationCommit": "ef7cb1377da3da885739a5eb8452e0f4f07a4570",
+    "branch": "feature/dsh-engineering-instrumentation",
+    "scope": "DSH scripts and goal gates; no Wip.Factory production code"
+  },
+  "baseline": {
+    "sessionId": "session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f",
+    "sessionFileSha256": "93d0249aa9656a57e30226e26c95feec8805fb3712d772f5139608d47d72e14b",
+    "events": 3788,
+    "modelCalls": 515,
+    "toolCalls": 586,
+    "failedToolCalls": 17,
+    "retries": 0,
+    "wallMs": 8614200,
+    "usage": {
+      "inputTokens": 323397,
+      "cacheReadTokens": 216914304,
+      "cacheWriteTokens": 0,
+      "outputTokens": 390954,
+      "aggregateTokens": 217628655
+    },
+    "cacheHitRate": 0.9985,
+    "costUsd": 1.4273,
+    "pricing": "deepseek-flash rates pinned at 2026-11-11; peak/off-peak UTC calendar",
+    "fullTranscriptChars": 11638913,
+    "fullTranscriptEstimatedTokens": 2909729,
+    "boundedProjectionBytes": 4745,
+    "boundedProjectionEstimatedTokens": 1187,
+    "boundedProjectionReductionPercent": 99.96,
+    "repeatedCallGroups": 1,
+    "maxConsecutiveRepeat": 1,
+    "stalledTurns": []
+  },
+  "mechanisms": [
+    {
+      "requirement": "bound active working-context growth",
+      "implementation": "DSH compaction and tool-result-pruner packages; the new session-budget projection bounds a per-turn working view and keeps the full transcript retrievable",
+      "evidence": [
+        "packages/compaction/compaction/README.md",
+        "packages/compaction/compaction-basic/README.md",
+        "packages/compaction/compaction-tool-result-pruner/README.md",
+        "scripts/session-budget.ts",
+        "scripts/session-budget.spec.ts"
+      ]
+    },
+    {
+      "requirement": "separate historical evidence from active context",
+      "implementation": "work-state reconstructs declared/effective status from the durable session and evidence store; session-budget reports per-turn facts separately from the full archive",
+      "evidence": [
+        "scripts/work-state.ts",
+        "scripts/work-state.spec.ts",
+        "packages/compaction/compaction/src/facts.ts"
+      ]
+    },
+    {
+      "requirement": "reconstruct context from durable state at meaningful boundaries",
+      "implementation": "goal/session projections and work-state rebuild state from the session log and revalidated evidence store; session-budget emits a context pack with source digests and seq locators",
+      "evidence": [
+        "packages/goal/goal/README.md",
+        "scripts/work-state.ts",
+        "scripts/session-budget.ts"
+      ]
+    },
+    {
+      "requirement": "retrieve detailed evidence on demand",
+      "implementation": "spill locators and bounded output views keep full output retrievable; session-budget emits turn-level seq locators",
+      "evidence": [
+        "docs/subsystems/spill.md",
+        "packages/shell/shell/src/output-view.ts",
+        "scripts/output-view.ts",
+        "scripts/session-budget.ts"
+      ]
+    },
+    {
+      "requirement": "preserve provenance across context compression",
+      "implementation": "compaction facts carry a source label and bounded fact block; session-budget projection binds the source log SHA-256 and projection SHA-256",
+      "evidence": [
+        "packages/compaction/compaction/src/facts.ts",
+        "packages/compaction/compaction/tests/facts.spec.ts",
+        "scripts/session-budget.ts"
+      ]
+    },
+    {
+      "requirement": "instrument token usage, cache utilization, model calls, retries, tool calls, wall time and cost",
+      "implementation": "session-budget measures all named counters from canonical session events, marks absent usage unknown, and prices with pinned rates; session-trace and acceptance-ledger provide the goal trace and cost ledger",
+      "evidence": [
+        "scripts/session-budget.ts",
+        "scripts/session-budget.spec.ts",
+        "scripts/session-trace.ts",
+        "packages/goal/acceptance-ledger/src/pricing.ts"
+      ]
+    },
+    {
+      "requirement": "detect repetitive or stalled execution loops",
+      "implementation": "the repeat-tool-reminder guard injects a bounded reminder for consecutive identical calls; delegation progress tracks stagnation; session-budget reports repeated-call groups and stalled turns offline",
+      "evidence": [
+        "packages/guard/repeat-tool-reminder/src/index.ts",
+        "packages/guard/repeat-tool-reminder/tests/repeat-tool-reminder.spec.ts",
+        "packages/subagent/subagent/src/delegation-progress.ts",
+        "scripts/session-budget.ts"
+      ]
+    },
+    {
+      "requirement": "benchmark against a reproducible baseline",
+      "implementation": "the frozen prior-session archive is the baseline; its full SHA-256, event counts, usage and bounded projection are recorded in DSH_EFFICIENCY_BASELINE.json and reproduce from one command",
+      "evidence": [
+        "DSH_EFFICIENCY_BASELINE.json",
+        "DSH_EFFICIENCY_BASELINE.md",
+        "DSH_CONTEXT_PACK.json",
+        "scripts/session-budget.ts"
+      ]
+    },
+    {
+      "requirement": "refuse goal completion when required engineering deliverables are missing",
+      "implementation": "engineering-deliverables-gate returns a synchronous GoalCompletionCheck; a missing, empty, escaping, malformed or status-mismatched artifact blocks the real goal service and commits nothing",
+      "evidence": [
+        "scripts/engineering-deliverables-gate.ts",
+        "scripts/engineering-deliverables-gate.spec.ts",
+        "packages/goal/goal/tests/ledger-gate-integration.spec.ts"
+      ]
+    },
+    {
+      "requirement": "delegation respects agent capabilities",
+      "implementation": "tool-subagent rejects config the provider cannot apply (agentOptions, agentPreset, depthLimit, outputSchema) and model selection validates the live session route; tests cover mount-time and request-time refusal",
+      "evidence": [
+        "packages/subagent/tool-subagent/src/index.ts",
+        "packages/subagent/tool-subagent/tests/tool-subagent.spec.ts",
+        "packages/subagent/subagent/src/model-selection.ts"
+      ]
+    }
+  ],
+  "verification": {
+    "commands": [
+      "pnpm exec vitest run scripts/session-budget.spec.ts scripts/engineering-deliverables-gate.spec.ts",
+      "pnpm exec vitest run packages/subagent/tool-subagent/tests/tool-subagent.spec.ts",
+      "pnpm exec vitest run packages/guard/repeat-tool-reminder/tests",
+      "pnpm exec vitest run scripts/work-state.spec.ts scripts/session-trace.spec.ts",
+      "pnpm exec tsc -b tsconfig.host.json"
+    ],
+    "results": [
+      { "command": "session-budget + engineering-deliverables-gate", "cases": 16, "failed": 0 },
+      { "command": "tool-subagent capability suite", "cases": 47, "failed": 0 },
+      { "command": "repeat-tool-reminder guard", "cases": 20, "failed": 0 },
+      { "command": "work-state + session-trace", "cases": 36, "failed": 0 },
+      { "command": "tsc -b tsconfig.host.json", "exit": 0 }
+    ],
+    "reproduceBaseline": "node --import tsx/esm scripts/session-budget.ts --session C:/Users/ricar/.dsh/sessions/--F-dev-Modus-WIP--/session-6d38d16b-2c7e-4d5d-9b24-0c8fefbdef6f --out DSH_EFFICIENCY_BASELINE.json --markdown DSH_EFFICIENCY_BASELINE.md --context-pack DSH_CONTEXT_PACK.json"
+  },
+  "limitations": [
+    "The bounded projection is a diagnostic working view, not a claim that the same 515-call session would have completed with 1,187 tokens.",
+    "Offline loop detection reports repeated call signatures and failed repeats; it does not replay a model and cannot prove that a future loop would have been prevented.",
+    "Cost is computed from pinned public rates and recorded usage; it is not provider billing and is null when any response lacks complete usage.",
+    "The prior session archive is a frozen local artifact; its SHA-256 is recorded, but the archive itself is not copied into the repository.",
+    "DSH changes are in a separate checkout and commit ef7cb1377d; the pre-commit hook could not run in this environment, so lint/typecheck were run directly (tsc exit 0)."
+  ]
+}
