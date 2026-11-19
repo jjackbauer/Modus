@@ -1,7 +1,8 @@
 # Wip.Factory Operator Alpha — delivery record (v0.4 remediation)
 
-**Status:** `implementation-ready / acceptance-pending`.
-**Accepted:** no. **PA-01/PA-02:** not run — no independent evaluator supplied withheld requirements.
+**Status: NOT ACCEPTED.**
+**Independent acceptance (2026-11-19):** PA-01 **failed**, PA-02 **passed**, pair **failed**. See
+`v0.4-independent-acceptance-result.md`.
 
 Baseline: `feature/wip-factory-alpha` at `e142bb43fb2faed6884f85387833186eac06457d` plus the v0.4 remediation
 changes. Code revision: `e29df4d`; measured evidence: `becc4e8` (later commits are harness/docs only).
@@ -30,9 +31,9 @@ Source: `v0.4-test-report.md`, `gate-report.json`, `named-test-coverage.json`.
 | FAC-P0-02 four review checks | **implemented + tested** | validation/coverage/architecture/security each with executed, digest-bound evidence |
 | FAC-P0-03 immutable templates | **implemented + tested** | re-registration conflict, marker/body mismatch, revocation persistence, traversal refusal |
 | FAC-P0-04 acceptance harness | **implemented + tested** | evaluator owns expected scenarios and frozen contract; missing/duplicate/uninspected evidence fails |
-| FAC-P0-05 blind PA-01/PA-02 | **not-run** | requires an external evaluator and withheld requirements |
+| FAC-P0-05 blind PA-01/PA-02 | **failed** | PA-01 failed on worktree retry idempotency; PA-02 passed 7/7 in both phases; pair exit 2 |
 | FAC-P1-01..08 | **implemented with named exceptions** | see `v0.4-closure-map.md`; secret redaction and its security-policy check are implemented |
-| v0.3 PA-03–PA-08 | **mechanics re-exercised (known-input)** | one live-model run at `e29df4d` passed intake, four review checks, merge, post-merge verification and serve with 4/4 scenarios in both phases; this is not blind PA-01/PA-02 |
+| v0.3 PA-03–PA-08 | **mechanics exercised; PA-02 passed** | independent PA-02 passed all 7 scenarios in both phases; PA-01 failed before review; prior known-input A also passed 4/4 |
 
 ## Reproducing
 
@@ -62,24 +63,23 @@ factory acceptance verify-pair --first ... --second ...
 
 ## What acceptance still requires
 
-Two requirement files the implementer has not seen, with evaluator-authored expectations
-(`expectedScenarioIds`, `approvedContractDigest`, `frozenHostDigest`, `evaluatorOwned: true`, `evaluatorId`), run
-against this binary and configuration with no source or configuration change:
+The 2026-11-19 attempt failed PA-01; its tasks may not be reused as blind evidence for a changed candidate. A new
+freeze and a **new, previously unseen** evaluator pair are required:
 
-```powershell
-run-acceptance.ps1 -Requirement <withheld-A.md> -Gate PA-01 -OutRoot <dir> -Expectations <A-evaluator.json>
-run-acceptance.ps1 -Requirement <withheld-B.md> -Gate PA-02 -OutRoot <dir> -Expectations <B-evaluator.json>
-factory acceptance verify-pair --first <A.evidence.json> --first-expectations <A-evaluator.json> `
-                              --second <B.evidence.json> --second-expectations <B-evaluator.json>
-```
+1. Fix worktree-provisioning retry idempotency and preserve the original agent failure category.
+2. Rerun the suites; record the new code revision and host/config digest.
+3. Obtain two new evaluator-authored requirement files and expectation manifests.
+4. Execute both with `run-acceptance.ps1` and `factory acceptance verify-pair`.
 
-Until those exist, the honest answer to "is this an accepted factory?" is **no**. The engineering claims are
-measured; the product acceptance is unclaimed.
+Until that new pair passes, the honest answer to "is this an accepted factory?" is **no**.
 
 ## Known limitations (not hidden)
 
-- **PA-01/PA-02 not run.** No independent evaluator was available in this session. A fresh live **known-input** run\n  (`v0.4-known-input-run.md`) passed end to end but is explicitly not blind acceptance.
-- **61 of the 80 v0.3 named tests are exact; 18 more are proven under explicitly mapped names; only the blind PA-02 remains unrun.**
+- **Independent acceptance failed:** PA-01 failed at implementation retry (`branch already exists` after a soft agent
+  failure); PA-02 passed 7/7 in both phases. The pair verdict failed. A fresh live **known-input** run
+  (`v0.4-known-input-run.md`) also passed end to end but is explicitly not blind acceptance.
+- **61 of the 80 v0.3 named tests are exact; 18 more are proven under explicitly mapped names; only the blind PA-02
+  name remains unrun.**
   `named-test-coverage.json` and `named-test-renames.json` report each one. No pass-through tests were manufactured.
 - **Child-process output is redacted** by the versioned `factory/redaction@1` policy; a redactor failure is the named
   `redaction-failed` refusal. Tool-boundary, path-escape and missing-OS-bounds negatives are implemented.

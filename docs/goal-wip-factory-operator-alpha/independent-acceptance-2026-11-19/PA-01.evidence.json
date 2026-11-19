@@ -1,0 +1,41 @@
+{
+    "gate":  "PA-01",
+    "hostDigest":  "sha256:b921c4c1f84d4c94b9fadd77e3ecde3a09e7c3d01bf3fdef04cfea6d838a9990",
+    "configDigest":  "sha256:3afdf0bec8bb5565a329cd47c8787ba56a42e253e8194ca3da7574972f113bb7",
+    "requirementDigest":  "sha256:0018c32a83fccecddbf69f63a2bfe888cd3309135466f8dbd5faf9210cdfee84",
+    "contractDigest":  "sha256:d796a21f7c53c46dfc08c63ecfc66d737256057aa1cdbc14b7dafcb1db6912f2",
+    "modelEvidenceKind":  "live",
+    "modelProvider":  "deepseek",
+    "knownInput":  false,
+    "blind":  true,
+    "preMerge":  [
+
+                 ],
+    "postMerge":  [
+
+                  ],
+    "released":  false,
+    "mergedSha":  null,
+    "targetHeadSha":  null,
+    "operationallyValidated":  false,
+    "recordedAtUtc":  "2026-11-19T11:11:06.9864616Z",
+    "commands":  [
+                     {
+                         "command":  "requirement submit",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (proposal)",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "contract approve",
+                         "exit":  0
+                     },
+                     {
+                         "command":  "run (implementation+review)",
+                         "exit":  0
+                     }
+                 ],
+    "failureCategory":  "worktree-failed:Failed to create worktree for session \u0027session-impl-work-e3962e6e\u0027. Args=\u0027git worktree add -b wip/session/session-impl-work-e3962e6e C:\\Users\\ricar\\AppData\\Local\\Temp\\wip-factory-v04-independent-acceptance\\PA-01\\control\\worktrees\\session-impl-work-e3962e6e main\u0027, ExitCode=255, StdErr=\u0027Preparing worktree (new branch \u0027wip/session/session-impl-work-e3962e6e\u0027)\nfatal: a branch named \u0027wip/session/session-impl-work-e3962e6e\u0027 already exists\u0027, StdOut=\u0027\u0027."
+}

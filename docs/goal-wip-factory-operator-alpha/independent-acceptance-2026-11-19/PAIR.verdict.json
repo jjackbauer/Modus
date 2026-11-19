@@ -1,0 +1,7 @@
+{
+    "gate":  "PA-01+PA-02",
+    "exit":  2,
+    "output":  "acceptance: fail (PA-01:acceptance-scenario-missing:pre-merge:all)\r\ndotnet.exe :   PA-01:acceptance-scenario-missing:pre-merge:all\r\nAt line:3 char:11\r\n+ $output = \u0026 dotnet run --project WIP\\Wip.Factory.Host --no-build -- f ...\r\n+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\r\n    + CategoryInfo          : NotSpecified: (  PA-01:accepta...g:pre-merge:all:String) [], RemoteException\r\n    + FullyQualifiedErrorId : NativeCommandError\r\n \r\n  PA-01:acceptance-scenario-missing:post-merge:all\r\n  PA-01:acceptance-not-released",
+    "verdict":  "fail",
+    "recordedAtUtc":  "2026-11-19T11:13:22.4613496Z"
+}

@@ -1,24 +1,20 @@
 # State — Wip.Factory Operator Alpha v0.4 remediation
 
-**Status: `implementation-ready / acceptance-pending`. Not accepted.**
+**Status: NOT ACCEPTED.** Independent PA-01 failed; PA-02 passed; the pair verdict failed.
 
-- **Measured at this revision:** 264 factory test cases (264 listed methods), 0 failures across core (21), agents
-  (69), host (169) and architecture (5). Build: 0 errors.
-- **Named v0.3 coverage:** 61 exact-and-executable, 18 equivalent-but-renamed with an explicit map, 1 missing
-  (`PA02_GivenDifferentBlindRequirement_UsesUnchangedFactoryBinary`, the blind gate), 0 name-only placeholders.
-  That is **79 of 80 accounted for**.
-- **P0 remediation:** FAC-P0-01, -02, -03 and -04 are implemented with adversarial executable tests.
-  FAC-P0-05 (independent PA-01/PA-02) is **not run**: no external evaluator supplied withheld requirements.
-- **P1 remediation:** FAC-P1-01 through FAC-P1-07 are implemented and tested. FAC-P1-08 is complete except the
-  blind PA-02 execution, which is not a code gap.
-- **v0.3 PA-03–PA-08:** prior session-reported evidence was not re-certified by this remediation. PA-06/PA-07
-  mechanisms were strengthened and tested; live blind acceptance was not re-run.
-- **Why not accepted:** PA-01/PA-02 require two requirements authored and withheld outside this session, plus
-  evaluator-owned expectations. The harness refuses an auto-approved or uninspected contract; it cannot manufacture
-  an evaluator.
-- **Exact next action:** run `run-acceptance.ps1` twice with the two withheld requirement files and their evaluator
-  expectation JSON, then `factory acceptance verify-pair` over both evidence manifests. Until then the status does
-  not change, regardless of green suites.
+- **Independent acceptance (2026-11-19):** package from `external-chatgpt-evaluator-2026-11-19`, executed on the frozen
+  binary at code revision `e29df4d` (host `sha256:b921c4c1…a9990`, config `sha256:3afdf0be…3bb7`).
+  - **PA-01: FAIL** — the first implementation attempt created a worktree and model source but the agent run failed
+    before commit; retries then failed with `branch already exists`, replacing the original failure.
+  - **PA-02: PASS** — 7/7 scenarios in both phases, merged SHA == target head, `OperationallyValidated`.
+  - **Pair: FAIL**.
+  Full record: `v0.4-independent-acceptance-result.md`.
+- **Engineering baseline before acceptance:** 264 factory cases, 0 failures; 61 exact + 18
+  equivalent-but-renamed = 79/80 v0.3 names accounted; build 0 errors.
+- **Why not accepted:** PA-01 failed. The evaluator's rules forbid reusing these tasks after a code change; a fix
+  requires a new freeze and a new unseen pair.
+- **Next:** fix worktree-provisioning retry idempotency and preserve the original agent failure category; rerun the
+  suites at a new revision; obtain a new evaluator-authored unseen pair; do not label the current tasks blind again.
 
 See `v0.4-closure-map.md`, `v0.4-test-report.md`, `v0.4-fault-injection.md`, `v0.4-status.md`,
-`v0.4-evaluator-handoff.md`.
+`v0.4-evaluator-handoff.md`, `v0.4-independent-acceptance-result.md`.
