@@ -29,6 +29,25 @@ pub fn AppShell(children: Children) -> impl IntoView {
         nav_open.set(false);
     });
 
+    // A route change moves focus to the new page's h1, so a screen reader starts at the new page
+    // instead of remaining on the control that triggered navigation. Suspense-backed routes
+    // render the heading after their data arrives, so the helper retries briefly. The heading is
+    // made programmatically focusable for this focus only; it does not enter the tab order. A
+    // dialog owns focus while it is open, so the effect does nothing in that case.
+    Effect::new(move |_| {
+        #[cfg(target_arch = "wasm32")]
+        {
+            if location.pathname.get().is_empty() {
+                return;
+            }
+            focus_main_heading(40);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = location.pathname.get();
+        }
+    });
+
     // Keep the document behind the drawer from scrolling while it is open.
     Effect::new(move |_| {
         #[cfg(target_arch = "wasm32")]
@@ -444,6 +463,56 @@ fn focus_element_after_frame(id: &'static str) {
     {
         let _ = id;
     }
+}
+
+/// Focuses the new route's `h1`. A Suspense-backed route renders its heading once the data
+/// resolves, and a reactive refresh can replace that heading node, so this keeps checking for a
+/// short bounded window. It only moves focus while the active element is the document body or the
+/// heading itself; the moment the operator focuses a control it stops.
+fn focus_main_heading(remaining: u32) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        use wasm_bindgen::JsCast;
+        let Some(document) = web_sys::window().and_then(|window| window.document()) else {
+            return;
+        };
+        if document
+            .query_selector(".dialog")
+            .ok()
+            .flatten()
+            .is_some()
+        {
+            return;
+        }
+        let active = document.active_element();
+        let active_tag = active
+            .as_ref()
+            .map(|element| element.tag_name())
+            .unwrap_or_default();
+        if active_tag != "BODY" && active_tag != "H1" {
+            return;
+        }
+        if let Some(heading) = document.query_selector("main h1").ok().flatten() {
+            let already_focused = active
+                .as_ref()
+                .map(|element| element.is_same_node(Some(&heading)))
+                .unwrap_or(false);
+            if !already_focused {
+                if let Some(element) = heading.dyn_ref::<web_sys::HtmlElement>() {
+                    let _ = element.set_tab_index(-1);
+                    let _ = element.focus();
+                }
+            }
+        }
+        if remaining > 0 {
+            leptos::prelude::set_timeout(
+                move || focus_main_heading(remaining - 1),
+                std::time::Duration::from_millis(80),
+            );
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    let _ = remaining;
 }
 
 fn trap_tab(event: &leptos::ev::KeyboardEvent, container_id: &str) {
