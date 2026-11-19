@@ -606,10 +606,14 @@ contrast review; VG-02 is met for the automated AA rule set.
 - Keyboard-only mutations (contract freeze, merge authorization, serve start/stop) were executed in
   the item 7 E2E; the dialogs that carry them were additionally read under NVDA in this pass.
 
-**VG-04 safety/truth.** The E2E proved requirement-digest binding, review-digest binding to the
-merge dialog, post-merge verification on the merged revision, one merge decision per fixture, and a
-serving state that agreed between work detail and release detail. A stale merge authorization was
-not exercised; VG-04 is not claimed complete.
+**VG-04 safety/truth.** Met. The E2E proved requirement-digest binding, review-digest binding to
+the merge dialog, post-merge verification on the merged revision, one merge decision per fixture,
+and a serving state that agreed between work detail and release detail. The stale path was then
+exercised on `WORK-6075dcca`, whose reviewed target had moved: submitting the open dialog's digest
+was refused with `approval-target-moved`, the dialog stayed open with its evidence, checked
+confirmation and exact typed digest, the refusal banner showed the code once, and no event or state
+changed. Wrong-digest and repeat-authorization refusals were also measured
+(`stale-submit-only.cjs`, `stale-merge.json`).
 
 **VG-05 visual evidence.** 60+ screenshots across both themes and 320–1920; no approved regression
 baseline or pixel diff was produced, so VG-05 is not claimed complete.
@@ -692,9 +696,10 @@ open.
 - Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
-- **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast review; VG-04 has digest-mismatch and repeat-authorization refusals but not a changed-review stale case
-  merge authorization; VG-05 has no approved regression baseline; VG-06 did not exercise every
-  panel and state combination, and a failed background detail refetch is silent; VG-08 reached 104 work items but only 144 events and no long
+- **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
+  review; VG-05 has no approved regression baseline; VG-06 did not exercise every panel and state
+  combination, and the refresh-failure banner is verified only on the queue and work detail (not
+  overview/release); VG-08 reached 104 work items but only 144 events and no long
   diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom
   is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan is not
   complete and must not be marked so.
