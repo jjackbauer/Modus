@@ -4,7 +4,7 @@
 **Accepted:** no. **PA-01/PA-02:** not run — no independent evaluator supplied withheld requirements.
 
 Baseline: `feature/wip-factory-alpha` at `e142bb43fb2faed6884f85387833186eac06457d` plus the v0.4 remediation
-changes. Code revision: `e29df4d`; measured evidence: `becc4e8` (docs-only commits follow).
+changes. Code revision: `e29df4d`; measured evidence: `becc4e8` (later commits are harness/docs only).
 Spec: `harness/requirements/Wip.Factory.Operator.Alpha.v0.3.md`; remediation requirements: v0.4 (this record).
 The superseded v0.3 narrative is preserved in git history, not restated here with stale numbers.
 
