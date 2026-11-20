@@ -732,7 +732,7 @@ open.
   and 1440, axe clean in both themes, and `Transition` keeps the table on screen during a refresh
   (`quality-axe.json`). The approval-card kind label and template `Confirmation` path are not
   browser-verified because the approvals inbox is empty in this fixture (the adapter
-  `/v1/approvals` exceeds 25s). Pipeline, Agents and Settings retain their KPI/metric
+  `/v1/approvals` exceeds 25s). Settings and Analytics retain their KPI/metric
   compositions; the D-04 template-policy move, B-03, B-04 and the release in-page back link
   remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
@@ -742,3 +742,55 @@ open.
   58s in the browser at that scale; VG-09 has no human visual review. A physical 200% browser
   zoom is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan
   is not complete and must not be marked so.
+### 14.8 Handoff — gate status, evidence and human decisions
+
+This section is the single handoff for the branch. It records what is delivered, what is measured,
+and what still requires a human or an adapter decision. It does not declare the plan complete.
+
+**Delivered**
+
+- Queue B-02, work detail item 6, intake item 6 and the item 7 E2E (real authorized fixture,
+  keyboard paths, both themes, 320–1920, before/after screenshots and JSON).
+- C-01 primitives, including the `Timeline` ordered list; C-03 per-route document titles with exact
+  record identity.
+- Truth fixes: offline/online transport states, retryable read failures, background-refresh
+  retention for queue/work detail/release/overview, and decision-dialog failure retention.
+- Merge authorization execution state: recorded authorization hides the action, dispatch becomes
+  primary, the queue next step is "Run dispatch to merge".
+- PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
+  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog.
+
+**Gate status**
+
+| Gate | Status | Evidence |
+|---|---|---|
+| VG-01 responsive | Met: 7 widths × 4 routes, 25 dialog cases, both themes, text spacing, 0 overflow; 200% is the 720 CSS-px layout equivalent | `vg-checks.json`, `dialogs-check.json` |
+| VG-02 readability | Met for automated AA: axe 17 runs, 0 violations; no manual contrast review | `axe-results.json` |
+| VG-03 keyboard/AT | Met with notes: real NVDA 53/55; two scripted misses explained; physical Ctrl+= blocked by Windows input access | `vg03-nvda.json`, `timeline-ax.json` |
+| VG-04 safety/truth | Met: digest binding, serving consistency, one decision per merge, wrong/repeat/stale-target refusals with failure retention | `stale-merge.json`, `stale-submit-only.cjs` |
+| VG-05 visual | Baseline ready: 18 fixed-clock views, two captures, 0 changed pixels; independent approval pending | `visual-diff.json` |
+| VG-06 states | Partial: four surfaces' initial/refresh/empty/offline/denied states measured; empty-factory overview unavailable | `vg06-states.json`, `vg06-detail-states.json`, `refresh-banner.json` |
+| VG-07 technical | Met for this increment: 26 web + 13 server tests, wasm build/check, browser suites; .NET not re-run because no adapter source changed | `cargo-test-workspace.txt` |
+| VG-08 large data | Partial: 104 work items/144 events, 0 overflow; no 1000-event/long-diff fixtures; overview 32s server-side / 58s browser | `vg08-large.json`, `overview-latency.json` |
+| VG-09 design coherence | Open: no independent human review | — |
+
+**Human decisions still required**
+
+1. **VG-05:** approve the 18-view baseline or replace it; then the diff gate can fail a regression.
+2. **VG-09:** conduct the independent review of Overview, Queue, Detail, Approvals, Agents,
+   Analytics and Settings in both themes.
+3. **VG-08:** decide whether to invest in the demo adapter's approvals/detail fan-out and a
+   1,000-event/long-diff fixture. The adapter at 5100 was kept untouched; its `/v1/approvals`
+   exceeds 25s and serialises detail reads.
+4. **Quality approvals path:** provide an approvals fixture (template or pending approval) so the
+   converted approval-card `StatusIndicator`/`Confirmation` path can be browser-verified.
+5. **PR 5:** Analytics, Settings/audit, Improvement and auth surfaces remain.
+
+**Deliberate deviations**
+
+- Physical 200% browser zoom was not achievable: page-level keys do not reach browser chrome and
+  the OS-level `SendKeys` attempt was denied. The 720 CSS-px layout at 1440 device pixels is the
+  recorded substitute.
+- The large-data fixture has 104 work items but 144 events; the overview was bounded at 8s for
+  approvals and still takes 32.3s server-side.
+- No .NET adapter source was changed and the 3100/5100 processes were not restarted.
