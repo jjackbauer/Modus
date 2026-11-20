@@ -704,8 +704,13 @@ open.
   next step is "Run dispatch to merge". A wrong digest is refused with `review-digest-mismatch`;
   repeating the recorded authorization is refused with `approval-already-applied`; neither changes
   the release record. Evidence: `merge-state.json`, `merge-queue-check.cjs`, `stale-merge.json`.
-- Release detail still uses `Chip` for its state/verified/serving labels and its own
-  `ServeConfirm` markup (not the shared `Confirmation`); PR 4.
+- **Release detail (PR 4) — converted.** The header state, verification and serving labels
+  now use `StatusIndicator`; the verification outcome uses `outcome_label`; and start/stop serve
+  uses the shared `Confirmation` assertion, with the footer disabled until it is checked. Measured
+  on `WORK-b3a440a4`: 0 chips on the page, the three status labels render in sentence case, the
+  serve dialog exposes the assertion, is disabled before the check and enabled after it, and
+  Escape closes it (`release-serve-check.json`). Quality/Pipeline/Agents/Settings, B-03/B-04 and
+  D-04 remain.
 - Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
