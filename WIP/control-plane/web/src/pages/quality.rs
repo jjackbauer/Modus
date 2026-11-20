@@ -2,12 +2,14 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_params_map;
 
-use control_plane_domain::{ApprovalItem, WorkReview, short_digest};
+use control_plane_domain::{ApprovalItem, WorkReview, outcome_label, short_digest};
 
 use crate::api;
+use crate::components::status::StatusIndicator;
 use crate::components::ui::{
-    Chip, DigestCopy, DigestLine, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago,
+    DigestCopy, DigestLine, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago,
 };
+use crate::components::Confirmation;
 use crate::context::AppContext;
 
 #[component]
@@ -54,7 +56,7 @@ pub fn QualityPage() -> impl IntoView {
                 </div>
             </header>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading approvals and engineering evidence…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading approvals and engineering evidence…"/> }>
                 {move || match approvals.get().flatten() {
                     None => view! { <LoadingBlock label="Loading approvals and engineering evidence…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -75,9 +77,9 @@ pub fn QualityPage() -> impl IntoView {
                         </div>
                     }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading review evidence…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading review evidence…"/> }>
                 {move || match reviews.get().flatten() {
                     None => view! { <LoadingBlock label="Loading review evidence…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -91,7 +93,7 @@ pub fn QualityPage() -> impl IntoView {
                         </Panel>
                     }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
 
             <Notice kind="accent">
                 <strong>"Acceptance boundary. "</strong>
@@ -191,7 +193,7 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
                                     .map(|version| (id.to_string(), version))
                             })
                             .unwrap_or_else(|| (template_identity.clone(), 1));
-                        api::approve_template(&instance, &csrf, &id, version, &digest, true)
+                        api::approve_template(&instance, &csrf, &id, version, &digest, confirmed.get())
                             .await
                             .map(|_| ())
                     }
@@ -260,7 +262,7 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
         <article class=format!("approval-card {}", if stale { "approval-stale" } else { "" })>
             <div class="row-between">
                 <div class="row wrap">
-                    <Chip label=item.kind.to_uppercase() tone=match item.kind.as_str() { "merge" => "danger", "contract" => "waiting", _ => "info" }/>
+                    <StatusIndicator label=match item.kind.as_str() { "merge" => "Merge authorization", "contract" => "Contract approval", "template" => "Template policy", _ => "Approval" }.to_string() tone=match item.kind.as_str() { "merge" => "danger", "contract" => "waiting", _ => "info" } raw=item.kind.clone()/>
                     <strong>{item.title}</strong>
                     {(!item.work_item_id.is_empty()).then(|| { let id = item.work_item_id.clone(); let id_for_href = id.clone(); view! { <a class="tiny mono" href=format!("/i/{instance}/work/{id_for_href}")>{id}</a> } })}
                 </div>
@@ -287,9 +289,9 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
                     {if kind == "template" {
                         view! {
                             <div class="stack">
-                                <label class="check"><input type="checkbox" prop:checked=move || confirmed.get() on:change=move |event| confirmed.set(event_target_checked(&event))/><span>"I inspected the immutable template manifest digest and its parameter schema."</span></label>
+                                <Confirmation assertion="I inspected the immutable template manifest digest and its parameter schema.".to_string() checked=confirmed/>
                                 <div class="row">
-                                    <button class="btn btn-primary" disabled=move || busy.get() on:click=approve.clone()>"Approve template policy"</button>
+                                    <button class="btn btn-primary" disabled=move || busy.get() || !confirmed.get() on:click=approve.clone()>"Approve template policy"</button>
                                 </div>
                             </div>
                         }.into_any()
@@ -341,7 +343,7 @@ fn ReviewTable(reviews: Vec<WorkReview>, instance: String) -> impl IntoView {
                         view! {
                             <tr>
                                 <td><a href=href>{title}</a><div class="tiny faint mono">{review.work_item_id.clone()}</div></td>
-                                <td><Chip label=verdict.to_uppercase() tone=verdict_tone/></td>
+                                <td><StatusIndicator label=outcome_label(&verdict).to_string() tone=verdict_tone raw=verdict.clone()/></td>
                                 <td>{validation}</td>
                                 <td>{coverage}</td>
                                 <td>{architecture}</td>
@@ -360,8 +362,8 @@ fn ReviewTable(reviews: Vec<WorkReview>, instance: String) -> impl IntoView {
 fn check_cell(review: &WorkReview, kind: &str) -> AnyView {
     match review.executions.iter().find(|execution| execution.kind == kind) {
         Some(execution) => view! {
-            <Chip label=if execution.passed { "PASS".to_string() } else { "FAIL".to_string() } tone=if execution.passed { "success" } else { "danger" }/>
+            <StatusIndicator label=if execution.passed { "Passed".to_string() } else { "Failed".to_string() } tone=if execution.passed { "success" } else { "danger" }/>
         }.into_any(),
-        None => view! { <Chip label="MISSING".to_string() tone="danger"/> }.into_any(),
+        None => view! { <StatusIndicator label="Not measured".to_string() tone="danger"/> }.into_any(),
     }
 }
