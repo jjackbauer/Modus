@@ -294,6 +294,8 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | VG-07 technical | Rust/wasm/browser green; .NET suite not re-run because no adapter source changed | `cargo-test-workspace.txt`, E2E JSON |
 | VG-08 large data | Partial: 104 work items, 144 events, 1.33s queue projection, 0 overflow at 1440/390; below the 1000-event leg, no long diff/session fixtures, and the 105-item overview takes 32s server-side / 58s in the browser (adapter approvals >25s) | `vg08-large.json`, `overview-latency.json` |
 | VG-09 design coherence | Open: no human visual review | — |
+**Pipeline PR4:** four KPI cards replaced by a labelled summary with definitions; stage counts are plain numbers; states use `StatusIndicator`; the board is a named, focusable scroll region; `Transition` keeps content during refresh. 9 stages, 0 chips, 0 overflow at 320/1440, axe clean both themes.
+
 **Quality PR4 partial:** the review matrix uses `StatusIndicator` and `Transition` (0 chips, 4 rows, 0 overflow at 320/1440, axe clean); the approval-card kind label and template `Confirmation` are not browser-verified because the approvals inbox is empty at this fixture.
 
 **C-01 primitives:** all named primitives exist; `Timeline` is now a semantic ordered list and is

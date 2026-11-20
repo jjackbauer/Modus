@@ -713,7 +713,12 @@ open.
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
   320 and 1440, axe clean in both themes (`releases-check.json`). Quality is partially
-  converted (review matrix + Transition); Pipeline/Agents/Settings, B-03/B-04 and D-04 remain.
+  converted (review matrix + Transition); Pipeline is converted; Agent activity/Settings,\n  B-03/B-04 and D-04 remain.
+- **Pipeline — converted.** The four KPI cards are replaced by a labelled summary with stated
+  definitions; stage counts are plain numbers, work-item states use `StatusIndicator`, the page uses
+  `Transition`, and the horizontally scrollable board is a named, keyboard-focusable region.
+  Measured: 9 stages, 0 chips, “Work items shown 106 / Queue depth 102 / In flight 0 / Needs
+  attention 0”, 0 overflow at 320 and 1440, axe clean in both themes (`pipeline-check.json`).
 - **Quality — partially converted.** The review matrix now uses `StatusIndicator` (verdict
   "Accepted"; checks "Passed" / "Failed" / "Not measured"), has 0 chips, 4 rows, 0 overflow at 320
   and 1440, axe clean in both themes, and `Transition` keeps the table on screen during a refresh
