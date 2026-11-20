@@ -3,16 +3,17 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_params_map;
 
 use control_plane_domain::{
-    Release, Serving, ServingView, WorkItemDetail, serving_view, short_digest, short_sha,
-    state_label, state_tone,
+    Release, Serving, ServingView, WorkItemDetail, outcome_label, serving_view, short_digest,
+    short_sha, state_label, state_tone,
 };
 
 use crate::api;
 use crate::components::modal::Modal;
+use crate::components::status::StatusIndicator;
 use crate::components::ui::{
-    Chip, DigestLine, EmptyBlock, InfoRow, LoadingBlock, Notice, Panel, error_view, time_ago,
-    timestamp,
+    DigestLine, EmptyBlock, InfoRow, LoadingBlock, Notice, Panel, error_view, time_ago, timestamp,
 };
+use crate::components::Confirmation;
 use crate::context::AppContext;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -147,12 +148,12 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                                 <div>
                                     <h1 class="page-title">{title}</h1>
                                     <div class="row wrap">
-                                        <Chip label=state_label(&state).to_string() tone=state_tone(&state)/>
-                                        <Chip
+                                        <StatusIndicator label=state_label(&state).to_string() tone=state_tone(&state) raw=state.clone()/>
+                                        <StatusIndicator
                                             label=if verified { "Release verified".to_string() } else { "Not verified".to_string() }
                                             tone=if verified { "success" } else { "waiting" }
                                         />
-                                        <Chip label=view_model.label.to_string() tone=view_model.tone/>
+                                        <StatusIndicator label=view_model.label.to_string() tone=view_model.tone raw=serving.status.clone().unwrap_or_default()/>
                                         <span class="tiny faint mono">{release.work_item_id.clone()}</span>
                                     </div>
                                 </div>
@@ -217,7 +218,7 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                                             Some(verification) => view! {
                                                 <div class="stack">
                                                     <div class="row wrap">
-                                                        <Chip label=verification.outcome.to_uppercase() tone=if verification.verified { "success" } else { "danger" }/>
+                                                        <StatusIndicator label=outcome_label(&verification.outcome).to_string() tone=if verification.verified { "success" } else { "danger" } raw=verification.outcome.clone()/>
                                                         <span class="tiny mono">{verification.verifier_version.clone()}</span>
                                                         <span class="tiny faint">{time_ago(Some(&verification.verified_at_utc.to_rfc3339()))}</span>
                                                     </div>
@@ -255,7 +256,7 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                                         <div class="stack">
                                             <div class="row-between">
                                                 <span class="muted">"Status"</span>
-                                                <Chip label=view_model.label.to_string() tone=view_model.tone/>
+                                                <StatusIndicator label=view_model.label.to_string() tone=view_model.tone raw=serving.status.clone().unwrap_or_default()/>
                                             </div>
                                             {view_model.detail.clone().map(|detail| view! { <Notice kind="warning">{detail}</Notice> })}
                                             <InfoRow label="Process".to_string()>{serving.process_id.map(|id| id.to_string()).unwrap_or_else(|| "—".to_string())}</InfoRow>
@@ -313,6 +314,7 @@ fn ServeConfirm(
     let busy = RwSignal::new(false);
     let error = RwSignal::new(None::<String>);
     let duration = RwSignal::new(60i32);
+    let confirmed = RwSignal::new(false);
 
     let close = Callback::new(move |_| {
         if busy.get() {
@@ -350,7 +352,14 @@ fn ServeConfirm(
                     on_close.run(());
                     context.touch();
                 }
-                Err(failure) => error.set(Some(format!("{} ({})", failure.message, failure.code))),
+                Err(failure) => {
+                    let message = if failure.code.is_empty() || failure.message.contains(&failure.code) {
+                        failure.message
+                    } else {
+                        format!("{} ({})", failure.message, failure.code)
+                    };
+                    error.set(Some(message));
+                }
             }
         });
     });
@@ -369,10 +378,21 @@ fn ServeConfirm(
         ServeIntent::Start => "Start supervised serve",
         ServeIntent::Stop => "Stop the serve window",
     };
-    let can_submit = Signal::derive(move || match intent {
-        ServeIntent::Start => (10..=300).contains(&duration.get()),
-        ServeIntent::Stop => true,
+    let can_submit = Signal::derive(move || {
+        confirmed.get()
+            && match intent {
+                ServeIntent::Start => (10..=300).contains(&duration.get()),
+                ServeIntent::Stop => true,
+            }
     });
+    let assertion = match intent {
+        ServeIntent::Start => {
+            "I understand the factory starts and owns this process, publishes a preview only after verification, and ends the window automatically."
+        }
+        ServeIntent::Stop => {
+            "I understand the published preview stops responding immediately; release evidence and serving history stay recorded."
+        }
+    };
     let process = serving.process_id.unwrap_or_default();
     let url = serving.url.clone();
     let active = serving.active;
@@ -443,6 +463,7 @@ fn ServeConfirm(
                         </div>
                     }.into_any(),
                 }}
+                <Confirmation assertion=assertion.to_string() checked=confirmed/>
             </div>
         </Modal>
     }
