@@ -1,10 +1,11 @@
 use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
 
-use control_plane_domain::{AgentDetail, short_digest};
+use control_plane_domain::{AgentDetail, outcome_label, short_digest};
 
 use crate::api;
-use crate::components::ui::{Chip, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago};
+use crate::components::status::StatusIndicator;
+use crate::components::ui::{EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago};
 use crate::components::{Timeline, TimelineItem};
 use crate::context::AppContext;
 
@@ -70,7 +71,7 @@ pub fn ImprovementPage() -> impl IntoView {
                 <span>"Proposals, evaluations and promotions remain the factory's responsibility. The control plane only displays its versioned adaptation evidence and provides the governed profile-management surface."</span>
             </Notice>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading adaptation evidence…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading adaptation evidence…"/> }>
                 {move || match agents.get().flatten() {
                     None => view! { <LoadingBlock label="Loading adaptation evidence…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -87,15 +88,15 @@ pub fn ImprovementPage() -> impl IntoView {
                         </div>
                     }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading profile history and adaptation events…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading profile history and adaptation events…"/> }>
                 {move || match detail.get().flatten() {
                     None => view! { <LoadingBlock label="Loading profile history and adaptation events…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                     Some(Ok(agent)) => view! { <ImprovementBody agent=agent/> }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
@@ -120,7 +121,8 @@ fn ImprovementBody(agent: AgentDetail) -> impl IntoView {
                                     <div class="profile-history">
                                         <div class="row-between">
                                             <div class="row">
-                                                <Chip label=format!("v{}", profile.version) tone=if profile.active { "success" } else { "neutral" }/>
+                                                <span class="mono tiny">{format!("v{}", profile.version)}</span>
+                                                {profile.active.then(|| view! { <StatusIndicator label="Active".to_string() tone="success"/> })}
                                                 {profile.parent_version.map(|parent| view! { <span class="tiny faint">"from v"{parent}</span> })}
                                             </div>
                                             <span class="tiny faint">{time_ago(Some(&profile.published_at_utc.to_rfc3339()))}</span>
@@ -147,7 +149,7 @@ fn ImprovementBody(agent: AgentDetail) -> impl IntoView {
                                 {events.into_iter().map(|event| view! {
                                     <TimelineItem time=time_ago(Some(&event.time_utc.to_rfc3339()))>
                                         <div class="event-title">
-                                            <Chip label=adaptation_kind(&event.r#type).to_string() tone=adaptation_tone(&event.r#type)/>
+                                            <StatusIndicator label=adaptation_kind(&event.r#type).to_string() tone=adaptation_tone(&event.r#type) raw=event.r#type.clone()/>
                                             <span class="tiny faint mono">{event.r#type.clone()}</span>
                                         </div>
                                         <div class="small muted">{event.summary.clone().unwrap_or_default()}</div>
@@ -178,7 +180,7 @@ fn ImprovementBody(agent: AgentDetail) -> impl IntoView {
                                 {sessions.into_iter().take(8).map(|session| view! {
                                     <div class="row-between">
                                         <span class="tiny mono">{short_digest(Some(&session.session_id))}</span>
-                                        <Chip label=session.outcome.to_uppercase() tone=if session.outcome == "completed" { "success" } else { "danger" }/>
+                                        <StatusIndicator label=outcome_label(&session.outcome).to_string() tone=if session.outcome == "completed" { "success" } else { "danger" } raw=session.outcome.clone()/>
                                     </div>
                                 }).collect_view()}
                             </div>
