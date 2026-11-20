@@ -2,12 +2,11 @@ use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_router::hooks::use_params_map;
 
-use control_plane_domain::{AuditEntry, UserSummary, short_digest};
+use control_plane_domain::{AuditEntry, UserSummary, outcome_label, short_digest};
 
 use crate::api;
-use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, Panel, PanelActions, error_view, time_ago,
-};
+use crate::components::status::StatusIndicator;
+use crate::components::ui::{EmptyBlock, LoadingBlock, Panel, PanelActions, error_view, time_ago};
 use crate::context::AppContext;
 
 #[component]
@@ -89,7 +88,7 @@ pub fn SettingsPage() -> impl IntoView {
                 </div>
             </header>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading factory configuration…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading factory configuration…"/> }>
                 {move || match settings.get().flatten() {
                     None => view! { <LoadingBlock label="Loading factory configuration…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -150,29 +149,29 @@ pub fn SettingsPage() -> impl IntoView {
                                 <AccountPassword/>
 
                                 <Panel title="Control-plane audit".to_string()>
-                                    <Suspense fallback=move || view! { <LoadingBlock label="Loading audit history…"/> }>
+                                    <Transition fallback=move || view! { <LoadingBlock label="Loading audit history…"/> }>
                                         {move || match audit.get().flatten() {
                                             None => view! { <div class="tiny faint">"Audit history is available to operators and administrators."</div> }.into_any(),
                                             Some(Err(error)) => view! { {error_view(error)} }.into_any(),
-                                            Some(Ok(page)) => view! { <AuditTable entries=page.items/> }.into_any(),
+                                            Some(Ok(page)) => view! { <AuditTable entries=page.items label="Control-plane audit history"/> }.into_any(),
                                         }}
-                                    </Suspense>
+                                    </Transition>
                                 </Panel>
 
                                 <Panel title="Adapter operator audit".to_string()>
-                                    <Suspense fallback=move || view! { <LoadingBlock label="Loading adapter audit…"/> }>
+                                    <Transition fallback=move || view! { <LoadingBlock label="Loading adapter audit…"/> }>
                                         {move || match adapter_audit.get().flatten() {
                                             None => view! { <div class="tiny faint">"Adapter audit is available to operators and administrators."</div> }.into_any(),
                                             Some(Err(error)) => view! { {error_view(error)} }.into_any(),
-                                            Some(Ok(page)) => view! { <AuditTable entries=page.items/> }.into_any(),
+                                            Some(Ok(page)) => view! { <AuditTable entries=page.items label="Adapter audit history"/> }.into_any(),
                                         }}
-                                    </Suspense>
+                                    </Transition>
                                 </Panel>
                             </div>
                         </div>
                     }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
@@ -191,7 +190,7 @@ fn InstancePanel() -> impl IntoView {
     view! {
         <PanelActions
             title="Factory instances".to_string()
-            actions=view! { <Chip label=format!("{} configured", context.session.get().map(|session| session.instances.len()).unwrap_or(0)) tone="neutral"/> }.into_any()
+            actions=view! { <span class="tiny faint">{format!("{} configured", context.session.get().map(|session| session.instances.len()).unwrap_or(0))}</span> }.into_any()
         >
             <div class="stack">
                 {move || context.session.get().map(|session| view! {
@@ -202,7 +201,7 @@ fn InstancePanel() -> impl IntoView {
                                     <strong>{instance.label.clone()}</strong>
                                     <div class="tiny mono faint">{instance.id.clone()}" · "{instance.adapter_url.clone()}</div>
                                 </div>
-                                <Chip label=if instance.healthy { "HEALTHY".to_string() } else { "UNREACHABLE".to_string() } tone=if instance.healthy { "success" } else { "danger" }/>
+                                <StatusIndicator label=if instance.healthy { "Healthy".to_string() } else { "Unreachable".to_string() } tone=if instance.healthy { "success" } else { "danger" }/>
                             </div>
                         }).collect_view()}
                     </div>
@@ -265,13 +264,13 @@ fn AdminUsers(
                 view! { <div class="tiny faint">"Only administrators may inspect or change operator identities."</div> }.into_any()
             } else {
                 view! {
-                    <Suspense fallback=move || view! { <LoadingBlock label="Loading operator identities…"/> }>
+                    <Transition fallback=move || view! { <LoadingBlock label="Loading operator identities…"/> }>
                         {move || match users.get().flatten() {
                             None => view! { <LoadingBlock label="Loading operator identities…"/> }.into_any(),
                             Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                             Some(Ok(users)) => view! { <UserAdminTable users=users/> }.into_any(),
                         }}
-                    </Suspense>
+                    </Transition>
                 }.into_any()
             }}
         </Panel>
@@ -302,7 +301,7 @@ fn UserAdminTable(users: Vec<UserSummary>) -> impl IntoView {
                                 <tr>
                                     <td><strong>{user.display_name.clone()}</strong><div class="tiny faint mono">{user.username.clone()}</div></td>
                                     <td>
-                                        <select class="select" on:change=move |event| {
+                                        <select class="select" aria-label=format!("Role for {}", user.username) on:change=move |event| {
                                             let csrf = context.csrf.get();
                                             let request = control_plane_domain::UpdateUserRequest { role: event_target_value(&event), active };
                                             let username = username.clone();
@@ -405,13 +404,13 @@ fn AccountPassword() -> impl IntoView {
 }
 
 #[component]
-fn AuditTable(entries: Vec<AuditEntry>) -> impl IntoView {
+fn AuditTable(entries: Vec<AuditEntry>, #[prop(into)] label: String) -> impl IntoView {
     view! {
         {if entries.is_empty() {
             view! { <EmptyBlock title="No audit records" detail="Every operator mutation is recorded here with actor, subject, result and correlation."/> }.into_any()
         } else {
             view! {
-                <div class="table-wrap audit-table">
+                <div class="table-wrap audit-table" role="region" aria-label=label tabindex="0">
                     <table class="data">
                         <thead><tr><th>"Time"</th><th>"Actor"</th><th>"Action"</th><th>"Subject"</th><th>"Result"</th><th>"Operation"</th></tr></thead>
                         <tbody>
@@ -421,7 +420,7 @@ fn AuditTable(entries: Vec<AuditEntry>) -> impl IntoView {
                                     <td class="tiny">{entry.actor.clone()}<div class="faint">{entry.role.clone()}</div></td>
                                     <td class="tiny mono">{entry.action.clone()}</td>
                                     <td class="tiny mono">{entry.subject.clone()}</td>
-                                    <td><Chip label=entry.result.to_uppercase() tone=if entry.result == "succeeded" { "success" } else { "danger" }/></td>
+                                    <td><StatusIndicator label=outcome_label(&entry.result).to_string() tone=if entry.result == "succeeded" { "success" } else { "danger" } raw=entry.result.clone()/></td>
                                     <td class="tiny mono">{entry.operation_id.clone().unwrap_or_else(|| "—".to_string())}</td>
                                 </tr>
                             }).collect_view()}
@@ -446,7 +445,7 @@ fn TemplatePanel(
     view! {
         <Panel title="Approved templates".to_string()>
             <div class="stack">
-                <Suspense fallback=move || view! { <LoadingBlock label="Loading template registry…"/> }>
+                <Transition fallback=move || view! { <LoadingBlock label="Loading template registry…"/> }>
                     {move || match templates.get().flatten() {
                         None => view! { <LoadingBlock label="Loading template registry…"/> }.into_any(),
                         Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -462,7 +461,7 @@ fn TemplatePanel(
                             }
                         }
                     }}
-                </Suspense>
+                </Transition>
                 {move || context.is_admin().then(|| view! {
                     <details class="intake-advanced">
                         <summary>"Register a template manifest"</summary>
@@ -518,7 +517,7 @@ fn TemplateRow(template: control_plane_domain::Template, instance: String) -> im
                     <div class="tiny faint">{template.supported_class.clone()}" · "{template.parameters.join(", ")}</div>
                 </div>
                 <div class="row">
-                    <Chip label=if revoked { "REVOKED".to_string() } else if approved { "APPROVED".to_string() } else { "PENDING".to_string() } tone=if revoked { "danger" } else if approved { "success" } else { "waiting" }/>
+                    <StatusIndicator label=if revoked { "Revoked".to_string() } else if approved { "Approved".to_string() } else { "Pending".to_string() } tone=if revoked { "danger" } else if approved { "success" } else { "waiting" }/>
                     {if !approved && !revoked && context.is_admin() {
                         view! {
                             <button class="btn btn-sm" disabled=move || busy.get() on:click=move |_| {
