@@ -637,7 +637,11 @@ suite/build was not re-run.
 1.39s, p95 2.59s, max 2.71s; 100/100 accepted). The queue then projected 104 items and 144 events
 in 1.33s, rendered 104 rows at 1440 with 0 overflow (104 mobile cards at 390, 0 overflow). This
 meets the >=100 work-item leg but not the >=1000-event leg, and does not cover long diffs, many
-sessions or dozens of approvals, so VG-08 is partial.
+sessions or dozens of approvals, so VG-08 is partial. The large fixture also exposed a real
+limitation: the overview projection took **32.3s** (200, 73 KB) after bounding the adapter
+approvals read at 8s; the adapter `/v1/approvals` endpoint alone exceeded 25s and the demo adapter
+serialises the remaining detail reads. The server now parallelises the independent reads and bounds
+approvals, but the overview is not usable at this scale; this remains open.
 
 **VG-09 design coherence.** No human visual review was conducted in this increment; VG-09 remains
 open.
@@ -704,6 +708,6 @@ open.
   review; VG-05 has no approved regression baseline; VG-06 did not exercise every panel and state
   combination, and the refresh-failure banner is verified on the queue, work detail and release detail (not
   overview); VG-08 reached 104 work items but only 144 events and no long
-  diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom
+  diff/session/approval fixtures, and the overview takes 32s at that scale; VG-09 has no human visual review. A physical 200% browser zoom
   is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan is not
   complete and must not be marked so.
