@@ -709,8 +709,11 @@ open.
   uses the shared `Confirmation` assertion, with the footer disabled until it is checked. Measured
   on `WORK-b3a440a4`: 0 chips on the page, the three status labels render in sentence case, the
   serve dialog exposes the assertion, is disabled before the check and enabled after it, and
-  Escape closes it (`release-serve-check.json`). Quality/Pipeline/Agents/Settings, B-03/B-04 and
-  D-04 remain.
+  Escape closes it (`release-serve-check.json`). The releases list now uses the same
+  `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
+  and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
+  320 and 1440, axe clean in both themes (`releases-check.json`). Quality/Pipeline/Agents/Settings,
+  B-03/B-04 and D-04 remain.
 - Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
