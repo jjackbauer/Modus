@@ -735,6 +735,10 @@ open.
   real title (“Documentation · Wip.Factory Control Plane”) and a “← Back to the control plane”
   link to `/`. Measured at 1440 and 320: 0 overflow, axe clean in both themes
   (`docs-check.json`). The page remains session-protected like the rest of the app.
+- **404 / empty-error polish — done.** The server fallback for unknown routes now has
+  `lang="en"`, a theme-aware `data-theme`, the title “Not found · Wip.Factory Control
+  Plane”, one back link and the existing recovery button. Measured: axe clean, 0 overflow at
+  1440 and 320, meaningful title/tab text (`not-found.json`).
 - **Auth — polished.** An API 401 now redirects to `/login?next=…`; signing in returns to the
   original page (measured: queue → login with `/i/local/work` → login → the same 106-row queue).
   The login page has labelled username/password fields, CSRF, `role=alert` errors, focus returns
@@ -783,7 +787,7 @@ and what still requires a human or an adapter decision. It does not declare the 
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
   `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;
   Improvement, Analytics, Settings/audit, auth and integrated docs are converted as well;
-  D-04, B-03 and B-04 are closed.
+  D-04, B-03 and B-04 are closed; the 404/error polish is done.
 
 **Gate status**
 
@@ -809,8 +813,8 @@ and what still requires a human or an adapter decision. It does not declare the 
    exceeds 25s and serialises detail reads.
 4. **Quality approvals path:** provide an approvals fixture (template or pending approval) so the
    converted approval-card `StatusIndicator`/`Confirmation` path can be browser-verified.
-5. **PR 5:** final empty/error polish remains; integrated docs and the named PR5 surfaces are
-   converted.
+5. **PR 5:** complete for the named surfaces, integrated docs, auth and the 404/error polish;
+   the Quality approval-card fixture is still unavailable.
 
 **Deliberate deviations**
 

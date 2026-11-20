@@ -297,6 +297,8 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | VG-09 design coherence | Open: no human visual review | — |
 **Auth PR5:** API 401 redirects to `/login?next=…`; re-login returns to the page (queue → `/i/local/work` → 106 rows). Login fields are labelled, CSRF-protected, errors are `role=alert`, focus returns to username, 0 overflow at 320/1440.
 
+**404/error polish:** server fallback has `lang=en`, theme-aware `data-theme`, meaningful title and one back link; axe clean, 0 overflow at 320/1440.
+
 **Integrated docs PR5:** `/docs` follows `cp_theme`, has a back link to `/`, real title, 0 overflow at 320/1440 and axe-clean both themes; session-protected.
 
 **B-04 settings navigation:** "On this page" nav with six anchors (Factory, Control-plane audit, Adapter audit, Operators, Password, Templates), all present; mobile audit scroll hints display; control root, target repository and adapter URL wrap only at path separators (`<wbr>`, 3 elements/19 breaks); 0 overflow at 320/1440, axe clean both themes. The redundant release in-page back link is removed; "Work detail" remains.
