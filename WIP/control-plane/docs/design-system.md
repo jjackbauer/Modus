@@ -713,7 +713,7 @@ open.
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
   320 and 1440, axe clean in both themes (`releases-check.json`). Quality (review matrix), Pipeline, Agent activity
-  and Settings/audit are converted; B-03/B-04 remain.
+  and Settings/audit are converted; B-04 remains.
 - **Agent activity — converted.** The Agents list and agent detail replace their KPI cards
   with labelled summaries and definitions; definition IDs are mono identities rather than
   uppercase chips; active-profile, attempt and session outcomes use `StatusIndicator`; both
@@ -727,6 +727,9 @@ open.
   `Transition`, and the horizontally scrollable board is a named, keyboard-focusable region.
   Measured: 9 stages, 0 chips, “Work items shown 106 / Queue depth 102 / In flight 0 / Needs
   attention 0”, 0 overflow at 320 and 1440, axe clean in both themes (`pipeline-check.json`).
+  B-03 composition: desktop columns are 280px with a “9 stages · scroll horizontally…” and
+  keyboard cue; at ≤760px the compact overview is hidden and the board becomes a single-column
+  stage list (304px), with 0 document overflow and a clean axe rerun (`pipeline-b03.json`).
 - **Auth — polished.** An API 401 now redirects to `/login?next=…`; signing in returns to the
   original page (measured: queue → login with `/i/local/work` → login → the same 106-row queue).
   The login page has labelled username/password fields, CSRF, `role=alert` errors, focus returns
@@ -771,7 +774,8 @@ and what still requires a human or an adapter decision. It does not declare the 
   primary, the queue next step is "Run dispatch to merge".
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
   `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;
-  Improvement, Analytics, Settings/audit and auth are converted as well; D-04 is closed.
+  Improvement, Analytics, Settings/audit and auth are converted as well; D-04 and B-03 are
+  closed.
 
 **Gate status**
 
