@@ -70,6 +70,25 @@ fn encode(value: &str) -> String {
     percent_encoding::utf8_percent_encode(value, percent_encoding::NON_ALPHANUMERIC).to_string()
 }
 
+#[cfg(target_arch = "wasm32")]
+fn redirect_to_login() {
+    let Some(window) = web_sys::window() else {
+        return;
+    };
+    let location = window.location();
+    let Ok(path) = location.pathname() else {
+        return;
+    };
+    if path == "/login" {
+        return;
+    }
+    let search = location.search().unwrap_or_default();
+    let next = js_sys::encode_uri_component(&format!("{path}{search}"))
+        .as_string()
+        .unwrap_or_default();
+    let _ = location.set_href(&format!("/login?next={next}"));
+}
+
 fn instance_base(instance: &str) -> String {
     format!("/api/instances/{}", encode(instance))
 }
@@ -80,6 +99,13 @@ async fn parse_response<T: DeserializeOwned>(response: gloo_net::http::Response)
         .text()
         .await
         .map_err(|error| UiError::network(error.to_string()))?;
+
+    // An expired or revoked session is not a page error: send the operator to sign-in and return
+    // to the current page afterwards. The login handler sanitises `next` to a local path.
+    #[cfg(target_arch = "wasm32")]
+    if status == 401 {
+        redirect_to_login();
+    }
 
     if !(200..300).contains(&status) {
         if let Ok(envelope) = serde_json::from_str::<ErrorEnvelope>(&text) {
