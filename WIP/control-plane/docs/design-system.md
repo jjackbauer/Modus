@@ -720,7 +720,8 @@ open.
   pages use `Transition`. Measured: 9 role cards, 0 chips, “Registered roles 9 / Recorded
   sessions 0 / Implementation attempts 4 / Tokens Not measured”, 0 overflow at 320 and 1440,
   axe clean in both themes; the detail shows “No active profile” and its six-count summary
-  (`agents-check.json`).
+  (`agents-check.json`). That role had 0 sessions/attempts, so its attempt/session
+  `StatusIndicator` paths were not rendered; the list totals still show 4 attempts across roles.
 - **Pipeline — converted.** The four KPI cards are replaced by a labelled summary with stated
   definitions; stage counts are plain numbers, work-item states use `StatusIndicator`, the page uses
   `Transition`, and the horizontally scrollable board is a named, keyboard-focusable region.
