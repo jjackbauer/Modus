@@ -294,6 +294,8 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | VG-07 technical | Rust/wasm/browser green; .NET suite not re-run because no adapter source changed | `cargo-test-workspace.txt`, E2E JSON |
 | VG-08 large data | Partial: 104 work items, 144 events, 1.33s queue projection, 0 overflow at 1440/390; below the 1000-event leg, no long diff/session fixtures, and the 105-item overview takes 32s server-side / 58s in the browser (adapter approvals >25s) | `vg08-large.json`, `overview-latency.json` |
 | VG-09 design coherence | Open: no human visual review | — |
+**Improvement PR5:** Transition + StatusIndicator conversion; 5 panels, 0 chips, empty "No published versions"/"No adaptation events recorded" states, 0 overflow at 320/1440, axe clean both themes. The profile/adaptation/session status paths were not rendered because the selected role has no history.
+
 **Agent activity PR4:** the Agents list and detail replace KPI cards with labelled summaries and definitions; definition IDs are mono identities; active-profile/attempt/session outcomes use `StatusIndicator`; both use `Transition`. 9 cards, 0 chips, 0 overflow at 320/1440, axe clean both themes.
 
 **Pipeline PR4:** four KPI cards replaced by a labelled summary with definitions; stage counts are plain numbers; states use `StatusIndicator`; the board is a named, focusable scroll region; `Transition` keeps content during refresh. 9 stages, 0 chips, 0 overflow at 320/1440, axe clean both themes.

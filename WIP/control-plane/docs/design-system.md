@@ -732,8 +732,9 @@ open.
   and 1440, axe clean in both themes, and `Transition` keeps the table on screen during a refresh
   (`quality-axe.json`). The approval-card kind label and template `Confirmation` path are not
   browser-verified because the approvals inbox is empty in this fixture (the adapter
-  `/v1/approvals` exceeds 25s). Settings and Analytics retain their KPI/metric
-  compositions; the D-04 template-policy move, B-03, B-04 and the release in-page back link
+  `/v1/approvals` exceeds 25s). Improvement is converted (Transition, 0 chips, empty
+  profile/adaptation states verified; its status paths were unrendered). Settings and Analytics
+  retain their KPI/metric compositions; the D-04 template-policy move, B-03, B-04 and the release in-page back link
   remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has a 0-diff baseline of 18 fixed-clock views but no independent approval; VG-06 covers the four major surfaces' refresh
