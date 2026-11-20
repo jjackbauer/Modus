@@ -759,7 +759,7 @@ and what still requires a human or an adapter decision. It does not declare the 
 - Merge authorization execution state: recorded authorization hides the action, dispatch becomes
   primary, the queue next step is "Run dispatch to merge".
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
-  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog.
+  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;\n  Improvement is converted as well.
 
 **Gate status**
 
@@ -785,7 +785,7 @@ and what still requires a human or an adapter decision. It does not declare the 
    exceeds 25s and serialises detail reads.
 4. **Quality approvals path:** provide an approvals fixture (template or pending approval) so the
    converted approval-card `StatusIndicator`/`Confirmation` path can be browser-verified.
-5. **PR 5:** Analytics, Settings/audit, Improvement and auth surfaces remain.
+5. **PR 5:** Analytics, Settings/audit and auth remain; Improvement is converted (its status\n   paths await a role with history).
 
 **Deliberate deviations**
 
