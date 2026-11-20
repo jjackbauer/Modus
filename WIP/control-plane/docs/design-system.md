@@ -626,7 +626,7 @@ last durable facts" within 0.8s, keeps the durable rows, and returns to live act
 browser reconnects; a nonexistent work item shows 404 `work-item-not-found` with no retry action and
 the exact ID in the breadcrumb; a viewer role sees disabled merge and dispatch controls and receives
 403 `forbidden` from the merge endpoint. Non-executable contract and stale intake drafts are covered
-above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A failed background refresh now keeps the last good projection on the queue, work detail and release detail and shows "The last refresh failed" with a Retry refresh action; the banner clears after a successful retry (`refresh-banner.json`, `release-refresh.json`). The overview refresh path was not verified. Not every major panel has every state exercised, so VG-06 is not claimed complete.
+above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A failed background refresh now keeps the last good projection on the queue, work detail, release detail and overview and shows "The last refresh failed" with a Retry refresh action; the banner clears after a successful retry (`refresh-banner.json`, `release-refresh.json`, `overview-refresh.json`). The overview had to finish its 58s initial projection before the failure could be exercised; it retained its 11.7k-character content and never entered the error state. Not every major panel has every initial error/empty combination exercised, so VG-06 is not claimed complete.
 
 **VG-07 technical.** `cargo test --workspace` suites were green; the web crate has 24 tests and the
 server 13. The hydrate wasm check and release server/wasm builds succeeded, and the browser checks
@@ -641,7 +641,7 @@ sessions or dozens of approvals, so VG-08 is partial. The large fixture also exp
 limitation: the overview projection took **32.3s** (200, 73 KB) after bounding the adapter
 approvals read at 8s; the adapter `/v1/approvals` endpoint alone exceeded 25s and the demo adapter
 serialises the remaining detail reads. The server now parallelises the independent reads and bounds
-approvals, but the overview is not usable at this scale; this remains open.
+approvals, but the overview is not usable at this scale: the browser load was **58s** (SSR projection plus the client refetch). This remains open.
 
 **VG-09 design coherence.** No human visual review was conducted in this increment; VG-09 remains
 open.
@@ -705,9 +705,9 @@ open.
   review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
   in-page back link remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
-  review; VG-05 has no approved regression baseline; VG-06 did not exercise every panel and state
-  combination, and the refresh-failure banner is verified on the queue, work detail and release detail (not
-  overview); VG-08 reached 104 work items but only 144 events and no long
-  diff/session/approval fixtures, and the overview takes 32s at that scale; VG-09 has no human visual review. A physical 200% browser zoom
-  is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan is not
-  complete and must not be marked so.
+  review; VG-05 has no approved regression baseline; VG-06 covers the four major surfaces' refresh
+  failures but not every initial error/empty combination; VG-08 reached 104 work items but only
+  144 events, no long diff/session/approval fixtures, and the overview takes 32s server-side /
+  58s in the browser at that scale; VG-09 has no human visual review. A physical 200% browser
+  zoom is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan
+  is not complete and must not be marked so.
