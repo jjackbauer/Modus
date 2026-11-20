@@ -626,7 +626,7 @@ last durable facts" within 0.8s, keeps the durable rows, and returns to live act
 browser reconnects; a nonexistent work item shows 404 `work-item-not-found` with no retry action and
 the exact ID in the breadcrumb; a viewer role sees disabled merge and dispatch controls and receives
 403 `forbidden` from the merge endpoint. Non-executable contract and stale intake drafts are covered
-above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A failed background refresh now keeps the last good projection on the queue and work detail and shows "The last refresh failed" with a Retry refresh action; the banner clears after a successful retry (`refresh-banner.json`). Overview and release detail were not verified for this path. Not every major panel has every state exercised, so VG-06 is not claimed complete.
+above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A failed background refresh now keeps the last good projection on the queue, work detail and release detail and shows "The last refresh failed" with a Retry refresh action; the banner clears after a successful retry (`refresh-banner.json`, `release-refresh.json`). The overview refresh path was not verified. Not every major panel has every state exercised, so VG-06 is not claimed complete.
 
 **VG-07 technical.** `cargo test --workspace` suites were green; the web crate has 24 tests and the
 server 13. The hydrate wasm check and release server/wasm builds succeeded, and the browser checks
@@ -653,11 +653,15 @@ open.
   carries the exact UTC instant, and a `compact` variant for the overview. Work detail's
   implementation attempts and event log were measured at 1440 and 320: 1 and 15 entries, computed
   `list-style: none`, zero margin/padding, 0 horizontal overflow; axe remains clean across all 17
-  runs (`timeline-check.json`).- **Refresh failures.** A background refetch that fails used to replace a full queue or work
+  runs (`timeline-check.json`).
+
+- **Refresh failures.** A background refetch that fails used to replace a full queue or work
   item with the error screen. Both now keep the last successful projection and show the typed
   failure with a Retry refresh action; the banner clears when the retry succeeds. Verified with
-  aborted work-items and work-item requests (`refresh-banner.json`). Overview and release detail
-  do not have the same verified behavior yet.- **Background refresh retention.** The converted surfaces used `Suspense`, so an SSE-driven
+  aborted work-items, work-item and release requests (`refresh-banner.json`,
+  `release-refresh.json`). The overview refresh path is still unverified.
+
+- **Background refresh retention.** The converted surfaces used `Suspense`, so an SSE-driven
   refresh replaced a fully rendered work item with its loading block and lost the operator's
   context. Overview, queue, work detail and release now use `Transition`: the first load still
   shows the loading state, but a background refetch keeps the previous content on screen. Verified
@@ -698,8 +702,8 @@ open.
   in-page back link remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has no approved regression baseline; VG-06 did not exercise every panel and state
-  combination, and the refresh-failure banner is verified only on the queue and work detail (not
-  overview/release); VG-08 reached 104 work items but only 144 events and no long
+  combination, and the refresh-failure banner is verified on the queue, work detail and release detail (not
+  overview); VG-08 reached 104 work items but only 144 events and no long
   diff/session/approval fixtures; VG-09 has no human visual review. A physical 200% browser zoom
   is still not run (the 720 CSS-px layout equivalent is the recorded substitute). The plan is not
   complete and must not be marked so.
