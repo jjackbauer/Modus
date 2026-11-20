@@ -712,11 +712,16 @@ open.
   Escape closes it (`release-serve-check.json`). The releases list now uses the same
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
-  320 and 1440, axe clean in both themes (`releases-check.json`). Quality/Pipeline/Agents/Settings,
-  B-03/B-04 and D-04 remain.
-- Quality, Pipeline, Agents and Settings retain their KPI/metric compositions. The Quality
-  review-matrix redesign, the D-04 template-policy move to Settings, B-03, B-04 and the release
-  in-page back link remain open.
+  320 and 1440, axe clean in both themes (`releases-check.json`). Quality is partially
+  converted (review matrix + Transition); Pipeline/Agents/Settings, B-03/B-04 and D-04 remain.
+- **Quality — partially converted.** The review matrix now uses `StatusIndicator` (verdict
+  "Accepted"; checks "Passed" / "Failed" / "Not measured"), has 0 chips, 4 rows, 0 overflow at 320
+  and 1440, axe clean in both themes, and `Transition` keeps the table on screen during a refresh
+  (`quality-axe.json`). The approval-card kind label and template `Confirmation` path are not
+  browser-verified because the approvals inbox is empty in this fixture (the adapter
+  `/v1/approvals` exceeds 25s). Pipeline, Agents and Settings retain their KPI/metric
+  compositions; the D-04 template-policy move, B-03, B-04 and the release in-page back link
+  remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has a 0-diff baseline of 18 fixed-clock views but no independent approval; VG-06 covers the four major surfaces' refresh
   failures but not every initial error/empty combination; VG-08 reached 104 work items but only
