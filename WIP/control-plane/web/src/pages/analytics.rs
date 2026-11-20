@@ -48,13 +48,13 @@ pub fn AnalyticsPage() -> impl IntoView {
                 </div>
             </header>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading measured factory analytics…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading measured factory analytics…"/> }>
                 {move || match analytics.get().flatten() {
                     None => view! { <LoadingBlock label="Loading measured factory analytics…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                     Some(Ok(analytics)) => view! { <AnalyticsBody analytics=analytics/> }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
