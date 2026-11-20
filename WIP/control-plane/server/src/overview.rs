@@ -9,16 +9,29 @@ use control_plane_factory_client::{ClientError, FactoryClient};
 /// Aggregates the adapter's read models into the Overview projection. This is a read-only
 /// composition, not a second work-state authority: every field points back to an adapter object.
 pub async fn build(client: &FactoryClient) -> Overview {
-    let meta = client.meta().await;
-    let health = client.health().await;
-    let factory = client.factory().await;
-    let dispatch = client.dispatch_status().await;
-    let approvals = client.approvals().await;
-    let releases = client.releases().await;
-    let agents = client.agents().await;
-    let work = client
-        .work_items(None, None, None, Some("updated-desc"), 500, 0)
-        .await;
+    // These reads are independent. Sequential awaits made the landing page latency the sum of
+    // every adapter round-trip; on a large fixture that exceeded the request timeout.
+    let (meta, health, factory, dispatch, approvals, releases, agents, work) = tokio::join!(
+        client.meta(),
+        client.health(),
+        client.factory(),
+        client.dispatch_status(),
+        async {
+            tokio::time::timeout(
+                std::time::Duration::from_secs(8),
+                client.approvals(),
+            )
+            .await
+            .unwrap_or_else(|_| {
+                Err(ClientError::Transport(
+                    "overview approvals timed out after 8s".to_string(),
+                ))
+            })
+        },
+        client.releases(),
+        client.agents(),
+        client.work_items(None, None, None, Some("updated-desc"), 500, 0),
+    );
 
     let mut errors = Vec::new();
     for (label, error) in [
@@ -86,11 +99,19 @@ pub async fn build(client: &FactoryClient) -> Overview {
         })
         .count() as i32;
 
+    let detail_results = futures_util::future::join_all(flagged.iter().map(|item| {
+        let work_item_id = item.work_item_id.clone();
+        async move {
+            let result = client.work_item(&work_item_id).await;
+            (work_item_id, result)
+        }
+    }))
+    .await;
     let mut details = Vec::new();
-    for item in flagged {
-        match client.work_item(&item.work_item_id).await {
+    for (work_item_id, result) in detail_results {
+        match result {
             Ok(detail) => details.push(detail),
-            Err(error) => errors.push(format!("detail {}: {error}", item.work_item_id)),
+            Err(error) => errors.push(format!("detail {work_item_id}: {error}")),
         }
     }
 
