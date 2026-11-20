@@ -88,6 +88,17 @@ pub fn SettingsPage() -> impl IntoView {
                 </div>
             </header>
 
+            <nav class="section-nav" aria-label="Settings sections">
+                <span class="tiny faint">"On this page"</span>
+                <a href="#settings-factory">"Factory"</a>
+                <a href="#settings-audit">"Control-plane audit"</a>
+                <a href="#settings-adapter-audit">"Adapter audit"</a>
+                <a href="#settings-operators">"Operators"</a>
+                <a href="#settings-password">"Password"</a>
+                <a href="#approved-templates">"Templates"</a>
+            </nav>
+
+            <span id="settings-factory"></span>
             <Transition fallback=move || view! { <LoadingBlock label="Loading factory configuration…"/> }>
                 {move || match settings.get().flatten() {
                     None => view! { <LoadingBlock label="Loading factory configuration…"/> }.into_any(),
@@ -148,6 +159,7 @@ pub fn SettingsPage() -> impl IntoView {
 
                                 <AccountPassword/>
 
+                                <span id="settings-audit"></span>
                                 <Panel title="Control-plane audit".to_string()>
                                     <Transition fallback=move || view! { <LoadingBlock label="Loading audit history…"/> }>
                                         {move || match audit.get().flatten() {
@@ -158,6 +170,7 @@ pub fn SettingsPage() -> impl IntoView {
                                     </Transition>
                                 </Panel>
 
+                                <span id="settings-adapter-audit"></span>
                                 <Panel title="Adapter operator audit".to_string()>
                                     <Transition fallback=move || view! { <LoadingBlock label="Loading adapter audit…"/> }>
                                         {move || match adapter_audit.get().flatten() {
@@ -259,7 +272,8 @@ fn AdminUsers(
 ) -> impl IntoView {
     let context = AppContext::provide();
     view! {
-        <Panel title="Operator identities".to_string()>
+        <span id="settings-operators"></span>
+            <Panel title="Operator identities".to_string()>
             {move || if !context.is_admin() {
                 view! { <div class="tiny faint">"Only administrators may inspect or change operator identities."</div> }.into_any()
             } else {
@@ -375,7 +389,8 @@ fn AccountPassword() -> impl IntoView {
     let message = RwSignal::new(None::<String>);
 
     view! {
-        <Panel title="Your password".to_string()>
+        <span id="settings-password"></span>
+            <Panel title="Your password".to_string()>
             <div class="stack">
                 <label class="field">"Current password"<input class="input" type="password" autocomplete="current-password" prop:value=move || current.get() on:input=move |event| current.set(event_target_value(&event))/></label>
                 <label class="field">"New password (12+ characters)"<input class="input" type="password" autocomplete="new-password" prop:value=move || new_password.get() on:input=move |event| new_password.set(event_target_value(&event))/></label>
@@ -410,6 +425,7 @@ fn AuditTable(entries: Vec<AuditEntry>, #[prop(into)] label: String) -> impl Int
             view! { <EmptyBlock title="No audit records" detail="Every operator mutation is recorded here with actor, subject, result and correlation."/> }.into_any()
         } else {
             view! {
+                <p class="tiny faint audit-scroll-hint">"Scroll sideways to see every column. The table is focusable with Tab."</p>
                 <div class="table-wrap audit-table" role="region" aria-label=label tabindex="0">
                     <table class="data">
                         <thead><tr><th>"Time"</th><th>"Actor"</th><th>"Action"</th><th>"Subject"</th><th>"Result"</th><th>"Operation"</th></tr></thead>
