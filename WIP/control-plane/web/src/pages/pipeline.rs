@@ -74,6 +74,7 @@ fn PipelineBody(pipeline: Pipeline) -> impl IntoView {
     let queue_depth: i32 = stages.iter().map(|stage| stage.queue_depth).sum();
     let in_flight: i32 = stages.iter().map(|stage| stage.in_flight).sum();
     let needs_attention: i32 = stages.iter().map(|stage| stage.failed).sum();
+    let stage_count = stages.len();
 
     view! {
         <div class="stack">
@@ -121,6 +122,10 @@ fn PipelineBody(pipeline: Pipeline) -> impl IntoView {
                 "Queue depth = sum of stage queue depths. In flight = active stages. Needs attention = blocked or failed."
             </div>
 
+            <div class="pipeline-scroll-hint row-between">
+                <span class="tiny faint">{format!("{stage_count} stages · scroll horizontally to see every stage.")}</span>
+                <span class="tiny faint">"Focus the board and use arrow keys to scroll."</span>
+            </div>
             <div class="pipeline-board" role="region" aria-label="Pipeline stages" tabindex="0">
                 {stages.into_iter().map(|stage| {
                     let stage_items: Vec<_> = items.iter().filter(|item| item.stage == stage.id).cloned().collect();

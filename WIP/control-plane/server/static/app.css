@@ -2279,14 +2279,14 @@ pre.diff {
 
 .pipeline-board {
   display: grid;
-  grid-template-columns: repeat(9, minmax(200px, 1fr));
+  grid-template-columns: repeat(9, minmax(280px, 1fr));
   gap: var(--space-3);
   overflow-x: auto;
   padding-bottom: var(--space-3);
 }
 
 .pipeline-column {
-  min-width: 200px;
+  min-width: 280px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--bg-panel);
@@ -4325,5 +4325,22 @@ td .entity-identity .btn:focus-visible {
   .section-head-side {
     width: 100%;
     justify-content: space-between;
+  }
+}
+/* B-03: a phone gets a stage list, not a miniature nine-column board. */
+@media (max-width: 760px) {
+  /* One mobile composition: the stacked stage list. The compact overview duplicates it. */
+  .pipeline-stages {
+    display: none;
+  }
+  .pipeline-board {
+    grid-template-columns: 1fr;
+    overflow-x: visible;
+  }
+  .pipeline-column {
+    min-width: 0;
+  }
+  .pipeline-scroll-hint {
+    display: none;
   }
 }
