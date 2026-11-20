@@ -299,7 +299,7 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 
 **Integrated docs PR5:** `/docs` follows `cp_theme`, has a back link to `/`, real title, 0 overflow at 320/1440 and axe-clean both themes; session-protected.
 
-**B-04 settings navigation:** "On this page" nav with six anchors (Factory, Control-plane audit, Adapter audit, Operators, Password, Templates), all present; mobile audit scroll hints display; 0 overflow at 320/1440, axe clean both themes. Identifier wrapping refinement remains.
+**B-04 settings navigation:** "On this page" nav with six anchors (Factory, Control-plane audit, Adapter audit, Operators, Password, Templates), all present; mobile audit scroll hints display; control root, target repository and adapter URL wrap only at path separators (`<wbr>`, 3 elements/19 breaks); 0 overflow at 320/1440, axe clean both themes. The redundant release in-page back link is removed; "Work detail" remains.
 
 **Settings/audit PR5:** instance/audit/template statuses use `StatusIndicator`; audit tables are named focusable regions; role selects have aria-labels; five `Transition` boundaries. 9 panels, 0 chips, 214 rows, 0 overflow at 320/1440, axe clean both themes.
 

@@ -713,8 +713,8 @@ open.
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
   320 and 1440, axe clean in both themes (`releases-check.json`). Quality (review matrix), Pipeline, Agent activity
-  and Settings/audit are converted; B-04 section navigation and audit scroll cues are done,
-  identifier wrapping polish remains.
+  and Settings/audit are converted. B-04 is closed: section navigation, audit scroll cues and
+  path-aware wrapping are measured; the redundant release in-page back link is removed.
 - **Agent activity — converted.** The Agents list and agent detail replace their KPI cards
   with labelled summaries and definitions; definition IDs are mono identities rather than
   uppercase chips; active-profile, attempt and session outcomes use `StatusIndicator`; both
@@ -740,17 +740,14 @@ open.
   The login page has labelled username/password fields, CSRF, `role=alert` errors, focus returns
   to the username field after a bad password, and 0 overflow at 320 and 1440
   (`session-expiry.json`, `login-check.json`).
-- **Settings/audit — converted.** (B-04 section navigation and narrow-table cues included.) An
-  “On this page” nav links to six anchors (Factory, Control-plane audit, Adapter audit, Operators,
-  Password, Templates), all present; audit tables are named focusable regions and show a mobile
-  “Scroll sideways…” hint. Measured at 1440/320: 6 links, 6 anchors, 0 overflow, axe clean both
-  themes (`settings-b04.json`). Mid-word wrapping of long identifiers/paths is not separately
-  measured yet.
 - **Settings/audit — converted.** Instance health, audit results and template states use
-  `StatusIndicator`; the audit tables are named, keyboard-focusable scroll regions; role selects
-  have accessible names; all five `Suspense` boundaries are `Transition`. Measured: 9 panels, 0
-  chips, 214 audit rows across 4 tables, “No templates registered” empty state, 0 overflow at 320
-  and 1440, axe clean in both themes (`settings-check.json`).
+  `StatusIndicator`; audit tables are named, keyboard-focusable scroll regions with a mobile
+  “Scroll sideways…” hint; role selects have accessible names; all five `Suspense` boundaries are
+  `Transition`. B-04: an “On this page” nav links six anchors (Factory, Control-plane audit, Adapter
+  audit, Operators, Password, Templates); control root, target repository and adapter URL wrap only
+  at path separators (`<wbr>`). Measured: 9 panels, 0 chips, 214 rows, 6 links/anchors, 0 overflow
+  at 320/1440, axe clean both themes (`settings-check.json`, `settings-b04.json`,
+  `paths-release.json`).
 - **Quality — partially converted.** The review matrix now uses `StatusIndicator` (verdict
   "Accepted"; checks "Passed" / "Failed" / "Not measured"), has 0 chips, 4 rows, 0 overflow at 320
   and 1440, axe clean in both themes, and `Transition` keeps the table on screen during a refresh
@@ -760,7 +757,7 @@ open.
   profile/adaptation states verified; its status paths were unrendered). Analytics uses its
   measured panels and definitions with `Transition`; Settings/audit is converted; auth now
   redirects expired sessions to sign-in with a return path. D-04 is closed: Quality links to
-  `Settings#approved-templates`; B-03/B-04 and the release in-page back link remain open.
+  `Settings#approved-templates`; B-03/B-04 and the release in-page back link are closed.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has a 0-diff baseline of 18 fixed-clock views but no independent approval; VG-06 covers the four major surfaces' refresh
   failures but not every initial error/empty combination; VG-08 reached 104 work items but only
@@ -786,8 +783,7 @@ and what still requires a human or an adapter decision. It does not declare the 
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
   `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;
   Improvement, Analytics, Settings/audit, auth and integrated docs are converted as well;
-  D-04 and B-03 are
-  closed.
+  D-04, B-03 and B-04 are closed.
 
 **Gate status**
 
