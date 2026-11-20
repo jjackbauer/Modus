@@ -713,7 +713,7 @@ open.
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
   320 and 1440, axe clean in both themes (`releases-check.json`). Quality (review matrix), Pipeline, Agent activity
-  and Settings/audit are converted; B-04 remains.
+  and Settings/audit are converted; B-04 section navigation and audit scroll cues are done,\n  identifier wrapping polish remains.
 - **Agent activity — converted.** The Agents list and agent detail replace their KPI cards
   with labelled summaries and definitions; definition IDs are mono identities rather than
   uppercase chips; active-profile, attempt and session outcomes use `StatusIndicator`; both
@@ -735,6 +735,12 @@ open.
   The login page has labelled username/password fields, CSRF, `role=alert` errors, focus returns
   to the username field after a bad password, and 0 overflow at 320 and 1440
   (`session-expiry.json`, `login-check.json`).
+- **Settings/audit — converted.** (B-04 section navigation and narrow-table cues included.) An
+  “On this page” nav links to six anchors (Factory, Control-plane audit, Adapter audit, Operators,
+  Password, Templates), all present; audit tables are named focusable regions and show a mobile
+  “Scroll sideways…” hint. Measured at 1440/320: 6 links, 6 anchors, 0 overflow, axe clean both
+  themes (`settings-b04.json`). Mid-word wrapping of long identifiers/paths is not separately
+  measured yet.
 - **Settings/audit — converted.** Instance health, audit results and template states use
   `StatusIndicator`; the audit tables are named, keyboard-focusable scroll regions; role selects
   have accessible names; all five `Suspense` boundaries are `Transition`. Measured: 9 panels, 0
