@@ -1,5 +1,4 @@
 use leptos::prelude::*;
-use leptos::task::spawn_local;
 use leptos_router::hooks::use_params_map;
 
 use control_plane_domain::{ApprovalItem, WorkReview, outcome_label, short_digest};
@@ -9,7 +8,6 @@ use crate::components::status::StatusIndicator;
 use crate::components::ui::{
     DigestCopy, DigestLine, EmptyBlock, LoadingBlock, Notice, Panel, error_view, time_ago,
 };
-use crate::components::Confirmation;
 use crate::context::AppContext;
 
 #[component]
@@ -105,159 +103,13 @@ pub fn QualityPage() -> impl IntoView {
 
 #[component]
 fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
-    let context = AppContext::provide();
-    let busy = RwSignal::new(false);
-    let confirmed = RwSignal::new(false);
-    let typed = RwSignal::new(String::new());
-    let reason = RwSignal::new(String::new());
     let stale = item.stale;
-    let digest = item.digest.clone();
     let work_item_id = item.work_item_id.clone();
     let kind = item.kind.clone();
     let authorize_href = format!(
         "/i/{instance}/work/{work_item_id}{}",
         if kind == "merge" { "?authorize=merge" } else { "" }
     );
-    let template_identity = item
-        .source_revision
-        .clone()
-        .unwrap_or_else(|| item.title.clone());
-
-    let approve = {
-        let instance = instance.clone();
-        let digest = digest.clone();
-        let work_item_id = work_item_id.clone();
-        let kind = kind.clone();
-        let template_identity = template_identity.clone();
-        move |_| {
-            let instance = instance.clone();
-            let csrf = context.csrf.get();
-            let key = api::new_idempotency_key();
-            let digest = digest.clone();
-            let work_item_id = work_item_id.clone();
-            let kind = kind.clone();
-            let template_identity = template_identity.clone();
-            let confirmed_value = confirmed.get();
-            let typed_value = typed.get();
-            if kind == "merge" && typed_value.trim() != digest.trim() {
-                context.notify_error(api::UiError::new(
-                    0,
-                    "confirmation-mismatch",
-                    "Type the exact review digest before authorizing the merge.",
-                ));
-                return;
-            }
-            if kind != "merge" && !confirmed_value {
-                context.notify_error(api::UiError::new(
-                    0,
-                    "confirmation-required",
-                    "Confirm that you inspected the exact object and digest.",
-                ));
-                return;
-            }
-
-            busy.set(true);
-            spawn_local(async move {
-                let result = match kind.as_str() {
-                    "contract" => api::approve_contract(
-                        &instance,
-                        &csrf,
-                        &work_item_id,
-                        &control_plane_domain::ContractApproveRequest {
-                            proposal_digest: digest.clone(),
-                            confirmed: true,
-                        },
-                        &key,
-                    )
-                    .await
-                    .map(|_| ()),
-                    "merge" => api::approve_merge(
-                        &instance,
-                        &csrf,
-                        &work_item_id,
-                        &control_plane_domain::MergeApprovalRequest {
-                            review_digest: digest.clone(),
-                            confirmation: typed_value,
-                        },
-                        &key,
-                    )
-                    .await
-                    .map(|_| ()),
-                    "template" => {
-                        let (id, version) = template_identity
-                            .split_once('@')
-                            .and_then(|(id, version)| {
-                                version
-                                    .parse::<i32>()
-                                    .ok()
-                                    .map(|version| (id.to_string(), version))
-                            })
-                            .unwrap_or_else(|| (template_identity.clone(), 1));
-                        api::approve_template(&instance, &csrf, &id, version, &digest, confirmed.get())
-                            .await
-                            .map(|_| ())
-                    }
-                    _ => {
-                        busy.set(false);
-                        context.notify_error(api::UiError::new(
-                            0,
-                            "unsupported-approval",
-                            "This approval kind is not supported by this control-plane build.",
-                        ));
-                        return;
-                    }
-                };
-
-                busy.set(false);
-                match result {
-                    Ok(_) => {
-                        context.notify_success(
-                            "Authorization recorded. The factory now owns the next lifecycle step.",
-                        );
-                        context.touch();
-                    }
-                    Err(error) => context.notify_error(error),
-                }
-            });
-        }
-    };
-
-    let reject = {
-        let instance = instance.clone();
-        let digest = digest.clone();
-        let work_item_id = work_item_id.clone();
-        move |_: leptos::ev::MouseEvent| {
-            let instance = instance.clone();
-            let csrf = context.csrf.get();
-            let digest = digest.clone();
-            let work_item_id = work_item_id.clone();
-            let reason_value = reason.get();
-            busy.set(true);
-            spawn_local(async move {
-                let result = api::reject_contract(
-                    &instance,
-                    &csrf,
-                    &work_item_id,
-                    &control_plane_domain::ContractRejectRequest {
-                        proposal_digest: digest,
-                        reason: (!reason_value.trim().is_empty()).then_some(reason_value),
-                    },
-                    &api::new_idempotency_key(),
-                )
-                .await;
-                busy.set(false);
-                match result {
-                    Ok(_) => {
-                        context
-                            .notify_success("Contract proposal rejected; the decision is durable.");
-                        context.touch();
-                    }
-                    Err(error) => context.notify_error(error),
-                }
-            });
-        }
-    };
-
     view! {
         <article class=format!("approval-card {}", if stale { "approval-stale" } else { "" })>
             <div class="row-between">
@@ -289,10 +141,10 @@ fn ApprovalCard(item: ApprovalItem, instance: String) -> impl IntoView {
                     {if kind == "template" {
                         view! {
                             <div class="stack">
-                                <Confirmation assertion="I inspected the immutable template manifest digest and its parameter schema.".to_string() checked=confirmed/>
-                                <div class="row">
-                                    <button class="btn btn-primary" disabled=move || busy.get() || !confirmed.get() on:click=approve.clone()>"Approve template policy"</button>
-                                </div>
+                                <p class="small muted">
+                                    "Template policy approval is owned by Settings → Approved templates, where the immutable manifest and parameter schema live. This inbox keeps the row and links there."
+                                </p>
+                                <a class="btn" href=format!("/i/{instance}/settings#approved-templates")>"Review template policy in Settings"</a>
                             </div>
                         }.into_any()
                     } else {

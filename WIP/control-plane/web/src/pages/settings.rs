@@ -443,7 +443,8 @@ fn TemplatePanel(
     let error = RwSignal::new(None::<api::UiError>);
 
     view! {
-        <Panel title="Approved templates".to_string()>
+        <span id="approved-templates"></span>
+            <Panel title="Approved templates".to_string()>
             <div class="stack">
                 <Transition fallback=move || view! { <LoadingBlock label="Loading template registry…"/> }>
                     {move || match templates.get().flatten() {
