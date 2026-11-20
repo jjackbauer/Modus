@@ -626,7 +626,7 @@ last durable facts" within 0.8s, keeps the durable rows, and returns to live act
 browser reconnects; a nonexistent work item shows 404 `work-item-not-found` with no retry action and
 the exact ID in the breadcrumb; a viewer role sees disabled merge and dispatch controls and receives
 403 `forbidden` from the merge endpoint. Non-executable contract and stale intake drafts are covered
-above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A failed background refresh now keeps the last good projection on the queue, work detail, release detail and overview and shows "The last refresh failed" with a Retry refresh action; the banner clears after a successful retry (`refresh-banner.json`, `release-refresh.json`, `overview-refresh.json`). The overview had to finish its 58s initial projection before the failure could be exercised; it retained its 11.7k-character content and never entered the error state. Initial projection failures were also measured on overview and release: both show the typed network error and the safe Reload this page action (`initial-errors.json`). Not every major panel has every empty combination exercised, so VG-06 is not claimed complete.
+above. Detail-tab states were also measured: a proposed item shows "No implementation attempt yet" and "No review verdict yet"; the release page for a merge-authorized, unmerged item resolves to Not verified / Not serving with "No post-merge verification"; an invalid ID shows the non-retryable 404 without a retry button (`vg06-detail-states.json`). A failed background refresh now keeps the last good projection on the queue, work detail, release detail and overview and shows "The last refresh failed" with a Retry refresh action; the banner clears after a successful retry (`refresh-banner.json`, `release-refresh.json`, `overview-refresh.json`). The overview had to finish its 58s initial projection before the failure could be exercised; it retained its 11.7k-character content and never entered the error state. Initial projection failures were also measured on overview and release: both show the typed network error and the safe Reload this page action (`initial-errors.json`). A work item with no accepted review shows the release empty state "No release yet" with its explanation, not a loading shell or an error (`release-empty.json`). The empty-factory overview is not available in this single-instance fixture, so VG-06 is not claimed complete.
 
 **VG-07 technical.** `cargo test --workspace` suites were green; the web crate has 24 tests and the
 server 13. The hydrate wasm check and release server/wasm builds succeeded, and the browser checks
@@ -657,7 +657,8 @@ open.
   carries the exact UTC instant, and a `compact` variant for the overview. Work detail's
   implementation attempts and event log were measured at 1440 and 320: 1 and 15 entries, computed
   `list-style: none`, zero margin/padding, 0 horizontal overflow; axe remains clean across all 17
-  runs (`timeline-check.json`).
+  runs (`timeline-check.json`). Chrome's accessibility tree exposes them as named `list` nodes
+  with 1 and 15 `listitem` children (`timeline-ax.json`).
 
 - **Refresh failures.** A background refetch that fails used to replace a full queue or work
   item with the error screen. Both now keep the last successful projection and show the typed
