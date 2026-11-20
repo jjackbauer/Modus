@@ -733,8 +733,8 @@ open.
   (`quality-axe.json`). The approval-card kind label and template `Confirmation` path are not
   browser-verified because the approvals inbox is empty in this fixture (the adapter
   `/v1/approvals` exceeds 25s). Improvement is converted (Transition, 0 chips, empty
-  profile/adaptation states verified; its status paths were unrendered). Settings and Analytics
-  retain their KPI/metric compositions; the D-04 template-policy move, B-03, B-04 and the release in-page back link
+  profile/adaptation states verified; its status paths were unrendered). Analytics uses its
+  measured panels and definitions with `Transition`; Settings/audit and auth remain; the D-04 template-policy move, B-03, B-04 and the release in-page back link
   remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has a 0-diff baseline of 18 fixed-clock views but no independent approval; VG-06 covers the four major surfaces' refresh
@@ -759,7 +759,7 @@ and what still requires a human or an adapter decision. It does not declare the 
 - Merge authorization execution state: recorded authorization hides the action, dispatch becomes
   primary, the queue next step is "Run dispatch to merge".
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
-  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;\n  Improvement is converted as well.
+  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;\n  Improvement and Analytics are converted as well.
 
 **Gate status**
 
