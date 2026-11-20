@@ -4368,3 +4368,9 @@ td .entity-identity .btn:focus-visible {
     display: block;
   }
 }
+
+/* B-04: long paths wrap at separators, not mid-token. */
+.path-value {
+  overflow-wrap: normal;
+  word-break: normal;
+}

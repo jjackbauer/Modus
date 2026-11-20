@@ -95,7 +95,6 @@ pub fn ReleaseDetailPage() -> impl IntoView {
     view! {
         <section class="page">
             <div class="row wrap">
-                <a class="tiny" href=format!("/i/{}/releases", instance.get())>"← Releases"</a>
                 <a class="tiny" href=format!("/i/{}/work/{}", instance.get(), work_item_id.get())>"Work detail"</a>
             </div>
             <Transition fallback=move || view! { <LoadingBlock label="Loading release identity and evidence…"/> }>

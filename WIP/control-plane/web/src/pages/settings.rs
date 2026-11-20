@@ -109,8 +109,8 @@ pub fn SettingsPage() -> impl IntoView {
                                 <Panel title="Factory instance".to_string()>
                                     <div class="stack">
                                         <div class="row-between"><span class="muted">"Instance"</span><span class="mono">{settings.factory_instance_id.clone()}</span></div>
-                                        <div class="row-between"><span class="muted">"Control root"</span><span class="mono tiny">{settings.control_root.clone()}</span></div>
-                                        <div class="row-between"><span class="muted">"Target repository"</span><span class="mono tiny">{settings.target_repository.clone()}</span></div>
+                                        <div class="row-between"><span class="muted">"Control root"</span><PathValue value=settings.control_root.clone()/></div>
+                                        <div class="row-between"><span class="muted">"Target repository"</span><PathValue value=settings.target_repository.clone()/></div>
                                         <div class="row-between"><span class="muted">"Target branch"</span><span class="mono">{settings.target_branch.clone()}</span></div>
                                         <div class="row-between"><span class="muted">"Supported class"</span><span class="mono">{settings.supported_class.clone()}</span></div>
                                         <div class="row-between"><span class="muted">"Implementation runner"</span><span class="mono">{settings.implementation_runner.clone()}</span></div>
@@ -212,7 +212,7 @@ fn InstancePanel() -> impl IntoView {
                             <div class="row-between instance-row">
                                 <div>
                                     <strong>{instance.label.clone()}</strong>
-                                    <div class="tiny mono faint">{instance.id.clone()}" · "{instance.adapter_url.clone()}</div>
+                                    <div class="tiny mono faint">{instance.id.clone()}" · "<PathValue value=instance.adapter_url.clone()/></div>
                                 </div>
                                 <StatusIndicator label=if instance.healthy { "Healthy".to_string() } else { "Unreachable".to_string() } tone=if instance.healthy { "success" } else { "danger" }/>
                             </div>
@@ -415,6 +415,20 @@ fn AccountPassword() -> impl IntoView {
                 }>{move || if busy.get() { "Changing…" } else { "Change password" }}</button>
             </div>
         </Panel>
+    }
+}
+
+/// A filesystem path or URL that may wrap only at separators, never mid-token.
+#[component]
+fn PathValue(#[prop(into)] value: String) -> impl IntoView {
+    let segments: Vec<String> = value
+        .split_inclusive(&['/', '\\'][..])
+        .map(str::to_string)
+        .collect();
+    view! {
+        <span class="mono tiny path-value">
+            {segments.into_iter().map(|segment| view! { <span>{segment}</span><wbr/> }).collect_view()}
+        </span>
     }
 }
 
