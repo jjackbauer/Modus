@@ -3161,7 +3161,8 @@ table.data th {
   min-width: 0;
 }
 
-.queue-summary {
+.queue-summary,
+.pipeline-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -3170,7 +3171,8 @@ table.data th {
   font-size: var(--text-sm);
 }
 
-.queue-summary strong {
+.queue-summary strong,
+.pipeline-summary strong {
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }

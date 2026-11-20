@@ -4,9 +4,8 @@ use leptos_router::hooks::use_params_map;
 use control_plane_domain::{Pipeline, format_duration_seconds, short_digest, state_label};
 
 use crate::api;
-use crate::components::ui::{
-    Chip, LoadingBlock, MetricCard, Notice, error_view,
-};
+use crate::components::status::StatusIndicator;
+use crate::components::ui::{LoadingBlock, Notice, error_view};
 use crate::context::AppContext;
 
 #[component]
@@ -53,13 +52,13 @@ pub fn PipelinePage() -> impl IntoView {
                 </div>
             </header>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Reconstructing pipeline state from durable events…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Reconstructing pipeline state from durable events…"/> }>
                 {move || match pipeline.get().flatten() {
                     None => view! { <LoadingBlock label="Reconstructing pipeline state from durable events…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                     Some(Ok(pipeline)) => view! { <PipelineBody pipeline=pipeline/> }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
@@ -112,17 +111,19 @@ fn PipelineBody(pipeline: Pipeline) -> impl IntoView {
                 }).collect_view()}
             </div>
 
-            <div class="metric-grid">
-                <MetricCard label="Work items shown".to_string() value=items.len().to_string() unit=None basis=None tone="" measured=true/>
-                <MetricCard label="Queue depth".to_string() value=queue_depth.to_string() unit=None basis=Some("Sum of stage queue depths".to_string()) tone="waiting" measured=true/>
-                <MetricCard label="In flight".to_string() value=in_flight.to_string() unit=None basis=Some("Active stages".to_string()) tone="active" measured=true/>
-                <MetricCard label="Needs attention".to_string() value=needs_attention.to_string() unit=None basis=Some("Blocked or failed".to_string()) tone="danger" measured=true/>
+            <div class="pipeline-summary">
+                <span><span class="faint">"Work items shown "</span><strong>{items.len()}</strong></span>
+                <span><span class="faint">"Queue depth "</span><strong>{queue_depth}</strong></span>
+                <span><span class="faint">"In flight "</span><strong>{in_flight}</strong></span>
+                <span><span class="faint">"Needs attention "</span><strong>{needs_attention}</strong></span>
+            </div>
+            <div class="tiny faint definitions">
+                "Queue depth = sum of stage queue depths. In flight = active stages. Needs attention = blocked or failed."
             </div>
 
-            <div class="pipeline-board">
+            <div class="pipeline-board" role="region" aria-label="Pipeline stages" tabindex="0">
                 {stages.into_iter().map(|stage| {
                     let stage_items: Vec<_> = items.iter().filter(|item| item.stage == stage.id).cloned().collect();
-                    let head_tone = if stage.failed > 0 { "danger" } else { "neutral" };
                     view! {
                         <div class="pipeline-column">
                             <div class="pipeline-column-head">
@@ -130,7 +131,7 @@ fn PipelineBody(pipeline: Pipeline) -> impl IntoView {
                                     <strong>{stage.label.clone()}</strong>
                                     <div class="tiny faint">{stage.id.clone()}</div>
                                 </div>
-                                <Chip label=stage_items.len().to_string() tone=head_tone/>
+                                <span class="tiny mono">{stage_items.len()}</span>
                             </div>
                             <div class="pipeline-column-body">
                                 {if stage_items.is_empty() {
@@ -140,7 +141,7 @@ fn PipelineBody(pipeline: Pipeline) -> impl IntoView {
                                         <div class="pipeline-card">
                                             <div class="row-between">
                                                 <span class="tiny mono faint">{short_digest(Some(&item.work_item_id))}</span>
-                                                <Chip label=state_label(&item.state).to_string() tone=if item.needs_attention { "danger" } else { "neutral" }/>
+                                                <StatusIndicator label=state_label(&item.state).to_string() tone=if item.needs_attention { "danger" } else { "neutral" } raw=item.state.clone()/>
                                             </div>
                                             <strong>{item.title.clone()}</strong>
                                             <div class="tiny faint">
