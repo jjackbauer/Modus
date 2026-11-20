@@ -4,7 +4,8 @@ use leptos_router::hooks::use_params_map;
 use control_plane_domain::{serving_status_label, serving_status_tone, short_digest, state_label, state_tone};
 
 use crate::api;
-use crate::components::ui::{Chip, EmptyBlock, LoadingBlock, Panel, error_view};
+use crate::components::status::StatusIndicator;
+use crate::components::ui::{EmptyBlock, LoadingBlock, Panel, error_view};
 use crate::context::AppContext;
 
 #[component]
@@ -75,12 +76,12 @@ pub fn ReleasesPage() -> impl IntoView {
                                                     view! {
                                                         <tr>
                                                             <td><a href=href>{release.title}</a><div class="tiny faint mono">{work_id}</div></td>
-                                                            <td><Chip label=state_label tone=state_tone/></td>
+                                                            <td><StatusIndicator label=state_label.clone() tone=state_tone raw=state_label.clone()/></td>
                                                             <td class="mono tiny">{merged}</td>
-                                                            <td><Chip label=if verified { "VERIFIED".to_string() } else { "NOT VERIFIED".to_string() } tone=if verified { "success" } else { "waiting" }/></td>
+                                                            <td><StatusIndicator label=if verified { "Release verified".to_string() } else { "Not verified".to_string() } tone=if verified { "success" } else { "waiting" }/></td>
                                                             <td>
                                                                 <div class="row">
-                                                                    <Chip label=serving_status_label(Some(serving.as_str())).to_string() tone=serving_tone/>
+                                                                    <StatusIndicator label=serving_status_label(Some(serving.as_str())).to_string() tone=serving_tone raw=serving.clone()/>
                                                                     {release.serving_url.map(|url| view! { <a class="tiny" href=url target="_blank" rel="noopener noreferrer">"open"</a> })}
                                                                 </div>
                                                             </td>
