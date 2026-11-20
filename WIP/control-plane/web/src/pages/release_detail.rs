@@ -3,7 +3,8 @@ use leptos::task::spawn_local;
 use leptos_router::hooks::use_params_map;
 
 use control_plane_domain::{
-    Serving, ServingView, serving_view, short_digest, short_sha, state_label, state_tone,
+    Release, Serving, ServingView, WorkItemDetail, serving_view, short_digest, short_sha,
+    state_label, state_tone,
 };
 
 use crate::api;
@@ -28,28 +29,64 @@ pub fn ReleaseDetailPage() -> impl IntoView {
     let work_item_id = Signal::derive(move || params.get().get("work_item_id").unwrap_or_default());
     let refresh = context.refresh;
     let confirm = RwSignal::new(None::<ServeIntent>);
+    let release_refresh_error = RwSignal::new(None::<api::UiError>);
+    let release_last_good = RwSignal::new(None::<(String, Release)>);
+    let detail_refresh_error = RwSignal::new(None::<api::UiError>);
+    let detail_last_good = RwSignal::new(None::<(String, WorkItemDetail)>);
 
     let release = LocalResource::new(move || {
         let instance = instance.get();
         let work_item_id = work_item_id.get();
+        let request_key = work_item_id.clone();
         let _ = refresh.get();
+        let error_slot = release_refresh_error;
+        let previous_slot = release_last_good;
         async move {
             if !api::is_client() || instance.is_empty() || work_item_id.is_empty() {
                 None
             } else {
-                Some(api::release(&instance, &work_item_id).await)
+                match api::release(&instance, &work_item_id).await {
+                    Ok(release) => {
+                        error_slot.set(None);
+                        previous_slot.set(Some((request_key.clone(), release.clone())));
+                        Some(Ok(release))
+                    }
+                    Err(error) => {
+                        error_slot.set(Some(error.clone()));
+                        match previous_slot.get_untracked() {
+                            Some((key, previous)) if key == request_key => Some(Ok(previous)),
+                            _ => Some(Err(error)),
+                        }
+                    }
+                }
             }
         }
     });
     let detail = LocalResource::new(move || {
         let instance = instance.get();
         let work_item_id = work_item_id.get();
+        let request_key = work_item_id.clone();
         let _ = refresh.get();
+        let error_slot = detail_refresh_error;
+        let previous_slot = detail_last_good;
         async move {
             if !api::is_client() || instance.is_empty() || work_item_id.is_empty() {
                 None
             } else {
-                Some(api::work_item(&instance, &work_item_id).await)
+                match api::work_item(&instance, &work_item_id).await {
+                    Ok(detail) => {
+                        error_slot.set(None);
+                        previous_slot.set(Some((request_key.clone(), detail.clone())));
+                        Some(Ok(detail))
+                    }
+                    Err(error) => {
+                        error_slot.set(Some(error.clone()));
+                        match previous_slot.get_untracked() {
+                            Some((key, previous)) if key == request_key => Some(Ok(previous)),
+                            _ => Some(Err(error)),
+                        }
+                    }
+                }
             }
         }
     });
@@ -93,6 +130,19 @@ pub fn ReleaseDetailPage() -> impl IntoView {
                         let work_item_value = work_item_id.get();
 
                         view! {
+                            {move || {
+                                let error = release_refresh_error.get().or_else(|| detail_refresh_error.get());
+                                error.map(|error| view! {
+                                    <Notice kind="danger">
+                                        <div role="alert" class="row wrap">
+                                            <strong>"The last refresh failed. "</strong>
+                                            <span>{error.message}</span>
+                                            <span class="tiny mono">{format!("{} · {}", error.status, error.code)}</span>
+                                            <button class="btn btn-sm" on:click=move |_| context.touch()>"Retry refresh"</button>
+                                        </div>
+                                    </Notice>
+                                })
+                            }}
                             <header class="page-header">
                                 <div>
                                     <h1 class="page-title">{title}</h1>
