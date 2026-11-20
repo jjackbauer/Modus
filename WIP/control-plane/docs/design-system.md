@@ -713,7 +713,8 @@ open.
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
   320 and 1440, axe clean in both themes (`releases-check.json`). Quality (review matrix), Pipeline, Agent activity
-  and Settings/audit are converted; B-04 section navigation and audit scroll cues are done,\n  identifier wrapping polish remains.
+  and Settings/audit are converted; B-04 section navigation and audit scroll cues are done,
+  identifier wrapping polish remains.
 - **Agent activity — converted.** The Agents list and agent detail replace their KPI cards
   with labelled summaries and definitions; definition IDs are mono identities rather than
   uppercase chips; active-profile, attempt and session outcomes use `StatusIndicator`; both
@@ -730,6 +731,10 @@ open.
   B-03 composition: desktop columns are 280px with a “9 stages · scroll horizontally…” and
   keyboard cue; at ≤760px the compact overview is hidden and the board becomes a single-column
   stage list (304px), with 0 document overflow and a clean axe rerun (`pipeline-b03.json`).
+- **Integrated docs — polished.** `/docs` follows `cp_theme` (dark default, light when stored), has a
+  real title (“Documentation · Wip.Factory Control Plane”) and a “← Back to the control plane”
+  link to `/`. Measured at 1440 and 320: 0 overflow, axe clean in both themes
+  (`docs-check.json`). The page remains session-protected like the rest of the app.
 - **Auth — polished.** An API 401 now redirects to `/login?next=…`; signing in returns to the
   original page (measured: queue → login with `/i/local/work` → login → the same 106-row queue).
   The login page has labelled username/password fields, CSRF, `role=alert` errors, focus returns
@@ -780,7 +785,8 @@ and what still requires a human or an adapter decision. It does not declare the 
   primary, the queue next step is "Run dispatch to merge".
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
   `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;
-  Improvement, Analytics, Settings/audit and auth are converted as well; D-04 and B-03 are
+  Improvement, Analytics, Settings/audit, auth and integrated docs are converted as well;
+  D-04 and B-03 are
   closed.
 
 **Gate status**
@@ -807,7 +813,7 @@ and what still requires a human or an adapter decision. It does not declare the 
    exceeds 25s and serialises detail reads.
 4. **Quality approvals path:** provide an approvals fixture (template or pending approval) so the
    converted approval-card `StatusIndicator`/`Confirmation` path can be browser-verified.
-5. **PR 5:** integrated docs and final empty/error polish remain; the named PR5 surfaces are
+5. **PR 5:** final empty/error polish remains; integrated docs and the named PR5 surfaces are
    converted.
 
 **Deliberate deviations**
