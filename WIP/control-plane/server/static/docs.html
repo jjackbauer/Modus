@@ -3,12 +3,19 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Control Plane Documentation</title>
+  <meta name="color-scheme" content="dark light">
+  <title>Documentation · Wip.Factory Control Plane</title>
   <link rel="icon" href="/favicon.svg">
+  <script>
+    try {
+      if (localStorage.getItem('cp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+    } catch (_) {}
+  </script>
   <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
   <main class="content">
+    <p class="tiny"><a href="/">← Back to the control plane</a></p>
     <h1>Wip.Factory Control Plane</h1>
     <p class="page-subtitle">Local-first operator application for the existing Wip.Factory execution engine.</p>
     <section class="panel"><div class="panel-body">
