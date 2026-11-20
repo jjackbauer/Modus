@@ -178,8 +178,9 @@ is missing, even when the screen looks correct.
   type the digest; submit is disabled until exact; `Escape` when not busy; focus returns to the
   authorizing control.
 - **Current:** the decision dialog is implemented (`work_detail.rs:1439-1795`); the background is
-  not inert; Quality still holds dead merge-inline handler code (`quality.rs:140-183`) despite the
-  card linking out. **Owner:** PR 1 (done) / PR 2 (portal, dead path removal).
+  not inert; Quality no longer holds inline merge/template handlers (`quality.rs`) — it links to
+  the work item for contract/merge and to Settings for template policy. **Owner:** PR 1 (done) /
+  PR 2 (portal, dead path removal).
 
 ### J7 — Start and stop a supervised serve
 
@@ -269,7 +270,7 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | D-01 | One pending merge appears in four places | `overview.rs:172-182` attention, `:203-224` pending authorizations, `quality.rs:68-75` inbox, `work_detail.rs:285-287` header + `:469-481` panel | Overview shows one attention row and one "Pending authorizations" summary that deep-links; Quality is the ledger; the work item is the only authorization surface | PR 3 |
 | D-02 | Contract approval has two entry buttons on one page | `work_detail.rs:288-290` header, `:600` contract panel | **Done differently:** one header action row owns approve/reject; the contract panel keeps the evidence and links to the row | PR 3 |
 | D-03 | Serve is offered from four controls and two dialogs | `work_detail.rs:291-297`, `:730`, `:443-467`; `release_detail.rs:108-131`, `:255-400` | **Done:** release detail owns start/stop; work detail reports state and deep-links to it. Its `ServeConfirm` still uses local markup, so the shared confirmation is a PR 4 item | PR 4 |
-| D-04 | Template policy approval exists twice with different assertions | `quality.rs:287-295`; `settings.rs:500-546` | **Decision:** move it to Settings → Approved templates, where the immutable object lives; the Quality inbox keeps a row that links there. Same pattern as contract/merge | PR 5 |
+| D-04 | Template policy approval exists twice with different assertions | `quality.rs`; `settings.rs` | **Closed:** Quality keeps a read-only row that links to `Settings#approved-templates`; the inline approve/reject code is removed. Settings owns the template decision | Done |
 | D-05 | Status chips repeat the same facts in the work header | `work_detail.rs:273-279` | State text once, derived indicator only when different, one health line; remove "CONTRACT FROZEN"/"DISPATCH ACTIVE" chips (the panels show those facts) | PR 3 |
 | D-06 | KPI grids repeat counts already present in context | `overview.rs:154-168`, `work.rs:271-296`, `quality.rs:62-66`, `pipeline.rs:115-120`, `agents.rs:60-72` | Keep a summary row only where it changes a decision; put counts in the heading of the list they count; no six identical tiles | PR 3/PR 4 |
 | D-07 | Refresh is a per-page button and there is no global freshness | `overview.rs:60`, `work.rs:171`, `quality.rs:53`, `releases.rs:39`, `pipeline.rs:52`, `agents.rs:41`, `analytics.rs`, `improvement.rs` | Deferred: keep page buttons until `FreshnessIndicator` lands, then one shell refresh with "last successful update" | PR 3 |

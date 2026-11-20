@@ -712,8 +712,8 @@ open.
   Escape closes it (`release-serve-check.json`). The releases list now uses the same
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
-  320 and 1440, axe clean in both themes (`releases-check.json`). Quality is partially
-  converted (review matrix + Transition); Pipeline and Agent activity are converted; Settings,\n  B-03/B-04 and D-04 remain.
+  320 and 1440, axe clean in both themes (`releases-check.json`). Quality (review matrix), Pipeline, Agent activity
+  and Settings/audit are converted; B-03/B-04 remain.
 - **Agent activity — converted.** The Agents list and agent detail replace their KPI cards
   with labelled summaries and definitions; definition IDs are mono identities rather than
   uppercase chips; active-profile, attempt and session outcomes use `StatusIndicator`; both
@@ -744,8 +744,9 @@ open.
   browser-verified because the approvals inbox is empty in this fixture (the adapter
   `/v1/approvals` exceeds 25s). Improvement is converted (Transition, 0 chips, empty
   profile/adaptation states verified; its status paths were unrendered). Analytics uses its
-  measured panels and definitions with `Transition`; Settings/audit is converted; auth now\n  redirects expired sessions to sign-in with a return path; the D-04 template-policy move, B-03, B-04 and the release in-page back link
-  remain open.
+  measured panels and definitions with `Transition`; Settings/audit is converted; auth now
+  redirects expired sessions to sign-in with a return path. D-04 is closed: Quality links to
+  `Settings#approved-templates`; B-03/B-04 and the release in-page back link remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has a 0-diff baseline of 18 fixed-clock views but no independent approval; VG-06 covers the four major surfaces' refresh
   failures but not every initial error/empty combination; VG-08 reached 104 work items but only
@@ -769,7 +770,8 @@ and what still requires a human or an adapter decision. It does not declare the 
 - Merge authorization execution state: recorded authorization hides the action, dispatch becomes
   primary, the queue next step is "Run dispatch to merge".
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
-  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;\n  Improvement, Analytics, Settings/audit and auth are converted as well.
+  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;
+  Improvement, Analytics, Settings/audit and auth are converted as well; D-04 is closed.
 
 **Gate status**
 
@@ -795,7 +797,8 @@ and what still requires a human or an adapter decision. It does not declare the 
    exceeds 25s and serialises detail reads.
 4. **Quality approvals path:** provide an approvals fixture (template or pending approval) so the
    converted approval-card `StatusIndicator`/`Confirmation` path can be browser-verified.
-5. **PR 5:** Analytics, Settings/audit and auth remain; Improvement is converted (its status\n   paths await a role with history).
+5. **PR 5:** integrated docs and final empty/error polish remain; the named PR5 surfaces are
+   converted.
 
 **Deliberate deviations**
 
