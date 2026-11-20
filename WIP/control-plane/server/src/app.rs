@@ -88,7 +88,26 @@ async fn not_found() -> Response {
     (
         StatusCode::NOT_FOUND,
         [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
-        "<!doctype html><html><head><title>Not found</title><link rel=\"stylesheet\" href=\"/assets/app.css\"></head><body><main class=\"content\"><h1>Not found</h1><p>This control-plane route does not exist.</p><a class=\"btn\" href=\"/\">Back to the factory</a></main></body></html>",
+        r#"<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>Not found · Wip.Factory Control Plane</title>
+<script>
+  try { if (localStorage.getItem('cp_theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (_) {}
+</script>
+<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<main class="content">
+  <h1>Not found</h1>
+  <p>This control-plane route does not exist.</p>
+  <a class="btn" href="/">Back to the factory</a>
+</main>
+</body>
+</html>"#,
     )
         .into_response()
 }
