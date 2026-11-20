@@ -727,6 +727,11 @@ open.
   `Transition`, and the horizontally scrollable board is a named, keyboard-focusable region.
   Measured: 9 stages, 0 chips, “Work items shown 106 / Queue depth 102 / In flight 0 / Needs
   attention 0”, 0 overflow at 320 and 1440, axe clean in both themes (`pipeline-check.json`).
+- **Auth — polished.** An API 401 now redirects to `/login?next=…`; signing in returns to the
+  original page (measured: queue → login with `/i/local/work` → login → the same 106-row queue).
+  The login page has labelled username/password fields, CSRF, `role=alert` errors, focus returns
+  to the username field after a bad password, and 0 overflow at 320 and 1440
+  (`session-expiry.json`, `login-check.json`).
 - **Settings/audit — converted.** Instance health, audit results and template states use
   `StatusIndicator`; the audit tables are named, keyboard-focusable scroll regions; role selects
   have accessible names; all five `Suspense` boundaries are `Transition`. Measured: 9 panels, 0
@@ -739,7 +744,7 @@ open.
   browser-verified because the approvals inbox is empty in this fixture (the adapter
   `/v1/approvals` exceeds 25s). Improvement is converted (Transition, 0 chips, empty
   profile/adaptation states verified; its status paths were unrendered). Analytics uses its
-  measured panels and definitions with `Transition`; Settings/audit is converted; auth remains; the D-04 template-policy move, B-03, B-04 and the release in-page back link
+  measured panels and definitions with `Transition`; Settings/audit is converted; auth now\n  redirects expired sessions to sign-in with a return path; the D-04 template-policy move, B-03, B-04 and the release in-page back link
   remain open.
 - **Remaining VG work:** VG-02 is met by the automated AA audit but has no manual contrast
   review; VG-05 has a 0-diff baseline of 18 fixed-clock views but no independent approval; VG-06 covers the four major surfaces' refresh
@@ -764,7 +769,7 @@ and what still requires a human or an adapter decision. It does not declare the 
 - Merge authorization execution state: recorded authorization hides the action, dispatch becomes
   primary, the queue next step is "Run dispatch to merge".
 - PR 4/5 conversions: release detail/list, Pipeline, Agent activity, and the Quality review matrix;
-  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;\n  Improvement, Analytics and Settings/audit are converted as well.
+  `StatusIndicator` and the shared `Confirmation` replace the remaining chips/local serve dialog;\n  Improvement, Analytics, Settings/audit and auth are converted as well.
 
 **Gate status**
 
