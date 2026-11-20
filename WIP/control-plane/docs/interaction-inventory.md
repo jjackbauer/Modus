@@ -294,6 +294,8 @@ Every row is a current duplication with a decision. "Owner" is the PR that remov
 | VG-07 technical | Rust/wasm/browser green; .NET suite not re-run because no adapter source changed | `cargo-test-workspace.txt`, E2E JSON |
 | VG-08 large data | Partial: 104 work items, 144 events, 1.33s queue projection, 0 overflow at 1440/390; below the 1000-event leg, no long diff/session fixtures, and the 105-item overview takes 32s server-side / 58s in the browser (adapter approvals >25s) | `vg08-large.json`, `overview-latency.json` |
 | VG-09 design coherence | Open: no human visual review | — |
+**Agent activity PR4:** the Agents list and detail replace KPI cards with labelled summaries and definitions; definition IDs are mono identities; active-profile/attempt/session outcomes use `StatusIndicator`; both use `Transition`. 9 cards, 0 chips, 0 overflow at 320/1440, axe clean both themes.
+
 **Pipeline PR4:** four KPI cards replaced by a labelled summary with definitions; stage counts are plain numbers; states use `StatusIndicator`; the board is a named, focusable scroll region; `Transition` keeps content during refresh. 9 stages, 0 chips, 0 overflow at 320/1440, axe clean both themes.
 
 **Quality PR4 partial:** the review matrix uses `StatusIndicator` and `Transition` (0 chips, 4 rows, 0 overflow at 320/1440, axe clean); the approval-card kind label and template `Confirmation` are not browser-verified because the approvals inbox is empty at this fixture.
@@ -355,7 +357,7 @@ journeys are finished.
 | J1 navigation | Done: three task groups, `aria-current="page"`, ≤1024px drawer with Menu button, backdrop, Escape, Tab trap, focus in/return, body scroll lock, closed drawer removed from the tab order. Added: route-change focus moves to the new page h1; NVDA announced "Open navigation"/"Close navigation" and the new heading | A broader AT/drawer matrix is still under VG-06/VG-09 |
 | J2 queue toolbar | Done: visible labels on every field, two-row toolbar, Filters toggle at ≤760px, Clear filters with a stated disabled reason, `aria-expanded`/`aria-controls`, labelled view switch, and purpose-built cards at ≤860px. Extended in the PR 3 completion increment: saved-view rename/delete with an active indicator, URL state, 280px board region with arrows and a hint, priority definition | Real screen-reader verification of the saved-view status announcement and the board scroll region (VG-03) |
 | D-05 status repetition | Closed: one state line, one derived indicator, one health fact, one attention line, no merge panel; the header is the only decision surface | The attention line was not specifically exercised under NVDA; it remains in the VG-06 matrix |
-| D-06 KPI grids | Partially done: queue tiles replaced by a labelled summary | Overview, Quality, Pipeline and Agents still use metric grids |
+| D-06 KPI grids | Done for queue, Overview, Quality, Pipeline and Agents (labelled summaries with definitions) | Settings/Analytics metric compositions remain |
 | D-07 refresh | Deferred to PR 3 | Per-page Refresh buttons remain until `FreshnessIndicator` exists |
 | D-08 breadcrumbs | Partially done: current crumb is not a link, instance crumb targets `/overview`, work-detail back link removed, labels match the new nav | Release detail still has an in-page back link |
 | Responsive containment | Done and measured: 224 headless Chrome measurements (16 routes × 7 widths × 2 themes), 0 documents with horizontal overflow, 0 visible text below 12px | Keyboard-focusable table scroll regions and the remaining mobile data layouts (B-02/B-04) |

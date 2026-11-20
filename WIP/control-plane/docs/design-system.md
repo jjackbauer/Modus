@@ -713,7 +713,14 @@ open.
   `StatusIndicator` contract: 0 chips, “Operationally validated / Release verified / Stopped”
   and “Ready for delivery / Not verified / Not serving” in sentence case, 4 rows, 0 overflow at
   320 and 1440, axe clean in both themes (`releases-check.json`). Quality is partially
-  converted (review matrix + Transition); Pipeline is converted; Agent activity/Settings,\n  B-03/B-04 and D-04 remain.
+  converted (review matrix + Transition); Pipeline and Agent activity are converted; Settings,\n  B-03/B-04 and D-04 remain.
+- **Agent activity — converted.** The Agents list and agent detail replace their KPI cards
+  with labelled summaries and definitions; definition IDs are mono identities rather than
+  uppercase chips; active-profile, attempt and session outcomes use `StatusIndicator`; both
+  pages use `Transition`. Measured: 9 role cards, 0 chips, “Registered roles 9 / Recorded
+  sessions 0 / Implementation attempts 4 / Tokens Not measured”, 0 overflow at 320 and 1440,
+  axe clean in both themes; the detail shows “No active profile” and its six-count summary
+  (`agents-check.json`).
 - **Pipeline — converted.** The four KPI cards are replaced by a labelled summary with stated
   definitions; stage counts are plain numbers, work-item states use `StatusIndicator`, the page uses
   `Transition`, and the horizontally scrollable board is a named, keyboard-focusable region.
