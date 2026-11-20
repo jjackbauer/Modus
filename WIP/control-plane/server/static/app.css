@@ -3162,7 +3162,8 @@ table.data th {
 }
 
 .queue-summary,
-.pipeline-summary {
+.pipeline-summary,
+.count-summary {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -3172,7 +3173,8 @@ table.data th {
 }
 
 .queue-summary strong,
-.pipeline-summary strong {
+.pipeline-summary strong,
+.count-summary strong {
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }

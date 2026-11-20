@@ -4,13 +4,12 @@ use leptos_router::hooks::use_params_map;
 use serde_json::json;
 
 use control_plane_domain::{
-    AgentSession, Profile, format_duration_seconds, format_relative, short_digest,
+    AgentSession, Profile, format_duration_seconds, format_relative, outcome_label, short_digest,
 };
 
 use crate::api;
-use crate::components::ui::{
-    Chip, EmptyBlock, LoadingBlock, MetricCard, Panel, error_view, time_ago,
-};
+use crate::components::status::StatusIndicator;
+use crate::components::ui::{EmptyBlock, LoadingBlock, Panel, error_view, time_ago};
 use crate::components::{Timeline, TimelineItem};
 use crate::context::AppContext;
 
@@ -41,13 +40,13 @@ pub fn AgentDetailPage() -> impl IntoView {
             <div class="row wrap">
                 <a class="tiny" href=format!("/i/{}/agents", instance.get())>"← Agents"</a>
             </div>
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading role, profiles and session evidence…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading role, profiles and session evidence…"/> }>
                 {move || match agent.get().flatten() {
                     None => view! { <LoadingBlock label="Loading role, profiles and session evidence…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
                     Some(Ok(agent)) => view! { <AgentBody agent=agent instance=instance.get()/> }.into_any(),
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
@@ -77,8 +76,8 @@ fn AgentBody(agent: control_plane_domain::AgentDetail, instance: String) -> impl
         <header class="page-header">
             <div>
                 <div class="row wrap">
-                    <Chip label=summary.definition_id.clone() tone="neutral"/>
-                    <Chip label=if summary.active_profile_id.is_some() { "PROFILE ACTIVE".to_string() } else { "NO ACTIVE PROFILE".to_string() } tone=if summary.active_profile_id.is_some() { "success" } else { "warn" }/>
+                    <span class="mono tiny">{summary.definition_id.clone()}</span>
+                    <StatusIndicator label=if summary.active_profile_id.is_some() { "Profile active".to_string() } else { "No active profile".to_string() } tone=if summary.active_profile_id.is_some() { "success" } else { "waiting" }/>
                 </div>
                 <h1 class="page-title">{summary.role.clone()}</h1>
                 <p class="page-subtitle">{summary.objective.clone()}</p>
@@ -89,27 +88,16 @@ fn AgentBody(agent: control_plane_domain::AgentDetail, instance: String) -> impl
             </div>
         </header>
 
-        <div class="metric-grid">
-            <MetricCard label="Published versions".to_string() value=summary.published_profile_count.to_string() unit=None basis=None tone="" measured=true/>
-            <MetricCard label="Sessions".to_string() value=summary.session_count.to_string() unit=None basis=None tone="active" measured=true/>
-            <MetricCard label="Attempts".to_string() value=summary.attempt_count.to_string() unit=None basis=None tone="" measured=true/>
-            <MetricCard label="Success / failure".to_string() value=format!("{} / {}", summary.success_count, summary.failure_count) unit=None basis=Some("Durable traces and attempts".to_string()) tone="" measured=true/>
-            <MetricCard
-                label="Input tokens".to_string()
-                value=if summary.tokens_measured { summary.input_tokens.to_string() } else { "Not measured".to_string() }
-                unit=if summary.tokens_measured { Some("tokens".to_string()) } else { None }
-                basis=Some("Provider usage in durable traces".to_string())
-                tone=""
-                measured=summary.tokens_measured
-            />
-            <MetricCard
-                label="Output tokens".to_string()
-                value=if summary.tokens_measured { summary.output_tokens.to_string() } else { "Not measured".to_string() }
-                unit=if summary.tokens_measured { Some("tokens".to_string()) } else { None }
-                basis=Some("Provider usage in durable traces".to_string())
-                tone=""
-                measured=summary.tokens_measured
-            />
+        <div class="count-summary">
+            <span><span class="faint">"Published versions "</span><strong>{summary.published_profile_count}</strong></span>
+            <span><span class="faint">"Sessions "</span><strong>{summary.session_count}</strong></span>
+            <span><span class="faint">"Attempts "</span><strong>{summary.attempt_count}</strong></span>
+            <span><span class="faint">"Success / failure "</span><strong>{format!("{} / {}", summary.success_count, summary.failure_count)}</strong></span>
+            <span><span class="faint">"Input tokens "</span><strong>{if summary.tokens_measured { summary.input_tokens.to_string() } else { "Not measured".to_string() }}</strong></span>
+            <span><span class="faint">"Output tokens "</span><strong>{if summary.tokens_measured { summary.output_tokens.to_string() } else { "Not measured".to_string() }}</strong></span>
+        </div>
+        <div class="tiny faint definitions">
+            "Published versions = profile versions. Sessions and attempts = durable traces. Tokens = provider-reported usage, or Not measured when no trace reports it."
         </div>
 
         <div class="split">
@@ -164,7 +152,7 @@ fn AgentBody(agent: control_plane_domain::AgentDetail, instance: String) -> impl
                                 <Timeline label="Improvement and adaptation events">
                                     {improvements.into_iter().map(|event| view! {
                                         <TimelineItem time=time_ago(Some(&event.time_utc.to_rfc3339()))>
-                                            <div class="event-title"><Chip label=event.r#type.clone() tone="info"/></div>
+                                            <div class="event-title"><span class="mono tiny">{event.r#type.clone()}</span></div>
                                             <div class="small muted">{event.summary.clone().unwrap_or_default()}</div>
                                             <details class="evidence"><summary>"Technical data"</summary><pre>{serde_json::to_string_pretty(&event.data).unwrap_or_default()}</pre></details>
                                         </TimelineItem>
@@ -199,7 +187,7 @@ fn AgentBody(agent: control_plane_domain::AgentDetail, instance: String) -> impl
                             <div class="stack">
                                 {attempts.into_iter().map(|attempt| view! {
                                     <div class="tiny">
-                                        <div class="row-between"><span class="mono">{attempt.session_id.clone()}</span><Chip label=attempt.outcome.to_uppercase() tone=if attempt.outcome == "succeeded" { "success" } else { "danger" }/></div>
+                                        <div class="row-between"><span class="mono">{attempt.session_id.clone()}</span><StatusIndicator label=outcome_label(&attempt.outcome).to_string() tone=if attempt.outcome == "succeeded" { "success" } else { "danger" } raw=attempt.outcome.clone()/></div>
                                         <div class="faint">{attempt.failure_category.clone().unwrap_or_default()}</div>
                                         <div class="mono faint">{short_digest(attempt.head_sha.as_deref())}</div>
                                     </div>
@@ -260,7 +248,7 @@ fn ProfileRow(profile: Profile, instance: String, definition_id: String) -> impl
             <td class="tiny">{profile.max_steps}" steps · "{profile.max_total_tokens}" tokens · "{format_duration_seconds(profile.timeout_seconds as f64)}</td>
             <td class="tiny mono">{profile.tools.join(", ")}</td>
             <td class="tiny mono" title=profile.content_digest.clone()>{short_digest(Some(&profile.content_digest))}</td>
-            <td>{if profile.active { view! { <Chip label="ACTIVE".to_string() tone="success"/> }.into_any() } else { view! { <span class="faint">"—"</span> }.into_any() }}</td>
+            <td>{if profile.active { view! { <StatusIndicator label="Active".to_string() tone="success"/> }.into_any() } else { view! { <span class="faint">"—"</span> }.into_any() }}</td>
             <td>
                 {if profile.active {
                     view! { <span class="tiny faint">"Pinned for new sessions"</span> }.into_any()
@@ -317,7 +305,7 @@ fn SessionRow(session: AgentSession) -> impl IntoView {
         <TimelineItem time=time_ago(Some(&session.recorded_at_utc.to_rfc3339()))>
                 <div class="event-title">
                     <strong class="mono">{session.session_id.clone()}</strong>
-                    <Chip label=session.outcome.to_uppercase() tone=if session.outcome == "completed" { "success" } else { "danger" }/>
+                    <StatusIndicator label=outcome_label(&session.outcome).to_string() tone=if session.outcome == "completed" { "success" } else { "danger" } raw=session.outcome.clone()/>
                     <span class="tiny faint">{session.model_id.clone()}</span>
                 </div>
                 <div class="tiny faint">

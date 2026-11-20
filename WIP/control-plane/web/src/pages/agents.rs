@@ -5,7 +5,7 @@ use control_plane_domain::format_relative;
 
 use crate::api;
 use crate::components::ui::{
-    Chip, LoadingBlock, MetricCard, Notice, error_view,
+    LoadingBlock, Notice, error_view,
 };
 use crate::context::AppContext;
 
@@ -47,7 +47,7 @@ pub fn AgentsPage() -> impl IntoView {
                 <span>"This inventory reads the factory's role definitions, profile registry, session traces and attempt journal. It does not imply nine continuously running processes."</span>
             </Notice>
 
-            <Suspense fallback=move || view! { <LoadingBlock label="Loading registered roles, profiles and sessions…"/> }>
+            <Transition fallback=move || view! { <LoadingBlock label="Loading registered roles, profiles and sessions…"/> }>
                 {move || match agents.get().flatten() {
                     None => view! { <LoadingBlock label="Loading registered roles, profiles and sessions…"/> }.into_any(),
                     Some(Err(error)) => view! { {error_view(error)} }.into_any(),
@@ -57,18 +57,14 @@ pub fn AgentsPage() -> impl IntoView {
                         let measured = agents.iter().any(|agent| agent.tokens_measured);
                         let tokens: i32 = agents.iter().map(|agent| agent.input_tokens + agent.output_tokens).sum();
                         view! {
-                            <div class="metric-grid">
-                                <MetricCard label="Registered roles".to_string() value=agents.len().to_string() unit=None basis=Some("Factory role definitions".to_string()) tone="" measured=true/>
-                                <MetricCard label="Recorded sessions".to_string() value=total_sessions.to_string() unit=None basis=Some("Durable session traces".to_string()) tone="active" measured=true/>
-                                <MetricCard label="Implementation attempts".to_string() value=total_attempts.to_string() unit=None basis=Some("Attempt journals".to_string()) tone="" measured=true/>
-                                <MetricCard
-                                    label="Tokens".to_string()
-                                    value=if measured { tokens.to_string() } else { "Not measured".to_string() }
-                                    unit=if measured { Some("tokens".to_string()) } else { None }
-                                    basis=Some(if measured { "Provider-reported usage".to_string() } else { "No measured provider usage in durable traces".to_string() })
-                                    tone=""
-                                    measured=measured
-                                />
+                            <div class="count-summary">
+                                <span><span class="faint">"Registered roles "</span><strong>{agents.len()}</strong></span>
+                                <span><span class="faint">"Recorded sessions "</span><strong>{total_sessions}</strong></span>
+                                <span><span class="faint">"Implementation attempts "</span><strong>{total_attempts}</strong></span>
+                                <span><span class="faint">"Tokens "</span><strong>{if measured { tokens.to_string() } else { "Not measured".to_string() }}</strong></span>
+                            </div>
+                            <div class="tiny faint definitions">
+                                "Registered roles = factory role definitions. Sessions and attempts = durable traces. Tokens = provider-reported usage, or Not measured when no trace reports it."
                             </div>
 
                             <div class="agent-grid">
@@ -78,7 +74,7 @@ pub fn AgentsPage() -> impl IntoView {
                                     view! {
                                         <a class="agent-card" href=href>
                                             <div class="row-between">
-                                                <Chip label=agent.definition_id.replace("factory.", "").to_uppercase() tone="neutral"/>
+                                                <span class="mono tiny">{agent.definition_id.clone()}</span>
                                                 <span class="tiny faint">{agent.published_profile_count}" profile version(s)"</span>
                                             </div>
                                             <h2>{agent.role.clone()}</h2>
@@ -97,7 +93,7 @@ pub fn AgentsPage() -> impl IntoView {
                         }.into_any()
                     }
                 }}
-            </Suspense>
+            </Transition>
         </section>
     }
 }
